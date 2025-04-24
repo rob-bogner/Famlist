@@ -1,131 +1,87 @@
-/*
-GroceryGenius
-AddItemView.swift
-Created by Robert Bogner on 13.01.24.
-
-Provides an interface for editing an existing items in the grocery list.
-*/
+// MARK: - EditItemView.swift
 
 import SwiftUI
 
 struct EditItemView: View {
-    
-    @Environment(\.dismiss) private var dismiss // Environment property to dismiss the view.
-    @EnvironmentObject var listViewModel: ListViewModel // Environment object for accessing the ListViewModel.
-    var item: ItemModel // The item being edited.
-    @State private var editName: String // State for the edited name of the item.
-    @State private var editUnits: String // State for the edited unit count of the item.
-    @State private var editMeasure: String // State for the edited measurement unit of the item.
-    @State private var editPrice: String // State for the edited price of the item.
-    @FocusState private var editItemFocus: Bool // Focus state to manage the keyboard focus.
-    
-    init(item: ItemModel) {
-        self.item = item
-        // Initializing states with the current values of the item properties.
-        _editName = State(initialValue: item.name)
-        _editUnits = State(initialValue: String(item.units))
-        _editMeasure = State(initialValue: item.measure)
-        _editPrice = State(initialValue: String(item.price))
-    }
-    
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var listViewModel: ListViewModel
+    let item: ItemModel
+
+    @State private var name: String = ""
+    @State private var units: String = "1"
+    @State private var measure: String = ""
+    @State private var price: String = "0.0"
+    @State private var image: String = ""
+    @State private var isChecked: Bool = false
+
     var body: some View {
-        VStack(alignment: .trailing) {
-            closeButton // Close button at the top.
-            editItemTitle // Title of the edit item view.
-            editItemName // TextField for editing the name.
-            editItemUnits // TextField for editing the units.
-            editItemMeasure // TextField for editing the measurement unit.
-            editItemPrice // TextField for editing the price.
-            saveButton // Save button to store the changes.
-            Spacer()
-        }
-        .onAppear() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                editItemFocus = true // Automatically focuses the text field when the view appears.
+        VStack {
+            Form {
+                TextField("Name", text: $name)
+                TextField("Einheiten", text: $units)
+                    .keyboardType(.numberPad)
+                TextField("Maßeinheit", text: $measure)
+                TextField("Preis", text: $price)
+                    .keyboardType(.decimalPad)
+                TextField("Symbol", text: $image)
+
+                Toggle("Abgehakt", isOn: $isChecked)
+            }
+
+            HStack {
+                Button(action: {
+                    dismiss()
+                }, label: {
+                    Text("Cancel")
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.gray.cornerRadius(10))
+                        .foregroundColor(.white)
+                        .font(.headline)
+                })
+
+                Button(action: {
+                    saveChanges()
+                    dismiss()
+                }, label: {
+                    Text("Save")
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue.cornerRadius(10))
+                        .foregroundColor(.white)
+                        .font(.headline)
+                })
             }
         }
-    }
-    
-    /// Button for closing the EditItemView.
-    private var closeButton: some View {
-        Button(action: {
-            dismiss() // Dismisses the view when pressed.
-        }, label: {
-            Image(systemName: "xmark.circle.fill")
-                .font(.title)
-                .tint(.gray)
-        })
-        .frame(alignment: .trailing)
-        .padding(.top)
-        .padding(.trailing)
-    }
-    
-    private var editItemTitle: some View {
-        Text("Edit Item")
-            .padding(.horizontal)
-            .font(.title2)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
-    private var editItemName: some View {
-        TextField("Enter item name here, e.g. Milk", text: $editName)
-            .textFieldStyle(.roundedBorder)
-            .padding(.horizontal)
-            .focused($editItemFocus)
-    }
-    
-    private var editItemUnits: some View {
-        TextField("Enter units here, e.g. 2", text: $editUnits)
-            .textFieldStyle(.roundedBorder)
-            .padding(.horizontal)
-    }
-    
-    private var editItemMeasure: some View {
-        TextField("Enter measure here, e.g. Liters", text: $editMeasure)
-            .textFieldStyle(.roundedBorder)
-            .padding(.horizontal)
-    }
-    
-    private var editItemPrice: some View {
-        TextField("Enter price here, e.g. 1.99", text: $editPrice)
-            .textFieldStyle(.roundedBorder)
-            .padding(.horizontal)
-            .padding(.bottom, 8)
-    }
-    
-    /// Button for saving the edited item to the list.
-    private var saveButton: some View {
-        Button(action: {
-            saveItemPressed() // Calls the function to save the edited item.
-            dismiss() // Dismisses the view after saving the item.
-        }, label: {
-            Text("Save")
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue.cornerRadius(10))
-                .foregroundColor(.white)
-                .font(.headline)
-        })
+        .frame(maxHeight: .infinity, alignment: .top)
         .padding(.horizontal)
+        .padding(.top)
+        .navigationTitle("Item bearbeiten")
+        .onAppear {
+            name = item.name
+            units = String(item.units)
+            measure = item.measure
+            price = String(item.price)
+            image = item.image
+            isChecked = item.isChecked
+        }
     }
-    
-    /// Function called when the save button is pressed.
-    /// Creates an updated item model with edited properties and saves it to the list using the ViewModel.
-    func saveItemPressed() {
+
+    func saveChanges() {
         let updatedItem = ItemModel(
-                id: item.id, // Use the existing ID to identify the same item
-                image: item.image, // Optionally, you can add an editImage if you handle image editing in your UI
-                name: editName,
-                units: Int(editUnits), // Convert units from String to Int
-                measure: editMeasure,
-                price: Double(editPrice), // Convert price from String to Double
-                isChecked: item.isChecked
-            )
-        listViewModel.saveItem(updatedItem: updatedItem) // Updating the item in the list model
+            id: item.id,
+            image: image,
+            name: name,
+            units: Int(units) ?? 1,
+            measure: measure,
+            price: Double(price) ?? 0.0,
+            isChecked: isChecked
+        )
+        listViewModel.updateItem(updatedItem)
     }
 }
 
 #Preview {
-    EditItemView(item: MockData.sampleItem)
-                .environmentObject(ListViewModel())
+    EditItemView(item: ItemModel(name: "Milch"))
+        .environmentObject(ListViewModel())
 }

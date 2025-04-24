@@ -8,16 +8,18 @@ Configures the app's initial view and environment.
 */
 
 import SwiftUI
+import FirebaseCore // <- notwendig für FirebaseApp.configure()
 
-/// The main application struct for Grocery Genius.
-/// Conforms to the `App` protocol, defining the app's configuration and initial content.
 @main
 struct GroceryGeniusApp: App {
-    /// Defines the content and behavior of the app's scene.
+    init() {
+        FirebaseApp.configure() // <- Initialisiere Firebase beim Start
+    }
+
     var body: some Scene {
         WindowGroup {
-            ShoppingListView() // The root view of the app.
-                .environmentObject(ListViewModel()) // Provides a ListViewModel instance to the app's environment.
+            ShoppingListView()
+                .environmentObject(ListViewModel())
         }
     }
 }

@@ -11,7 +11,7 @@ import SwiftUI
 /// A view for displaying the list of items, both checked and unchecked.
 struct ListView: View {
     
-    @ObservedObject var listViewModel: ListViewModel // ViewModel providing the data and logic for the list.
+    @EnvironmentObject var listViewModel: ListViewModel // ViewModel providing the data and logic for the list.
     @State private var showEditItemView: Bool = false // State to control the presentation of the EditItemView.
 
     var body: some View {
@@ -25,12 +25,12 @@ struct ListView: View {
             if let selectedItem = listViewModel.selectedItem {
                 EditItemView(item: selectedItem)
                     .environmentObject(listViewModel) // Passes the ListViewModel to the EditItemView.
-                    .presentationDetents([.height(300)])
+                    .presentationDetents([.height(400)])
                     .presentationCornerRadius(15)
             }
         }
     }
-    
+
     /// Section displaying unchecked items.
     /// Iterates through items that are not checked and presents them using `ListRowView`.
     private var uncheckedItemsSection: some View {
@@ -51,21 +51,21 @@ struct ListView: View {
                     .tint(.blue)
                     Button("Delete", systemImage: "trash.circle", role: .destructive) {
                         withAnimation {
-                            listViewModel.deleteItem(item: item) // Deletes the item from the list.
+                            listViewModel.deleteItem(item) // Deletes the item from the list.
                         }
                     }
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                     Button("Check", systemImage: "checkmark.circle") {
                         withAnimation {
-                            listViewModel.toggleItemChecked(item: item) // Toggles the checked status of the item.
+                            listViewModel.toggleItemChecked(item) // Toggles the checked status of the item.
                         }
                     }
                     .tint(.green)
                 }
         }
     }
-    
+
     /// Section displaying checked items.
     /// Displays only if there are checked items in the list, to keep track of checked items.
     private var checkedItemsSection: some View {
@@ -79,7 +79,7 @@ struct ListView: View {
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button("Uncheck", systemImage: "arrow.uturn.backward.circle") {
                                     withAnimation {
-                                        listViewModel.toggleItemChecked(item: item) // Allows unchecking of an item.
+                                        listViewModel.toggleItemChecked(item) // Allows unchecking of an item.
                                     }
                                 }
                                 .tint(.yellow)
@@ -87,7 +87,7 @@ struct ListView: View {
                             .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                 Button("Delete", systemImage: "trash.circle") {
                                     withAnimation {
-                                        listViewModel.deleteItem(item: item) // Enables deletion of a checked item.
+                                        listViewModel.deleteItem(item) // Enables deletion of a checked item.
                                     }
                                 }
                                 .tint(.red)
@@ -102,5 +102,6 @@ struct ListView: View {
 }
 
 #Preview {
-    ListView(listViewModel: ListViewModel()) // Preview setup with a ListViewModel.
+    ListView()
+        .environmentObject(ListViewModel()) // Preview setup with a ListViewModel.
 }

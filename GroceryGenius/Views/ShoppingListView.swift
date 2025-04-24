@@ -45,7 +45,7 @@ struct ShoppingListView: View {
     
     /// View component displaying the list of items.
     private var listView: some View {
-        ListView(listViewModel: listViewModel)
+        ListView().environmentObject(listViewModel)
     }
     
     /// Button for adding a new item to the list.
@@ -67,7 +67,7 @@ struct ShoppingListView: View {
             .padding(.bottom, 20)
             .sheet(isPresented: $addNewItem, content: {
                 AddItemView() // Presents the view for adding a new item.
-                    .presentationDetents([.height(170)])
+                    .presentationDetents([.height(150)])
                     .presentationCornerRadius(15)
             })
         }
