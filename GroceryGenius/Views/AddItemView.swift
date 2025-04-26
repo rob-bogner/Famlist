@@ -40,7 +40,7 @@ struct AddItemView: View {
             currentUnits -= 1
             units = String(currentUnits)
         }
-        print("Nach dem Decrement: \(units)")
+//        print("Nach dem Decrement: \(units)")
     }
 
     private func incrementUnits() {
@@ -49,12 +49,11 @@ struct AddItemView: View {
             currentUnits += 1
             units = String(currentUnits)
         }
-        print("Nach dem Increment: \(units)")
+//        print("Nach dem Increment: \(units)")
     }
 
     var body: some View {
-        VStack {
-            VStack {
+            VStack (spacing: 16) {
                 VStack(spacing: 12) {
                     TextField("Enter Item Name", text: $item)
                         .textFieldStyle(.roundedBorder)
@@ -96,9 +95,9 @@ struct AddItemView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal)
+            .padding(.horizontal).padding(.vertical, 25)
             .frame(maxWidth: .infinity, alignment: .leading)
-        }
+            .frame(maxHeight: .infinity, alignment: .top)
         .onAppear {
             isItemFieldFocused = true
         }

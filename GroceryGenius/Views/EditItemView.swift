@@ -27,69 +27,64 @@ struct EditItemView: View {
     }
 
     var body: some View {
-            VStack(spacing: 12) {
-                TextField("Name", text: $name)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(1)
-
-                HStack {
-                    // Einheit TextField - linksbündig
-                    TextField("Einheiten", text: $units)
-                        .keyboardType(.numberPad)
-                        .frame(width: 70)
-                        .multilineTextAlignment(.leading)
-                        .textFieldStyle(.roundedBorder)
-
-                    // Maß-Einheit TextField - linksbündig
-                    TextField("Maßeinheit", text: $measure)
-                        .multilineTextAlignment(.leading)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
-                    
-                    Spacer()
-                    
-                    // Plus / Minus Buttons - rechtsbündig
-                    HStack(spacing: 10) {
-                        Button(action: {
-                            decrementUnits()
-                        }) {
-                            Image(systemName: "minus.circle")
-                                .font(.title)
-                                .foregroundColor(Color.accentColor)
-                        }
-
-                        Button(action: {
-                            incrementUnits()
-                        }) {
-                            Image(systemName: "plus.circle")
-                                .font(.title)
-                                .foregroundColor(Color.accentColor)
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity)
-
-                TextField("Preis", value: Binding(
-                    get: {
-                        Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
-                    },
-                    set: {
-                        price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
-                    }
-                ), formatter: priceFormatter)
-                .keyboardType(.decimalPad)
+        VStack(spacing: 16) {
+            TextField("Enter Item Name", text: $name)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1)
 
-                TextField("Symbol", text: $image)
+            HStack {
+                TextField("Units", text: $units)
+                    .keyboardType(.numberPad)
+                    .frame(width: 70)
+                    .multilineTextAlignment(.leading)
+                    .textFieldStyle(.roundedBorder)
+
+                TextField("Measure", text: $measure)
+                    .multilineTextAlignment(.leading)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1)
 
-                Toggle("Abgehakt", isOn: $isChecked)
-            }
-            .padding()
+                Spacer()
 
-            HStack {
+                HStack(spacing: 8) {
+                    Button(action: {
+                        decrementUnits()
+                    }) {
+                        Image(systemName: "minus.circle")
+                            .font(.title)
+                            .foregroundColor(Color.accentColor)
+                    }
+
+                    Button(action: {
+                        incrementUnits()
+                    }) {
+                        Image(systemName: "plus.circle")
+                            .font(.title)
+                            .foregroundColor(Color.accentColor)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            TextField("Price", value: Binding(
+                get: {
+                    Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
+                },
+                set: {
+                    price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
+                }
+            ), formatter: priceFormatter)
+            .keyboardType(.decimalPad)
+            .textFieldStyle(.roundedBorder)
+            .lineLimit(1)
+
+            TextField("Symbol", text: $image)
+                .textFieldStyle(.roundedBorder)
+                .lineLimit(1)
+
+            Toggle("Checked", isOn: $isChecked)
+
+            HStack(spacing: 8) {
                 Button(action: {
                     dismiss()
                 }, label: {
@@ -113,10 +108,12 @@ struct EditItemView: View {
                         .font(.headline)
                 })
             }
-        .frame(maxHeight: .infinity, alignment: .top)
+        }
         .padding(.horizontal)
-        .padding(.top)
-        .navigationTitle("Item bearbeiten")
+        .padding(.vertical, 25)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .navigationTitle("Edit Item")
         .onAppear {
             name = item.name
             units = String(item.units)
