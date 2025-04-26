@@ -31,19 +31,21 @@ struct EditItemView: View {
             VStack(spacing: 8) {
                 TextField("Name", text: $name)
                     .textFieldStyle(.roundedBorder)
+                    .lineLimit(1)
 
                 HStack {
                     // Einheit TextField - linksbündig
                     TextField("Einheiten", text: $units)
                         .keyboardType(.numberPad)
-                        .frame(width: 50)
-                        .multilineTextAlignment(.center)
+                        .frame(width: 70)
+                        .multilineTextAlignment(.leading)
                         .textFieldStyle(.roundedBorder)
 
                     // Maß-Einheit TextField - linksbündig
                     TextField("Maßeinheit", text: $measure)
                         .multilineTextAlignment(.leading)
                         .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
                     
                     Spacer()
                     
@@ -78,9 +80,11 @@ struct EditItemView: View {
                 ), formatter: priceFormatter)
                 .keyboardType(.decimalPad)
                 .textFieldStyle(.roundedBorder)
+                .lineLimit(1)
 
                 TextField("Symbol", text: $image)
                     .textFieldStyle(.roundedBorder)
+                    .lineLimit(1)
 
                 Toggle("Abgehakt", isOn: $isChecked)
             }
@@ -131,7 +135,7 @@ struct EditItemView: View {
             currentUnits -= 1
             units = String(currentUnits)
         }
-        print("Nach dem Decrement: \(units)")
+//        print("Nach dem Decrement: \(units)")
     }
 
     private func incrementUnits() {
@@ -140,7 +144,7 @@ struct EditItemView: View {
             currentUnits += 1
             units = String(currentUnits)
         }
-        print("Nach dem Increment: \(units)")
+//        print("Nach dem Increment: \(units)")
     }
 
     func saveChanges() {
