@@ -13,6 +13,14 @@ struct ListRowView: View {
     
     let item: ItemModel // The item model that this row represents.
     
+    private var priceFormatter: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "EUR"
+        formatter.locale = Locale.current
+        return formatter
+    }
+    
     var body: some View {
         ZStack {
             Color.theme.background.ignoresSafeArea() // Sets the background color of the row.
@@ -59,7 +67,7 @@ struct ListRowView: View {
             
             Spacer()
             
-            Text("€ \(String(format: "%.2f", item.price))") // Price will always have a value
+            Text(priceFormatter.string(from: NSNumber(value: item.price)) ?? "€ 0.00")
         }
         .font(.subheadline)
     }
