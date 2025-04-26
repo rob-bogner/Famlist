@@ -20,7 +20,6 @@ struct AddItemView: View {
                 .foregroundColor(.white)
                 .font(.headline)
         })
-        .padding(.horizontal)
     }
 
     func addItemPressed() {
@@ -54,42 +53,51 @@ struct AddItemView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            TextField("Enter Item Name", text: $item)
-                .textFieldStyle(.roundedBorder)
-                .padding(.horizontal)
-                .focused($isItemFieldFocused)
+        VStack {
+            VStack(spacing: 16) {
+                VStack(spacing: 8) {
+                    TextField("Enter Item Name", text: $item)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
+                        .focused($isItemFieldFocused)
 
-            HStack(spacing: 10) {
-                TextField("Units", text: $units)
-                    .frame(width: 50)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.center)
-                    .textFieldStyle(.roundedBorder)
+                    HStack(spacing: 10) {
+                        TextField("Units", text: $units)
+                            .keyboardType(.numberPad)
+                            .frame(width: 70)
+                            .multilineTextAlignment(.leading)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
 
-                TextField("Unit", text: $measure)
-                    .multilineTextAlignment(.leading)
-                    .textFieldStyle(.roundedBorder)
+                        TextField("Measure", text: $measure)
+                            .multilineTextAlignment(.leading)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
 
-                Spacer()
+                        Spacer()
 
-                HStack(spacing: 10) {
-                    Button(action: decrementUnits) {
-                        Image(systemName: "minus.circle")
-                            .font(.system(size: 28))
-                            .foregroundColor(Color.accentColor)
+                        HStack(spacing: 8) {
+                            Button(action: decrementUnits) {
+                                Image(systemName: "minus.circle")
+                                    .font(.title)
+                                    .foregroundColor(Color.accentColor)
+                            }
+
+                            Button(action: incrementUnits) {
+                                Image(systemName: "plus.circle")
+                                    .font(.title)
+                                    .foregroundColor(Color.accentColor)
+                            }
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Button(action: incrementUnits) {
-                        Image(systemName: "plus.circle")
-                            .font(.system(size: 28))
-                            .foregroundColor(Color.accentColor)
-                    }
+                    addButton
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal)
-
-            addButton
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onAppear {
             isItemFieldFocused = true
