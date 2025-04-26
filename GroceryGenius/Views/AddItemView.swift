@@ -54,14 +54,14 @@ struct AddItemView: View {
 
     var body: some View {
         VStack {
-            VStack(spacing: 16) {
-                VStack(spacing: 8) {
+            VStack {
+                VStack(spacing: 12) {
                     TextField("Enter Item Name", text: $item)
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(1)
                         .focused($isItemFieldFocused)
 
-                    HStack(spacing: 10) {
+                    HStack {
                         TextField("Units", text: $units)
                             .keyboardType(.numberPad)
                             .frame(width: 70)
@@ -76,7 +76,7 @@ struct AddItemView: View {
 
                         Spacer()
 
-                        HStack(spacing: 8) {
+                        HStack(spacing: 10) {
                             Button(action: decrementUnits) {
                                 Image(systemName: "minus.circle")
                                     .font(.title)

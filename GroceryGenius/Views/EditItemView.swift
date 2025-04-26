@@ -27,8 +27,7 @@ struct EditItemView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 8) {
+            VStack(spacing: 12) {
                 TextField("Name", text: $name)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1)
@@ -50,7 +49,7 @@ struct EditItemView: View {
                     Spacer()
                     
                     // Plus / Minus Buttons - rechtsbündig
-                    HStack(spacing: 8) {
+                    HStack(spacing: 10) {
                         Button(action: {
                             decrementUnits()
                         }) {
@@ -114,7 +113,6 @@ struct EditItemView: View {
                         .font(.headline)
                 })
             }
-        }
         .frame(maxHeight: .infinity, alignment: .top)
         .padding(.horizontal)
         .padding(.top)
