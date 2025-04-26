@@ -18,6 +18,13 @@ struct EditItemView: View {
         get { Int(units) ?? 1 }
         set { units = String(newValue) }
     }
+    
+    private var priceFormatter: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale.current
+        return formatter
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -61,9 +68,16 @@ struct EditItemView: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                TextField("Preis", text: $price)
-                    .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
+                TextField("Preis", value: Binding(
+                    get: {
+                        Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
+                    },
+                    set: {
+                        price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
+                    }
+                ), formatter: priceFormatter)
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.roundedBorder)
 
                 TextField("Symbol", text: $image)
                     .textFieldStyle(.roundedBorder)
@@ -136,7 +150,7 @@ struct EditItemView: View {
             name: name,
             units: Int(units) ?? 1,
             measure: measure,
-            price: Double(price) ?? 0.0,
+            price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,
             isChecked: isChecked
         )
         listViewModel.updateItem(updatedItem)
