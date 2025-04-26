@@ -13,6 +13,7 @@ struct EditItemView: View {
     @State private var price: String = "0.0"
     @State private var image: String = ""
     @State private var isChecked: Bool = false
+    @FocusState private var isNameFieldFocused: Bool
 
     private var unitsInt: Int {
         get { Int(units) ?? 1 }
@@ -31,6 +32,7 @@ struct EditItemView: View {
             TextField("Enter Item Name", text: $name)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1)
+                .focused($isNameFieldFocused)
 
             HStack {
                 TextField("Units", text: $units)
@@ -83,7 +85,7 @@ struct EditItemView: View {
                 .lineLimit(1)
 
             Toggle("Checked", isOn: $isChecked)
-
+            
             HStack(spacing: 8) {
                 Button(action: {
                     dismiss()
@@ -108,11 +110,13 @@ struct EditItemView: View {
                         .font(.headline)
                 })
             }
+            .padding(.top, 35)
         }
         .padding(.horizontal)
         .padding(.vertical, 25)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(maxHeight: .infinity, alignment: .top)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .navigationTitle("Edit Item")
         .onAppear {
             name = item.name
@@ -121,6 +125,10 @@ struct EditItemView: View {
             price = String(item.price)
             image = item.image
             isChecked = item.isChecked
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isNameFieldFocused = true
+            }
         }
     }
 

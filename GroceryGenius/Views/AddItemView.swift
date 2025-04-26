@@ -91,6 +91,8 @@ struct AddItemView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                    Spacer()
+
                     addButton
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

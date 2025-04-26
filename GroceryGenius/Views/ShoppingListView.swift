@@ -67,7 +67,7 @@ struct ShoppingListView: View {
             .padding(.bottom, 20)
             .sheet(isPresented: $addNewItem, content: {
                 AddItemView() // Presents the view for adding a new item.
-                    .presentationDetents([(.height(160))])
+                    .presentationDetents([.fraction(0.25)])
                     .presentationCornerRadius(15)
             })
         }
