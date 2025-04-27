@@ -11,8 +11,12 @@ import SwiftUI
 /// Represents a single row in the list view, displaying details of an item.
 struct ListRowView: View {
     
-    let item: ItemModel // The item model that this row represents.
+    // MARK: - Properties
     
+    /// The item model that this row represents.
+    let item: ItemModel
+    
+    /// Formatter to display the price in localized currency format.
     private var priceFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -21,29 +25,11 @@ struct ListRowView: View {
         return formatter
     }
     
-    var body: some View {
-        ZStack {
-            Color.theme.background.ignoresSafeArea() // Sets the background color of the row.
-            HStack(alignment: .top) {
-                itemImageView // Displays the image of the item.
-                
-                VStack(alignment: .leading) {
-                    itemNameView // Displays the name of the item.
-                    Spacer()
-                    itemDetailsView // Displays additional details of the item.
-                }
-                .padding(.trailing, 7)
-                .padding(.vertical, 7)
-            }
-            .background(item.isChecked ? Color.theme.buttonFillColor : Color.theme.card) // Changes background based on checked status.
-            .opacity(item.isChecked ? 0.5 : 1) // Adjusts opacity for checked items.
-            .cornerRadius(10)
-        }
-    }
+    // MARK: - Computed Views
     
     /// View for displaying the image of the item.
     private var itemImageView: some View {
-        Image(item.image.isEmpty ? "defaultImage" : item.image) // Replace "defaultImage" with your default image asset name if the image string is empty
+        Image(item.image.isEmpty ? "defaultImage" : item.image)
             .resizable()
             .scaledToFit()
             .frame(width: 50, height: 50)
@@ -62,7 +48,7 @@ struct ListRowView: View {
     /// View for displaying additional details like units and price of the item.
     private var itemDetailsView: some View {
         HStack {
-            Text("\(item.units) \(item.measure)") // Units and measure will always have a value
+            Text("\(item.units) \(item.measure)")
                 .frame(alignment: .leading)
             
             Spacer()
@@ -71,8 +57,35 @@ struct ListRowView: View {
         }
         .font(.subheadline)
     }
+    
+    // MARK: - Body
+    
+    /// The main body view of the row, composing image, name, and details with styling.
+    var body: some View {
+        ZStack {
+            Color.theme.background
+                .ignoresSafeArea()
+            
+            HStack(alignment: .top) {
+                itemImageView
+                
+                VStack(alignment: .leading) {
+                    itemNameView
+                    
+                    Spacer()
+                    
+                    itemDetailsView
+                }
+                .padding(.trailing, 7)
+                .padding(.vertical, 7)
+            }
+            .background(item.isChecked ? Color.theme.buttonFillColor : Color.theme.card)
+            .opacity(item.isChecked ? 0.5 : 1)
+            .cornerRadius(10)
+        }
+    }
 }
 
 #Preview {
-    ListRowView(item: MockData.sampleItem) // Preview setup with a sample item.
+    ListRowView(item: MockData.sampleItem)
 }
