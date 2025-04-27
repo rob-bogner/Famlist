@@ -1,10 +1,29 @@
 //
 // GroceryGenius
 // ShoppingListView.swift
-// Created by Robert Bogner on 27.11.23.
+// Created on: 27.11.2023
+// Last updated on: 26.04.2025
 //
+// ------------------------------------------------------------------------
+// 📄 File Overview:
+//
+// This file defines the main view for displaying and interacting with
+// the shopping list. It includes progress tracking, a dynamic item list,
+// and functionality to add new items.
+//
+// 🛠 Includes:
+// - Navigation view setup
+// - Display of shopping progress
+// - List of shopping items
+// - Floating add-button and modal sheet for adding items
+//
+// 🔰 Notes for Beginners:
+// - `@EnvironmentObject` injects shared data (ListViewModel) into the view.
+// - `.sheet` is used to present a modal interface.
+// - `.presentationDetents` controls the sheet's height behavior.
+// ------------------------------------------------------------------------
 
-import SwiftUI
+import SwiftUI // Provides UI building blocks for the app
 
 /// A view for displaying and interacting with the shopping list.
 struct ShoppingListView: View {
@@ -19,39 +38,39 @@ struct ShoppingListView: View {
     
     // MARK: - Body
     
-    /// The content and behavior of the ShoppingListView.
+    /// The main layout and behavior of the ShoppingListView.
     var body: some View {
-        NavigationView {
-            ZStack {
+        NavigationView { // Creates a navigation context for the app
+            ZStack { // Layers elements on top of each other
                 Color.theme.background
-                    .ignoresSafeArea() // Sets the background color.
+                    .ignoresSafeArea() // Extends background color across the entire screen
                 
-                VStack(spacing: 0) {
+                VStack(spacing: 0) { // Main vertical stack for progress view and list
+                    Spacer() // Pushes elements down
+                    shoppingListProgressView // Progress bar at the top
                     Spacer()
-                    shoppingListProgressView
-                    Spacer()
-                    listView
+                    listView // Shopping items in a list
                     Spacer()
                 }
                 
-                VStack {
+                VStack { // Separate stack for floating add button
                     Spacer()
-                    addButton
+                    addButton // Positioned at the bottom right
                 }
             }
-            .navigationTitle("Shopping List")
+            .navigationTitle("Shopping List") // Sets the title at the top of the NavigationView
             .transition(
                 .asymmetric(
-                    insertion: .opacity.combined(with: .move(edge: .leading)),
-                    removal: .opacity.combined(with: .move(edge: .trailing))
+                    insertion: .opacity.combined(with: .move(edge: .leading)), // Animates appearing
+                    removal: .opacity.combined(with: .move(edge: .trailing)) // Animates disappearing
                 )
             )
         }
-        .navigationViewStyle(StackNavigationViewStyle())
-        .sheet(isPresented: $addNewItem) {
+        .navigationViewStyle(StackNavigationViewStyle()) // Forces stack style for navigation on all devices
+        .sheet(isPresented: $addNewItem) { // Presents the AddItemView as a modal sheet
             AddItemView()
-                .presentationDetents([.fraction(0.25)])
-                .presentationCornerRadius(15)
+                .presentationDetents([.fraction(0.25)]) // Sets sheet height to 25% of screen height
+                .presentationCornerRadius(15) // Applies corner radius for smooth sheet edges
         }
     }
     
@@ -65,26 +84,26 @@ struct ShoppingListView: View {
     /// Displays the list of shopping items.
     private var listView: some View {
         ListView()
-            .environmentObject(listViewModel)
+            .environmentObject(listViewModel) // Injects the ViewModel into ListView
     }
     
     /// Button to add a new item to the list.
     private var addButton: some View {
         HStack {
-            Spacer()
+            Spacer() // Pushes the button to the right
             Button(action: {
-                addNewItem.toggle()
+                addNewItem.toggle() // Shows or hides the AddItemView when tapped
             }) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 45))
+                Image(systemName: "plus.circle.fill") // Plus icon for adding a new item
+                    .font(.system(size: 45)) // Sets the size of the icon
                     .foregroundStyle(
                         Color.theme.buttonIconColor,
                         Color.theme.buttonFillColor
                     )
-                    .shadow(color: Color.theme.shadow, radius: 10)
+                    .shadow(color: Color.theme.shadow, radius: 10) // Adds a drop shadow
             }
-            .padding(.trailing, 20)
-            .padding(.bottom, 20)
+            .padding(.trailing, 20) // Pushes button away from right edge
+            .padding(.bottom, 20) // Pushes button up from bottom edge
         }
     }
 }
