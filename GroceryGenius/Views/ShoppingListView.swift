@@ -1,60 +1,80 @@
-/*
-GroceryGenius
-ShoppingListView.swift
-Created by Robert Bogner on 27.11.23.
-
-Presents a view for managing and displaying a shopping list within the Grocery Genius app.
-*/
+//
+// GroceryGenius
+// ShoppingListView.swift
+// Created by Robert Bogner on 27.11.23.
+//
 
 import SwiftUI
 
 /// A view for displaying and interacting with the shopping list.
 struct ShoppingListView: View {
     
-    @EnvironmentObject var listViewModel: ListViewModel // ViewModel providing the data and logic for the list.
-    @State private var addNewItem: Bool = false // State to control the display of the add new item view.
-
+    // MARK: - Properties
+    
+    /// ViewModel providing the data and logic for the list.
+    @EnvironmentObject var listViewModel: ListViewModel
+    
+    /// State to control the display of the Add New Item sheet.
+    @State private var addNewItem: Bool = false
+    
+    // MARK: - Body
+    
+    /// The content and behavior of the ShoppingListView.
     var body: some View {
         NavigationView {
             ZStack {
-                Color.theme.background.ignoresSafeArea() // Sets the background color of the view.
+                Color.theme.background
+                    .ignoresSafeArea() // Sets the background color.
                 
                 VStack(spacing: 0) {
                     Spacer()
-                    shoppingListProgressView // Displays the progress of the shopping list.
+                    shoppingListProgressView
                     Spacer()
-                    listView // Displays the list of items.
+                    listView
                     Spacer()
                 }
                 
                 VStack {
                     Spacer()
-                    addButton // Button to add a new item to the list.
+                    addButton
                 }
             }
-            .navigationTitle("Shopping List") // Sets the navigation bar title.
-            .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity.combined(with: .move(edge: .trailing)))) // Custom transition for the view.
+            .navigationTitle("Shopping List")
+            .transition(
+                .asymmetric(
+                    insertion: .opacity.combined(with: .move(edge: .leading)),
+                    removal: .opacity.combined(with: .move(edge: .trailing))
+                )
+            )
         }
-        .navigationViewStyle(StackNavigationViewStyle()) // Sets the navigation view style.
+        .navigationViewStyle(StackNavigationViewStyle())
+        .sheet(isPresented: $addNewItem) {
+            AddItemView()
+                .presentationDetents([.fraction(0.25)])
+                .presentationCornerRadius(15)
+        }
     }
     
-    /// View component displaying the progress of the shopping list.
+    // MARK: - Subviews
+    
+    /// Displays the progress of the shopping list.
     private var shoppingListProgressView: some View {
         ShoppingListProgressView(listViewModel: listViewModel)
     }
     
-    /// View component displaying the list of items.
+    /// Displays the list of shopping items.
     private var listView: some View {
-        ListView().environmentObject(listViewModel)
+        ListView()
+            .environmentObject(listViewModel)
     }
     
-    /// Button for adding a new item to the list.
+    /// Button to add a new item to the list.
     private var addButton: some View {
         HStack {
             Spacer()
             Button(action: {
-                addNewItem.toggle() // Toggles the state to show or hide the add new item view.
-            }, label: {
+                addNewItem.toggle()
+            }) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 45))
                     .foregroundStyle(
@@ -62,19 +82,15 @@ struct ShoppingListView: View {
                         Color.theme.buttonFillColor
                     )
                     .shadow(color: Color.theme.shadow, radius: 10)
-            })
+            }
             .padding(.trailing, 20)
             .padding(.bottom, 20)
-            .sheet(isPresented: $addNewItem, content: {
-                AddItemView() // Presents the view for adding a new item.
-                    .presentationDetents([.fraction(0.25)])
-                    .presentationCornerRadius(15)
-            })
         }
     }
 }
 
 #Preview {
+    /// Preview setup with a ListViewModel.
     ShoppingListView()
-        .environmentObject(ListViewModel()) // Preview setup with a ListViewModel.
+        .environmentObject(ListViewModel())
 }
