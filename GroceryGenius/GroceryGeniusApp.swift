@@ -1,21 +1,27 @@
 /*
-GroceryGenius
-GroceryGeniusApp.swift
-Created by Robert Bogner on 27.11.23.
+ GroceryGenius
+ GroceryGeniusApp.swift
+ Created by Robert Bogner on 27.11.23.
 
-The main entry point of the Grocery Genius app.
-Configures the app's initial view and environment.
+ The main entry point for the Grocery Genius app.
+ Initializes Firebase services and sets up the initial view and environment.
 */
 
 import SwiftUI
-import FirebaseCore // <- notwendig für FirebaseApp.configure()
+import FirebaseCore // Necessary for initializing FirebaseApp
 
+/// The main application structure for Grocery Genius.
 @main
 struct GroceryGeniusApp: App {
+    
+    // MARK: - Initializer
+    
     init() {
-        FirebaseApp.configure() // <- Initialisiere Firebase beim Start
+        FirebaseApp.configure() // Initializes Firebase when the app launches
     }
 
+    // MARK: - Body
+    
     var body: some Scene {
         WindowGroup {
             ShoppingListView()
@@ -24,6 +30,7 @@ struct GroceryGeniusApp: App {
     }
 }
 
-// Note: The `@main` attribute identifies `GroceryGeniusApp` as the app's entry point.
-// `WindowGroup` creates a new window for the app's UI, and `ShoppingListView` is set as the initial view.
-// The `ListViewModel` is injected as an environment object to be accessible throughout the app.
+// Note:
+// - The `@main` attribute marks GroceryGeniusApp as the app’s entry point.
+// - `WindowGroup` creates a new window displaying ShoppingListView.
+// - The `ListViewModel` is injected as an environment object for global accessibility.
