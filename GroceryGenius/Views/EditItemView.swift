@@ -2,7 +2,11 @@
 
 import SwiftUI
 
+/// A view for editing an existing item in the shopping list.
 struct EditItemView: View {
+    
+    // MARK: - Properties
+    
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var listViewModel: ListViewModel
     let item: ItemModel
@@ -15,18 +19,22 @@ struct EditItemView: View {
     @State private var isChecked: Bool = false
     @FocusState private var isNameFieldFocused: Bool
 
+    /// Computed property to convert units string to integer and back.
     private var unitsInt: Int {
         get { Int(units) ?? 1 }
         set { units = String(newValue) }
     }
     
+    /// Formatter to localize price input according to user locale.
     private var priceFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.locale = Locale.current
         return formatter
     }
-
+    
+    // MARK: - Body
+    
     var body: some View {
         VStack(spacing: 16) {
             TextField("Enter Item Name", text: $name)
@@ -68,14 +76,18 @@ struct EditItemView: View {
             }
             .frame(maxWidth: .infinity)
 
-            TextField("Price", value: Binding(
-                get: {
-                    Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
-                },
-                set: {
-                    price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
-                }
-            ), formatter: priceFormatter)
+            TextField(
+                "Price",
+                value: Binding(
+                    get: {
+                        Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
+                    },
+                    set: {
+                        price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
+                    }
+                ),
+                formatter: priceFormatter
+            )
             .keyboardType(.decimalPad)
             .textFieldStyle(.roundedBorder)
             .lineLimit(1)
@@ -93,7 +105,10 @@ struct EditItemView: View {
                     Text("Cancel")
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color.gray.cornerRadius(10))
+                        .background(
+                            Color.gray
+                                .cornerRadius(10)
+                        )
                         .foregroundColor(.white)
                         .font(.headline)
                 })
@@ -105,7 +120,10 @@ struct EditItemView: View {
                     Text("Save")
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color.blue.cornerRadius(10))
+                        .background(
+                            Color.blue
+                                .cornerRadius(10)
+                        )
                         .foregroundColor(.white)
                         .font(.headline)
                 })
@@ -131,26 +149,29 @@ struct EditItemView: View {
             }
         }
     }
-
+    
+    // MARK: - Helper Functions
+    
+    /// Decreases the number of units by 1, with a minimum of 1.
     private func decrementUnits() {
         var currentUnits = Int(units) ?? 1
         if currentUnits > 1 {
             currentUnits -= 1
             units = String(currentUnits)
         }
-//        print("Nach dem Decrement: \(units)")
     }
 
+    /// Increases the number of units by 1, up to a maximum of 999.
     private func incrementUnits() {
         var currentUnits = Int(units) ?? 1
         if currentUnits < 999 {
             currentUnits += 1
             units = String(currentUnits)
         }
-//        print("Nach dem Increment: \(units)")
     }
 
-    func saveChanges() {
+    /// Saves the edited changes back to the list model.
+    private func saveChanges() {
         let updatedItem = ItemModel(
             id: item.id,
             image: image,
