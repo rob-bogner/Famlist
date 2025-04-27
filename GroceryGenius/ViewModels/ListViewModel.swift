@@ -1,8 +1,34 @@
 // MARK: - ListViewModel.swift
 
-import Foundation
-import SwiftUI
-import FirebaseFirestore
+/*
+ ListViewModel.swift
+
+ GroceryGenius
+ Created on: 27.11.2023
+ Last updated on: 26.04.2025
+
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+
+ This file defines the ViewModel responsible for managing shopping list items,
+ handling real-time synchronization with Firestore, and supporting UI updates like the progress bar.
+
+ 🛠 Includes:
+ - CRUD operations (Create, Read, Update, Delete) on shopping list items
+ - Real-time Firestore synchronization
+ - Progress calculation for a progress bar component
+ - Support for separating checked and unchecked items
+
+ 🔰 Notes for Beginners:
+ - `@Published` properties automatically notify SwiftUI views when changes occur.
+ - Firestore provides real-time updates via a listener.
+ - Functions like `addItem`, `updateItem`, and `deleteItem` interact with Firestore via `FirestoreManager`.
+ ------------------------------------------------------------------------
+*/
+
+import Foundation // Provides essential types like Array, String, and DispatchQueue
+import SwiftUI // Provides @Published, ObservableObject, and animation support
+import FirebaseFirestore // Provides Firestore database interaction
 
 /// ViewModel responsible for managing the shopping list items and synchronizing with Firestore.
 class ListViewModel: ObservableObject {
@@ -10,24 +36,24 @@ class ListViewModel: ObservableObject {
     // MARK: - Properties
 
     /// The list of shopping items.
-    @Published var items: [ItemModel] = []
+    @Published var items: [ItemModel] = [] // Automatically updates the UI when the list changes
 
     /// The currently selected item, if any.
-    @Published var selectedItem: ItemModel?
+    @Published var selectedItem: ItemModel? // Holds a selected item (e.g., for editing)
 
     /// The Firestore listener registration to observe real-time updates.
-    private var listener: ListenerRegistration?
+    private var listener: ListenerRegistration? // Used to keep track of Firestore's real-time listener
 
     // MARK: - Initialization
 
     /// Initializes a new instance of `ListViewModel` and starts listening to Firestore changes.
     init() {
-        startListeningToFirestore()
+        startListeningToFirestore() // Immediately begins syncing with Firestore when the ViewModel is created
     }
 
     /// Cleans up the Firestore listener when the view model is deallocated.
     deinit {
-        listener?.remove()
+        listener?.remove() // Stops the listener to prevent memory leaks
     }
 
     // MARK: - Firestore Listener Handling
@@ -35,66 +61,66 @@ class ListViewModel: ObservableObject {
     /// Starts listening for real-time updates from Firestore and updates the local item list accordingly.
     func startListeningToFirestore() {
         listener = FirestoreManager.shared.addListener { [weak self] items in
-            DispatchQueue.main.async {
-                withAnimation {
-                    self?.items = items
+            DispatchQueue.main.async { // Ensure UI updates happen on the main thread
+                withAnimation { // Animate the list changes smoothly
+                    self?.items = items // Update the local list of items
                 }
             }
         }
     }
 
-    // MARK: - CRUD Operationen
+    // MARK: - CRUD Operations
 
     /// Adds a new item to Firestore.
     /// - Parameter item: The item to be added.
     func addItem(_ item: ItemModel) {
-        FirestoreManager.shared.addItem(item)
+        FirestoreManager.shared.addItem(item) // Delegate adding item to FirestoreManager
     }
 
     /// Updates an existing item in Firestore.
     /// - Parameter item: The item to be updated.
     func updateItem(_ item: ItemModel) {
-        FirestoreManager.shared.updateItem(item)
+        FirestoreManager.shared.updateItem(item) // Delegate updating item to FirestoreManager
     }
 
     /// Deletes an item from Firestore.
     /// - Parameter item: The item to be deleted.
     func deleteItem(_ item: ItemModel) {
-        FirestoreManager.shared.deleteItem(item)
+        FirestoreManager.shared.deleteItem(item) // Delegate deleting item to FirestoreManager
     }
 
     /// Toggles the `isChecked` status of an item and updates it in Firestore.
     /// - Parameter item: The item whose check status will be toggled.
     func toggleItemChecked(_ item: ItemModel) {
-        var updated = item
-        updated.isChecked.toggle()
-        updateItem(updated)
+        var updated = item // Create a mutable copy of the item
+        updated.isChecked.toggle() // Invert the isChecked property
+        updateItem(updated) // Save the updated item back to Firestore
     }
 
-    // MARK: - ProgressBar Unterstützung
+    // MARK: - ProgressBar Support
 
     /// The total number of items in the list.
     var totalItemCount: Int {
-        items.count
+        items.count // Return the total number of items
     }
 
     /// The number of checked (completed) items.
     var checkedItemCount: Int {
-        items.filter { $0.isChecked }.count
+        items.filter { $0.isChecked }.count // Filter and count only the checked items
     }
 
     /// The fraction of completed items relative to the total number of items.
     var progressFraction: Double {
-        totalItemCount == 0 ? 0 : Double(checkedItemCount) / Double(totalItemCount)
+        totalItemCount == 0 ? 0 : Double(checkedItemCount) / Double(totalItemCount) // Avoid division by zero
     }
 
     /// The list of unchecked (not completed) items.
     var uncheckedItems: [ItemModel] {
-        items.filter { !$0.isChecked }
+        items.filter { !$0.isChecked } // Return all items that are not checked
     }
 
     /// The list of checked (completed) items.
     var checkedItems: [ItemModel] {
-        items.filter { $0.isChecked }
+        items.filter { $0.isChecked } // Return all items that are checked
     }
 }
