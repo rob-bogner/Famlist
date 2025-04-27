@@ -1,36 +1,59 @@
 /*
- GroceryGenius
  GroceryGeniusApp.swift
- Created by Robert Bogner on 27.11.23.
 
- The main entry point for the Grocery Genius app.
- Initializes Firebase services and sets up the initial view and environment.
+ GroceryGenius
+ Created on: 27.11.2023
+ Last updated on: 26.04.2025
+
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+
+ This file defines the main entry point for the Grocery Genius app.
+ It configures necessary services (like Firebase) and specifies
+ which view is presented to the user when the app launches.
+
+ 🛠 Includes:
+ - Initialization of Firebase services
+ - Setup of the main application window
+ - Injecting the central ListViewModel as an EnvironmentObject
+
+ 🔰 Notes for Beginners:
+ - Every SwiftUI app requires exactly one @main structure.
+ - The app execution starts inside the `body` property.
+ - `WindowGroup` creates the main window for your user interface.
+ ------------------------------------------------------------------------
 */
 
-import SwiftUI
-import FirebaseCore // Necessary for initializing FirebaseApp
+import SwiftUI // Imports the SwiftUI framework for building the user interface
+import FirebaseCore // Imports FirebaseCore to initialize Firebase services
 
 /// The main application structure for Grocery Genius.
-@main
+/// Defines the initial configuration and view hierarchy of the app.
+@main // Marks this structure as the entry point of the app.
 struct GroceryGeniusApp: App {
     
     // MARK: - Initializer
-    
+
+    /// This initializer is automatically called when the app launches.
+    /// Here, we configure Firebase before any views are displayed.
     init() {
-        FirebaseApp.configure() // Initializes Firebase when the app launches
+        FirebaseApp.configure() // Initializes Firebase services for the app
     }
 
     // MARK: - Body
-    
+
+    /// Defines the main scene (window) for the app.
+    /// Specifies which view will be shown first to the user.
     var body: some Scene {
-        WindowGroup {
-            ShoppingListView()
-                .environmentObject(ListViewModel())
+        WindowGroup { // Creates a window that hosts the content view
+            ShoppingListView() // Displays the ShoppingListView as the first screen
+                .environmentObject(ListViewModel()) // Injects ListViewModel globally into the environment
         }
     }
 }
 
-// Note:
-// - The `@main` attribute marks GroceryGeniusApp as the app’s entry point.
-// - `WindowGroup` creates a new window displaying ShoppingListView.
-// - The `ListViewModel` is injected as an environment object for global accessibility.
+// ------------------------------------------------------------------------
+// Important Notes:
+// - Without `FirebaseApp.configure()`, Firestore and Firebase Authentication won't work.
+// - Using `.environmentObject()` allows child views to access ListViewModel without direct injection.
+// ------------------------------------------------------------------------
