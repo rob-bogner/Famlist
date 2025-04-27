@@ -1,81 +1,116 @@
-import SwiftUI
+// MARK: - AddItemView.swift
+
+/*
+ AddItemView.swift
+
+ GroceryGenius
+ Created on: 27.11.2023
+ Last updated on: 26.04.2025
+
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+
+ This file defines the view used to add a new item to the shopping list.
+ It captures user input like item name, number of units, and measurement unit.
+
+ 🛠 Includes:
+ - Text fields for entering item information
+ - Plus and minus buttons to adjust the number of units
+ - Add item button to save the new item
+ - Focus management to auto-focus the item name field
+
+ 🔰 Notes for Beginners:
+ - `@EnvironmentObject` injects shared data (ListViewModel).
+ - `@FocusState` helps to control the keyboard focus programmatically.
+ - `@State` is used to handle local temporary UI state.
+ ------------------------------------------------------------------------
+*/
+
+import SwiftUI // Import SwiftUI framework for UI components
 
 /// A view for adding a new item to the shopping list.
 struct AddItemView: View {
     
     // MARK: - Properties
     
-    /// Dismisses the current view.
+    /// Environment dismiss action to close the current view.
     @Environment(\.dismiss) private var dismiss
     
-    /// ViewModel providing the data and logic for the list.
+    /// Shared list view model injected as environment object.
     @EnvironmentObject var listViewModel: ListViewModel
     
-    /// The entered item name.
+    /// State for the entered item name.
     @State private var item: String = ""
     
-    /// The entered number of units.
+    /// State for the entered number of units, stored as string.
     @State private var units: String = "1"
     
-    /// The entered measurement unit.
+    /// State for the entered measurement unit.
     @State private var measure: String = ""
     
-    /// Controls whether the item text field is focused.
+    /// Focus state to control keyboard focus on the item text field.
     @FocusState private var isItemFieldFocused: Bool
 
     // MARK: - Body
     
+    /// The main body view layout.
     var body: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 12) {
+        VStack(spacing: 16) { // Vertical stack with spacing between elements
+            VStack(spacing: 12) { // Inner vertical stack for inputs
+                
+                // Text field for entering the item name
                 TextField("Enter Item Name", text: $item)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(1)
-                    .focused($isItemFieldFocused)
+                    .textFieldStyle(.roundedBorder) // Apply rounded border style
+                    .lineLimit(1) // Limit input to one line
+                    .focused($isItemFieldFocused) // Bind focus state to this text field
 
-                HStack {
+                HStack { // Horizontal stack for units, measure, and buttons
+                    
+                    // Text field for number of units
                     TextField("Units", text: $units)
-                        .keyboardType(.numberPad)
-                        .frame(width: 70)
-                        .multilineTextAlignment(.leading)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
+                        .keyboardType(.numberPad) // Use number pad keyboard
+                        .frame(width: 70) // Fixed width for units input
+                        .multilineTextAlignment(.leading) // Align text to leading edge
+                        .textFieldStyle(.roundedBorder) // Rounded border style
+                        .lineLimit(1) // Limit input to one line
 
+                    // Text field for measurement unit
                     TextField("Measure", text: $measure)
-                        .multilineTextAlignment(.leading)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
+                        .multilineTextAlignment(.leading) // Align text to leading edge
+                        .textFieldStyle(.roundedBorder) // Rounded border style
+                        .lineLimit(1) // Limit input to one line
 
-                    Spacer()
+                    Spacer() // Push buttons to the right
 
+                    // Buttons to increment and decrement units
                     HStack(spacing: 10) {
-                        Button(action: decrementUnits) {
-                            Image(systemName: "minus.circle")
-                                .font(.title)
-                                .foregroundColor(Color.accentColor)
+                        Button(action: decrementUnits) { // Decrement units action
+                            Image(systemName: "minus.circle") // Minus icon
+                                .font(.title) // Title font size
+                                .foregroundColor(Color.accentColor) // Accent color
                         }
 
-                        Button(action: incrementUnits) {
-                            Image(systemName: "plus.circle")
-                                .font(.title)
-                                .foregroundColor(Color.accentColor)
+                        Button(action: incrementUnits) { // Increment units action
+                            Image(systemName: "plus.circle") // Plus icon
+                                .font(.title) // Title font size
+                                .foregroundColor(Color.accentColor) // Accent color
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading) // Align HStack leading with max width
 
-                Spacer()
+                Spacer() // Push add item button to bottom
 
-                addItemButton
+                addItemButton // Add item button view
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading) // Align inner VStack leading with max width
         }
-        .padding(.horizontal)
-        .padding(.vertical, 25)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal) // Apply horizontal padding
+        .padding(.vertical, 25) // Apply vertical padding of 25 points
+        .frame(maxWidth: .infinity, alignment: .leading) // Align main VStack leading with max width
+        .frame(maxHeight: .infinity, alignment: .top) // Align main VStack top with max height
         .onAppear {
-            isItemFieldFocused = true
+            isItemFieldFocused = true // Automatically focus item name field on appear
         }
     }
     
@@ -84,15 +119,18 @@ struct AddItemView: View {
     /// Button to add the item to the list.
     private var addItemButton: some View {
         Button(action: {
-            addItemPressed()
-            dismiss()
+            addItemPressed() // Call function to add item
+            dismiss() // Dismiss the current view after adding
         }, label: {
-            Text("Add Item to List")
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue.cornerRadius(10))
-                .foregroundColor(.white)
-                .font(.headline)
+            Text("Add Item to List") // Button label
+                .padding() // Add padding inside button
+                .frame(maxWidth: .infinity) // Make button take full width
+                .background( // Background color with corner radius
+                    Color.blue
+                        .cornerRadius(10)
+                )
+                .foregroundColor(.white) // Set text color to white
+                .font(.headline) // Use headline font style
         })
     }
     
@@ -101,36 +139,37 @@ struct AddItemView: View {
     /// Adds a new item to the shopping list.
     private func addItemPressed() {
         let newItem = ItemModel(
-            image: "",
-            name: item,
-            units: Int(units) ?? 1,
-            measure: measure,
-            price: 0.0,
-            isChecked: false
+            image: "", // No image assigned
+            name: item, // Item name from input
+            units: Int(units) ?? 1, // Convert units string to Int, default 1
+            measure: measure, // Measurement unit from input
+            price: 0.0, // Default price 0.0
+            isChecked: false // Default unchecked state
         )
-        listViewModel.addItem(newItem)
+        listViewModel.addItem(newItem) // Add new item to list view model
     }
 
     /// Decreases the number of units by 1, with a minimum of 1.
     private func decrementUnits() {
-        var currentUnits = Int(units) ?? 1
-        if currentUnits > 1 {
-            currentUnits -= 1
-            units = String(currentUnits)
+        var currentUnits = Int(units) ?? 1 // Parse units string or default to 1
+        if currentUnits > 1 { // Only decrement if greater than 1
+            currentUnits -= 1 // Decrement units
+            units = String(currentUnits) // Update units string
         }
     }
 
     /// Increases the number of units by 1, up to a maximum of 999.
     private func incrementUnits() {
-        var currentUnits = Int(units) ?? 1
-        if currentUnits < 999 {
-            currentUnits += 1
-            units = String(currentUnits)
+        var currentUnits = Int(units) ?? 1 // Parse units string or default to 1
+        if currentUnits < 999 { // Only increment if less than 999
+            currentUnits += 1 // Increment units
+            units = String(currentUnits) // Update units string
         }
     }
 }
 
 #Preview {
+    /// Preview provider for AddItemView.
     AddItemView()
-        .environmentObject(ListViewModel())
+        .environmentObject(ListViewModel()) // Inject list view model for preview
 }
