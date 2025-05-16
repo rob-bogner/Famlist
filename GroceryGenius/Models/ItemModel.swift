@@ -37,6 +37,9 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Emoji or symbol representing the item visually (e.g., 🥛 for milk).
     var image: String
     
+    /// Base64-encoded image data representing a captured or selected photo.
+    var imageData: String?
+    
     /// Name of the item (e.g., "Milk", "Bread").
     var name: String
     
@@ -59,6 +62,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// - Parameters:
     ///   - id: Unique identifier, defaults to a new random UUID.
     ///   - image: Symbol or emoji for the item, defaults to an empty string.
+    ///   - imageData: Optional Base64-encoded image data, defaults to nil.
     ///   - name: Name of the item, defaults to an empty string.
     ///   - units: Number of units, defaults to 1.
     ///   - measure: Measurement unit, defaults to an empty string.
@@ -67,6 +71,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     init(
         id: String = UUID().uuidString, // Generates a unique ID if none provided
         image: String = "", // Default image is an empty string
+        imageData: String? = nil, // Default image data is nil
         name: String = "", // Default name is an empty string
         units: Int = 1, // Default to 1 unit
         measure: String = "", // Default measurement is empty
@@ -75,6 +80,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ) {
         self.id = id // Assigns the unique identifier
         self.image = image // Assigns the image or emoji
+        self.imageData = imageData // Assigns the optional Base64 image data
         self.name = name // Assigns the item's name
         self.units = units // Assigns the quantity of the item
         self.measure = measure // Assigns the measurement unit

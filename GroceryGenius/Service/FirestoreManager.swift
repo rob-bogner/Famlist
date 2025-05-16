@@ -78,6 +78,7 @@ final class FirestoreManager {
     ///   - completion: Optional closure called with an optional Error if the operation fails.
     func addItem(_ item: ItemModel, completion: ((Error?) -> Void)? = nil) {
         do {
+            // The imageData property (Base64-encoded) is now also included during Firestore save and update operations.
             try db.collection(collection).document(item.id).setData(from: item) // Save item to Firestore
             completion?(nil) // Call completion handler without error
         } catch {
@@ -92,6 +93,7 @@ final class FirestoreManager {
     ///   - completion: Optional closure called with an optional Error if the operation fails.
     func updateItem(_ item: ItemModel, completion: ((Error?) -> Void)? = nil) {
         do {
+            // The imageData property (Base64-encoded) is now also included during Firestore save and update operations.
             try db.collection(collection).document(item.id).setData(from: item, merge: true) // Merge changes into existing document
             completion?(nil) // Call completion handler without error
         } catch {

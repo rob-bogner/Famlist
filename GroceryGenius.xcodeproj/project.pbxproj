@@ -12,6 +12,7 @@
 		EE2BAC4A2DBA3D800082D950 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC492DBA3D800082D950 /* FirebaseFirestore */; };
 		EE2BAC4C2DBA3D800082D950 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC4B2DBA3D800082D950 /* FirebaseFirestoreCombine-Community */; };
 		EE4B8CD22B52BD0B006FBBED /* EditItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */; };
+		EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */; };
 		EE6115E82B4467070043736A /* ListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6115E72B4467070043736A /* ListViewModel.swift */; };
 		EE6115EB2B48440E0043736A /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6115EA2B48440E0043736A /* Color.swift */; };
 		EE69A4E62B14CB78007C3515 /* GroceryGeniusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4E52B14CB78007C3515 /* GroceryGeniusApp.swift */; };
@@ -29,6 +30,7 @@
 /* Begin PBXFileReference section */
 		EE2BAC452DB9261F0082D950 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditItemView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		EE6115E72B4467070043736A /* ListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModel.swift; sourceTree = "<group>"; };
 		EE6115EA2B48440E0043736A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* GroceryGenius.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GroceryGenius.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -73,6 +75,7 @@
 		EE25EDBD2B40700500CA090C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				EE52222D2DBEDD0800AB84EF /* Components */,
 				EE69A4E72B14CB78007C3515 /* ShoppingListView.swift */,
 				EEF472FB2B4C5A4100330CE5 /* ListView.swift */,
 				EE69A4FD2B14F046007C3515 /* ListRowView.swift */,
@@ -81,6 +84,14 @@
 				EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		EE52222D2DBEDD0800AB84EF /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		EE6115E92B4843D80043736A /* Extensions */ = {
@@ -225,6 +236,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
 				EE69A4FA2B14CCED007C3515 /* MockData.swift in Sources */,
 				EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */,
@@ -374,6 +386,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Grocery Genius";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Wir benötigen Zugriff auf die Kamera, um Fotos als Produktbild aufzunehmen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -404,6 +417,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Grocery Genius";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Wir benötigen Zugriff auf die Kamera, um Fotos als Produktbild aufzunehmen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

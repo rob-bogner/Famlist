@@ -69,7 +69,7 @@ struct ShoppingListView: View {
         .navigationViewStyle(StackNavigationViewStyle()) // Forces stack style for navigation on all devices
         .sheet(isPresented: $addNewItem) { // Presents the AddItemView as a modal sheet
             AddItemView()
-                .presentationDetents([.fraction(0.25)]) // Sets sheet height to 25% of screen height
+                .presentationDetents([.fraction(0.45)]) // Sets sheet height to 25% of screen height
                 .presentationCornerRadius(15) // Applies corner radius for smooth sheet edges
         }
     }

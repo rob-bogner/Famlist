@@ -18,6 +18,7 @@
  - Plus and minus buttons to adjust the number of units
  - Add item button to save the new item
  - Focus management to auto-focus the item name field
+ - Now supports choosing image from camera or photo library
 
  🔰 Notes for Beginners:
  - `@EnvironmentObject` injects shared data (ListViewModel).
@@ -51,59 +52,114 @@ struct AddItemView: View {
     /// Focus state to control keyboard focus on the item text field.
     @FocusState private var isItemFieldFocused: Bool
 
+    /// State for the selected image from the image picker.
+    @State private var selectedImage: UIImage? = nil // Store selected image
+    
+    /// State to control the presentation of the image picker sheet.
+    @State private var isShowingImagePicker: Bool = false // Flag to show image picker
+
+    @State private var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary // Steuert Kamera oder Galerie
+    @State private var isShowingSourceDialog: Bool = false // Zeigt Auswahl-Dialog für Quelle an
+
     // MARK: - Body
     
     /// The main body view layout.
     var body: some View {
         VStack(spacing: 16) { // Vertical stack with spacing between elements
-            VStack(spacing: 12) { // Inner vertical stack for inputs
-                
-                // Text field for entering the item name
-                TextField("Enter Item Name", text: $item)
-                    .textFieldStyle(.roundedBorder) // Apply rounded border style
-                    .lineLimit(1) // Limit input to one line
-                    .focused($isItemFieldFocused) // Bind focus state to this text field
-
-                HStack { // Horizontal stack for units, measure, and buttons
+            ScrollView {
+                VStack(spacing: 12) { // Inner vertical stack for inputs
                     
-                    // Text field for number of units
-                    TextField("Units", text: $units)
-                        .keyboardType(.numberPad) // Use number pad keyboard
-                        .frame(width: 70) // Fixed width for units input
-                        .multilineTextAlignment(.leading) // Align text to leading edge
-                        .textFieldStyle(.roundedBorder) // Rounded border style
-                        .lineLimit(1) // Limit input to one line
-
-                    // Text field for measurement unit
-                    TextField("Measure", text: $measure)
-                        .multilineTextAlignment(.leading) // Align text to leading edge
-                        .textFieldStyle(.roundedBorder) // Rounded border style
-                        .lineLimit(1) // Limit input to one line
-
-                    Spacer() // Push buttons to the right
-
-                    // Buttons to increment and decrement units
-                    HStack(spacing: 10) {
-                        Button(action: decrementUnits) { // Decrement units action
-                            Image(systemName: "minus.circle") // Minus icon
-                                .font(.title) // Title font size
-                                .foregroundColor(Color.accentColor) // Accent color
+                    if let selectedImage = selectedImage {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            )
+                            .onTapGesture {
+                                // Optional: Bild antippen, um Bildauswahl erneut zu öffnen
+                                dismissKeyboard()
+                                isShowingSourceDialog = true
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        Button(action: {
+                            dismissKeyboard()
+                            isShowingSourceDialog = true
+                        }) {
+                            VStack(spacing: 8) {
+                                Image(systemName: "camera.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32)
+                                    .foregroundColor(.gray)
+                                Text("Add Photo")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(width: 100, height: 100)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            )
                         }
-
-                        Button(action: incrementUnits) { // Increment units action
-                            Image(systemName: "plus.circle") // Plus icon
-                                .font(.title) // Title font size
-                                .foregroundColor(Color.accentColor) // Accent color
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .sheet(isPresented: $isShowingImagePicker) {
+                            ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
                         }
                     }
+                    
+                    // Text field for entering the item name
+                    TextField("Enter Item Name", text: $item)
+                        .textFieldStyle(.roundedBorder) // Apply rounded border style
+                        .lineLimit(1) // Limit input to one line
+                        .focused($isItemFieldFocused) // Bind focus state to this text field
+
+                    HStack { // Horizontal stack for units, measure, and buttons
+                        
+                        // Text field for number of units
+                        TextField("Units", text: $units)
+                            .keyboardType(.numberPad) // Use number pad keyboard
+                            .frame(width: 70) // Fixed width for units input
+                            .multilineTextAlignment(.leading) // Align text to leading edge
+                            .textFieldStyle(.roundedBorder) // Rounded border style
+                            .lineLimit(1) // Limit input to one line
+
+                        // Text field for measurement unit
+                        TextField("Measure", text: $measure)
+                            .multilineTextAlignment(.leading) // Align text to leading edge
+                            .textFieldStyle(.roundedBorder) // Rounded border style
+                            .lineLimit(1) // Limit input to one line
+
+                        Spacer() // Push buttons to the right
+
+                        // Buttons to increment and decrement units
+                        HStack(spacing: 10) {
+                            Button(action: decrementUnits) { // Decrement units action
+                                Image(systemName: "minus.circle") // Minus icon
+                                    .font(.title) // Title font size
+                                    .foregroundColor(Color.accentColor) // Accent color
+                            }
+
+                            Button(action: incrementUnits) { // Increment units action
+                                Image(systemName: "plus.circle") // Plus icon
+                                    .font(.title) // Title font size
+                                    .foregroundColor(Color.accentColor) // Accent color
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading) // Align HStack leading with max width
+
+
+                    Spacer() // Restore natural spacing and push button down
+
+                    addItemButton // Add item button view
                 }
-                .frame(maxWidth: .infinity, alignment: .leading) // Align HStack leading with max width
-
-                Spacer() // Push add item button to bottom
-
-                addItemButton // Add item button view
+                .frame(maxWidth: .infinity, alignment: .leading) // Align inner VStack leading with max width
             }
-            .frame(maxWidth: .infinity, alignment: .leading) // Align inner VStack leading with max width
         }
         .padding(.horizontal) // Apply horizontal padding
         .padding(.vertical, 25) // Apply vertical padding of 25 points
@@ -111,6 +167,18 @@ struct AddItemView: View {
         .frame(maxHeight: .infinity, alignment: .top) // Align main VStack top with max height
         .onAppear {
             isItemFieldFocused = true // Automatically focus item name field on appear
+        }
+        .presentationDetents([.height(500)]) // Fix sheet height to avoid layout compression when image picker is active
+        .confirmationDialog("Bild auswählen", isPresented: $isShowingSourceDialog, titleVisibility: .visible) {
+            Button("Foto aufnehmen") {
+                imagePickerSourceType = .camera
+                isShowingImagePicker = true
+            }
+            Button("Aus Galerie wählen") {
+                imagePickerSourceType = .photoLibrary
+                isShowingImagePicker = true
+            }
+            Button("Abbrechen", role: .cancel) {}
         }
     }
     
@@ -138,8 +206,11 @@ struct AddItemView: View {
     
     /// Adds a new item to the shopping list.
     private func addItemPressed() {
+        // Convert selected UIImage to Base64 string for storage
+        let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString() ?? ""
+        
         let newItem = ItemModel(
-            image: "", // No image assigned
+            image: imageBase64, // Store image as Base64 string
             name: item, // Item name from input
             units: Int(units) ?? 1, // Convert units string to Int, default 1
             measure: measure, // Measurement unit from input
@@ -165,6 +236,11 @@ struct AddItemView: View {
             currentUnits += 1 // Increment units
             units = String(currentUnits) // Update units string
         }
+    }
+    
+    /// Programmatically dismisses the keyboard.
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

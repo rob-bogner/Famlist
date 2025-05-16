@@ -31,14 +31,26 @@ struct ListRowView: View {
     
     // MARK: - Computed Views
     
-    /// View for displaying the image of the item.
+    /// Attempts to decode the item's Base64 image string.
+    /// If successful, displays the decoded image.
+    /// Otherwise, displays a default placeholder image.
     private var itemImageView: some View {
-        Image(item.image.isEmpty ? "defaultImage" : item.image) // Use default image if item image is empty
-            .resizable() // Make the image resizable
-            .scaledToFit() // Scale the image to fit its frame while maintaining aspect ratio
-            .frame(width: 50, height: 50) // Set the frame size to 50x50 points
-            .cornerRadius(5) // Apply a corner radius of 5 points
-            .padding(10) // Add padding of 10 points around the image
+        Group {
+            if item.image.isEmpty == false,
+               let imageData = Data(base64Encoded: item.image),
+               let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable() // Allow resizing of the decoded image
+                    .scaledToFit() // Maintain aspect ratio while fitting the frame
+            } else {
+                Image("defaultImage")
+                    .resizable() // Allow resizing of the placeholder image
+                    .scaledToFit() // Maintain aspect ratio while fitting the frame
+            }
+        }
+        .frame(width: 50, height: 50) // Set the frame size to 50x50 points
+        .cornerRadius(5) // Apply a corner radius of 5 points
+        .padding(10) // Add padding around the image
     }
     
     /// View for displaying the name of the item, with strikethrough if checked.

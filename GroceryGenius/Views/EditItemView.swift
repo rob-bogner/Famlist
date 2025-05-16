@@ -39,6 +39,11 @@ struct EditItemView: View {
     /// Focus state for the name text field.
     @FocusState private var isNameFieldFocused: Bool
 
+    /// State variable to hold the selected UIImage from the image picker.
+    @State private var selectedImage: UIImage? = nil
+    /// State variable to control the presentation of the image picker sheet.
+    @State private var isShowingImagePicker: Bool = false
+
     /// Computed property to convert units string to integer and back.
     private var unitsInt: Int {
         get { Int(units) ?? 1 } // Get integer value from units string or default to 1.
@@ -115,6 +120,37 @@ struct EditItemView: View {
             TextField("Symbol", text: $image) // Text field for the image symbol.
                 .textFieldStyle(.roundedBorder) // Apply rounded border style.
                 .lineLimit(1) // Limit to a single line.
+
+            // Show selected image preview if available
+            if let selectedImage = selectedImage {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 150)
+                    .cornerRadius(10)
+                    .padding(.top, 8)
+            }
+
+            // Button to add or take a photo
+            Button(action: {
+                isShowingImagePicker = true
+            }) {
+                HStack {
+                    Image(systemName: "camera.fill")
+                    Text("Add Photo")
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    Color.accentColor
+                        .cornerRadius(10)
+                )
+                .foregroundColor(.white)
+                .font(.headline)
+            }
+            .sheet(isPresented: $isShowingImagePicker) {
+                ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker)
+            }
 
             Toggle("Checked", isOn: $isChecked) // Toggle switch for checked state.
             
@@ -194,7 +230,7 @@ struct EditItemView: View {
     private func saveChanges() {
         let updatedItem = ItemModel( // Create updated item model.
             id: item.id, // Keep the same id.
-            image: image, // Use updated image.
+            image: selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString() ?? image, // Use new image if selected, else keep existing symbol.
             name: name, // Use updated name.
             units: Int(units) ?? 1, // Convert units string to integer.
             measure: measure, // Use updated measure.
