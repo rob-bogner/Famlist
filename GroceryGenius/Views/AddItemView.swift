@@ -66,6 +66,7 @@ struct AddItemView: View {
     /// The main body view layout.
     var body: some View {
         VStack(spacing: 16) { // Vertical stack with spacing between elements
+            header(dismiss: { dismiss() })
             ScrollView {
                 VStack(spacing: 12) { // Inner vertical stack for inputs
                     
@@ -241,6 +242,26 @@ struct AddItemView: View {
     /// Programmatically dismisses the keyboard.
     private func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
+    /// Header view with centered title and close button. Dismiss-Closure wird weitergereicht.
+    private func header(dismiss: @escaping () -> Void) -> some View {
+        HStack {
+            Spacer(minLength: 0)
+            Text("Add new Item")
+                .font(.title2)
+                .foregroundColor(.teal)
+                .frame(maxWidth: .infinity, alignment: .center)
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark")
+                    .foregroundColor(.gray)
+                    .padding(6)
+                    .background(Circle().fill(Color(white: 0.95)))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal)
+        .padding(.top, 4)
     }
 }
 
