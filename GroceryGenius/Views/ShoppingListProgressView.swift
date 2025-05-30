@@ -24,7 +24,7 @@ struct ShoppingListProgressView: View {
     /// The content and behavior of the view.
     var body: some View {
         VStack(alignment: .leading) { // Vertical stack aligned to leading edge
-            Text("Shopping Progress") // Display the title text
+            Text("Progress") // Display the title text
                 .font(.caption2) // Set font to caption2 style
                 .fontWeight(.medium) // Apply medium font weight
                 .padding(.horizontal, 20) // Add horizontal padding of 20 points
