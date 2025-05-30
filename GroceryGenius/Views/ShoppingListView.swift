@@ -7,28 +7,23 @@
 // ------------------------------------------------------------------------
 // 📄 File Overview:
 //
-// This file defines the main view for displaying and managing the shopping list.
-// It integrates progress tracking, a dynamically updating item list, and both
-// quick and modal methods for adding new items.
+// This file defines the main shopping list view, featuring a decorative accent header
+// background, a visually engaging progress bar, and a modern, ticket-app-inspired layout.
+// The UI includes a quick-add row, floating action button, and modal for advanced item entry.
 //
-// 🛠️ Main Features:
-// - Progress bar reflecting shopping completion state
-// - Animated quick-add input with expanding/collapsing behavior
-// - Floating action button with dynamic SF Symbol (plus/paperplane)
-// - Full support for both Light and Dark Mode (via Theme Colors)
+// 🖌️ Modern UI Features:
+// - AccentHeaderBackground: Decorative, ticket-style accent header with rounded corners
+// - Progress bar and list content layered in a visually distinct header section
+// - Floating quick-add action button with animated icon (plus/paperplane)
+// - Seamless support for Light and Dark Mode via theme colors
 // - Modal sheet for advanced item creation
-// - Tap-gesture overlay for dismissing quick-add with outside tap
+// - Tap-gesture overlay for dismissing quick-add input
 //
-// 🧑‍💻 Frameworks:
-// - SwiftUI: Declarative UI framework for all layouts, animations, and input
-//
-// 🔎 Notes for Developers & Beginners:
-// - Uses `@EnvironmentObject` to share the ListViewModel
-// - Quick-Add field uses `.focused` to manage keyboard appearance and is always present for smooth animations
-// - The add-button dynamically switches icon and size based on quick-add state
-// - Tap-gesture overlay ensures quick-add is dismissed when tapping outside the field/button
-// - All colors use the `theme` extension to support seamless dark/light mode transitions
-// - Animations and transitions are managed with explicit state and SwiftUI's animation system
+// 🧑‍💻 Developer Notes:
+// - Uses `@EnvironmentObject` for ListViewModel
+// - Quick-Add field is always present for smooth transitions/animations
+// - All accent and card backgrounds are handled via the theme extension
+// - Animations and transitions utilize SwiftUI's animation system
 //
 // ------------------------------------------------------------------------
 
@@ -57,18 +52,37 @@ struct ShoppingListView: View {
     /// The main layout and behavior of the ShoppingListView.
     var body: some View {
         NavigationView { // Creates a navigation context for the app
-            ZStack { // Layers elements on top of each other
-                Color.theme.background
-                    .ignoresSafeArea() // Extends background color across the entire screen
+            // Changed main container to a ZStack aligned at the top to layer header and content
+            ZStack(alignment: .top) {
+                // Decorative header background with accent color and rounded bottom corners
+                AccentHeaderBackground()
+                    .frame(height: UIScreen.main.bounds.height * 0.24) // Changed header height from 0.29 to 0.27 for better layout spacing
+                    .zIndex(0) // Always at the back of the ZStack
                 
-                VStack(spacing: 0) { // Main vertical stack for progress view and list
-                    Spacer()
-                    shoppingListProgressView
-                    Spacer()
-                    // Changed ZStack to include the tap overlay inside, below addButton but above listView
+                // Header content (navigation title and progress bar) overlays the accent header
+                VStack(alignment: .leading, spacing: 12) { // Changed VStack alignment to leading and added spacing 12 for header layout
+                    Text("Shopping List")
+                        .font(.largeTitle.bold())
+                        .foregroundColor(.white)
+                        .padding(.top, 30) // Changed from 48 to 30 for less top padding (adjusted as requested)
+                        .padding(.leading, 18) // Changed from 24 to 18 for left alignment consistency (adjusted as requested)
+
+                    shoppingListProgressView // Progress bar sits inside the header
+                        .padding(.top, 8) // Added top padding to position progress bar lower in header
+
+                    Spacer().frame(height: 4) // Much smaller space below progress bar (explicit 4pt)
+                }
+                .frame(height: UIScreen.main.bounds.height * 0.24, alignment: .top) // Changed header height from 0.29 to 0.27 for better layout spacing
+                .zIndex(1) // Above background
+                
+                // Main app content (list, quick-add, overlay), starts exactly under the header
+                VStack(spacing: 0) {
+                    // Spacer to leave space for the header so content starts below it
+                    Spacer().frame(height: UIScreen.main.bounds.height * 0.20) // Changed spacer height from 0.29 to 0.23 to reduce gap below header
+                    
                     ZStack(alignment: .bottomTrailing) {
                         listView // Main list of items, aligned with the button below
-
+                        
                         // The "tap outside to close" overlay is inserted below the addButton.
                         // Only active while quickAddActive is true.
                         if quickAddActive {
@@ -83,15 +97,16 @@ struct ShoppingListView: View {
                                 }
                                 .allowsHitTesting(true) // Makes sure taps are captured outside the button/textfield
                         }
-
+                        
                         addButton
                             .padding(.trailing, 0) // No extra padding, aligns to ListView's trailing edge
                             .padding(.bottom, 16) // Space from bottom content (not screen edge)
                     }
                     Spacer()
                 }
+                .zIndex(2) // Ensure content is above header and background
             }
-            .navigationTitle("Shopping List") // Sets the title at the top of the NavigationView
+            .navigationBarHidden(true) // Hide default navigation bar to use custom title in header
             .transition(
                 .asymmetric(
                     insertion: .opacity.combined(with: .move(edge: .leading)), // Animates appearing

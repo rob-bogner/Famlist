@@ -1,12 +1,12 @@
 /*
  GroceryGenius
  ShoppingListProgressView.swift
- Created on 08.01.24
- Last Updated on 27.04.24
+ Created on: 08.01.24
+ Last Updated on: 27.04.24
 
- This file defines ShoppingListProgressView, a SwiftUI view that visually represents
- the progress of checking off items in a shopping list. It displays a progress bar,
- an icon, and a textual count of checked versus total items.
+ This file defines ShoppingListProgressView, a SwiftUI progress bar view showing
+ checked/total items in the shopping list. It is visually integrated in the accent
+ header background for a modern, ticket-inspired look.
 */
 
 import SwiftUI
@@ -26,10 +26,8 @@ struct ShoppingListProgressView: View {
         VStack(alignment: .leading) { // Vertical stack aligned to leading edge
             Text("Progress") // Display the title text
                 .font(.caption2) // Set font to caption2 style
-                .fontWeight(.medium) // Apply medium font weight
+                .fontWeight(.bold) // Apply bold font weight
                 .padding(.horizontal, 20) // Add horizontal padding of 20 points
-                .padding(.vertical, 0) // Add vertical padding of 0 points
-            
             HStack { // Horizontal stack for icon, progress bar, and text
                 Group { // Group to apply padding collectively
                     Image(systemName: "basket") // Display basket system icon
