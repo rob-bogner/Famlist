@@ -20,7 +20,6 @@
 		EE69A4EA2B14CB79007C3515 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE69A4E92B14CB79007C3515 /* Assets.xcassets */; };
 		EE69A4ED2B14CB79007C3515 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE69A4EC2B14CB79007C3515 /* Preview Assets.xcassets */; };
 		EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4F72B14CC96007C3515 /* ItemModel.swift */; };
-		EE69A4FA2B14CCED007C3515 /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4F92B14CCED007C3515 /* MockData.swift */; };
 		EE69A4FE2B14F046007C3515 /* ListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4FD2B14F046007C3515 /* ListRowView.swift */; };
 		EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7872302B1E3ED600FDD00B /* AddItemView.swift */; };
 		EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */; };
@@ -40,7 +39,6 @@
 		EE69A4E92B14CB79007C3515 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EE69A4EC2B14CB79007C3515 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		EE69A4F72B14CC96007C3515 /* ItemModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemModel.swift; sourceTree = "<group>"; };
-		EE69A4F92B14CCED007C3515 /* MockData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockData.swift; sourceTree = "<group>"; };
 		EE69A4FD2B14F046007C3515 /* ListRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListRowView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		EE7872302B1E3ED600FDD00B /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
 		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
@@ -131,7 +129,6 @@
 				EE25EDBC2B406FFA00CA090C /* Models */,
 				EE2BAC412DB917E20082D950 /* Service */,
 				EE6115E92B4843D80043736A /* Extensions */,
-				EEBF14F82B49B74C0063BC9D /* MockData */,
 				EE69A4E92B14CB79007C3515 /* Assets.xcassets */,
 				EE69A4EB2B14CB79007C3515 /* Preview Content */,
 			);
@@ -152,14 +149,6 @@
 				EE6115E72B4467070043736A /* ListViewModel.swift */,
 			);
 			path = ViewModels;
-			sourceTree = "<group>";
-		};
-		EEBF14F82B49B74C0063BC9D /* MockData */ = {
-			isa = PBXGroup;
-			children = (
-				EE69A4F92B14CCED007C3515 /* MockData.swift */,
-			);
-			path = MockData;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -242,7 +231,6 @@
 				EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
-				EE69A4FA2B14CCED007C3515 /* MockData.swift in Sources */,
 				EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */,
 				EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */,
 				EE69A4E82B14CB78007C3515 /* ShoppingListView.swift in Sources */,

@@ -105,6 +105,16 @@ struct ListRowView: View {
 }
 
 #Preview {
-    // Changed from MockData.sampleItem.image to MockData.sampleItem.imageData to match new field usage
-    ListRowView(item: MockData.sampleItem)
+    ListRowView(item: ItemModel(
+        id: UUID().uuidString,
+        imageData: nil,
+        name: "Milch",
+        units: 1,
+        measure: "L",
+        price: 1.99,
+        isChecked: false,
+        category: "Milchprodukte",
+        productDescription: "Haltbare Milch 3,5%",
+        brand: "Demeter"
+    ))
 }

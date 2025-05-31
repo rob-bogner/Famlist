@@ -241,11 +241,24 @@ struct EditItemView: View {
             price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0, // Convert price string to double.
             isChecked: isChecked // Use updated checked state.
         )
+        // Refactor: parameter order, imageData before name
+        // Already correct: imageData, name, ...
         listViewModel.updateItem(updatedItem) // Update the item in the list view model.
     }
 }
 
 #Preview {
-    EditItemView(item: ItemModel(name: "Milch")) // Preview with sample item named "Milch".
-        .environmentObject(ListViewModel()) // Provide environment object for preview.
+    EditItemView(item: ItemModel(
+        id: UUID().uuidString,
+        imageData: nil,
+        name: "Milch",
+        units: 1,
+        measure: "L",
+        price: 1.99,
+        isChecked: false,
+        category: "Milchprodukte",
+        productDescription: "Haltbare Milch 3,5%",
+        brand: "Demeter"
+    ))
+    .environmentObject(ListViewModel())
 }
