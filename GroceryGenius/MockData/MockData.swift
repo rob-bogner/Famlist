@@ -13,7 +13,7 @@ struct MockData {
     
     /// A sample item used for previews or testing.
     static let sampleItem: ItemModel = ItemModel(
-        image: "Milch",
+        imageData: "",
         name: "Milch",
         units: 3,
         measure: "Pkg.",
@@ -24,70 +24,70 @@ struct MockData {
     /// This mock data can be used for development and testing, providing a way to work with sample data.
     static var items = [
         ItemModel(
-            image: "Milch",
+            imageData: "",
             name: "Milch",
             units: 3,
             measure: "Pkg.",
             price: 1.59, isChecked: false
         ),
         ItemModel(
-            image: "Butter",
+            imageData: "",
             name: "Butter",
             units: 1,
             measure: "Stk.",
             price: 1.79, isChecked: false
         ),
         ItemModel(
-            image: "Kaese",
+            imageData: "",
             name: "Käse",
             units: 200,
             measure: "g",
             price: 3.29, isChecked: false
         ),
         ItemModel(
-            image: "Spaghetti",
+            imageData: "",
             name: "Spaghetti",
             units: 1,
             measure: "Pkg.",
             price: 1.99, isChecked: false
         ),
         ItemModel(
-            image: "PassierteTomaten",
+            imageData: "",
             name: "Passierte Tomaten",
             units: 1,
             measure: "Fl.",
             price: 1.89, isChecked: false
         ),
         ItemModel(
-            image: "Chips",
+            imageData: "",
             name: "Chips",
             units: 1,
             measure: "Pkg.",
             price: 2.19, isChecked: false
         ),
         ItemModel(
-            image: "Toillettenpapier",
+            imageData: "",
             name: "Toillettenpapier",
             units: 1,
             measure: "Pkg.",
             price: 3.89, isChecked: false
         ),
         ItemModel(
-            image: "Cola Zero",
+            imageData: "",
             name: "Cola Zero",
             units: 1,
             measure: "Pkg.",
             price: 3.89, isChecked: false
         ),
         ItemModel(
-            image: "Salat",
+            imageData: "",
             name: "Salat",
             units: 1,
             measure: "Stk.",
             price: 1.39, isChecked: false
         ),
         ItemModel(
-            image: "Lachs",
+            imageData: "",
             name: "Lachs",
             units: 400,
             measure: "g.",

@@ -6,7 +6,7 @@
 //  Last Updated on 2024-06-14.
 //
 //  A SwiftUI view that allows users to edit an existing item in the shopping list.
-//  Provides input fields for item properties such as name, units, measure, price, image symbol, and check status.
+//  Provides input fields for item properties such as name, units, measure, price, and check status.
 //  Includes increment and decrement buttons for units and saves changes back to the shared list view model.
 //
 
@@ -32,8 +32,6 @@ struct EditItemView: View {
     @State private var measure: String = ""
     /// State variable for the price as a string.
     @State private var price: String = "0.0"
-    /// State variable for the image symbol.
-    @State private var image: String = ""
     /// State variable for whether the item is checked.
     @State private var isChecked: Bool = false
     /// Focus state for the name text field.
@@ -117,10 +115,8 @@ struct EditItemView: View {
             .textFieldStyle(.roundedBorder) // Apply rounded border style.
             .lineLimit(1) // Limit to a single line.
 
-            TextField("Symbol", text: $image) // Text field for the image symbol.
-                .textFieldStyle(.roundedBorder) // Apply rounded border style.
-                .lineLimit(1) // Limit to a single line.
-
+            // Removed Symbol text field and related UI as per instructions (no more emoji/SFSymbol selection)
+            
             // Show selected image preview if available
             if let selectedImage = selectedImage {
                 Image(uiImage: selectedImage)
@@ -197,8 +193,16 @@ struct EditItemView: View {
             units = String(item.units) // Initialize units state with item's units as string.
             measure = item.measure // Initialize measure state.
             price = String(item.price) // Initialize price state as string.
-            image = item.image // Initialize image state.
             isChecked = item.isChecked // Initialize checked state.
+            
+            // Load image from base64 string in item.imageData if available
+            if let imageDataString = item.imageData,
+               let imageData = Data(base64Encoded: imageDataString),
+               let uiImage = UIImage(data: imageData) {
+                selectedImage = uiImage
+            } else {
+                selectedImage = nil
+            }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { // Delay to focus name field after view appears.
                 isNameFieldFocused = true // Set focus to name text field.
@@ -230,7 +234,7 @@ struct EditItemView: View {
     private func saveChanges() {
         let updatedItem = ItemModel( // Create updated item model.
             id: item.id, // Keep the same id.
-            image: selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString() ?? image, // Use new image if selected, else keep existing symbol.
+            imageData: selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString(), // Use new image if selected, else nil.
             name: name, // Use updated name.
             units: Int(units) ?? 1, // Convert units string to integer.
             measure: measure, // Use updated measure.

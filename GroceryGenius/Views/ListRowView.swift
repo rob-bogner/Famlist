@@ -22,86 +22,89 @@ struct ListRowView: View {
     
     /// Formatter to display the price in localized currency format.
     private var priceFormatter: NumberFormatter {
-        let formatter = NumberFormatter() // Create a NumberFormatter instance
-        formatter.numberStyle = .currency // Set the formatter style to currency
-        formatter.currencyCode = "EUR" // Set the currency code to Euro
-        formatter.locale = Locale.current // Use the current locale for formatting
-        return formatter // Return the configured formatter
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "EUR"
+        formatter.locale = Locale.current
+        return formatter
     }
     
     // MARK: - Computed Views
     
-    /// Attempts to decode the item's Base64 image string.
+    /// Attempts to decode the item's Base64 imageData string.
     /// If successful, displays the decoded image.
     /// Otherwise, displays a default placeholder image.
     private var itemImageView: some View {
         Group {
-            if item.image.isEmpty == false,
-               let imageData = Data(base64Encoded: item.image),
+            // Changed from item.image to item.imageData as per instructions
+            if let imageDataString = item.imageData,
+               !imageDataString.isEmpty,
+               let imageData = Data(base64Encoded: imageDataString),
                let uiImage = UIImage(data: imageData) {
                 Image(uiImage: uiImage)
-                    .resizable() // Allow resizing of the decoded image
-                    .scaledToFit() // Maintain aspect ratio while fitting the frame
+                    .resizable()
+                    .scaledToFit()
             } else {
                 Image("defaultImage")
-                    .resizable() // Allow resizing of the placeholder image
-                    .scaledToFit() // Maintain aspect ratio while fitting the frame
+                    .resizable()
+                    .scaledToFit()
             }
         }
-        .frame(width: 50, height: 50) // Set the frame size to 50x50 points
-        .cornerRadius(5) // Apply a corner radius of 5 points
-        .padding(10) // Add padding around the image
+        .frame(width: 50, height: 50)
+        .cornerRadius(5)
+        .padding(10)
     }
     
     /// View for displaying the name of the item, with strikethrough if checked.
     private var itemNameView: some View {
-        Text(item.name) // Display the item's name
-            .font(.headline) // Use headline font style
-            .strikethrough(item.isChecked, color: item.isChecked ? Color.black : .none) // Apply strikethrough if checked
-            .frame(alignment: .leading) // Align text to the leading edge
+        Text(item.name)
+            .font(.headline)
+            .strikethrough(item.isChecked, color: item.isChecked ? Color.accentColor : .none)
+            .frame(alignment: .leading)
     }
     
     /// View for displaying additional details like units and price of the item.
     private var itemDetailsView: some View {
-        HStack { // Horizontal stack for units/measure and price
-            Text("\(item.units) \(item.measure)") // Display units and measure
-                .frame(alignment: .leading) // Align text to leading edge
+        HStack {
+            Text("\(item.units) \(item.measure)")
+                .frame(alignment: .leading)
             
-            Spacer() // Push price text to the right
+            Spacer()
             
-            Text(priceFormatter.string(from: NSNumber(value: item.price)) ?? "€ 0.00") // Display formatted price or fallback
+            Text(priceFormatter.string(from: NSNumber(value: item.price)) ?? "€ 0.00")
         }
-        .font(.subheadline) // Use subheadline font style for details
+        .font(.subheadline)
     }
     
     // MARK: - Body
     
     /// The main body view of the row, composing image, name, and details with styling.
     var body: some View {
-        ZStack { // Use ZStack to layer background and content
-            Color.theme.background // Set background color from theme
-                .ignoresSafeArea() // Extend background to ignore safe area
+        ZStack {
+            Color.theme.background
+                .ignoresSafeArea()
             
-            HStack(alignment: .top) { // Horizontal stack aligning items to top
-                itemImageView // Show item image
+            HStack(alignment: .top) {
+                itemImageView
                 
-                VStack(alignment: .leading) { // Vertical stack aligned to leading edge
-                    itemNameView // Show item name
+                VStack(alignment: .leading) {
+                    itemNameView
                     
-                    Spacer() // Push details to bottom
+                    Spacer()
                     
-                    itemDetailsView // Show item details
+                    itemDetailsView
                 }
-                .padding(.trailing, 7) // Add 7 points trailing padding
-                .padding(.vertical, 7) // Add 7 points vertical padding
+                .padding(.trailing, 7)
+                .padding(.vertical, 7)
             }
-            .background(item.isChecked ? Color.theme.buttonFillColor : Color.theme.card) // Set background color based on checked state
-            .opacity(item.isChecked ? 0.5 : 1) // Adjust opacity if checked
-            .cornerRadius(10) // Apply corner radius of 10 points
+            .background(item.isChecked ? Color.theme.buttonFillColor : Color.theme.card)
+            .opacity(item.isChecked ? 0.5 : 1)
+            .cornerRadius(10)
         }
     }
 }
 
 #Preview {
-    ListRowView(item: MockData.sampleItem) // Preview with sample item
+    // Changed from MockData.sampleItem.image to MockData.sampleItem.imageData to match new field usage
+    ListRowView(item: MockData.sampleItem)
 }

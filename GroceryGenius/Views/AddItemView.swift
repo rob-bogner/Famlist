@@ -211,7 +211,7 @@ struct AddItemView: View {
         let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString() ?? ""
         
         let newItem = ItemModel(
-            image: imageBase64, // Store image as Base64 string
+            imageData: imageBase64, // Store image as Base64 string
             name: item, // Item name from input
             units: Int(units) ?? 1, // Convert units string to Int, default 1
             measure: measure, // Measurement unit from input
