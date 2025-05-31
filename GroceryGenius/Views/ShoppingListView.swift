@@ -79,7 +79,7 @@ struct ShoppingListView: View {
                 // Main app content (list, quick-add, overlay), starts exactly under the header
                 VStack(spacing: 0) {
                     // Spacer to leave space for the header so content starts below it
-                    Spacer().frame(height: UIScreen.main.bounds.height * 0.20) // Changed spacer height from 0.29 to 0.23 to reduce gap below header
+                    Spacer().frame(height: UIScreen.main.bounds.height * 0.18) // Changed spacer height from 0.29 to 0.23 to reduce gap below header
                     
                     ZStack(alignment: .bottomTrailing) {
                         listView // Main list of items, aligned with the button below
