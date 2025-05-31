@@ -54,6 +54,7 @@ struct ShoppingListView: View {
         NavigationView { // Creates a navigation context for the app
             // Changed main container to a ZStack aligned at the top to layer header and content
             ZStack(alignment: .top) {
+                Color.theme.background.ignoresSafeArea()
                 // Decorative header background with accent color and rounded bottom corners
                 AccentHeaderBackground()
                     .frame(height: UIScreen.main.bounds.height * 0.24) // Changed header height from 0.29 to 0.27 for better layout spacing
