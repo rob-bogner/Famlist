@@ -38,4 +38,7 @@ struct ColorTheme { // Define the ColorTheme struct
     
     /// Color for icons on buttons.
     let buttonIconColor = Color("ButtonIconColor") // Define button icon color from asset catalog
+
+    /// Color for text.
+    let textColor = Color("TextColor") // Define button icon color from asset catalog
 }
