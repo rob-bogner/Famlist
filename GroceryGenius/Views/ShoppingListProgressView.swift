@@ -27,6 +27,7 @@ struct ShoppingListProgressView: View {
             Text("Progress") // Display the title text
                 .font(.caption2) // Set font to caption2 style
                 .fontWeight(.bold) // Apply bold font weight
+                .foregroundColor(Color.theme.textColor)
                 .padding(.horizontal, 20) // Add horizontal padding of 20 points
             HStack { // Horizontal stack for icon, progress bar, and text
                 Group { // Group to apply padding collectively
