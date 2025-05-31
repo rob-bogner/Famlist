@@ -52,7 +52,7 @@ struct ListView: View {
             if let selectedItem = listViewModel.selectedItem {
                 EditItemView(item: selectedItem) // Edit view for the selected item
                     .environmentObject(listViewModel) // Passes ViewModel to the edit view
-                    .presentationDetents([.fraction(0.75)]) // Sets sheet height to 45% of screen
+                    .presentationDetents([.fraction(0.75), .large])  // Sets sheet height to 45% of screen
                     .presentationCornerRadius(15) // Smooth rounded sheet corners
             }
         }

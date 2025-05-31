@@ -1,201 +1,234 @@
 //
 //  EditItemView.swift
-//  ShoppingListApp
+//  GroceryGenius
+//  Created: 27.11.2023
+//  Last Updated: 31.05.2025
 //
-//  Created on 2024-06-14.
-//  Last Updated on 2024-06-14.
+// ------------------------------------------------------------------------
+// 📄 File Overview:
+// EditItemView allows the user to edit all fields of an existing shopping item
+// in a modern, card-like UI. Includes image picker, all item properties as text fields,
+// and a single Save button. Layout and logic are harmonized with AddItemView.
 //
-//  A SwiftUI view that allows users to edit an existing item in the shopping list.
-//  Provides input fields for item properties such as name, units, measure, price, and check status.
-//  Includes increment and decrement buttons for units and saves changes back to the shared list view model.
-//
+// 🛠️ Features:
+// - Card-style vertical stack layout for all item fields
+// - Photo picker supporting camera and gallery, with preview
+// - All ItemModel properties as editable fields (name, brand, productDescription, category, units, measure, price)
+// - Save button at the bottom, closes on success
+// - Close button at top right
+// - Consistent style, dark mode support
+// - Thoroughly commented for beginners
+// ------------------------------------------------------------------------
 
 import SwiftUI
 
 /// A view for editing an existing item in the shopping list.
+/// All properties can be edited, including name, brand, description, category, units, measure, price, and photo.
 struct EditItemView: View {
-    
+
     // MARK: - Properties
-    
-    /// Environment value to dismiss the current view.
+
+    /// Dismiss action to close the sheet
     @Environment(\.dismiss) private var dismiss
-    /// Shared list view model object for managing the shopping list.
+
+    /// The view model for the list, needed to update the item
     @EnvironmentObject var listViewModel: ListViewModel
-    /// The item to be edited.
+
+    /// The item being edited
     let item: ItemModel
 
-    /// State variable for the item's name.
+    // Editable fields, initialized from the current item's properties
     @State private var name: String = ""
-    /// State variable for the number of units as a string.
+    @State private var brand: String = ""
+    @State private var productDescription: String = ""
+    @State private var category: String = ""
     @State private var units: String = "1"
-    /// State variable for the measure unit.
     @State private var measure: String = ""
-    /// State variable for the price as a string.
     @State private var price: String = "0.0"
-    /// State variable for whether the item is checked.
     @State private var isChecked: Bool = false
-    /// Focus state for the name text field.
-    @FocusState private var isNameFieldFocused: Bool
 
-    /// State variable to hold the selected UIImage from the image picker.
+    /// Holds the currently selected photo (UIImage)
     @State private var selectedImage: UIImage? = nil
-    /// State variable to control the presentation of the image picker sheet.
+
+    /// Whether the photo picker sheet is open
     @State private var isShowingImagePicker: Bool = false
 
-    /// Computed property to convert units string to integer and back.
-    private var unitsInt: Int {
-        get { Int(units) ?? 1 } // Get integer value from units string or default to 1.
-        set { units = String(newValue) } // Set units string from integer value.
-    }
-    
-    /// Formatter to localize price input according to user locale.
+    /// The type of photo picker (camera or gallery)
+    @State private var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary
+
+    /// Whether to show the dialog to pick camera/gallery
+    @State private var isShowingSourceDialog: Bool = false
+
+    /// Focus management for the first text field (item name)
+    @FocusState private var isNameFieldFocused: Bool
+
+    /// Localized number formatter for price input
     private var priceFormatter: NumberFormatter {
-        let formatter = NumberFormatter() // Create a number formatter instance.
-        formatter.numberStyle = .decimal // Set style to decimal numbers.
-        formatter.locale = Locale.current // Use the current locale for formatting.
-        return formatter // Return the configured formatter.
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale.current
+        return formatter
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
-        VStack(spacing: 16) { // Vertical stack with spacing of 16 points.
-            TextField("Enter Item Name", text: $name) // Text field for entering the item name.
-                .textFieldStyle(.roundedBorder) // Apply rounded border style to the text field.
-                .lineLimit(1) // Limit the text to a single line.
-                .focused($isNameFieldFocused) // Bind focus state to isNameFieldFocused.
+        VStack(spacing: 16) { // Vertical stack for all content, spacing between fields
+            header(dismiss: { dismiss() }) // Header with title and close button
 
-            HStack { // Horizontal stack for units, measure, and buttons.
-                TextField("Units", text: $units) // Text field for entering units.
-                    .keyboardType(.numberPad) // Use number pad keyboard for input.
-                    .frame(width: 70) // Set fixed width of 70 points.
-                    .multilineTextAlignment(.leading) // Align text to the leading edge.
-                    .textFieldStyle(.roundedBorder) // Apply rounded border style.
+            ScrollView { // Allows view to scroll if keyboard is open or content is long
+                VStack(spacing: 12) { // Stack for all editable fields
 
-                TextField("Measure", text: $measure) // Text field for measure unit.
-                    .multilineTextAlignment(.leading) // Align text to the leading edge.
-                    .textFieldStyle(.roundedBorder) // Apply rounded border style.
-                    .lineLimit(1) // Limit to a single line.
-
-                Spacer() // Flexible space to push buttons to the right.
-
-                HStack(spacing: 8) { // Horizontal stack for decrement and increment buttons with spacing.
-                    Button(action: {
-                        decrementUnits() // Call function to decrement units.
-                    }) {
-                        Image(systemName: "minus.circle") // Display minus circle system image.
-                            .font(.title) // Set font size to title.
-                            .foregroundColor(Color.accentColor) // Use accent color for the image.
+                    // --- Image Preview & Picker ---
+                    if let selectedImage = selectedImage {
+                        Image(uiImage: selectedImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            )
+                            .onTapGesture {
+                                // Tapping the image lets the user pick a new one
+                                dismissKeyboard()
+                                isShowingSourceDialog = true
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        Button(action: {
+                            dismissKeyboard()
+                            isShowingSourceDialog = true
+                        }) {
+                            VStack(spacing: 8) {
+                                Image(systemName: "camera.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32)
+                                    .foregroundColor(.gray)
+                                Text("Add Photo")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(width: 100, height: 100)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            )
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .sheet(isPresented: $isShowingImagePicker) {
+                            ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
+                        }
                     }
 
-                    Button(action: {
-                        incrementUnits() // Call function to increment units.
-                    }) {
-                        Image(systemName: "plus.circle") // Display plus circle system image.
-                            .font(.title) // Set font size to title.
-                            .foregroundColor(Color.accentColor) // Use accent color for the image.
+                    // --- Editable Fields ---
+                    // Name
+                    TextField("Name", text: $name)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
+                        .focused($isNameFieldFocused)
+
+                    // Brand
+                    TextField("Brand", text: $brand)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
+
+                    // Product Description
+                    TextField("Product Description", text: $productDescription)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
+
+                    // Category
+                    TextField("Category", text: $category)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
+
+                    // --- Units, Measure, and Increment/Decrement Buttons (like AddItemView) ---
+                    HStack {
+                        // Text field for number of units
+                        TextField("Units", text: $units)
+                            .keyboardType(.numberPad)
+                            .frame(width: 70)
+                            .multilineTextAlignment(.leading)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
+
+                        // Text field for measurement unit (e.g., "kg", "L")
+                        TextField("Measure", text: $measure)
+                            .multilineTextAlignment(.leading)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        // Increment/Decrement Buttons
+                        HStack(spacing: 10) {
+                            Button(action: decrementUnits) {
+                                Image(systemName: "minus.circle")
+                                    .font(.title)
+                                    .foregroundColor(Color.accentColor)
+                            }
+                            Button(action: incrementUnits) {
+                                Image(systemName: "plus.circle")
+                                    .font(.title)
+                                    .foregroundColor(Color.accentColor)
+                            }
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // Price
+                    TextField(
+                        "Price",
+                        value: Binding(
+                            get: {
+                                Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
+                            },
+                            set: {
+                                price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
+                            }
+                        ),
+                        formatter: priceFormatter
+                    )
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                    .lineLimit(1)
                 }
-            }
-            .frame(maxWidth: .infinity) // Allow the HStack to expand to maximum width.
-
-            TextField(
-                "Price",
-                value: Binding(
-                    get: {
-                        Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0 // Convert price string to Double, replacing commas with dots.
-                    },
-                    set: {
-                        price = priceFormatter.string(from: NSNumber(value: $0)) ?? "" // Format Double to localized string.
-                    }
-                ),
-                formatter: priceFormatter // Use the number formatter for the text field.
-            )
-            .keyboardType(.decimalPad) // Use decimal pad keyboard.
-            .textFieldStyle(.roundedBorder) // Apply rounded border style.
-            .lineLimit(1) // Limit to a single line.
-
-            // Removed Symbol text field and related UI as per instructions (no more emoji/SFSymbol selection)
-            
-            // Show selected image preview if available
-            if let selectedImage = selectedImage {
-                Image(uiImage: selectedImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 150)
-                    .cornerRadius(10)
-                    .padding(.top, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            // Button to add or take a photo
+            // --- Save Button ---
             Button(action: {
-                isShowingImagePicker = true
-            }) {
-                HStack {
-                    Image(systemName: "camera.fill")
-                    Text("Add Photo")
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    Color.accentColor
-                        .cornerRadius(10)
-                )
-                .foregroundColor(.white)
-                .font(.headline)
-            }
-            .sheet(isPresented: $isShowingImagePicker) {
-                ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker)
-            }
-
-            Toggle("Checked", isOn: $isChecked) // Toggle switch for checked state.
-            
-            HStack(spacing: 8) { // Horizontal stack for Cancel and Save buttons with spacing.
-                Button(action: {
-                    dismiss() // Dismiss the view without saving.
-                }, label: {
-                    Text("Cancel") // Button label.
-                        .padding() // Add default padding around the text.
-                        .frame(maxWidth: .infinity) // Expand button to maximum width.
-                        .background( // Background view for the button.
-                            Color.gray // Gray color for background.
-                                .cornerRadius(10) // Rounded corners with radius 10.
-                        )
-                        .foregroundColor(.white) // White text color.
-                        .font(.headline) // Headline font style.
-                })
-
-                Button(action: {
-                    saveChanges() // Save the changes.
-                    dismiss() // Dismiss the view after saving.
-                }, label: {
-                    Text("Save") // Button label.
-                        .padding() // Add default padding around the text.
-                        .frame(maxWidth: .infinity) // Expand button to maximum width.
-                        .background( // Background view for the button.
-                            Color.blue // Blue color for background.
-                                .cornerRadius(10) // Rounded corners with radius 10.
-                        )
-                        .foregroundColor(.white) // White text color.
-                        .font(.headline) // Headline font style.
-                })
-            }
-            .padding(.top, 35) // Add top padding of 35 points to the button stack.
+                saveChanges() // Save all edited fields to the item
+                dismiss() // Close the sheet
+            }, label: {
+                Text("Save")
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue.cornerRadius(10))
+                    .foregroundColor(.white)
+                    .font(.headline)
+            })
+            .padding(.top, 8)
         }
-        .padding(.horizontal) // Add default horizontal padding around the VStack.
-        .padding(.vertical, 25) // Add vertical padding of 25 points.
-        .frame(maxWidth: .infinity, alignment: .leading) // Expand to max width, align content to leading.
-        .frame(maxHeight: .infinity, alignment: .top) // Expand to max height, align content to top.
-        .ignoresSafeArea(.keyboard, edges: .bottom) // Ignore safe area for keyboard on bottom edge.
-        .navigationTitle("Edit Item") // Set navigation title.
+        .padding(.horizontal)
+        .padding(.vertical, 25)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxHeight: .infinity, alignment: .top)
         .onAppear {
-            name = item.name // Initialize name state with item's name.
-            units = String(item.units) // Initialize units state with item's units as string.
-            measure = item.measure // Initialize measure state.
-            price = String(item.price) // Initialize price state as string.
-            isChecked = item.isChecked // Initialize checked state.
-            
-            // Load image from base64 string in item.imageData if available
+            // Initialize all fields from the current item
+            name = item.name
+            brand = item.brand ?? ""
+            productDescription = item.productDescription ?? ""
+            category = item.category ?? ""
+            units = String(item.units)
+            measure = item.measure
+            price = String(item.price)
+            isChecked = item.isChecked
+
+            // Load image from base64 string if available
             if let imageDataString = item.imageData,
                let imageData = Data(base64Encoded: imageDataString),
                let uiImage = UIImage(data: imageData) {
@@ -203,51 +236,92 @@ struct EditItemView: View {
             } else {
                 selectedImage = nil
             }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { // Delay to focus name field after view appears.
-                isNameFieldFocused = true // Set focus to name text field.
+
+        }
+        .presentationDetents([.height(570)]) // Height similar to AddItemView
+        .confirmationDialog("Select Photo Source", isPresented: $isShowingSourceDialog, titleVisibility: .visible) {
+            Button("Take Photo") {
+                imagePickerSourceType = .camera
+                isShowingImagePicker = true
             }
+            Button("Choose from Gallery") {
+                imagePickerSourceType = .photoLibrary
+                isShowingImagePicker = true
+            }
+            Button("Cancel", role: .cancel) {}
         }
     }
-    
+
     // MARK: - Helper Functions
-    
-    /// Decreases the number of units by 1, with a minimum of 1.
-    private func decrementUnits() {
-        var currentUnits = Int(units) ?? 1 // Convert units string to integer or default to 1.
-        if currentUnits > 1 { // Only decrement if greater than 1.
-            currentUnits -= 1 // Decrement units by 1.
-            units = String(currentUnits) // Update units string.
-        }
-    }
 
-    /// Increases the number of units by 1, up to a maximum of 999.
-    private func incrementUnits() {
-        var currentUnits = Int(units) ?? 1 // Convert units string to integer or default to 1.
-        if currentUnits < 999 { // Only increment if less than 999.
-            currentUnits += 1 // Increment units by 1.
-            units = String(currentUnits) // Update units string.
-        }
-    }
-
-    /// Saves the edited changes back to the list model.
+    /// Save all changes to the item and update the model
     private func saveChanges() {
-        let updatedItem = ItemModel( // Create updated item model.
-            id: item.id, // Keep the same id.
-            imageData: selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString(), // Use new image if selected, else nil.
-            name: name, // Use updated name.
-            units: Int(units) ?? 1, // Convert units string to integer.
-            measure: measure, // Use updated measure.
-            price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0, // Convert price string to double.
-            isChecked: isChecked // Use updated checked state.
+        // Convert selected image to base64 string, if available
+        let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+        // Create the updated ItemModel
+        let updatedItem = ItemModel(
+            id: item.id,
+            imageData: imageBase64,
+            name: name,
+            units: Int(units) ?? 1,
+            measure: measure,
+            price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,
+            isChecked: isChecked,
+            category: category,
+            productDescription: productDescription,
+            brand: brand
         )
-        // Refactor: parameter order, imageData before name
-        // Already correct: imageData, name, ...
-        listViewModel.updateItem(updatedItem) // Update the item in the list view model.
+        listViewModel.updateItem(updatedItem) // Update in the view model (and Firestore)
+    }
+
+    /// Helper to dismiss the keyboard
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+    /// Header view with centered title and close button.
+    private func header(dismiss: @escaping () -> Void) -> some View {
+        HStack {
+            Spacer(minLength: 0)
+            Text("Edit Item")
+                .font(.title2)
+                .foregroundColor(.teal)
+                .frame(maxWidth: .infinity, alignment: .center)
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark")
+                    .foregroundColor(.gray)
+                    .padding(6)
+                    .background(Circle().fill(Color(white: 0.95)))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal)
+        .padding(.top, 4)
+    }
+    
+    // MARK: - Increment/Decrement Logic
+    
+    /// Decreases the number of units by 1, minimum 1.
+    private func decrementUnits() {
+        var currentUnits = Int(units) ?? 1
+        if currentUnits > 1 {
+            currentUnits -= 1
+            units = String(currentUnits)
+        }
+    }
+    
+    /// Increases the number of units by 1, max 999.
+    private func incrementUnits() {
+        var currentUnits = Int(units) ?? 1
+        if currentUnits < 999 {
+            currentUnits += 1
+            units = String(currentUnits)
+        }
     }
 }
 
 #Preview {
+    /// Preview for EditItemView using the new layout and logic.
     EditItemView(item: ItemModel(
         id: UUID().uuidString,
         imageData: nil,
@@ -262,3 +336,4 @@ struct EditItemView: View {
     ))
     .environmentObject(ListViewModel())
 }
+
