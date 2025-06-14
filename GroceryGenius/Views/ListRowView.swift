@@ -59,7 +59,7 @@ struct ListRowView: View {
     private var itemNameView: some View {
         Text(item.name)
             .font(.headline)
-            .strikethrough(item.isChecked, color: item.isChecked ? Color.accentColor : .none)
+            .strikethrough(item.isChecked, color: item.isChecked ? Color.theme.buttonIconColor : .none)
             .frame(alignment: .leading)
     }
     
