@@ -23,6 +23,7 @@
 		EE69A4FE2B14F046007C3515 /* ListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4FD2B14F046007C3515 /* ListRowView.swift */; };
 		EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7872302B1E3ED600FDD00B /* AddItemView.swift */; };
 		EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */; };
+		EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */; };
 		EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FB2B4C5A4100330CE5 /* ListView.swift */; };
 		EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */; };
 /* End PBXBuildFile section */
@@ -42,6 +43,7 @@
 		EE69A4FD2B14F046007C3515 /* ListRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListRowView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		EE7872302B1E3ED600FDD00B /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
 		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
+		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageFullscreenView.swift; sourceTree = "<group>"; };
 		EEF472FB2B4C5A4100330CE5 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListProgressView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -75,6 +77,7 @@
 		EE25EDBD2B40700500CA090C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */,
 				EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */,
 				EE69A4E72B14CB78007C3515 /* ShoppingListView.swift */,
 				EEF472FB2B4C5A4100330CE5 /* ListView.swift */,
@@ -228,6 +231,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */,
 				EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,

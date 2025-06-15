@@ -1,17 +1,37 @@
-/*
- GroceryGenius
- ListRowView.swift
- Created: 27.11.23
- Last Updated: 29.04.24
-
- File Overview:
- This file defines the ListRowView struct, which represents a single row in the grocery list.
- It displays the item's image, name, units, measure, and price.
- The row appearance changes based on whether the item is checked or not.
-*/
+// GroceryGenius
+// ListRowView.swift
+// Created on: 27.11.2023
+// Last updated on: 31.05.2025
+//
+// ------------------------------------------------------------------------
+// 📄 File Overview:
+//
+// This file defines the row view for a single shopping list item,
+// providing modern styling, theming, and all core interactions.
+// Each row can display an item photo, item details, and a checkmark.
+//
+// 🖌️ Modern UI Features:
+// - Theme-based design for consistent light and dark mode support
+// - Accent color highlights for checkmark and important actions
+// - Displays product image or placeholder
+// - Product photo can be tapped to open a fullscreen modal preview
+// - Strikethrough in accent color for checked items
+//
+// 🧑‍💻 Developer Notes:
+// - Designed to be used inside ListView and ShoppingListView
+// - Uses @EnvironmentObject for ListViewModel data/context
+// - Photo modal logic is handled locally in each row
+// - Fully documented for learning and maintainability
+//
+// ------------------------------------------------------------------------
 
 import SwiftUI
 
+/// Wrapper for modal photo presentation, ensures unique identity per image tap.
+struct ModalPhoto: Identifiable, Equatable {
+    let id = UUID()
+    let image: UIImage?
+}
 /// Represents a single row in the list view, displaying details of an item.
 struct ListRowView: View {
     
@@ -19,6 +39,8 @@ struct ListRowView: View {
     
     /// The item model that this row represents.
     let item: ItemModel
+    
+    @State private var modalPhoto: ModalPhoto?
     
     /// Formatter to display the price in localized currency format.
     private var priceFormatter: NumberFormatter {
@@ -44,10 +66,18 @@ struct ListRowView: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
+                    // Tap on the image opens it in fullscreen modal
+                    .onTapGesture {
+                        modalPhoto = ModalPhoto(image: uiImage)
+                    }
             } else {
                 Image("defaultImage")
                     .resizable()
                     .scaledToFit()
+                    // Even if no custom image, allow tap to present modal with placeholder
+                    .onTapGesture {
+                        modalPhoto = ModalPhoto(image: nil)
+                    }
             }
         }
         .frame(width: 50, height: 50)
@@ -100,6 +130,16 @@ struct ListRowView: View {
             .background(item.isChecked ? Color.theme.buttonFillColor : Color.theme.card)
             .opacity(item.isChecked ? 0.5 : 1)
             .cornerRadius(10)
+        }
+        // Presents the fullscreen product image modal if a product photo is set
+        .sheet(item: $modalPhoto) { modal in
+            ProductImageFullscreenView(
+                image: modal.image ?? UIImage(named: "defaultImage")!,
+                name: item.name,
+                productDescription: item.productDescription,
+                brand: item.brand
+            )
+            .presentationDetents([.fraction(0.5)])
         }
     }
 }
