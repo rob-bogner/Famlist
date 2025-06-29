@@ -139,7 +139,7 @@ struct ListRowView: View {
                 productDescription: item.productDescription,
                 brand: item.brand
             )
-            .presentationDetents([.fraction(0.5)])
+            .presentationDetents([.fraction(0.5), .medium])
         }
     }
 }

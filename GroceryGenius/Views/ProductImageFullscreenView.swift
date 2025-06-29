@@ -74,6 +74,7 @@ struct ProductImageFullscreenView: View {
                 // The main product image, fit to screen and scaled
                 Image(uiImage: displayedImage)
                     .resizable()
+                    .cornerRadius(24)
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.theme.card)
