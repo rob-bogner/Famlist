@@ -140,6 +140,7 @@ struct ListRowView: View {
                 brand: item.brand
             )
             .presentationDetents([.fraction(0.5), .medium])
+            .presentationCornerRadius(15) // Smooth rounded sheet corners
         }
     }
 }

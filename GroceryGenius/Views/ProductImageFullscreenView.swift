@@ -57,19 +57,21 @@ struct ProductImageFullscreenView: View {
             
             VStack(spacing: 12) {
                 HStack {
-                    Spacer()
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "xmark")
-                                .foregroundColor(.gray)
-                                .padding(6)
-                                .background(Circle().fill(Color(white: 0.95)))
-                        }
-                        .buttonStyle(.plain)
+                    Spacer(minLength: 0)
+                    Text("Product Image")
+                        .font(.title2)
+                        .foregroundColor(.teal)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.gray)
+                            .padding(6)
+                            .background(Circle().fill(Color(white: 0.95)))
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 12)
+                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal)
+                .padding(.top, 25)
                 Spacer()
                 // The main product image, fit to screen and scaled
                 Image(uiImage: displayedImage)
