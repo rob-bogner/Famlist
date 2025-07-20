@@ -35,7 +35,7 @@ import Foundation // Imports Foundation framework, needed for Codable and UUID f
 
 /// Represents a single item in the shopping list.
 /// Conforms to `Identifiable`, `Hashable`, and `Codable` for UI rendering, set operations, and persistence.
-struct ItemModel: Identifiable, Hashable, Codable {
+struct ItemModel: FirestoreRepresentable, Identifiable, Hashable, Codable {
     
     // MARK: - Properties
     
