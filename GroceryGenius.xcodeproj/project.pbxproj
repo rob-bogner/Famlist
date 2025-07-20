@@ -85,7 +85,6 @@
 				EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */,
 				EE7872302B1E3ED600FDD00B /* AddItemView.swift */,
 				EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */,
-				EE52222D2DBEDD0800AB84EF /* Components */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -127,6 +126,7 @@
 			isa = PBXGroup;
 			children = (
 				EE69A4E52B14CB78007C3515 /* GroceryGeniusApp.swift */,
+				EE52222D2DBEDD0800AB84EF /* Components */,
 				EE25EDBD2B40700500CA090C /* Views */,
 				EE9C2B4E2B407E83009776A0 /* ViewModels */,
 				EE25EDBC2B406FFA00CA090C /* Models */,
