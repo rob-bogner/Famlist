@@ -42,15 +42,6 @@ struct ListRowView: View {
     
     @State private var modalPhoto: ModalPhoto?
     
-    /// Formatter to display the price in localized currency format.
-    private var priceFormatter: NumberFormatter {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "EUR"
-        formatter.locale = Locale.current
-        return formatter
-    }
-    
     // MARK: - Computed Views
     
     /// Attempts to decode the item's Base64 imageData string.
@@ -58,19 +49,14 @@ struct ListRowView: View {
     /// Otherwise, displays a default placeholder image.
     private var itemImageView: some View {
         Group {
-            // Changed from item.image to item.imageData as per instructions
-            if let imageDataString = item.imageData,
-               !imageDataString.isEmpty,
-               let imageData = Data(base64Encoded: imageDataString),
-               let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
+            if let image = base64ToImage(item.imageData), item.imageData != nil, !item.imageData!.isEmpty {
+                Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
                     .roundedCorners(5)
                     .padding(10)
-                    // Tap on the image opens it in fullscreen modal
                     .onTapGesture {
-                        modalPhoto = ModalPhoto(image: uiImage)
+                        modalPhoto = ModalPhoto(image: image)
                     }
             } else {
                 Image("defaultImage")
@@ -78,7 +64,6 @@ struct ListRowView: View {
                     .scaledToFit()
                     .roundedCorners(5)
                     .padding(10)
-                    // Even if no custom image, allow tap to present modal with placeholder
                     .onTapGesture {
                         modalPhoto = ModalPhoto(image: nil)
                     }
@@ -100,10 +85,8 @@ struct ListRowView: View {
         HStack {
             Text("\(item.units) \(item.measure)")
                 .frame(alignment: .leading)
-            
             Spacer()
-            
-            Text(priceFormatter.string(from: NSNumber(value: item.price)) ?? "€ 0.00")
+            Text(formatPrice(item.price))
         }
         .font(.subheadline)
     }

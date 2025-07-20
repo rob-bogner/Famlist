@@ -65,11 +65,10 @@ struct AddItemView: View {
     
     /// The main body view layout.
     var body: some View {
-        VStack(spacing: 16) { // Vertical stack with spacing between elements
+        VStack(spacing: 16) {
             header(dismiss: { dismiss() })
             ScrollView {
-                VStack(spacing: 12) { // Inner vertical stack for inputs
-                    
+                VStack(spacing: 12) {
                     if let selectedImage = selectedImage {
                         Image(uiImage: selectedImage)
                             .resizable()
@@ -81,7 +80,6 @@ struct AddItemView: View {
                                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
                             )
                             .onTapGesture {
-                                // Optional: Bild antippen, um Bildauswahl erneut zu öffnen
                                 dismissKeyboard()
                                 isShowingSourceDialog = true
                             }
@@ -113,7 +111,6 @@ struct AddItemView: View {
                             ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
                         }
                     }
-                    
                     // Text field for entering the item name
                     TextField("Enter Item Name", text: $item)
                         .textFieldStyle(.roundedBorder) // Apply rounded border style
@@ -208,18 +205,17 @@ struct AddItemView: View {
     
     /// Adds a new item to the shopping list.
     private func addItemPressed() {
-        // Convert selected UIImage to Base64 string for storage
-        let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString() ?? ""
-        
+        // Nutze Utility-Funktion für Base64-Konvertierung
+        let imageBase64 = imageToBase64(selectedImage) ?? ""
         let newItem = ItemModel(
-            imageData: imageBase64, // Store image as Base64 string
-            name: item, // Item name from input
-            units: Int(units) ?? 1, // Convert units string to Int, default 1
-            measure: measure, // Measurement unit from input
-            price: 0.0, // Default price 0.0
-            isChecked: false // Default unchecked state
+            imageData: imageBase64,
+            name: item,
+            units: Int(units) ?? 1,
+            measure: measure,
+            price: 0.0,
+            isChecked: false
         )
-        listViewModel.addItem(newItem) // Add new item to list view model
+        listViewModel.addItem(newItem)
     }
 
     /// Decreases the number of units by 1, with a minimum of 1.
