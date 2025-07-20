@@ -44,6 +44,10 @@ class ListViewModel: ObservableObject {
     /// The Firestore listener registration to observe real-time updates.
     private var listener: ListenerRegistration? // Used to keep track of Firestore's real-time listener
 
+    /// Fehler- und Ladezustand für UI-Feedback
+    @Published var errorMessage: String? = nil
+    @Published var isLoading: Bool = false
+
     // MARK: - Initialization
 
     /// Initializes a new instance of `ListViewModel` and starts listening to Firestore changes.
@@ -122,5 +126,73 @@ class ListViewModel: ObservableObject {
     /// The list of checked (completed) items.
     var checkedItems: [ItemModel] {
         items.filter { $0.isChecked } // Return all items that are checked
+    }
+
+    // MARK: - Neue Methoden für View-Input (Business-Logik aus Views entfernen)
+
+    /// Fügt ein Item aus einfachen Eingabewerten hinzu (z.B. aus AddItemView oder Quick-Add)
+    func addItemFromInput(name: String, units: String, measure: String, image: UIImage? = nil) {
+        isLoading = true
+        let imageBase64 = imageToBase64(image)
+        let newItem = ItemModel(
+            imageData: imageBase64,
+            name: name,
+            units: Int(units) ?? 1,
+            measure: measure,
+            price: 0.0,
+            isChecked: false
+        )
+        FirestoreManager.shared.addItem(newItem) { [weak self] error in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                if let error = error {
+                    self?.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    /// Fügt ein Item aus Quick-Add-Text hinzu
+    func addQuickItem(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        addItemFromInput(name: trimmed, units: "1", measure: "")
+    }
+
+    /// Aktualisiert ein Item aus Edit-Input
+    func updateItemFromInput(
+        id: String,
+        name: String,
+        units: String,
+        measure: String,
+        price: String,
+        isChecked: Bool,
+        category: String?,
+        productDescription: String?,
+        brand: String?,
+        image: UIImage?
+    ) {
+        isLoading = true
+        let imageBase64 = imageToBase64(image)
+        let updatedItem = ItemModel(
+            id: id,
+            imageData: imageBase64,
+            name: name,
+            units: Int(units) ?? 1,
+            measure: measure,
+            price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,
+            isChecked: isChecked,
+            category: category,
+            productDescription: productDescription,
+            brand: brand
+        )
+        FirestoreManager.shared.updateItem(updatedItem) { [weak self] error in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                if let error = error {
+                    self?.errorMessage = error.localizedDescription
+                }
+            }
+        }
     }
 }

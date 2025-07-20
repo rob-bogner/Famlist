@@ -211,15 +211,14 @@ struct ShoppingListView: View {
     /// Trims whitespace, creates a new ItemModel, and passes it to the ViewModel.
     /// Resets and hides the quick-add input after adding.
     private func addQuickItem() {
-        let trimmed = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines) // Removes spaces at the start/end of the input
-        guard !trimmed.isEmpty else { return } // Exits if the field is empty
-        let newItem = ItemModel(name: trimmed) // Creates a new ItemModel using the input as name
-        listViewModel.addItem(newItem)         // Passes the new ItemModel to the ViewModel (adds it to the list)
-        quickAddText = ""                      // Clears the text field for future input
+        let trimmed = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        listViewModel.addQuickItem(trimmed)
+        quickAddText = ""
         withAnimation {
-            quickAddActive = false             // Hides the quick-add field with animation
+            quickAddActive = false
         }
-        quickAddFocused = false // Dismiss keyboard after successfully adding item
+        quickAddFocused = false
     }
 }
 

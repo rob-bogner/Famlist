@@ -257,22 +257,18 @@ struct EditItemView: View {
 
     /// Save all changes to the item and update the model
     private func saveChanges() {
-        // Nutze Utility-Funktion für Base64-Konvertierung
-        let imageBase64 = imageToBase64(selectedImage)
-        // Create the updated ItemModel
-        let updatedItem = ItemModel(
+        listViewModel.updateItemFromInput(
             id: item.id,
-            imageData: imageBase64,
             name: name,
-            units: Int(units) ?? 1,
+            units: units,
             measure: measure,
-            price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,
+            price: price,
             isChecked: isChecked,
             category: category,
             productDescription: productDescription,
-            brand: brand
+            brand: brand,
+            image: selectedImage
         )
-        listViewModel.updateItem(updatedItem) // Update in the view model (and Firestore)
     }
 
     /// Helper to dismiss the keyboard
