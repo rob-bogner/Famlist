@@ -30,6 +30,7 @@
 		EEFA09E52E2CE7A200B2F2B0 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		EEFA09EB2E2CED5000B2F2B0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */; };
 		EEFA09ED2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09EC2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift */; };
+		EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +54,7 @@
 		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		EEFA09EC2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreRepresentable.swift; sourceTree = "<group>"; };
+		EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModalView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -98,6 +100,7 @@
 		EE52222D2DBEDD0800AB84EF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */,
 				EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */,
 				EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */,
 				EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */,
@@ -248,6 +251,7 @@
 				EEFA09ED2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
 				EEFA09E52E2CE7A200B2F2B0 /* (null) in Sources */,
+				EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */,
 				EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */,
 				EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */,
 				EE69A4E82B14CB78007C3515 /* ShoppingListView.swift in Sources */,

@@ -65,109 +65,122 @@ struct AddItemView: View {
     
     /// The main body view layout.
     var body: some View {
-        VStack(spacing: 16) {
-            header(dismiss: { dismiss() })
-            ScrollView {
-                VStack(spacing: 12) {
-                    if let selectedImage = selectedImage {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .roundedCorners(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                            )
-                            .onTapGesture {
+        CustomModalView(title: "Add new Item", onClose: { dismiss() }) {
+            VStack(spacing: 16) {
+                ScrollView {
+                    VStack(spacing: 12) {
+                        if let selectedImage = selectedImage {
+                            Image(uiImage: selectedImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .roundedCorners(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                                )
+                                .onTapGesture {
+                                    dismissKeyboard()
+                                    isShowingSourceDialog = true
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else {
+                            Button(action: {
                                 dismissKeyboard()
                                 isShowingSourceDialog = true
+                            }) {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "camera.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 32, height: 32)
+                                        .foregroundColor(.gray)
+                                    Text("Add Photo")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(width: 100, height: 100)
+                                .roundedCorners(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                                )
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        Button(action: {
-                            dismissKeyboard()
-                            isShowingSourceDialog = true
-                        }) {
-                            VStack(spacing: 8) {
-                                Image(systemName: "camera.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 32, height: 32)
-                                    .foregroundColor(.gray)
-                                Text("Add Photo")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
+                            .sheet(isPresented: $isShowingImagePicker) {
+                                ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
                             }
-                            .frame(width: 100, height: 100)
-                            .roundedCorners(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                            )
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .sheet(isPresented: $isShowingImagePicker) {
-                            ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
-                        }
-                    }
-                    // Text field for entering the item name
-                    TextField("Enter Item Name", text: $item)
-                        .textFieldStyle(.roundedBorder) // Apply rounded border style
-                        .lineLimit(1) // Limit input to one line
-                        .focused($isItemFieldFocused) // Bind focus state to this text field
-
-                    HStack { // Horizontal stack for units, measure, and buttons
-                        
-                        // Text field for number of units
-                        TextField("Units", text: $units)
-                            .keyboardType(.numberPad) // Use number pad keyboard
-                            .frame(width: 70) // Fixed width for units input
-                            .multilineTextAlignment(.leading) // Align text to leading edge
-                            .textFieldStyle(.roundedBorder) // Rounded border style
+                        // Text field for entering the item name
+                        TextField("Enter Item Name", text: $item)
+                            .textFieldStyle(.roundedBorder) // Apply rounded border style
                             .lineLimit(1) // Limit input to one line
+                            .focused($isItemFieldFocused) // Bind focus state to this text field
 
-                        // Text field for measurement unit
-                        TextField("Measure", text: $measure)
-                            .multilineTextAlignment(.leading) // Align text to leading edge
-                            .textFieldStyle(.roundedBorder) // Rounded border style
-                            .lineLimit(1) // Limit input to one line
+                        HStack { // Horizontal stack for units, measure, and buttons
+                            
+                            // Text field for number of units
+                            TextField("Units", text: $units)
+                                .keyboardType(.numberPad) // Use number pad keyboard
+                                .frame(width: 70) // Fixed width for units input
+                                .multilineTextAlignment(.leading) // Align text to leading edge
+                                .textFieldStyle(.roundedBorder) // Rounded border style
+                                .lineLimit(1) // Limit input to one line
 
-                        Spacer() // Push buttons to the right
+                            // Text field for measurement unit
+                            TextField("Measure", text: $measure)
+                                .multilineTextAlignment(.leading) // Align text to leading edge
+                                .textFieldStyle(.roundedBorder) // Rounded border style
+                                .lineLimit(1) // Limit input to one line
 
-                        // Buttons to increment and decrement units
-                        HStack(spacing: 10) {
-                            Button(action: decrementUnits) { // Decrement units action
-                                Image(systemName: "minus.circle") // Minus icon
-                                    .font(.title) // Title font size
-                                    .foregroundColor(Color.accentColor) // Accent color
-                            }
+                            Spacer() // Push buttons to the right
 
-                            Button(action: incrementUnits) { // Increment units action
-                                Image(systemName: "plus.circle") // Plus icon
-                                    .font(.title) // Title font size
-                                    .foregroundColor(Color.accentColor) // Accent color
+                            // Buttons to increment and decrement units
+                            HStack(spacing: 10) {
+                                Button(action: decrementUnits) { // Decrement units action
+                                    Image(systemName: "minus.circle") // Minus icon
+                                        .font(.title) // Title font size
+                                        .foregroundColor(Color.accentColor) // Accent color
+                                }
+
+                                Button(action: incrementUnits) { // Increment units action
+                                    Image(systemName: "plus.circle") // Plus icon
+                                        .font(.title) // Title font size
+                                        .foregroundColor(Color.accentColor) // Accent color
+                                }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading) // Align HStack leading with max width
+
+
+                        Spacer() // Restore natural spacing and push button down
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading) // Align HStack leading with max width
-
-
-                    Spacer() // Restore natural spacing and push button down
-
-                    addItemButton // Add item button view
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.vertical, 25)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading) // Align inner VStack leading with max width
+                Spacer(minLength: 0)
+                Button(action: {
+                    addItemPressed()
+                    dismiss()
+                }, label: {
+                    Text("Add Item to List")
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue.roundedCorners(10))
+                        .foregroundColor(.white)
+                        .font(.headline)
+                })
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .padding(.horizontal) // Apply horizontal padding
-        .padding(.vertical, 25) // Apply vertical padding of 25 points
-        .frame(maxWidth: .infinity, alignment: .leading) // Align main VStack leading with max width
-        .frame(maxHeight: .infinity, alignment: .top) // Align main VStack top with max height
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            isItemFieldFocused = true // Automatically focus item name field on appear
+            isItemFieldFocused = true
         }
-        .presentationDetents([.height(500)]) // Fix sheet height to avoid layout compression when image picker is active
+        .presentationDetents([.height(500)])
         .confirmationDialog("Bild auswählen", isPresented: $isShowingSourceDialog, titleVisibility: .visible) {
             Button("Foto aufnehmen") {
                 imagePickerSourceType = .camera
@@ -239,26 +252,6 @@ struct AddItemView: View {
     /// Programmatically dismisses the keyboard.
     private func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    /// Header view with centered title and close button. Dismiss-Closure wird weitergereicht.
-    private func header(dismiss: @escaping () -> Void) -> some View {
-        HStack {
-            Spacer(minLength: 0)
-            Text("Add new Item")
-                .font(.title2)
-                .foregroundColor(.teal)
-                .frame(maxWidth: .infinity, alignment: .center)
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark")
-                    .foregroundColor(.gray)
-                    .padding(6)
-                    .background(Circle().fill(Color(white: 0.95)))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal)
-        .padding(.top, 4)
     }
 }
 

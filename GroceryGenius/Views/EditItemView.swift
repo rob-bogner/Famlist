@@ -73,183 +73,183 @@ struct EditItemView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 16) { // Vertical stack for all content, spacing between fields
-            header(dismiss: { dismiss() }) // Header with title and close button
+        CustomModalView(title: "Edit Item", onClose: { dismiss() }) {
+            VStack(spacing: 16) {
+                ScrollView {
+                    VStack(spacing: 12) { // Stack for all editable fields
 
-            ScrollView { // Allows view to scroll if keyboard is open or content is long
-                VStack(spacing: 12) { // Stack for all editable fields
-
-                    // --- Image Preview & Picker ---
-                    if let selectedImage = selectedImage {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .roundedCorners(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                            )
-                            .onTapGesture {
-                                // Tapping the image lets the user pick a new one
+                        // --- Image Preview & Picker ---
+                        if let selectedImage = selectedImage {
+                            Image(uiImage: selectedImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .roundedCorners(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                                )
+                                .onTapGesture {
+                                    // Tapping the image lets the user pick a new one
+                                    dismissKeyboard()
+                                    isShowingSourceDialog = true
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else {
+                            Button(action: {
                                 dismissKeyboard()
                                 isShowingSourceDialog = true
+                            }) {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "camera.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 32, height: 32)
+                                        .foregroundColor(.gray)
+                                    Text("Add Photo")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(width: 100, height: 100)
+                                .roundedCorners(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                                )
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                    } else {
-                        Button(action: {
-                            dismissKeyboard()
-                            isShowingSourceDialog = true
-                        }) {
-                            VStack(spacing: 8) {
-                                Image(systemName: "camera.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 32, height: 32)
-                                    .foregroundColor(.gray)
-                                Text("Add Photo")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
+                            .sheet(isPresented: $isShowingImagePicker) {
+                                ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
                             }
-                            .frame(width: 100, height: 100)
-                            .roundedCorners(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                            )
+                        }
+
+                        // --- Editable Fields ---
+                        // Name
+                        TextField("Name", text: $name)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
+                            .focused($isNameFieldFocused)
+
+                        // Brand
+                        TextField("Brand", text: $brand)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
+
+                        // Product Description
+                        TextField("Product Description", text: $productDescription)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
+
+                        // Category
+                        TextField("Category", text: $category)
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
+
+                        // --- Units, Measure, and Increment/Decrement Buttons (like AddItemView) ---
+                        HStack {
+                            // Text field for number of units
+                            TextField("Units", text: $units)
+                                .keyboardType(.numberPad)
+                                .frame(width: 70)
+                                .multilineTextAlignment(.leading)
+                                .textFieldStyle(.roundedBorder)
+                                .lineLimit(1)
+
+                            // Text field for measurement unit (e.g., "kg", "L")
+                            TextField("Measure", text: $measure)
+                                .multilineTextAlignment(.leading)
+                                .textFieldStyle(.roundedBorder)
+                                .lineLimit(1)
+
+                            Spacer()
+
+                            // Increment/Decrement Buttons
+                            HStack(spacing: 10) {
+                                Button(action: decrementUnits) {
+                                    Image(systemName: "minus.circle")
+                                        .font(.title)
+                                        .foregroundColor(Color.accentColor)
+                                }
+                                Button(action: incrementUnits) {
+                                    Image(systemName: "plus.circle")
+                                        .font(.title)
+                                        .foregroundColor(Color.accentColor)
+                                }
+                            }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .sheet(isPresented: $isShowingImagePicker) {
-                            ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
-                        }
-                    }
 
-                    // --- Editable Fields ---
-                    // Name
-                    TextField("Name", text: $name)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
-                        .focused($isNameFieldFocused)
-
-                    // Brand
-                    TextField("Brand", text: $brand)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
-
-                    // Product Description
-                    TextField("Product Description", text: $productDescription)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
-
-                    // Category
-                    TextField("Category", text: $category)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
-
-                    // --- Units, Measure, and Increment/Decrement Buttons (like AddItemView) ---
-                    HStack {
-                        // Text field for number of units
-                        TextField("Units", text: $units)
-                            .keyboardType(.numberPad)
-                            .frame(width: 70)
-                            .multilineTextAlignment(.leading)
-                            .textFieldStyle(.roundedBorder)
-                            .lineLimit(1)
-
-                        // Text field for measurement unit (e.g., "kg", "L")
-                        TextField("Measure", text: $measure)
-                            .multilineTextAlignment(.leading)
-                            .textFieldStyle(.roundedBorder)
-                            .lineLimit(1)
-
-                        Spacer()
-
-                        // Increment/Decrement Buttons
-                        HStack(spacing: 10) {
-                            Button(action: decrementUnits) {
-                                Image(systemName: "minus.circle")
-                                    .font(.title)
-                                    .foregroundColor(Color.accentColor)
-                            }
-                            Button(action: incrementUnits) {
-                                Image(systemName: "plus.circle")
-                                    .font(.title)
-                                    .foregroundColor(Color.accentColor)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    // Price
-                    TextField(
-                        "Price",
-                        value: Binding(
-                            get: {
-                                Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
+                        // Price
+                        TextField(
+                            "Price",
+                            value: Binding(
+                                get: {
+                                    Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
                             },
                             set: {
                                 price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
                             }
                         ),
                         formatter: priceFormatter
-                    )
-                    .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(1)
+                        )
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
 
-            // --- Save Button ---
-            Button(action: {
-                saveChanges() // Save all edited fields to the item
-                dismiss() // Close the sheet
-            }, label: {
-                Text("Save")
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue.roundedCorners(10))
-                    .foregroundColor(.white)
-                    .font(.headline)
-            })
-            .padding(.top, 8)
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 25)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(maxHeight: .infinity, alignment: .top)
-        .onAppear {
-            // Initialize all fields from the current item
-            name = item.name
-            brand = item.brand ?? ""
-            productDescription = item.productDescription ?? ""
-            category = item.category ?? ""
-            units = String(item.units)
-            measure = item.measure
-            price = String(item.price)
-            isChecked = item.isChecked
+                // --- Save Button ---
+                Button(action: {
+                    saveChanges() // Save all edited fields to the item
+                    dismiss() // Close the sheet
+                }, label: {
+                    Text("Save")
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue.roundedCorners(10))
+                        .foregroundColor(.white)
+                        .font(.headline)
+                })
+                .padding(.top, 8)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 25)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .onAppear {
+                // Initialize all fields from the current item
+                name = item.name
+                brand = item.brand ?? ""
+                productDescription = item.productDescription ?? ""
+                category = item.category ?? ""
+                units = String(item.units)
+                measure = item.measure
+                price = String(item.price)
+                isChecked = item.isChecked
 
-            // Load image from base64 string if available
-            if let imageDataString = item.imageData,
-               let imageData = Data(base64Encoded: imageDataString),
-               let uiImage = UIImage(data: imageData) {
-                selectedImage = uiImage
-            } else {
-                selectedImage = nil
-            }
+                // Load image from base64 string if available
+                if let imageDataString = item.imageData,
+                   let imageData = Data(base64Encoded: imageDataString),
+                   let uiImage = UIImage(data: imageData) {
+                    selectedImage = uiImage
+                } else {
+                    selectedImage = nil
+                }
 
-        }
-        .presentationDetents([.height(570)]) // Height similar to AddItemView
-        .confirmationDialog("Select Photo Source", isPresented: $isShowingSourceDialog, titleVisibility: .visible) {
-            Button("Take Photo") {
-                imagePickerSourceType = .camera
-                isShowingImagePicker = true
             }
-            Button("Choose from Gallery") {
-                imagePickerSourceType = .photoLibrary
-                isShowingImagePicker = true
+            .presentationDetents([.height(570)]) // Height similar to AddItemView
+            .confirmationDialog("Select Photo Source", isPresented: $isShowingSourceDialog, titleVisibility: .visible) {
+                Button("Take Photo") {
+                    imagePickerSourceType = .camera
+                    isShowingImagePicker = true
+                }
+                Button("Choose from Gallery") {
+                    imagePickerSourceType = .photoLibrary
+                    isShowingImagePicker = true
+                }
+                Button("Cancel", role: .cancel) {}
             }
-            Button("Cancel", role: .cancel) {}
         }
     }
 
@@ -257,18 +257,22 @@ struct EditItemView: View {
 
     /// Save all changes to the item and update the model
     private func saveChanges() {
-        listViewModel.updateItemFromInput(
+        // Convert selected image to base64 string, if available
+        let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+        // Create the updated ItemModel
+        let updatedItem = ItemModel(
             id: item.id,
+            imageData: imageBase64,
             name: name,
-            units: units,
+            units: Int(units) ?? 1,
             measure: measure,
-            price: price,
+            price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,
             isChecked: isChecked,
             category: category,
             productDescription: productDescription,
-            brand: brand,
-            image: selectedImage
+            brand: brand
         )
+        listViewModel.updateItem(updatedItem) // Update in the view model (and Firestore)
     }
 
     /// Helper to dismiss the keyboard

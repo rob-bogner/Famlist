@@ -51,27 +51,8 @@ struct ProductImageFullscreenView: View {
     }
 
     var body: some View {
-        ZStack {
-            Color.theme.card
-                .ignoresSafeArea()
-            
+        CustomModalView(title: "Product Image", onClose: { dismiss() }) {
             VStack(spacing: 12) {
-                HStack {
-                    Spacer(minLength: 0)
-                    Text("Product Image")
-                        .font(.title2)
-                        .foregroundColor(.teal)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "xmark")
-                            .foregroundColor(.gray)
-                            .padding(6)
-                            .background(Circle().fill(Color(white: 0.95)))
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal)
-                .padding(.top, 25)
                 Spacer()
                 // The main product image, fit to screen and scaled
                 Image(uiImage: displayedImage)
@@ -99,11 +80,11 @@ struct ProductImageFullscreenView: View {
                 }
                 .padding(.bottom, 32)
             }
-        }
-        // Also allow tap anywhere to dismiss
-        .contentShape(Rectangle())
-        .onTapGesture {
-            dismiss()
+            .background(Color.theme.card.ignoresSafeArea())
+            .contentShape(Rectangle())
+            .onTapGesture {
+                dismiss()
+            }
         }
     }
 }
