@@ -78,11 +78,9 @@
 			isa = PBXGroup;
 			children = (
 				EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */,
-				EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */,
 				EE69A4E72B14CB78007C3515 /* ShoppingListView.swift */,
 				EEF472FB2B4C5A4100330CE5 /* ListView.swift */,
 				EE69A4FD2B14F046007C3515 /* ListRowView.swift */,
-				EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */,
 				EE7872302B1E3ED600FDD00B /* AddItemView.swift */,
 				EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */,
 			);
@@ -93,6 +91,8 @@
 			isa = PBXGroup;
 			children = (
 				EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */,
+				EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */,
+				EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
