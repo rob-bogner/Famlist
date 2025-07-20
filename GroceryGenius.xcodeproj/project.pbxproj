@@ -27,6 +27,7 @@
 		EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FB2B4C5A4100330CE5 /* ListView.swift */; };
 		EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */; };
 		EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */; };
+		EEFA09E52E2CE7A200B2F2B0 /* FirestoreRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09E42E2CE7A200B2F2B0 /* FirestoreRepresentable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		EEF472FB2B4C5A4100330CE5 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListProgressView.swift; sourceTree = "<group>"; };
 		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
+		EEFA09E42E2CE7A200B2F2B0 /* FirestoreRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreRepresentable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -71,6 +73,7 @@
 		EE25EDBC2B406FFA00CA090C /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				EEFA09E42E2CE7A200B2F2B0 /* FirestoreRepresentable.swift */,
 				EE69A4F72B14CC96007C3515 /* ItemModel.swift */,
 			);
 			path = Models;
@@ -239,6 +242,7 @@
 				EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
+				EEFA09E52E2CE7A200B2F2B0 /* FirestoreRepresentable.swift in Sources */,
 				EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */,
 				EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */,
 				EE69A4E82B14CB78007C3515 /* ShoppingListView.swift in Sources */,
