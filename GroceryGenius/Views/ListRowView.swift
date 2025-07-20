@@ -66,6 +66,8 @@ struct ListRowView: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
+                    .roundedCorners(5)
+                    .padding(10)
                     // Tap on the image opens it in fullscreen modal
                     .onTapGesture {
                         modalPhoto = ModalPhoto(image: uiImage)
@@ -74,6 +76,8 @@ struct ListRowView: View {
                 Image("defaultImage")
                     .resizable()
                     .scaledToFit()
+                    .roundedCorners(5)
+                    .padding(10)
                     // Even if no custom image, allow tap to present modal with placeholder
                     .onTapGesture {
                         modalPhoto = ModalPhoto(image: nil)
@@ -81,8 +85,6 @@ struct ListRowView: View {
             }
         }
         .frame(width: 50, height: 50)
-        .cornerRadius(5)
-        .padding(10)
     }
     
     /// View for displaying the name of the item, with strikethrough if checked.
@@ -129,7 +131,7 @@ struct ListRowView: View {
             }
             .background(item.isChecked ? Color.theme.buttonFillColor : Color.theme.card)
             .opacity(item.isChecked ? 0.5 : 1)
-            .cornerRadius(10)
+            .roundedCorners(10)
         }
         // Presents the fullscreen product image modal if a product photo is set
         .sheet(item: $modalPhoto) { modal in

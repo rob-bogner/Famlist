@@ -85,7 +85,7 @@ struct EditItemView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 100, height: 100)
-                            .cornerRadius(8)
+                            .roundedCorners(8)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
@@ -112,6 +112,7 @@ struct EditItemView: View {
                                     .foregroundColor(.gray)
                             }
                             .frame(width: 100, height: 100)
+                            .roundedCorners(8)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
@@ -207,7 +208,7 @@ struct EditItemView: View {
                 Text("Save")
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color.blue.cornerRadius(10))
+                    .background(Color.blue.roundedCorners(10))
                     .foregroundColor(.white)
                     .font(.headline)
             })
@@ -336,4 +337,3 @@ struct EditItemView: View {
     ))
     .environmentObject(ListViewModel())
 }
-

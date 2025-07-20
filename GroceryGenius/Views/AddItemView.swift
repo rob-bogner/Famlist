@@ -75,7 +75,7 @@ struct AddItemView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 100, height: 100)
-                            .cornerRadius(8)
+                            .roundedCorners(8)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
@@ -102,6 +102,7 @@ struct AddItemView: View {
                                     .foregroundColor(.gray)
                             }
                             .frame(width: 100, height: 100)
+                            .roundedCorners(8)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
@@ -194,9 +195,9 @@ struct AddItemView: View {
             Text("Add Item to List") // Button label
                 .padding() // Add padding inside button
                 .frame(maxWidth: .infinity) // Make button take full width
-                .background( // Background color with corner radius
+                .background(
                     Color.blue
-                        .cornerRadius(10)
+                        .roundedCorners(10)
                 )
                 .foregroundColor(.white) // Set text color to white
                 .font(.headline) // Use headline font style
