@@ -27,10 +27,23 @@
 import SwiftUI // Imports the SwiftUI framework for building the user interface
 import FirebaseCore // Imports FirebaseCore to initialize Firebase services
 
+// MARK: - Orientation Lock Helper
+
+/// Hilfsklasse für die Orientierungssperre
+class AppDelegate: NSObject, UIApplicationDelegate {
+    static var orientationLock = UIInterfaceOrientationMask.portrait
+    
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        return AppDelegate.orientationLock
+    }
+}
+
 /// The main application structure for Grocery Genius.
 /// Defines the initial configuration and view hierarchy of the app.
 @main // Marks this structure as the entry point of the app.
 struct GroceryGeniusApp: App {
+    // MARK: - App Delegate Registration
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     // MARK: - Initializer
 
@@ -38,6 +51,20 @@ struct GroceryGeniusApp: App {
     /// Here, we configure Firebase before any views are displayed.
     init() {
         FirebaseApp.configure() // Initializes Firebase services for the app
+        
+        // Einschränkung auf Portrait-Modus (nur vertikale Ausrichtung)
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        
+        // Unterstützte Ausrichtungen auf nur Portrait-Modus begrenzen
+        if #available(iOS 16.0, *) {
+            // iOS 16 und neuer
+            UIApplication.shared.connectedScenes.forEach { scene in
+                if let windowScene = scene as? UIWindowScene {
+                    windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
+                    windowScene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+                }
+            }
+        }
     }
 
     // MARK: - Body
@@ -56,4 +83,5 @@ struct GroceryGeniusApp: App {
 // Important Notes:
 // - Without `FirebaseApp.configure()`, Firestore and Firebase Authentication won't work.
 // - Using `.environmentObject()` allows child views to access ListViewModel without direct injection.
+// - The app is now locked to portrait orientation only.
 // ------------------------------------------------------------------------

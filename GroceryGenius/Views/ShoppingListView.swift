@@ -64,7 +64,7 @@ struct ShoppingListView: View {
                 VStack(alignment: .leading, spacing: 12) { // Changed VStack alignment to leading and added spacing 12 for header layout
                     Text("Shopping List")
                         .font(.largeTitle.bold())
-                        .foregroundColor(Color.theme.textColor)
+                        .foregroundColor(Color.theme.background)
                         .padding(.top, 30) // Changed from 48 to 30 for less top padding (adjusted as requested)
                         .padding(.leading, 18) // Changed from 24 to 18 for left alignment consistency (adjusted as requested)
 

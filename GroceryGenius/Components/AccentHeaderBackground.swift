@@ -22,7 +22,7 @@ struct AccentHeaderBackground: View {
         GeometryReader { geometry in
             ZStack {
                 // Main accent background with rounded bottom corners.
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(Color.theme.accent)
                     .frame(
                         width: geometry.size.width,
@@ -48,17 +48,31 @@ struct AccentDecorations: View {
         ZStack {
             // Example: angled accent line (top left)
             RoundedRectangle(cornerRadius: 24)
-                .stroke(Color.white.opacity(0.18), lineWidth: 3)
-                .frame(width: width * 0.5, height: 40)
+                .stroke(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.37), Color.pink.opacity(0.37)]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 3
+                )
+                .frame(width: width * 0.5, height: 150)
                 .rotationEffect(.degrees(-15))
-                .offset(x: -width * 0.15, y: 16)
+                .offset(x: -width * 0.15, y: 1)
             
             // Example: accent curve (top right)
             RoundedRectangle(cornerRadius: 30)
-                .stroke(Color.white.opacity(0.15), lineWidth: 2)
-                .frame(width: width * 0.34, height: 36)
-                .rotationEffect(.degrees(10))
-                .offset(x: width * 0.23, y: 40)
+                .stroke(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.purple.opacity(0.6), Color.pink.opacity(0.5)]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 2
+                )
+                .frame(width: width * 0.54, height: 112)
+                .rotationEffect(.degrees(-15))
+                .offset(x: width * 0.2, y: 20)
         }
     }
 }

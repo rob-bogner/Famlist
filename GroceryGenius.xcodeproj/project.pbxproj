@@ -23,6 +23,8 @@
 		EE69A4FE2B14F046007C3515 /* ListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4FD2B14F046007C3515 /* ListRowView.swift */; };
 		EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7872302B1E3ED600FDD00B /* AddItemView.swift */; };
 		EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */; };
+		EE873CE62E3FA20100F3FF82 /* SVGKit in Frameworks */ = {isa = PBXBuildFile; productRef = EE873CE52E3FA20100F3FF82 /* SVGKit */; };
+		EE873CE82E3FA20100F3FF82 /* SVGKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EE873CE72E3FA20100F3FF82 /* SVGKitSwift */; };
 		EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */; };
 		EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FB2B4C5A4100330CE5 /* ListView.swift */; };
 		EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */; };
@@ -68,6 +70,8 @@
 			files = (
 				EE2BAC4C2DBA3D800082D950 /* FirebaseFirestoreCombine-Community in Frameworks */,
 				EE2BAC402DB917D50082D950 /* FirebaseFirestore in Frameworks */,
+				EE873CE82E3FA20100F3FF82 /* SVGKitSwift in Frameworks */,
+				EE873CE62E3FA20100F3FF82 /* SVGKit in Frameworks */,
 				EE2BAC4A2DBA3D800082D950 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -216,6 +220,7 @@
 			mainGroup = EE69A4D92B14CB78007C3515;
 			packageReferences = (
 				EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */,
 			);
 			productRefGroup = EE69A4E32B14CB78007C3515 /* Products */;
 			projectDirPath = "";
@@ -483,6 +488,14 @@
 				minimumVersion = 11.12.0;
 			};
 		};
+		EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SVGKit/SVGKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -500,6 +513,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = "FirebaseFirestoreCombine-Community";
+		};
+		EE873CE52E3FA20100F3FF82 /* SVGKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */;
+			productName = SVGKit;
+		};
+		EE873CE72E3FA20100F3FF82 /* SVGKitSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */;
+			productName = SVGKitSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
