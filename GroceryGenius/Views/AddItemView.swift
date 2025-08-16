@@ -105,7 +105,7 @@ struct AddItemView: View {
                     dismiss()
                 }
                 .disabled(!formValid)
-                .padding(.horizontal, 24)
+                .padding(.horizontal) // angeglichen an Textfelder
                 .padding(.bottom, 16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

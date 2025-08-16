@@ -1,4 +1,3 @@
-
 // MARK: - Reusable UI Components & Utilities
 
 /// Primary action button used across the app
@@ -6,10 +5,15 @@ struct PrimaryButton: View {
     let title: String
     let action: () -> Void
     var body: some View {
-        Button(title, action: action)
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .frame(maxWidth: .infinity)
+        Button(action: action) {
+            Text(title)
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8) // doppelte Höhe (vorher 4)
+        }
+        .buttonStyle(.borderedProminent) // Systemstil beibehalten
+        // .controlSize(.small) entfernt, eigene Höhe über Padding
+        .frame(maxWidth: .infinity)
     }
 }
 
