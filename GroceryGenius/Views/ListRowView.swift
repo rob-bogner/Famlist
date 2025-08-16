@@ -32,6 +32,53 @@ struct ModalPhoto: Identifiable, Equatable {
     let id = UUID()
     let image: UIImage?
 }
+
+struct ItemThumbnail: View {
+    let base64: String?
+    let onTap: (UIImage?) -> Void
+    var body: some View {
+        let image: UIImage? = {
+            if let b = base64, let data = Data(base64Encoded: b) { return UIImage(data: data) }
+            return nil
+        }()
+        Group {
+            if let image = image {
+                Image(uiImage: image).resizable().scaledToFit()
+            } else {
+                Image("defaultImage").resizable().scaledToFit()
+            }
+        }
+        .roundedCorners(5)
+        .padding(10)
+        .frame(width: 50, height: 50)
+        .onTapGesture { onTap(image) }
+    }
+}
+
+struct ItemTitle: View {
+    let text: String
+    let checked: Bool
+    var body: some View {
+        Text(text)
+            .font(.headline)
+            .strikethrough(checked, color: checked ? Color.theme.buttonIconColor : .clear)
+            .frame(alignment: .leading)
+    }
+}
+
+struct ItemMeta: View {
+    let units: Int
+    let measure: String
+    let price: Double
+    var body: some View {
+        HStack {
+            Text("\(units) \(measure)")
+            Spacer()
+            Text(Formatting.priceText(price))
+        }
+        .font(.subheadline)
+    }
+}
 /// Represents a single row in the list view, displaying details of an item.
 struct ListRowView: View {
     
@@ -44,52 +91,6 @@ struct ListRowView: View {
     
     // MARK: - Computed Views
     
-    /// Attempts to decode the item's Base64 imageData string.
-    /// If successful, displays the decoded image.
-    /// Otherwise, displays a default placeholder image.
-    private var itemImageView: some View {
-        Group {
-            if let image = base64ToImage(item.imageData), item.imageData != nil, !item.imageData!.isEmpty {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .roundedCorners(5)
-                    .padding(10)
-                    .onTapGesture {
-                        modalPhoto = ModalPhoto(image: image)
-                    }
-            } else {
-                Image("defaultImage")
-                    .resizable()
-                    .scaledToFit()
-                    .roundedCorners(5)
-                    .padding(10)
-                    .onTapGesture {
-                        modalPhoto = ModalPhoto(image: nil)
-                    }
-            }
-        }
-        .frame(width: 50, height: 50)
-    }
-    
-    /// View for displaying the name of the item, with strikethrough if checked.
-    private var itemNameView: some View {
-        Text(item.name)
-            .font(.headline)
-            .strikethrough(item.isChecked, color: item.isChecked ? Color.theme.buttonIconColor : .none)
-            .frame(alignment: .leading)
-    }
-    
-    /// View for displaying additional details like units and price of the item.
-    private var itemDetailsView: some View {
-        HStack {
-            Text("\(item.units) \(item.measure)")
-                .frame(alignment: .leading)
-            Spacer()
-            Text(formatPrice(item.price))
-        }
-        .font(.subheadline)
-    }
     
     // MARK: - Body
     
@@ -98,23 +99,23 @@ struct ListRowView: View {
         ZStack {
             Color.theme.background
                 .ignoresSafeArea()
-            
+
             HStack(alignment: .top) {
-                itemImageView
-                
+                ItemThumbnail(base64: item.imageData) { tapped in
+                    modalPhoto = ModalPhoto(image: tapped)
+                }
+
                 VStack(alignment: .leading) {
-                    itemNameView
-                    
+                    ItemTitle(text: item.name, checked: item.isChecked)
                     Spacer()
-                    
-                    itemDetailsView
+                    ItemMeta(units: item.units, measure: item.measure, price: item.price)
                 }
                 .padding(.trailing, 7)
                 .padding(.vertical, 7)
             }
-            .background(item.isChecked ? Color.theme.buttonFillColor : Color.theme.card)
+            .background(item.isChecked ? Color.theme.buttonFillColor : Color.clear)
+            .cardStyle()
             .opacity(item.isChecked ? 0.5 : 1)
-            .roundedCorners(10)
         }
         // Presents the fullscreen product image modal if a product photo is set
         .sheet(item: $modalPhoto) { modal in

@@ -101,7 +101,7 @@ struct ListView: View {
     private var checkedItemsSection: some View {
         Group {
             if listViewModel.checkedItemCount > 0 { // Only show if there are checked items
-                Section(header: Text("Checked Items")) { // Section header for checked items
+                Section(header: SectionHeader(title: "Checked Items")) {
                     ForEach(listViewModel.checkedItems) { item in // Loop over checked items
                         ListRowView(item: item) // Shows each checked item row
                             .listRowSeparator(.hidden) // Hide separator

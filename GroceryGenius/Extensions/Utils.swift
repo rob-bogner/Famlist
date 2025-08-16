@@ -13,11 +13,7 @@ import UIKit
 
 /// Formatiert einen Double-Wert als Euro-Währung (z.B. 1.99 -> "€ 1,99")
 func formatPrice(_ price: Double) -> String {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .currency
-    formatter.currencyCode = "EUR"
-    formatter.locale = Locale.current
-    return formatter.string(from: NSNumber(value: price)) ?? "€ 0,00"
+    return Formatting.priceText(price)
 }
 
 /// Konvertiert ein UIImage zu einem Base64-String

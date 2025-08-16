@@ -127,6 +127,13 @@ struct ShoppingListView: View {
     
     /// Displays the progress of the shopping list.
     private var shoppingListProgressView: some View {
+        // The ShoppingListProgressView is a custom SwiftUI view that displays
+        // the progress of your shopping list as a progress bar.
+        // It is designed specifically for this app, so it's not a built-in SwiftUI component.
+        // We need to provide it with the current listViewModel so it knows
+        // about the shopping items and their completion status.
+        // By passing the listViewModel as a parameter, the progress view can
+        // access the data it needs to calculate and display the list's progress.
         ShoppingListProgressView(listViewModel: listViewModel)
     }
     

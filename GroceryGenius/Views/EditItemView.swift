@@ -200,17 +200,10 @@ struct EditItemView: View {
                 }
 
                 // --- Save Button ---
-                Button(action: {
-                    saveChanges() // Save all edited fields to the item
-                    dismiss() // Close the sheet
-                }, label: {
-                    Text("Save")
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue.roundedCorners(10))
-                        .foregroundColor(.white)
-                        .font(.headline)
-                })
+                PrimaryButton(title: "Save") {
+                    saveChanges()
+                    dismiss()
+                }
                 .padding(.top, 8)
             }
             .padding(.horizontal)

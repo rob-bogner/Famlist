@@ -198,20 +198,10 @@ struct AddItemView: View {
     
     /// Button to add the item to the list.
     private var addItemButton: some View {
-        Button(action: {
-            addItemPressed() // Call function to add item
-            dismiss() // Dismiss the current view after adding
-        }, label: {
-            Text("Add Item to List") // Button label
-                .padding() // Add padding inside button
-                .frame(maxWidth: .infinity) // Make button take full width
-                .background(
-                    Color.blue
-                        .roundedCorners(10)
-                )
-                .foregroundColor(.white) // Set text color to white
-                .font(.headline) // Use headline font style
-        })
+        PrimaryButton(title: "Add Item to List") {
+            addItemPressed()
+            dismiss()
+        }
     }
     
     // MARK: - Functions
