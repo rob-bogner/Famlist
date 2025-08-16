@@ -47,6 +47,9 @@ struct ShoppingListView: View {
     /// Focus state for the quick-add input, triggers keyboard appearance.
     @FocusState private var quickAddFocused: Bool
     
+    private var headerHeight: CGFloat { UIScreen.main.bounds.height * DS.Layout.headerHeightRatio }
+    private var contentOffsetBelowHeader: CGFloat { headerHeight * 0.75 } // früher 0.18 * screenHeight
+    
     // MARK: - Body
     
     /// The main layout and behavior of the ShoppingListView.
@@ -57,7 +60,7 @@ struct ShoppingListView: View {
                 Color.theme.background.ignoresSafeArea()
                 // Decorative header background with accent color and rounded bottom corners
                 AccentHeaderBackground()
-                    .frame(height: UIScreen.main.bounds.height * 0.24) // Changed header height from 0.29 to 0.27 for better layout spacing
+                    .frame(height: headerHeight)
                     .zIndex(0) // Always at the back of the ZStack
                 
                 // Header content (navigation title and progress bar) overlays the accent header
@@ -73,13 +76,13 @@ struct ShoppingListView: View {
 
                     Spacer().frame(height: 4) // Much smaller space below progress bar (explicit 4pt)
                 }
-                .frame(height: UIScreen.main.bounds.height * 0.24, alignment: .top) // Changed header height from 0.29 to 0.27 for better layout spacing
+                .frame(height: headerHeight, alignment: .top) // Changed header height from 0.29 to 0.27 for better layout spacing
                 .zIndex(1) // Above background
                 
                 // Main app content (list, quick-add, overlay), starts exactly under the header
                 VStack(spacing: 0) {
                     // Spacer to leave space for the header so content starts below it
-                    Spacer().frame(height: UIScreen.main.bounds.height * 0.18) // Changed spacer height from 0.29 to 0.23 to reduce gap below header
+                    Spacer().frame(height: contentOffsetBelowHeader)
                     
                     ZStack(alignment: .bottomTrailing) {
                         listView // Main list of items, aligned with the button below
@@ -211,7 +214,7 @@ struct ShoppingListView: View {
         }
         .padding(.horizontal, 16) // Aligns with ListView edges
         .padding(.bottom, 16) // Space from the bottom of the screen
-        .frame(height: 48, alignment: .trailing) // Stack height matches new sizing
+        .frame(height: DS.Layout.quickAddHeight, alignment: .trailing) // Stack height matches new sizing
     }
     
     /// Adds the item from the quick-add field.

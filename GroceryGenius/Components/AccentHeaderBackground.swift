@@ -35,7 +35,7 @@ struct AccentHeaderBackground: View {
             }
             .edgesIgnoringSafeArea(.top) // Header covers top safe area.
         }
-        .frame(height: UIScreen.main.bounds.height * 0.24) // Changed header height from 0.29 to 0.27 for better layout spacing (changed)
+        .frame(height: UIScreen.main.bounds.height * DS.Layout.headerHeightRatio)
     }
 }
 

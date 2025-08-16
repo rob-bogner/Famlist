@@ -31,11 +31,11 @@
  ------------------------------------------------------------------------
 */
 
-import Foundation // Imports Foundation framework, needed for Codable and UUID functionality
+import Foundation
 
 /// Represents a single item in the shopping list.
 /// Conforms to `Identifiable`, `Hashable`, and `Codable` for UI rendering, set operations, and persistence.
-struct ItemModel: FirestoreRepresentable, Identifiable, Hashable, Codable {
+struct ItemModel: Identifiable, Hashable, Codable {
     
     // MARK: - Properties
     
@@ -106,40 +106,5 @@ struct ItemModel: FirestoreRepresentable, Identifiable, Hashable, Codable {
         self.category = category // Assigns the optional product category
         self.productDescription = productDescription // Assigns the exact product designation
         self.brand = brand // Assigns the brand or manufacturer
-    }
-    // MARK: - FirestoreRepresentable
-    func toFirestoreDict() -> [String: Any] {
-        return [
-            "id": id,
-            "imageData": imageData as Any,
-            "name": name,
-            "units": units,
-            "measure": measure,
-            "price": price,
-            "isChecked": isChecked,
-            "category": category as Any,
-            "productDescription": productDescription as Any,
-            "brand": brand as Any
-        ]
-    }
-    init?(from dict: [String: Any]) {
-        guard let id = dict["id"] as? String,
-              let name = dict["name"] as? String,
-              let units = dict["units"] as? Int,
-              let measure = dict["measure"] as? String,
-              let price = dict["price"] as? Double,
-              let isChecked = dict["isChecked"] as? Bool else {
-            return nil
-        }
-        self.id = id
-        self.imageData = dict["imageData"] as? String
-        self.name = name
-        self.units = units
-        self.measure = measure
-        self.price = price
-        self.isChecked = isChecked
-        self.category = dict["category"] as? String
-        self.productDescription = dict["productDescription"] as? String
-        self.brand = dict["brand"] as? String
     }
 }

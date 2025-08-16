@@ -11,10 +11,7 @@
 import Foundation
 import UIKit
 
-/// Formatiert einen Double-Wert als Euro-Währung (z.B. 1.99 -> "€ 1,99")
-func formatPrice(_ price: Double) -> String {
-    return Formatting.priceText(price)
-}
+// Entfernt: formatPrice() – Nutzung jetzt ausschließlich über Formatting.priceText
 
 /// Konvertiert ein UIImage zu einem Base64-String
 func imageToBase64(_ image: UIImage?) -> String? {

@@ -37,10 +37,7 @@ struct ItemThumbnail: View {
     let base64: String?
     let onTap: (UIImage?) -> Void
     var body: some View {
-        let image: UIImage? = {
-            if let b = base64, let data = Data(base64Encoded: b) { return UIImage(data: data) }
-            return nil
-        }()
+        let image = ImageCache.shared.image(fromBase64: base64)
         Group {
             if let image = image {
                 Image(uiImage: image).resizable().scaledToFit()
