@@ -52,6 +52,10 @@ struct EditItemView: View {
     /// Focus management for the first text field (item name)
     @FocusState private var isNameFieldFocused: Bool
 
+    @State private var nameError: String? = nil
+    @State private var unitsError: String? = nil
+    @State private var priceError: String? = nil
+
     // MARK: - Body
 
     var body: some View {
@@ -60,10 +64,17 @@ struct EditItemView: View {
                 ScrollView {
                     VStack(spacing: DS.Spacing.m) {
                         PhotoField(image: $selectedImage)
-                        TextField("Name", text: $name)
-                            .textFieldStyle(.roundedBorder)
-                            .lineLimit(1)
-                            .focused($isNameFieldFocused)
+                        VStack(alignment: .leading, spacing: 4) {
+                            TextField("Name", text: $name)
+                                .textFieldStyle(.roundedBorder)
+                                .lineLimit(1)
+                                .focused($isNameFieldFocused)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(nameError == nil ? Color.clear : Color.red, lineWidth: 1)
+                                )
+                            if let nameError { Text(nameError).font(.caption2).foregroundColor(.red) }
+                        }
                         TextField("Brand", text: $brand)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
@@ -73,25 +84,50 @@ struct EditItemView: View {
                         TextField("Category", text: $category)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
-                        QuantityMeasureRow(units: $units, measure: $measure)
-                        PriceField(price: $price)
+                        VStack(alignment: .leading, spacing: 4) {
+                            QuantityMeasureRow(units: $units, measure: $measure)
+                            if let unitsError { Text(unitsError).font(.caption2).foregroundColor(.red) }
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            PriceField(price: $price, errorMessage: priceError)
+                            if let priceError { Text(priceError).font(.caption2).foregroundColor(.red) }
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                     .padding(.vertical, 25)
                 }
                 PrimaryButton(title: "Save") {
-                    saveChanges(); dismiss()
+                    // Synchrone Validierung
+                    let currentNameError = ItemInputValidator.validateName(name)
+                    let currentUnitsError = ItemInputValidator.validateUnits(units)
+                    let currentPriceError = ItemInputValidator.validatePrice(price)
+                    nameError = currentNameError
+                    unitsError = currentUnitsError
+                    priceError = currentPriceError
+                    guard currentNameError == nil, currentUnitsError == nil, currentPriceError == nil else { return }
+                    saveChanges()
+                    dismiss()
                 }
+                .disabled(!formValid)
                 .padding(.horizontal)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .onAppear { populateFields() }
+            .onAppear { populateFields(); validateAll() }
+            .onChange(of: name) { _ , _ in validateName() }
+            .onChange(of: units) { _ , _ in validateUnits() }
+            .onChange(of: price) { _ , _ in validatePrice() }
             .presentationDetents([.height(570)])
         }
     }
 
     // MARK: - Helper Functions
+
+    private var formValid: Bool { nameError == nil && unitsError == nil && priceError == nil }
+    private func validateName() { nameError = ItemInputValidator.validateName(name) }
+    private func validateUnits() { unitsError = ItemInputValidator.validateUnits(units) }
+    private func validatePrice() { priceError = ItemInputValidator.validatePrice(price) }
+    private func validateAll() { validateName(); validateUnits(); validatePrice() }
 
     /// Initializes the editable fields with the current item's properties
     private func populateFields() {
@@ -112,13 +148,14 @@ struct EditItemView: View {
 
     /// Save all changes to the item and update the model
     private func saveChanges() {
+        let sanitizedName = ItemInputValidator.sanitizedName(name)
         // Convert selected image to base64 string, if available
         let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString()
         // Create the updated ItemModel
         let updatedItem = ItemModel(
             id: item.id,
             imageData: imageBase64,
-            name: name,
+            name: sanitizedName,
             units: Int(units) ?? 1,
             measure: measure,
             price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,

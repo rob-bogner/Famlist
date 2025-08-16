@@ -147,6 +147,7 @@ struct QuantityMeasureRow: View {
 struct PriceField: View {
     @Binding var price: String
     var showCurrencySymbol: Bool = true
+    var errorMessage: String? = nil
     @State private var internalText: String = ""
     @State private var suppressExternalSync = false
     @State private var lastSyncedRawPrice: String = ""
@@ -182,6 +183,10 @@ struct PriceField: View {
             .frame(width: fieldWidth, height: 44)
             .multilineTextAlignment(.leading)
             .lineLimit(1)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(errorMessage == nil ? Color.clear : Color.red.opacity(0.8), lineWidth: 1)
+            )
             .accessibilityLabel("Preis")
             if showCurrencySymbol {
                 Text(locale.currencySymbol ?? "€")

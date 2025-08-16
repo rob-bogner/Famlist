@@ -59,6 +59,9 @@ struct AddItemView: View {
     @State private var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var isShowingSourceDialog: Bool = false
 
+    @State private var nameError: String? = nil
+    @State private var unitsError: String? = nil
+
     // MARK: - Body
     
     /// The main body view layout.
@@ -68,11 +71,21 @@ struct AddItemView: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         PhotoField(image: $selectedImage)
-                        TextField("Enter Item Name", text: $item)
-                            .textFieldStyle(.roundedBorder)
-                            .lineLimit(1)
-                            .focused($isItemFieldFocused)
-                        QuantityMeasureRow(units: $units, measure: $measure)
+                        VStack(alignment: .leading, spacing: 4) {
+                            TextField("Enter Item Name", text: $item)
+                                .textFieldStyle(.roundedBorder)
+                                .lineLimit(1)
+                                .focused($isItemFieldFocused)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(nameError == nil ? Color.clear : Color.red, lineWidth: 1)
+                                )
+                            if let nameError { Text(nameError).font(.caption2).foregroundColor(.red) }
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            QuantityMeasureRow(units: $units, measure: $measure)
+                            if let unitsError { Text(unitsError).font(.caption2).foregroundColor(.red) }
+                        }
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -81,26 +94,37 @@ struct AddItemView: View {
                 }
                 Spacer(minLength: 0)
                 PrimaryButton(title: "Add Item to List") {
-                    addItemPressed(); dismiss()
+                    // Synchrone Validierung (State-Änderungen wirken erst nach Rückkehr, daher lokal prüfen)
+                    let currentNameError = ItemInputValidator.validateName(item)
+                    let currentUnitsError = ItemInputValidator.validateUnits(units)
+                    nameError = currentNameError
+                    unitsError = currentUnitsError
+                    guard currentNameError == nil, currentUnitsError == nil else { return }
+                    let sanitized = ItemInputValidator.sanitizedName(item)
+                    addItemPressed(sanitizedName: sanitized)
+                    dismiss()
                 }
+                .disabled(!formValid)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear { isItemFieldFocused = true }
+        .onAppear { isItemFieldFocused = true; validateAll() }
+        .onChange(of: item) { _ , _ in validateName() }
+        .onChange(of: units) { _ , _ in validateUnits() }
         .presentationDetents([.height(500)])
     }
     
     // MARK: - Functions
     
     /// Adds a new item to the shopping list.
-    private func addItemPressed() {
+    private func addItemPressed(sanitizedName: String) {
         let imageBase64 = imageToBase64(selectedImage) ?? ""
         let newItem = ItemModel(
             imageData: imageBase64,
-            name: item,
+            name: sanitizedName,
             units: Int(units) ?? 1,
             measure: measure,
             price: 0.0,
@@ -111,6 +135,11 @@ struct AddItemView: View {
     
     /// Programmatically dismisses the keyboard.
     private func dismissKeyboard() { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
+    
+    private var formValid: Bool { nameError == nil && unitsError == nil && !item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private func validateName() { nameError = ItemInputValidator.validateName(item) }
+    private func validateUnits() { unitsError = ItemInputValidator.validateUnits(units) }
+    private func validateAll() { validateName(); validateUnits() }
 }
 
 #Preview {

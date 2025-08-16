@@ -29,6 +29,7 @@
 		EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC082E50C95A00C037F1 /* ImageCache.swift */; };
 		EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */; };
 		EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */; };
+		EEC3BC0E2E50D5A800C037F1 /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC0D2E50D5A800C037F1 /* Validation.swift */; };
 		EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FB2B4C5A4100330CE5 /* ListView.swift */; };
 		EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */; };
 		EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */; };
@@ -56,6 +57,7 @@
 		EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		EEC3BC082E50C95A00C037F1 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableInputs.swift; sourceTree = "<group>"; };
+		EEC3BC0D2E50D5A800C037F1 /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 		EEF472FB2B4C5A4100330CE5 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListProgressView.swift; sourceTree = "<group>"; };
 		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
@@ -107,6 +109,7 @@
 		EE52222D2DBEDD0800AB84EF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				EEC3BC0D2E50D5A800C037F1 /* Validation.swift */,
 				EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */,
 				EEC3BC082E50C95A00C037F1 /* ImageCache.swift */,
 				EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */,
@@ -265,6 +268,7 @@
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
 				EEFA09E52E2CE7A200B2F2B0 /* (null) in Sources */,
 				EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */,
+				EEC3BC0E2E50D5A800C037F1 /* Validation.swift in Sources */,
 				EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */,
 				EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */,
 				EE69A4E82B14CB78007C3515 /* ShoppingListView.swift in Sources */,
