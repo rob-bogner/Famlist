@@ -34,7 +34,6 @@
 		EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */; };
 		EEFA09E52E2CE7A200B2F2B0 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		EEFA09EB2E2CED5000B2F2B0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */; };
-		EEFA09ED2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09EC2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift */; };
 		EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */; };
 /* End PBXBuildFile section */
 
@@ -61,7 +60,6 @@
 		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListProgressView.swift; sourceTree = "<group>"; };
 		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
 		EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		EEFA09EC2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreRepresentable.swift; sourceTree = "<group>"; };
 		EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModalView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -88,7 +86,6 @@
 		EE25EDBC2B406FFA00CA090C /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				EEFA09EC2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift */,
 				EE69A4F72B14CC96007C3515 /* ItemModel.swift */,
 			);
 			path = Models;
@@ -265,7 +262,6 @@
 				EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */,
 				EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
-				EEFA09ED2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
 				EEFA09E52E2CE7A200B2F2B0 /* (null) in Sources */,
 				EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */,
