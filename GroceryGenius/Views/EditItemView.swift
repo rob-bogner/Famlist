@@ -27,7 +27,6 @@ import SwiftUI
 struct EditItemView: View {
 
     // MARK: - Properties
-
     /// Dismiss action to close the sheet
     @Environment(\.dismiss) private var dismiss
 
@@ -50,203 +49,66 @@ struct EditItemView: View {
     /// Holds the currently selected photo (UIImage)
     @State private var selectedImage: UIImage? = nil
 
-    /// Whether the photo picker sheet is open
-    @State private var isShowingImagePicker: Bool = false
-
-    /// The type of photo picker (camera or gallery)
-    @State private var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary
-
-    /// Whether to show the dialog to pick camera/gallery
-    @State private var isShowingSourceDialog: Bool = false
-
     /// Focus management for the first text field (item name)
     @FocusState private var isNameFieldFocused: Bool
-
-    /// Localized number formatter for price input
-    private var priceFormatter: NumberFormatter {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale.current
-        return formatter
-    }
 
     // MARK: - Body
 
     var body: some View {
         CustomModalView(title: "Edit Item", onClose: { dismiss() }) {
-            VStack(spacing: 16) {
+            VStack(spacing: DS.Spacing.l) {
                 ScrollView {
-                    VStack(spacing: 12) { // Stack for all editable fields
-
-                        // --- Image Preview & Picker ---
-                        if let selectedImage = selectedImage {
-                            Image(uiImage: selectedImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 100, height: 100)
-                                .roundedCorners(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                )
-                                .onTapGesture {
-                                    // Tapping the image lets the user pick a new one
-                                    dismissKeyboard()
-                                    isShowingSourceDialog = true
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        } else {
-                            Button(action: {
-                                dismissKeyboard()
-                                isShowingSourceDialog = true
-                            }) {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "camera.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 32, height: 32)
-                                        .foregroundColor(.gray)
-                                    Text("Add Photo")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                                .frame(width: 100, height: 100)
-                                .roundedCorners(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                )
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .sheet(isPresented: $isShowingImagePicker) {
-                                ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
-                            }
-                        }
-
-                        // --- Editable Fields ---
-                        // Name
+                    VStack(spacing: DS.Spacing.m) {
+                        PhotoField(image: $selectedImage)
                         TextField("Name", text: $name)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
                             .focused($isNameFieldFocused)
-
-                        // Brand
                         TextField("Brand", text: $brand)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
-
-                        // Product Description
                         TextField("Product Description", text: $productDescription)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
-
-                        // Category
                         TextField("Category", text: $category)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
-
-                        // --- Units, Measure, and Increment/Decrement Buttons (like AddItemView) ---
-                        HStack {
-                            // Text field for number of units
-                            TextField("Units", text: $units)
-                                .keyboardType(.numberPad)
-                                .frame(width: 70)
-                                .multilineTextAlignment(.leading)
-                                .textFieldStyle(.roundedBorder)
-                                .lineLimit(1)
-
-                            // Text field for measurement unit (e.g., "kg", "L")
-                            TextField("Measure", text: $measure)
-                                .multilineTextAlignment(.leading)
-                                .textFieldStyle(.roundedBorder)
-                                .lineLimit(1)
-
-                            Spacer()
-
-                            // Increment/Decrement Buttons
-                            HStack(spacing: 10) {
-                                Button(action: decrementUnits) {
-                                    Image(systemName: "minus.circle")
-                                        .font(.title)
-                                        .foregroundColor(Color.accentColor)
-                                }
-                                Button(action: incrementUnits) {
-                                    Image(systemName: "plus.circle")
-                                        .font(.title)
-                                        .foregroundColor(Color.accentColor)
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                        // Price
-                        TextField(
-                            "Price",
-                            value: Binding(
-                                get: {
-                                    Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0
-                            },
-                            set: {
-                                price = priceFormatter.string(from: NSNumber(value: $0)) ?? ""
-                            }
-                        ),
-                        formatter: priceFormatter
-                        )
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1)
+                        QuantityMeasureRow(units: $units, measure: $measure)
+                        PriceField(price: $price)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.vertical, 25)
                 }
-
-                // --- Save Button ---
                 PrimaryButton(title: "Save") {
-                    saveChanges()
-                    dismiss()
+                    saveChanges(); dismiss()
                 }
-                .padding(.top, 8)
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 25)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(maxHeight: .infinity, alignment: .top)
-            .onAppear {
-                // Initialize all fields from the current item
-                name = item.name
-                brand = item.brand ?? ""
-                productDescription = item.productDescription ?? ""
-                category = item.category ?? ""
-                units = String(item.units)
-                measure = item.measure
-                price = String(item.price)
-                isChecked = item.isChecked
-
-                // Load image from base64 string if available
-                if let imageDataString = item.imageData,
-                   let imageData = Data(base64Encoded: imageDataString),
-                   let uiImage = UIImage(data: imageData) {
-                    selectedImage = uiImage
-                } else {
-                    selectedImage = nil
-                }
-
-            }
-            .presentationDetents([.height(570)]) // Height similar to AddItemView
-            .confirmationDialog("Select Photo Source", isPresented: $isShowingSourceDialog, titleVisibility: .visible) {
-                Button("Take Photo") {
-                    imagePickerSourceType = .camera
-                    isShowingImagePicker = true
-                }
-                Button("Choose from Gallery") {
-                    imagePickerSourceType = .photoLibrary
-                    isShowingImagePicker = true
-                }
-                Button("Cancel", role: .cancel) {}
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .onAppear { populateFields() }
+            .presentationDetents([.height(570)])
         }
     }
 
     // MARK: - Helper Functions
+
+    /// Initializes the editable fields with the current item's properties
+    private func populateFields() {
+        name = item.name
+        brand = item.brand ?? ""
+        productDescription = item.productDescription ?? ""
+        category = item.category ?? ""
+        units = String(item.units)
+        measure = item.measure
+        price = String(item.price)
+        isChecked = item.isChecked
+
+        // Load image from base64 string if available
+        if let img = ImageCache.shared.image(fromBase64: item.imageData) {
+            selectedImage = img
+        }
+    }
 
     /// Save all changes to the item and update the model
     private func saveChanges() {
@@ -266,51 +128,6 @@ struct EditItemView: View {
             brand: brand
         )
         listViewModel.updateItem(updatedItem) // Update in the view model (and Firestore)
-    }
-
-    /// Helper to dismiss the keyboard
-    private func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-
-    /// Header view with centered title and close button.
-    private func header(dismiss: @escaping () -> Void) -> some View {
-        HStack {
-            Spacer(minLength: 0)
-            Text("Edit Item")
-                .font(.title2)
-                .foregroundColor(.teal)
-                .frame(maxWidth: .infinity, alignment: .center)
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark")
-                    .foregroundColor(.gray)
-                    .padding(6)
-                    .background(Circle().fill(Color(white: 0.95)))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal)
-        .padding(.top, 4)
-    }
-    
-    // MARK: - Increment/Decrement Logic
-    
-    /// Decreases the number of units by 1, minimum 1.
-    private func decrementUnits() {
-        var currentUnits = Int(units) ?? 1
-        if currentUnits > 1 {
-            currentUnits -= 1
-            units = String(currentUnits)
-        }
-    }
-    
-    /// Increases the number of units by 1, max 999.
-    private func incrementUnits() {
-        var currentUnits = Int(units) ?? 1
-        if currentUnits < 999 {
-            currentUnits += 1
-            units = String(currentUnits)
-        }
     }
 }
 

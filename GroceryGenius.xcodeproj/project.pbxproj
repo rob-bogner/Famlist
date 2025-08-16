@@ -26,6 +26,9 @@
 		EE873CE62E3FA20100F3FF82 /* SVGKit in Frameworks */ = {isa = PBXBuildFile; productRef = EE873CE52E3FA20100F3FF82 /* SVGKit */; };
 		EE873CE82E3FA20100F3FF82 /* SVGKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EE873CE72E3FA20100F3FF82 /* SVGKitSwift */; };
 		EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */; };
+		EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC082E50C95A00C037F1 /* ImageCache.swift */; };
+		EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */; };
+		EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */; };
 		EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FB2B4C5A4100330CE5 /* ListView.swift */; };
 		EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */; };
 		EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */; };
@@ -51,6 +54,9 @@
 		EE7872302B1E3ED600FDD00B /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
 		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
 		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageFullscreenView.swift; sourceTree = "<group>"; };
+		EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		EEC3BC082E50C95A00C037F1 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
+		EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableInputs.swift; sourceTree = "<group>"; };
 		EEF472FB2B4C5A4100330CE5 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListProgressView.swift; sourceTree = "<group>"; };
 		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
@@ -104,6 +110,9 @@
 		EE52222D2DBEDD0800AB84EF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */,
+				EEC3BC082E50C95A00C037F1 /* ImageCache.swift */,
+				EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */,
 				EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */,
 				EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */,
 				EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */,
@@ -252,6 +261,9 @@
 				EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */,
 				EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */,
 				EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */,
+				EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */,
+				EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */,
+				EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EEFA09ED2E2CEEEC00B2F2B0 /* FirestoreRepresentable.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,

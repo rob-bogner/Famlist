@@ -35,6 +35,9 @@ class ListViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    /// Abstraktes Repository für Items (ermöglicht Mocking/Testbarkeit)
+    private let repository: ItemsRepository
+
     /// The list of shopping items.
     @Published var items: [ItemModel] = [] // Automatically updates the UI when the list changes
 
@@ -42,7 +45,7 @@ class ListViewModel: ObservableObject {
     @Published var selectedItem: ItemModel? // Holds a selected item (e.g., for editing)
 
     /// The Firestore listener registration to observe real-time updates.
-    private var listener: ListenerRegistration? // Used to keep track of Firestore's real-time listener
+    private var listener: ItemsRepository.ListenerToken? // Used to keep track of Firestore's real-time listener
 
     /// Fehler- und Ladezustand für UI-Feedback
     @Published var errorMessage: String? = nil
@@ -50,21 +53,20 @@ class ListViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    /// Initializes a new instance of `ListViewModel` and starts listening to Firestore changes.
-    init() {
+    /// Ermöglicht Injektion eines benutzerdefinierten Repositories (z.B. Mock im Test)
+    init(repository: ItemsRepository = FirestoreManager.shared) {
+        self.repository = repository
         startListeningToFirestore() // Immediately begins syncing with Firestore when the ViewModel is created
     }
 
     /// Cleans up the Firestore listener when the view model is deallocated.
-    deinit {
-        listener?.remove() // Stops the listener to prevent memory leaks
-    }
+    deinit { (listener as? ListenerRegistration)?.remove() } // Stops the listener to prevent memory leaks
 
     // MARK: - Firestore Listener Handling
 
     /// Starts listening for real-time updates from Firestore and updates the local item list accordingly.
     func startListeningToFirestore() {
-        listener = FirestoreManager.shared.addListener { [weak self] items in
+        listener = repository.addListener { [weak self] items in
             DispatchQueue.main.async { // Ensure UI updates happen on the main thread
                 withAnimation { // Animate the list changes smoothly
                     self?.items = items // Update the local list of items
@@ -78,19 +80,19 @@ class ListViewModel: ObservableObject {
     /// Adds a new item to Firestore.
     /// - Parameter item: The item to be added.
     func addItem(_ item: ItemModel) {
-        FirestoreManager.shared.addItem(item) // Delegate adding item to FirestoreManager
+        repository.addItem(item, completion: nil) // Delegate adding item to FirestoreManager
     }
 
     /// Updates an existing item in Firestore.
     /// - Parameter item: The item to be updated.
     func updateItem(_ item: ItemModel) {
-        FirestoreManager.shared.updateItem(item) // Delegate updating item to FirestoreManager
+        repository.updateItem(item, completion: nil) // Delegate updating item to FirestoreManager
     }
 
     /// Deletes an item from Firestore.
     /// - Parameter item: The item to be deleted.
     func deleteItem(_ item: ItemModel) {
-        FirestoreManager.shared.deleteItem(item) // Delegate deleting item to FirestoreManager
+        repository.deleteItem(item, completion: nil) // Delegate deleting item to FirestoreManager
     }
 
     /// Toggles the `isChecked` status of an item and updates it in Firestore.
@@ -142,7 +144,7 @@ class ListViewModel: ObservableObject {
             price: 0.0,
             isChecked: false
         )
-        FirestoreManager.shared.addItem(newItem) { [weak self] error in
+        repository.addItem(newItem) { [weak self] error in
             DispatchQueue.main.async {
                 self?.isLoading = false
                 if let error = error {
@@ -186,7 +188,7 @@ class ListViewModel: ObservableObject {
             productDescription: productDescription,
             brand: brand
         )
-        FirestoreManager.shared.updateItem(updatedItem) { [weak self] error in
+        repository.updateItem(updatedItem) { [weak self] error in
             DispatchQueue.main.async {
                 self?.isLoading = false
                 if let error = error {

@@ -6,34 +6,14 @@
  GroceryGenius
  Created on: 27.11.2023
  Last updated on: 26.04.2025
-
- ------------------------------------------------------------------------
- 📄 File Overview:
-
- This file defines a singleton manager class responsible for all Firestore operations
- related to shopping list items. It supports real-time updates, as well as basic
- CRUD operations (Create, Read, Update, Delete).
-
- 🛠 Includes:
- - Firestore real-time listener
- - Add, update, and delete operations for items
- - Singleton pattern for centralized Firestore access
-
- 🔰 Notes for Beginners:
- - Firestore is a cloud-hosted NoSQL database.
- - A singleton design ensures only one instance of FirestoreManager is used throughout the app.
- - Firestore operations can throw errors, which are caught and logged.
- ------------------------------------------------------------------------
 */
 
-import Foundation // Provides essential data types and networking features
-import FirebaseFirestore // Provides access to Google's Firestore database
+import Foundation
+import FirebaseFirestore
 
 /// A manager responsible for handling Firestore operations related to shopping list items.
-final class FirestoreManager {
-    
+final class FirestoreManager: ItemsRepository {
     // MARK: - Properties
-    
     /// Singleton instance of the FirestoreManager.
     static let shared = FirestoreManager()
     
@@ -53,7 +33,8 @@ final class FirestoreManager {
     /// Starts a real-time listener for item changes in Firestore.
     /// - Parameter onUpdate: Closure to be called with the updated list of items.
     /// - Returns: A ListenerRegistration object that can be used to stop listening.
-    func addListener(onUpdate: @escaping ([ItemModel]) -> Void) -> ListenerRegistration {
+    @discardableResult
+    func addListener(onUpdate: @escaping ([ItemModel]) -> Void) -> ListenerToken {
         return db.collection(collection).addSnapshotListener { snapshot, error in
             guard let documents = snapshot?.documents else {
                 // Print a warning if no documents were found and call the update closure with an empty array
@@ -67,7 +48,7 @@ final class FirestoreManager {
                 try? doc.data(as: ItemModel.self)
             }
             onUpdate(items) // Send updated item list to the caller
-        }
+        } as ListenerRegistration
     }
     
     // MARK: - CRUD Operations

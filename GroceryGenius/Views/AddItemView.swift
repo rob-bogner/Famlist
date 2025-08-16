@@ -53,13 +53,11 @@ struct AddItemView: View {
     @FocusState private var isItemFieldFocused: Bool
 
     /// State for the selected image from the image picker.
-    @State private var selectedImage: UIImage? = nil // Store selected image
-    
+    @State private var selectedImage: UIImage? = nil
     /// State to control the presentation of the image picker sheet.
-    @State private var isShowingImagePicker: Bool = false // Flag to show image picker
-
-    @State private var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary // Steuert Kamera oder Galerie
-    @State private var isShowingSourceDialog: Bool = false // Zeigt Auswahl-Dialog für Quelle an
+    @State private var isShowingImagePicker: Bool = false // (unused after refactor) lässt vorerst stehen falls extern referenziert
+    @State private var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary
+    @State private var isShowingSourceDialog: Bool = false
 
     // MARK: - Body
     
@@ -69,146 +67,36 @@ struct AddItemView: View {
             VStack(spacing: 16) {
                 ScrollView {
                     VStack(spacing: 12) {
-                        if let selectedImage = selectedImage {
-                            Image(uiImage: selectedImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 100, height: 100)
-                                .roundedCorners(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                )
-                                .onTapGesture {
-                                    dismissKeyboard()
-                                    isShowingSourceDialog = true
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        } else {
-                            Button(action: {
-                                dismissKeyboard()
-                                isShowingSourceDialog = true
-                            }) {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "camera.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 32, height: 32)
-                                        .foregroundColor(.gray)
-                                    Text("Add Photo")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                                .frame(width: 100, height: 100)
-                                .roundedCorners(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                )
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .sheet(isPresented: $isShowingImagePicker) {
-                                ImagePicker(selectedImage: $selectedImage, isPresented: $isShowingImagePicker, sourceType: imagePickerSourceType)
-                            }
-                        }
-                        // Text field for entering the item name
+                        PhotoField(image: $selectedImage)
                         TextField("Enter Item Name", text: $item)
-                            .textFieldStyle(.roundedBorder) // Apply rounded border style
-                            .lineLimit(1) // Limit input to one line
-                            .focused($isItemFieldFocused) // Bind focus state to this text field
-
-                        HStack { // Horizontal stack for units, measure, and buttons
-                            
-                            // Text field for number of units
-                            TextField("Units", text: $units)
-                                .keyboardType(.numberPad) // Use number pad keyboard
-                                .frame(width: 70) // Fixed width for units input
-                                .multilineTextAlignment(.leading) // Align text to leading edge
-                                .textFieldStyle(.roundedBorder) // Rounded border style
-                                .lineLimit(1) // Limit input to one line
-
-                            // Text field for measurement unit
-                            TextField("Measure", text: $measure)
-                                .multilineTextAlignment(.leading) // Align text to leading edge
-                                .textFieldStyle(.roundedBorder) // Rounded border style
-                                .lineLimit(1) // Limit input to one line
-
-                            Spacer() // Push buttons to the right
-
-                            // Buttons to increment and decrement units
-                            HStack(spacing: 10) {
-                                Button(action: decrementUnits) { // Decrement units action
-                                    Image(systemName: "minus.circle") // Minus icon
-                                        .font(.title) // Title font size
-                                        .foregroundColor(Color.accentColor) // Accent color
-                                }
-
-                                Button(action: incrementUnits) { // Increment units action
-                                    Image(systemName: "plus.circle") // Plus icon
-                                        .font(.title) // Title font size
-                                        .foregroundColor(Color.accentColor) // Accent color
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading) // Align HStack leading with max width
-
-
-                        Spacer() // Restore natural spacing and push button down
+                            .textFieldStyle(.roundedBorder)
+                            .lineLimit(1)
+                            .focused($isItemFieldFocused)
+                        QuantityMeasureRow(units: $units, measure: $measure)
+                        Spacer()
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                     .padding(.vertical, 25)
                 }
                 Spacer(minLength: 0)
-                Button(action: {
-                    addItemPressed()
-                    dismiss()
-                }, label: {
-                    Text("Add Item to List")
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue.roundedCorners(10))
-                        .foregroundColor(.white)
-                        .font(.headline)
-                })
+                PrimaryButton(title: "Add Item to List") {
+                    addItemPressed(); dismiss()
+                }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            isItemFieldFocused = true
-        }
+        .onAppear { isItemFieldFocused = true }
         .presentationDetents([.height(500)])
-        .confirmationDialog("Bild auswählen", isPresented: $isShowingSourceDialog, titleVisibility: .visible) {
-            Button("Foto aufnehmen") {
-                imagePickerSourceType = .camera
-                isShowingImagePicker = true
-            }
-            Button("Aus Galerie wählen") {
-                imagePickerSourceType = .photoLibrary
-                isShowingImagePicker = true
-            }
-            Button("Abbrechen", role: .cancel) {}
-        }
-    }
-    
-    // MARK: - Subviews
-    
-    /// Button to add the item to the list.
-    private var addItemButton: some View {
-        PrimaryButton(title: "Add Item to List") {
-            addItemPressed()
-            dismiss()
-        }
     }
     
     // MARK: - Functions
     
     /// Adds a new item to the shopping list.
     private func addItemPressed() {
-        // Nutze Utility-Funktion für Base64-Konvertierung
         let imageBase64 = imageToBase64(selectedImage) ?? ""
         let newItem = ItemModel(
             imageData: imageBase64,
@@ -220,29 +108,9 @@ struct AddItemView: View {
         )
         listViewModel.addItem(newItem)
     }
-
-    /// Decreases the number of units by 1, with a minimum of 1.
-    private func decrementUnits() {
-        var currentUnits = Int(units) ?? 1 // Parse units string or default to 1
-        if currentUnits > 1 { // Only decrement if greater than 1
-            currentUnits -= 1 // Decrement units
-            units = String(currentUnits) // Update units string
-        }
-    }
-
-    /// Increases the number of units by 1, up to a maximum of 999.
-    private func incrementUnits() {
-        var currentUnits = Int(units) ?? 1 // Parse units string or default to 1
-        if currentUnits < 999 { // Only increment if less than 999
-            currentUnits += 1 // Increment units
-            units = String(currentUnits) // Update units string
-        }
-    }
     
     /// Programmatically dismisses the keyboard.
-    private func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
+    private func dismissKeyboard() { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
 }
 
 #Preview {
