@@ -93,19 +93,61 @@ enum Formatting {
 }
 
 /// Measure enum and picker (keeps String in model for now)
-enum Measure: String, CaseIterable, Codable { case g, kg, ml, l, stk, pkg }
+enum Measure: String, CaseIterable, Codable {
+    case artikel, becher, beutel, bund, dose, flasche, glas, karton, kasten, kiste, netz, paar, packung, sack, scheibe, stueck, tafel, tube, tuete, g, kg, ml, l, cm, m
+
+    var displayName: String {
+        switch self {
+        case .artikel: return "Artikel"
+        case .becher: return "Becher"
+        case .beutel: return "Beutel"
+        case .bund: return "Bund"
+        case .dose: return "Dose"
+        case .flasche: return "Flasche"
+        case .glas: return "Glas"
+        case .karton: return "Karton"
+        case .kasten: return "Kasten"
+        case .kiste: return "Kiste"
+        case .netz: return "Netz"
+        case .paar: return "Paar"
+        case .packung: return "Packung"
+        case .sack: return "Sack"
+        case .scheibe: return "Scheibe"
+        case .stueck: return "Stück"
+        case .tafel: return "Tafel"
+        case .tube: return "Tube"
+        case .tuete: return "Tüte"
+        case .g: return "g"
+        case .kg: return "kg"
+        case .ml: return "ml"
+        case .l: return "l"
+        case .cm: return "cm"
+        case .m: return "m"
+        }
+    }
+
+    static func fromExternal(_ raw: String) -> Measure {
+        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch lower {
+        case "stk", "stück", "stueck": return .stueck
+        case "pkg": return .packung
+        case "tüte", "tuete": return .tuete
+        default: return Measure(rawValue: lower) ?? .stueck
+        }
+    }
+}
 struct MeasurePicker: View {
     @Binding var selection: String
     var body: some View {
         Picker("Measure", selection: Binding(
-            get: { Measure(rawValue: selection) ?? .stk },
+            get: { Measure.fromExternal(selection) },
             set: { selection = $0.rawValue }
         )) {
             ForEach(Measure.allCases, id: \.self) { m in
-                Text(m.rawValue.uppercased()).tag(m)
+                Text(m.displayName).tag(m)
             }
         }
-        .pickerStyle(.segmented)
+        .pickerStyle(.segmented) // Hinweis: Bei vielen Einträgen ggf. ungeeignet
     }
 }
 

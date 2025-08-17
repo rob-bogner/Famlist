@@ -94,6 +94,8 @@ struct QuantityMeasureRow: View {
     private var atMin: Bool { value <= range.lowerBound }
     private var atMax: Bool { value >= range.upperBound }
     private let controlHeight: CGFloat = 34
+    private let measureMinWidth: CGFloat = 120 // Option B: flexible Breite
+    @State private var showMeasurePicker = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -109,13 +111,29 @@ struct QuantityMeasureRow: View {
                     let normalized = String(clamped)
                     if normalized != units { units = normalized }
                 }
-            TextField("Measure", text: $measure)
-                .frame(height: controlHeight)
-                .multilineTextAlignment(.leading)
-                .textFieldStyle(.roundedBorder)
-                .lineLimit(1)
-                .accessibilityLabel("Einheit")
-            Spacer()
+            // Measure Auswahl via Wheel Sheet
+            Button {
+                showMeasurePicker = true
+            } label: {
+                HStack {
+                    let current = Measure.fromExternal(measure)
+                    Text(measure.isEmpty ? "Measure" : current.displayName)
+                        .foregroundColor(measure.isEmpty ? .secondary : .primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                }
+                .padding(.horizontal, 10)
+                .frame(minWidth: measureMinWidth, maxWidth: .infinity, minHeight: controlHeight, maxHeight: controlHeight, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.35)))
+            }
+            .layoutPriority(1)
+            .accessibilityLabel("Einheit wählen")
+            .sheet(isPresented: $showMeasurePicker) {
+                MeasureWheelPicker(selection: $measure)
+                    .presentationDetents([.fraction(0.35)])
+            }
             HStack(spacing: 12) {
                 Button { decrement() } label: {
                     Image(systemName: "minus")
@@ -141,6 +159,38 @@ struct QuantityMeasureRow: View {
     }
     private func decrement() { var v = value; if v > range.lowerBound { v -= 1; units = String(v); lightHaptic() } }
     private func increment() { var v = value; if v < range.upperBound { v += 1; units = String(v); lightHaptic() } }
+}
+
+// Wheel Picker Sheet
+private struct MeasureWheelPicker: View {
+    @Binding var selection: String
+    @Environment(\.dismiss) private var dismiss
+    private var measures: [Measure] { Measure.allCases }
+    @State private var internalSelection: Measure = .stueck
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Spacer()
+                Button("Fertig") {
+                    selection = internalSelection.rawValue
+                    dismiss()
+                }
+                .bold()
+            }
+            .padding(.horizontal)
+            Picker("Measure", selection: $internalSelection) {
+                ForEach(measures, id: \.self) { m in
+                    Text(m.displayName).tag(m)
+                }
+            }
+            .pickerStyle(.wheel)
+            .onAppear {
+                internalSelection = Measure.fromExternal(selection)
+            }
+        }
+        .presentationDragIndicator(.visible)
+    }
 }
 
 // MARK: Preisfeld mit lokaler Formatierung

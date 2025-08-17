@@ -68,8 +68,9 @@ struct ItemMeta: View {
     let measure: String
     let price: Double
     var body: some View {
+        let displayMeasure = measure.isEmpty ? "" : Measure.fromExternal(measure).displayName
         HStack {
-            Text("\(units) \(measure)")
+            Text(displayMeasure.isEmpty ? "\(units)" : "\(units) \(displayMeasure)")
             Spacer()
             Text(Formatting.priceText(price))
         }
