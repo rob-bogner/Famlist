@@ -1,6 +1,35 @@
-// MARK: - Reusable UI Components & Utilities
+// MARK: - ViewModifiers & UI Utilities
 
-/// Primary action button used across the app
+/*
+ File: ViewModifiers.swift
+ Project: GroceryGenius
+ Created: 20.07.2025
+ Last Updated: 17.08.2025
+
+ Overview:
+ Collection of small reusable SwiftUI building blocks (buttons, steppers, progress card, section header) plus formatting helpers, measurement enum & picker, lightweight thumbnail and style modifiers.
+
+ Responsibilities / Includes:
+ - PrimaryButton, QuantityStepper, ProgressCard, SectionHeader
+ - CardStyle + convenience view modifier wrappers (roundedCorners, shadowStyle, capsuleBorder)
+ - Formatting namespace (currency formatter + priceText)
+ - Measure enum (localization + normalization) & MeasurePicker
+ - Generic Thumbnail component
+
+ Design Notes:
+ - Keep visual tokens (spacing, radii) external (DesignSystem) except minimal inline values
+ - Measure stored as raw String in model for backward compatibility; enum normalizes user input
+ - Formatting isolated to enable future NumberFormatter reuse / caching
+
+ Possible Enhancements:
+ - Add accessibility variants for larger content size categories
+ - Provide async image loading variant for remote thumbnails
+ - Migrate measure persistence to strongly typed enum in model (breaking change)
+*/
+
+import SwiftUI
+
+// MARK: - Reusable UI Components
 struct PrimaryButton: View {
     let title: String
     let action: () -> Void
@@ -9,15 +38,13 @@ struct PrimaryButton: View {
             Text(title)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8) // doppelte Höhe (vorher 4)
+                .padding(.vertical, 8)
         }
-        .buttonStyle(.borderedProminent) // Systemstil beibehalten
-        // .controlSize(.small) entfernt, eigene Höhe über Padding
+        .buttonStyle(.borderedProminent)
         .frame(maxWidth: .infinity)
     }
 }
 
-/// Plus/Minus control for integer quantities
 struct QuantityStepper: View {
     @Binding var value: Int
     var range: ClosedRange<Int> = 0...999
@@ -31,7 +58,6 @@ struct QuantityStepper: View {
     }
 }
 
-/// Card-like progress display
 struct ProgressCard: View {
     let title: String
     let progress: Double
@@ -53,7 +79,6 @@ struct ProgressCard: View {
     }
 }
 
-/// Consistent section header
 struct SectionHeader: View {
     let title: String
     var body: some View {
@@ -66,7 +91,6 @@ struct SectionHeader: View {
     }
 }
 
-/// Card style used throughout the app
 struct CardStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -78,7 +102,7 @@ extension View {
     func cardStyle() -> some View { modifier(CardStyle()) }
 }
 
-/// Centralized formatters
+// MARK: - Formatting Helpers
 enum Formatting {
     static let currency: NumberFormatter = {
         let f = NumberFormatter()
@@ -92,50 +116,83 @@ enum Formatting {
     }
 }
 
-/// Measure enum and picker (keeps String in model for now)
+// MARK: - Measurement Enum & Picker
 enum Measure: String, CaseIterable, Codable {
-    case artikel, becher, beutel, bund, dose, flasche, glas, karton, kasten, kiste, netz, paar, packung, sack, scheibe, stueck, tafel, tube, tuete, g, kg, ml, l, cm, m
+    case item, cup, bag, bunch, can, bottle, jar, carton, crate, box, net, pair, pack, sack, slice, piece, bar, tube, smallBag, g, kg, ml, l, cm, m
 
-    var displayName: String {
+    var localizationKey: String {
         switch self {
-        case .artikel: return "Artikel"
-        case .becher: return "Becher"
-        case .beutel: return "Beutel"
-        case .bund: return "Bund"
-        case .dose: return "Dose"
-        case .flasche: return "Flasche"
-        case .glas: return "Glas"
-        case .karton: return "Karton"
-        case .kasten: return "Kasten"
-        case .kiste: return "Kiste"
-        case .netz: return "Netz"
-        case .paar: return "Paar"
-        case .packung: return "Packung"
-        case .sack: return "Sack"
-        case .scheibe: return "Scheibe"
-        case .stueck: return "Stück"
-        case .tafel: return "Tafel"
-        case .tube: return "Tube"
-        case .tuete: return "Tüte"
-        case .g: return "g"
-        case .kg: return "kg"
-        case .ml: return "ml"
-        case .l: return "l"
-        case .cm: return "cm"
-        case .m: return "m"
+        case .item: return "unit.item"
+        case .cup: return "unit.cup"
+        case .bag: return "unit.bag"
+        case .bunch: return "unit.bunch"
+        case .can: return "unit.can"
+        case .bottle: return "unit.bottle"
+        case .jar: return "unit.jar"
+        case .carton: return "unit.carton"
+        case .crate: return "unit.crate"
+        case .box: return "unit.box"
+        case .net: return "unit.net"
+        case .pair: return "unit.pair"
+        case .pack: return "unit.pack"
+        case .sack: return "unit.sack"
+        case .slice: return "unit.slice"
+        case .piece: return "unit.piece"
+        case .bar: return "unit.bar"
+        case .tube: return "unit.tube"
+        case .smallBag: return "unit.bagSmall"
+        case .g: return "unit.g"
+        case .kg: return "unit.kg"
+        case .ml: return "unit.ml"
+        case .l: return "unit.l"
+        case .cm: return "unit.cm"
+        case .m: return "unit.m"
         }
+    }
+
+    var localizedName: String {
+        let fallback: String
+        switch self {
+        case .g, .kg, .ml, .l, .cm, .m: fallback = rawValue
+        case .smallBag: fallback = "Small Bag"
+        default: fallback = String(describing: self).capitalized
+        }
+        let translated = NSLocalizedString(localizationKey, comment: "Measurement Unit")
+        return translated == localizationKey ? fallback : translated
     }
 
     static func fromExternal(_ raw: String) -> Measure {
         let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         switch lower {
-        case "stk", "stück", "stueck": return .stueck
-        case "pkg": return .packung
-        case "tüte", "tuete": return .tuete
-        default: return Measure(rawValue: lower) ?? .stueck
+        case "piece", "item": return .piece
+        case "cup": return .cup
+        case "bag": return .bag
+        case "bunch": return .bunch
+        case "can": return .can
+        case "bottle": return .bottle
+        case "jar": return .jar
+        case "carton": return .carton
+        case "crate": return .crate
+        case "box": return .box
+        case "net": return .net
+        case "pair": return .pair
+        case "pack": return .pack
+        case "sack": return .sack
+        case "slice": return .slice
+        case "bar": return .bar
+        case "tube": return .tube
+        case "smallbag", "bag_small": return .smallBag
+        case "g": return .g
+        case "kg": return .kg
+        case "ml": return .ml
+        case "l": return .l
+        case "cm": return .cm
+        case "m": return .m
+        default: return Measure(rawValue: lower) ?? .piece
         }
     }
 }
+
 struct MeasurePicker: View {
     @Binding var selection: String
     var body: some View {
@@ -144,14 +201,14 @@ struct MeasurePicker: View {
             set: { selection = $0.rawValue }
         )) {
             ForEach(Measure.allCases, id: \.self) { m in
-                Text(m.displayName).tag(m)
+                Text(m.localizedName).tag(m)
             }
         }
-        .pickerStyle(.segmented) // Hinweis: Bei vielen Einträgen ggf. ungeeignet
+        .pickerStyle(.segmented) // Note: may be unsuitable with many entries
     }
 }
 
-/// Simple image thumbnail
+// MARK: - Thumbnail
 struct Thumbnail: View {
     let image: UIImage?
     var body: some View {
@@ -172,34 +229,8 @@ struct Thumbnail: View {
         )
     }
 }
-// MARK: - ViewModifiers.swift
 
-/*
- ViewModifiers.swift
-
- GroceryGenius
- Created on: 20.07.2025
-
- ------------------------------------------------------------------------
- 📄 File Overview:
-
- This file defines reusable ViewModifiers for common styling patterns
- used throughout the Grocery Genius app.
-
- 🛠 Includes:
- - RoundedCornerModifier: Applies rounded corners to views
- - ShadowModifier: Adds a shadow to views
- - CapsuleBorderModifier: Adds a capsule-shaped border
-
- 🔰 Notes for Beginners:
- - ViewModifiers allow you to encapsulate styling logic and reuse it across views.
- - Use `.modifier()` to apply a ViewModifier to a view.
- ------------------------------------------------------------------------
-*/
-
-import SwiftUI
-
-/// A ViewModifier that applies rounded corners to a view.
+// MARK: - Style Modifiers
 struct RoundedCornerModifier: ViewModifier {
     let radius: CGFloat
 
@@ -209,7 +240,6 @@ struct RoundedCornerModifier: ViewModifier {
     }
 }
 
-/// A ViewModifier that adds a shadow to a view.
 struct ShadowModifier: ViewModifier {
     let color: Color
     let radius: CGFloat
@@ -222,7 +252,6 @@ struct ShadowModifier: ViewModifier {
     }
 }
 
-/// A ViewModifier that adds a capsule-shaped border to a view.
 struct CapsuleBorderModifier: ViewModifier {
     let color: Color
     let lineWidth: CGFloat
@@ -235,21 +264,16 @@ struct CapsuleBorderModifier: ViewModifier {
     }
 }
 
-// MARK: - Convenience Extensions
-
 extension View {
-    /// Applies rounded corners to the view.
     func roundedCorners(_ radius: CGFloat) -> some View {
-        self.modifier(RoundedCornerModifier(radius: radius))
+        modifier(RoundedCornerModifier(radius: radius))
     }
 
-    /// Applies a shadow to the view.
     func shadowStyle(color: Color, radius: CGFloat, x: CGFloat = 0, y: CGFloat = 0) -> some View {
-        self.modifier(ShadowModifier(color: color, radius: radius, x: x, y: y))
+        modifier(ShadowModifier(color: color, radius: radius, x: x, y: y))
     }
 
-    /// Applies a capsule-shaped border to the view.
     func capsuleBorder(color: Color, lineWidth: CGFloat) -> some View {
-        self.modifier(CapsuleBorderModifier(color: color, lineWidth: lineWidth))
+        modifier(CapsuleBorderModifier(color: color, lineWidth: lineWidth))
     }
 }

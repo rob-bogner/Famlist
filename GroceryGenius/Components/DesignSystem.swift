@@ -1,5 +1,29 @@
-// DesignSystem.swift
-// Central design tokens (spacing, radii, animation durations, layout metrics)
+// MARK: - DesignSystem.swift
+
+/*
+ File: DesignSystem.swift
+ Project: GroceryGenius
+ Created: 08.01.2024
+ Last Updated: 17.08.2025
+
+ Overview:
+ Central design tokens collected in one namespace (DS) to prevent magic numbers for spacing, radii, animation durations and layout metrics.
+
+ Responsibilities / Includes:
+ - Spacing scale (4 → 32)
+ - Corner radius scale
+ - Animation duration presets
+ - Layout constants (header ratio, quick add height, image sizes)
+
+ Design Notes:
+ - Use tokens instead of hard-coded numbers in UI code to ensure visual consistency.
+ - Ratio based header height keeps proportional feel across devices.
+
+ Possible Enhancements:
+ - Add typography scale
+ - Add elevation / shadow tokens
+ - Add semantic spacing aliases (e.g. formRow, sectionGap)
+*/
 import SwiftUI
 
 struct DS {

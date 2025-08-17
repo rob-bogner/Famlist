@@ -2,7 +2,7 @@
 //  EditItemView.swift
 //  GroceryGenius
 //  Created: 27.11.2023
-//  Last Updated: 31.05.2025
+//  Last Updated: 17.08.2025
 //
 // ------------------------------------------------------------------------
 // 📄 File Overview:
@@ -59,13 +59,13 @@ struct EditItemView: View {
     // MARK: - Body
 
     var body: some View {
-        CustomModalView(title: "Edit Item", onClose: { dismiss() }) {
+        CustomModalView(title: String(localized: "editItem.title"), onClose: { dismiss() }) {
             VStack(spacing: DS.Spacing.l) {
                 ScrollView {
                     VStack(spacing: DS.Spacing.m) {
                         PhotoField(image: $selectedImage)
                         VStack(alignment: .leading, spacing: 4) {
-                            TextField("Name", text: $name)
+                            TextField(String(localized: "field.name.placeholder"), text: $name)
                                 .textFieldStyle(.roundedBorder)
                                 .lineLimit(1)
                                 .focused($isNameFieldFocused)
@@ -75,13 +75,13 @@ struct EditItemView: View {
                                 )
                             if let nameError { Text(nameError).font(.caption2).foregroundColor(.red) }
                         }
-                        TextField("Brand", text: $brand)
+                        TextField(String(localized: "field.brand.placeholder"), text: $brand)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
-                        TextField("Product Description", text: $productDescription)
+                        TextField(String(localized: "field.description.placeholder"), text: $productDescription)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
-                        TextField("Category", text: $category)
+                        TextField(String(localized: "field.category.placeholder"), text: $category)
                             .textFieldStyle(.roundedBorder)
                             .lineLimit(1)
                         VStack(alignment: .leading, spacing: 4) {
@@ -97,8 +97,8 @@ struct EditItemView: View {
                     .padding(.horizontal)
                     .padding(.vertical, 25)
                 }
-                PrimaryButton(title: "Save") {
-                    // Synchrone Validierung
+                PrimaryButton(title: String(localized: "button.save")) {
+                    // Validation
                     let currentNameError = ItemInputValidator.validateName(name)
                     let currentUnitsError = ItemInputValidator.validateUnits(units)
                     let currentPriceError = ItemInputValidator.validatePrice(price)
@@ -121,13 +121,15 @@ struct EditItemView: View {
         }
     }
 
-    // MARK: - Helper Functions
+    // MARK: - Validation Helpers
 
     private var formValid: Bool { nameError == nil && unitsError == nil && priceError == nil }
     private func validateName() { nameError = ItemInputValidator.validateName(name) }
     private func validateUnits() { unitsError = ItemInputValidator.validateUnits(units) }
     private func validatePrice() { priceError = ItemInputValidator.validatePrice(price) }
     private func validateAll() { validateName(); validateUnits(); validatePrice() }
+
+    // MARK: - Populate & Save
 
     /// Initializes the editable fields with the current item's properties
     private func populateFields() {
@@ -173,14 +175,14 @@ struct EditItemView: View {
     EditItemView(item: ItemModel(
         id: UUID().uuidString,
         imageData: nil,
-        name: "Milch",
+        name: "Milk",
         units: 1,
-        measure: "L",
+        measure: "l",
         price: 1.99,
         isChecked: false,
-        category: "Milchprodukte",
-        productDescription: "Haltbare Milch 3,5%",
-        brand: "Demeter"
+        category: "Dairy",
+        productDescription: "Organic whole milk 3.5%",
+        brand: "Brand"
     ))
     .environmentObject(ListViewModel())
 }

@@ -51,7 +51,7 @@ struct ProductImageFullscreenView: View {
     }
 
     var body: some View {
-        CustomModalView(title: "Product Image", onClose: { dismiss() }) {
+        CustomModalView(title: String(localized: "productImage.title"), onClose: { dismiss() }) {
             VStack(spacing: 12) {
                 Spacer()
                 // The main product image, fit to screen and scaled
@@ -62,7 +62,7 @@ struct ProductImageFullscreenView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.theme.card)
                     .transition(.opacity.combined(with: .scale))
-                // Produktinfos unter dem Bild
+                // Product info below the image
                 VStack(spacing: 4) {
                     Text(name)
                         .font(.title2).fontWeight(.semibold)
@@ -92,8 +92,8 @@ struct ProductImageFullscreenView: View {
 #Preview {
     ProductImageFullscreenView(
         image: UIImage(systemName: "photo")!,
-        name: "Milch",
-        productDescription: "Haltbare Milch 3,5%",
-        brand: "Demeter"
+        name: "Milk",
+        productDescription: "Organic whole milk 3.5%",
+        brand: "Brand"
     )
 }

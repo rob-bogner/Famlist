@@ -1,47 +1,42 @@
+// MARK: - Color.swift
+
 /*
- GroceryGenius
- Color.swift
- File Overview:
- This file extends the Color struct to include a custom color theme for the Grocery Genius app.
- Created: 05.01.24
- Last Updated: 27.04.24
+ File: Color.swift
+ Project: GroceryGenius
+ Created: 05.01.2024
+ Last Updated: 17.08.2025
+
+ Overview:
+ Centralized color theme accessor. Exposes strongly-typed color tokens pulled from the asset catalog to avoid magic strings and scattered color references.
+
+ Responsibilities / Includes:
+ - Color.theme namespace
+ - ColorTheme struct listing semantic colors (accent, background, card, etc.)
+
+ Design Notes:
+ - Keep naming semantic (what the color represents, not the shade)
+ - Add new colors only here to maintain discoverability
+ - Assets must match the string names exactly
+
+ Possible Enhancements:
+ - Provide dynamic variants (e.g. elevated surfaces) if needed later
 */
 
-import Foundation // Import Foundation framework for basic functionalities
-import SwiftUI // Import SwiftUI framework for UI components
+import SwiftUI
 
-/// Provides static access to the app's custom color theme via `Color.theme`.
-extension Color { // Extend the Color struct
-    /// Provides access to the custom color theme.
-    static let theme = ColorTheme() // Define a static constant to access the ColorTheme instance
+extension Color {
+    /// Application design system color namespace.
+    static let theme = ColorTheme()
 }
 
-/// Struct defining a custom color theme for the app, pulling colors from the asset catalog.
-struct ColorTheme { // Define the ColorTheme struct
-    
-    // MARK: - Properties
-    
-    /// Accent color used throughout the app.
-    let accent = Color("AccentColor") // Define accent color from asset catalog
-    
-    /// Background color for views.
-    let background = Color("BackgroundColor") // Define background color from asset catalog
-    
-    /// Color used for card-like elements.
-    let card = Color("CardColor") // Define card color from asset catalog
-    
-    /// Color used for shadows.
-    let shadow = Color("ShadowColor") // Define shadow color from asset catalog
-    
-    /// Fill color for buttons.
-    let buttonFillColor = Color("ButtonFillColor") // Define button fill color from asset catalog
-    
-    /// Color for icons on buttons.
-    let buttonIconColor = Color("ButtonIconColor") // Define button icon color from asset catalog
-
-    /// Color for text.
-    let textColor = Color("TextColor") // Define button icon color from asset catalog
-    
-    /// Color for text.
-    let universalWhite = Color("universalWhite") // Define button icon color from asset catalogu
+/// Strongly typed palette of semantic colors.
+struct ColorTheme {
+    let accent = Color("AccentColor")
+    let background = Color("BackgroundColor")
+    let card = Color("CardColor")
+    let shadow = Color("ShadowColor")
+    let buttonFillColor = Color("ButtonFillColor")
+    let buttonIconColor = Color("ButtonIconColor")
+    let textColor = Color("TextColor")
+    let universalWhite = Color("universalWhite")
 }

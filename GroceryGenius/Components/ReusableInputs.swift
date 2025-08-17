@@ -1,12 +1,40 @@
-// ReusableInputs.swift
-// Wiederverwendbare Eingabe-Bausteine
+// MARK: - ReusableInputs.swift
+
+/*
+ File: ReusableInputs.swift
+ Project: GroceryGenius
+ Created: 20.07.2025
+ Last Updated: 17.08.2025
+
+ Overview:
+ Reusable input building blocks (photo picker field, quantity+measure row, wheel picker, localized price input) used across add/edit item flows.
+
+ Responsibilities / Includes:
+ - PhotoField: image capture / selection (camera or library) + removal confirmation
+ - QuantityMeasureRow: numeric units input with clamped stepper + measure selection sheet
+ - MeasureWheelPicker: wheel-style measure selection (sheet detent)
+ - PriceField: locale-aware decimal input normalizing to dot-decimal internal model
+ - Utility haptic feedback (light impact)
+
+ Design Notes:
+ - Keeps internal numeric state as String to reduce formatter churn & allow partial user input
+ - Wheel picker sheet uses internalSelection bridging to external String binding
+ - PriceField avoids NumberFormatter mid-edit to prevent cursor jumps; manual filtering instead
+ - Haptic feedback only on increment/decrement & remove to avoid over-stimulation
+
+ Possible Enhancements:
+ - Accessibility: VoiceOver custom rotor for measure selection
+ - Input masking for thousands separators
+ - Async image compression / orientation normalization before Base64 encoding
+*/
+
 import SwiftUI
 import UIKit
 
-// MARK: - Haptics Helper
+// MARK: - Haptics
 private func lightHaptic() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
 
-// MARK: Foto-Auswahl (Kamera / Galerie)
+// MARK: - PhotoField
 struct PhotoField: View {
     @Binding var image: UIImage?
     @State private var isPicker = false
@@ -24,7 +52,7 @@ struct PhotoField: View {
                         .clipped()
                         .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .onTapGesture { showSource = true }
-                        .accessibilityLabel("Produktfoto")
+                        .accessibilityLabel(String(localized: "photo.add"))
                         .accessibilityAddTraits(.isButton)
                 } else {
                     Button { showSource = true; lightHaptic() } label: {
@@ -33,13 +61,13 @@ struct PhotoField: View {
                                 .resizable().scaledToFit()
                                 .frame(width: 32, height: 32)
                                 .foregroundColor(.gray)
-                            Text("Add Photo")
+                            Text(String(localized: "photo.add"))
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
                         .frame(width: 120, height: 120)
                     }
-                    .accessibilityLabel("Foto hinzufügen")
+                    .accessibilityLabel(String(localized: "photo.add"))
                 }
             }
             .background(Color.theme.card.opacity(0.4))
@@ -50,7 +78,6 @@ struct PhotoField: View {
             )
 
             if image != nil {
-                // Remove Button
                 Button {
                     lightHaptic()
                     showRemoveConfirm = true
@@ -62,29 +89,27 @@ struct PhotoField: View {
                         .background(Circle().fill(Color.black.opacity(0.55)))
                         .padding(4)
                 }
-                .accessibilityLabel("Foto entfernen")
-                .confirmationDialog("Remove Photo?", isPresented: $showRemoveConfirm, titleVisibility: .visible) {
-                    Button("Remove", role: .destructive) { image = nil }
-                    Button("Cancel", role: .cancel) {}
+                .accessibilityLabel(String(localized: "photo.remove.action"))
+                .confirmationDialog(String(localized: "photo.remove.confirmTitle"), isPresented: $showRemoveConfirm, titleVisibility: .visible) {
+                    Button(String(localized: "photo.remove.action"), role: .destructive) { image = nil }
+                    Button(String(localized: "photo.cancel"), role: .cancel) {}
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .confirmationDialog("Select Photo Source", isPresented: $showSource, titleVisibility: .visible) {
+        .confirmationDialog(String(localized: "photo.selectSource.title"), isPresented: $showSource, titleVisibility: .visible) {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button("Take Photo") { source = .camera; isPicker = true }
+                Button(String(localized: "photo.take")) { source = .camera; isPicker = true }
             }
-            Button("Choose from Gallery") { source = .photoLibrary; isPicker = true }
-            if image != nil { Button("Remove Current Photo", role: .destructive) { image = nil } }
-            Button("Cancel", role: .cancel) {}
+            Button(String(localized: "photo.choose")) { source = .photoLibrary; isPicker = true }
+            if image != nil { Button(String(localized: "photo.removeCurrent.action"), role: .destructive) { image = nil } }
+            Button(String(localized: "photo.cancel"), role: .cancel) {}
         }
-        .sheet(isPresented: $isPicker) {
-            ImagePicker(selectedImage: $image, isPresented: $isPicker, sourceType: source)
-        }
+        .sheet(isPresented: $isPicker) { ImagePicker(selectedImage: $image, isPresented: $isPicker, sourceType: source) }
     }
 }
 
-// MARK: Menge + Einheit + Stepper
+// MARK: - Quantity + Measure Row
 struct QuantityMeasureRow: View {
     @Binding var units: String
     @Binding var measure: String
@@ -94,30 +119,27 @@ struct QuantityMeasureRow: View {
     private var atMin: Bool { value <= range.lowerBound }
     private var atMax: Bool { value >= range.upperBound }
     private let controlHeight: CGFloat = 34
-    private let measureMinWidth: CGFloat = 120 // Option B: flexible Breite
+    private let measureMinWidth: CGFloat = 120
     @State private var showMeasurePicker = false
 
     var body: some View {
         HStack(spacing: 12) {
-            TextField("Units", text: $units)
+            TextField(String(localized: "field.units.placeholder"), text: $units)
                 .keyboardType(.numberPad)
                 .frame(width: 70, height: controlHeight)
                 .multilineTextAlignment(.leading)
                 .textFieldStyle(.roundedBorder)
-                .onChange(of: units) { oldValue, newValue in
+                .onChange(of: units) { _, newValue in
                     let digits = newValue.filter { $0.isNumber }
                     let intVal = Int(digits) ?? range.lowerBound
                     let clamped = min(max(intVal, range.lowerBound), range.upperBound)
                     let normalized = String(clamped)
                     if normalized != units { units = normalized }
                 }
-            // Measure Auswahl via Wheel Sheet
-            Button {
-                showMeasurePicker = true
-            } label: {
+            Button { showMeasurePicker = true } label: {
                 HStack {
                     let current = Measure.fromExternal(measure)
-                    Text(measure.isEmpty ? "Measure" : current.displayName)
+                    Text(measure.isEmpty ? String(localized: "measure.placeholder") : current.localizedName)
                         .foregroundColor(measure.isEmpty ? .secondary : .primary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
@@ -129,7 +151,7 @@ struct QuantityMeasureRow: View {
                 .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.35)))
             }
             .layoutPriority(1)
-            .accessibilityLabel("Einheit wählen")
+            .accessibilityLabel(String(localized: "measure.placeholder"))
             .sheet(isPresented: $showMeasurePicker) {
                 MeasureWheelPicker(selection: $measure)
                     .presentationDetents([.fraction(0.35)])
@@ -141,18 +163,14 @@ struct QuantityMeasureRow: View {
                         .foregroundColor(.white)
                         .frame(width: controlHeight, height: controlHeight)
                         .background(Capsule().fill(atMin ? Color.gray.opacity(0.35) : Color.accentColor))
-                }
-                .disabled(atMin)
-                .accessibilityLabel("Menge verringern")
+                }.disabled(atMin).accessibilityLabel("decrement")
                 Button { increment() } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(width: controlHeight, height: controlHeight)
                         .background(Capsule().fill(atMax ? Color.gray.opacity(0.35) : Color.accentColor))
-                }
-                .disabled(atMax)
-                .accessibilityLabel("Menge erhöhen")
+                }.disabled(atMax).accessibilityLabel("increment")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -161,39 +179,28 @@ struct QuantityMeasureRow: View {
     private func increment() { var v = value; if v < range.upperBound { v += 1; units = String(v); lightHaptic() } }
 }
 
-// Wheel Picker Sheet
+// MARK: - Wheel Picker Sheet
 private struct MeasureWheelPicker: View {
     @Binding var selection: String
     @Environment(\.dismiss) private var dismiss
     private var measures: [Measure] { Measure.allCases }
-    @State private var internalSelection: Measure = .stueck
+    @State private var internalSelection: Measure = .piece
 
     var body: some View {
         VStack(spacing: 12) {
-            HStack {
-                Spacer()
-                Button("Fertig") {
-                    selection = internalSelection.rawValue
-                    dismiss()
-                }
-                .bold()
-            }
-            .padding(.horizontal)
+            HStack { Spacer(); Button(String(localized: "button.done")) { selection = internalSelection.rawValue; dismiss() }.bold() }
+                .padding(.horizontal)
             Picker("Measure", selection: $internalSelection) {
-                ForEach(measures, id: \.self) { m in
-                    Text(m.displayName).tag(m)
-                }
+                ForEach(measures, id: \.self) { m in Text(m.localizedName).tag(m) }
             }
             .pickerStyle(.wheel)
-            .onAppear {
-                internalSelection = Measure.fromExternal(selection)
-            }
+            .onAppear { internalSelection = Measure.fromExternal(selection) }
         }
         .presentationDragIndicator(.visible)
     }
 }
 
-// MARK: Preisfeld mit lokaler Formatierung
+// MARK: - PriceField (Locale-Aware Decimal Input)
 struct PriceField: View {
     @Binding var price: String
     var showCurrencySymbol: Bool = true
@@ -208,7 +215,7 @@ struct PriceField: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            TextField("Price", text: Binding(
+            TextField(String(localized: "field.price.placeholder"), text: Binding(
                 get: { internalText.isEmpty ? displayStringFromStoredPrice() : internalText },
                 set: { newVal in
                     suppressExternalSync = true
@@ -216,10 +223,7 @@ struct PriceField: View {
                     var result = ""
                     var separatorUsed = false
                     for ch in filtered {
-                        if ch == Character(decimalSeparator) {
-                            if separatorUsed { continue }
-                            separatorUsed = true
-                        }
+                        if ch == Character(decimalSeparator) { if separatorUsed { continue }; separatorUsed = true }
                         result.append(ch)
                     }
                     internalText = result
@@ -237,7 +241,7 @@ struct PriceField: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(errorMessage == nil ? Color.clear : Color.red.opacity(0.8), lineWidth: 1)
             )
-            .accessibilityLabel("Preis")
+            .accessibilityLabel(String(localized: "field.price.placeholder"))
             if showCurrencySymbol {
                 Text(locale.currencySymbol ?? "€")
                     .font(.subheadline.weight(.semibold))
@@ -252,19 +256,15 @@ struct PriceField: View {
     }
 
     private func displayStringFromStoredPrice() -> String {
-        // Zeigt den gespeicherten Preis im lokalen Format an
         let normalized = price.replacingOccurrences(of: ",", with: ".")
         guard let value = Double(normalized) else { return price.replacingOccurrences(of: ".", with: decimalSeparator) }
         var raw = String(value)
-        // Entferne trailing .0 für schönere Darstellung
         if raw.hasSuffix(".0") { raw.removeLast(2) }
         return raw.replacingOccurrences(of: ".", with: decimalSeparator)
     }
-
     private func syncFromBindingIfNeeded(force: Bool) {
         guard !suppressExternalSync else { return }
         let currentRaw = price
-        // Nur synchronisieren wenn internalText leer (Initialisierung) oder erzwungen
         if force || currentRaw != lastSyncedRawPrice {
             internalText = displayStringFromStoredPrice()
             lastSyncedRawPrice = currentRaw

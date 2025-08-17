@@ -1,100 +1,88 @@
 // MARK: - FirestoreManager.swift
 
 /*
- FirestoreManager.swift
+ File: FirestoreManager.swift
+ Project: GroceryGenius
+ Created: 27.11.2023
+ Last Updated: 17.08.2025
 
- GroceryGenius
- Created on: 27.11.2023
- Last updated on: 26.04.2025
+ Overview:
+ Concrete Firestore-backed implementation of ItemsRepository. Provides a singleton used by view models to observe and mutate shopping list items in real time.
+
+ Responsibilities / Includes:
+ - Real-time snapshot listener producing [ItemModel]
+ - CRUD (add / update / delete) with Codable mapping
+ - Simple error logging (console)
+ - Encapsulates collection naming & Firestore access
+
+ Key Points:
+ - Uses ItemModel.id (UUID) as Firestore document ID (stable & deterministic)
+ - updateItem applies merge:true to avoid overwriting untouched fields
+ - Listener emits empty array on failure so UI can gracefully degrade
+
+ Error Handling:
+ - Snapshot errors logged, caller receives empty list
+ - Encoding failures surface via completion(Error)
+ - Delete completion passes underlying Firestore error
+
+ Notes:
+ - Consider enhancing logging with a structured logger for production
+ - For unit tests provide a mock conforming to ItemsRepository
 */
 
 import Foundation
 import FirebaseFirestore
 
-/// A manager responsible for handling Firestore operations related to shopping list items.
+/// Firestore-backed repository (singleton) for ItemModel entities.
 final class FirestoreManager: ItemsRepository {
-    // MARK: - Properties
-    /// Singleton instance of the FirestoreManager.
+    // MARK: - Constants
     static let shared = FirestoreManager()
-    
-    /// The Firestore database reference.
-    private let db = Firestore.firestore() // Creates a Firestore database connection
-    
-    /// The name of the Firestore collection where items are stored.
-    private let collection = "items" // Collection name in Firestore where documents are saved
+    private let db = Firestore.firestore()
+    private let collection = "items"
 
-    // MARK: - Initializer
-    
-    /// Private initializer to ensure singleton usage.
-    private init() {} // Restricts creation to only one shared instance
+    private init() {}
 
-    // MARK: - Firestore Listener
-
-    /// Starts a real-time listener for item changes in Firestore.
-    /// - Parameter onUpdate: Closure to be called with the updated list of items.
-    /// - Returns: A ListenerRegistration object that can be used to stop listening.
+    // MARK: - Real-time Listener
     @discardableResult
     func addListener(onUpdate: @escaping ([ItemModel]) -> Void) -> ListenerToken {
-        return db.collection(collection).addSnapshotListener { snapshot, error in
+        db.collection(collection).addSnapshotListener { snapshot, error in
             guard let documents = snapshot?.documents else {
-                // Print a warning if no documents were found and call the update closure with an empty array
-                print("⚠️ Firestore: No documents found — \(error?.localizedDescription ?? "Unknown error")")
+                print("⚠️ Firestore snapshot empty – \(error?.localizedDescription ?? "unknown error")")
                 onUpdate([])
                 return
             }
-
-            // Try to map documents into ItemModel objects
             let items: [ItemModel] = documents.compactMap { doc in
                 try? doc.data(as: ItemModel.self)
             }
-            onUpdate(items) // Send updated item list to the caller
+            onUpdate(items)
         } as ListenerRegistration
     }
-    
-    // MARK: - CRUD Operations
-    
-    /// Adds a new item to Firestore.
-    /// - Parameters:
-    ///   - item: The item to be added.
-    ///   - completion: Optional closure called with an optional Error if the operation fails.
+
+    // MARK: - CRUD
     func addItem(_ item: ItemModel, completion: ((Error?) -> Void)? = nil) {
         do {
-            // The imageData property (Base64-encoded) is now also included during Firestore save and update operations.
-            try db.collection(collection).document(item.id).setData(from: item) // Save item to Firestore
-            completion?(nil) // Call completion handler without error
+            try db.collection(collection).document(item.id).setData(from: item)
+            completion?(nil)
         } catch {
-            print("❌ Firestore Error - Add Item: \(error.localizedDescription)")
-            completion?(error) // Pass error to completion handler
+            print("❌ Firestore add: \(error.localizedDescription)")
+            completion?(error)
         }
     }
-    
-    /// Updates an existing item in Firestore.
-    /// - Parameters:
-    ///   - item: The item to be updated.
-    ///   - completion: Optional closure called with an optional Error if the operation fails.
+
     func updateItem(_ item: ItemModel, completion: ((Error?) -> Void)? = nil) {
         do {
-            // The imageData property (Base64-encoded) is now also included during Firestore save and update operations.
-            try db.collection(collection).document(item.id).setData(from: item, merge: true) // Merge changes into existing document
-            completion?(nil) // Call completion handler without error
+            try db.collection(collection).document(item.id).setData(from: item, merge: true)
+            completion?(nil)
         } catch {
-            print("❌ Firestore Error - Update Item: \(error.localizedDescription)")
-            completion?(error) // Pass error to completion handler
+            print("❌ Firestore update: \(error.localizedDescription)")
+            completion?(error)
         }
     }
-    
-    /// Deletes an item from Firestore.
-    /// - Parameters:
-    ///   - item: The item to be deleted.
-    ///   - completion: Optional closure called with an optional Error if the operation fails.
+
     func deleteItem(_ item: ItemModel, completion: ((Error?) -> Void)? = nil) {
         db.collection(collection).document(item.id).delete { error in
-            if let error = error {
-                print("❌ Firestore Error - Delete Item: \(error.localizedDescription)")
-                completion?(error) // Pass error to completion handler if deletion fails
-            } else {
-                completion?(nil) // Call completion handler without error if deletion succeeds
-            }
+            if let error { print("❌ Firestore delete: \(error.localizedDescription)") }
+            completion?(error)
         }
     }
 }

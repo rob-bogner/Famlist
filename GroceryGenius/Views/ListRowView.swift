@@ -1,29 +1,30 @@
-// GroceryGenius
-// ListRowView.swift
-// Created on: 27.11.2023
-// Last updated on: 31.05.2025
-//
-// ------------------------------------------------------------------------
-// 📄 File Overview:
-//
-// This file defines the row view for a single shopping list item,
-// providing modern styling, theming, and all core interactions.
-// Each row can display an item photo, item details, and a checkmark.
-//
-// 🖌️ Modern UI Features:
-// - Theme-based design for consistent light and dark mode support
-// - Accent color highlights for checkmark and important actions
-// - Displays product image or placeholder
-// - Product photo can be tapped to open a fullscreen modal preview
-// - Strikethrough in accent color for checked items
-//
-// 🧑‍💻 Developer Notes:
-// - Designed to be used inside ListView and ShoppingListView
-// - Uses @EnvironmentObject for ListViewModel data/context
-// - Photo modal logic is handled locally in each row
-// - Fully documented for learning and maintainability
-//
-// ------------------------------------------------------------------------
+// MARK: - ListRowView.swift
+
+/*
+ File: ListRowView.swift
+ Project: GroceryGenius
+ Created: 27.11.2023
+ Last Updated: 17.08.2025
+
+ Overview:
+ Row representation of a single shopping list item with image thumbnail, title, meta info (units + measure + price) and optional strike-through when checked.
+
+ Responsibilities / Includes:
+ - Decodes Base64 image via ImageCache and displays placeholder fallback
+ - Opens fullscreen image modal on tap
+ - Applies visual differentiation (opacity + background) for checked state
+ - Exposes clean subviews (ItemThumbnail, ItemTitle, ItemMeta) for readability
+
+ Design Notes:
+ - Uses cardStyle() + conditional background for checked state
+ - ModalPhoto wrapper ensures unique identity for sheet presentation
+ - Layout keeps image square; meta line shows localized measure name
+
+ Possible Enhancements:
+ - Add accessibility labels for price and quantity
+ - Support async remote image source
+ - Add quick inline toggle gesture (e.g. leading swipe or tap zone)
+*/
 
 import SwiftUI
 
@@ -68,7 +69,7 @@ struct ItemMeta: View {
     let measure: String
     let price: Double
     var body: some View {
-        let displayMeasure = measure.isEmpty ? "" : Measure.fromExternal(measure).displayName
+        let displayMeasure = measure.isEmpty ? "" : Measure.fromExternal(measure).localizedName
         HStack {
             Text(displayMeasure.isEmpty ? "\(units)" : "\(units) \(displayMeasure)")
             Spacer()
@@ -133,13 +134,13 @@ struct ListRowView: View {
     ListRowView(item: ItemModel(
         id: UUID().uuidString,
         imageData: nil,
-        name: "Milch",
+        name: "Milk",
         units: 1,
-        measure: "L",
+        measure: "l",
         price: 1.99,
         isChecked: false,
-        category: "Milchprodukte",
-        productDescription: "Haltbare Milch 3,5%",
-        brand: "Demeter"
+        category: "Dairy",
+        productDescription: "Organic whole milk 3.5%",
+        brand: "Brand"
     ))
 }
