@@ -120,7 +120,7 @@ struct AddItemView: View {
 
     /// Adds a new item to the shopping list.
     private func addItemPressed(sanitizedName: String) {
-        let imageBase64 = imageToBase64(selectedImage) ?? ""
+        let imageBase64 = imageToBase64(selectedImage)
         let newItem = ItemModel(
             imageData: imageBase64,
             name: sanitizedName,

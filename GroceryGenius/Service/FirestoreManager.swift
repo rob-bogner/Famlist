@@ -70,8 +70,14 @@ final class FirestoreManager: ItemsRepository {
     }
 
     func updateItem(_ item: ItemModel, completion: ((Error?) -> Void)? = nil) {
+        let doc = db.collection(collection).document(item.id)
+        // If imageData is nil or empty, explicitly delete the field in Firestore. Codable omits nils which won't clear with merge: true.
+        let shouldDeleteImageField = (item.imageData == nil) || (item.imageData?.isEmpty == true)
+        if shouldDeleteImageField {
+            doc.updateData(["imageData": FieldValue.delete()])
+        }
         do {
-            try db.collection(collection).document(item.id).setData(from: item, merge: true)
+            try doc.setData(from: item, merge: true)
             completion?(nil)
         } catch {
             print("❌ Firestore update: \(error.localizedDescription)")
