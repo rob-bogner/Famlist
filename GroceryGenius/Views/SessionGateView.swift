@@ -16,11 +16,10 @@ struct SessionGateView: View {
             case .initializing:
                 ProgressView().controlSize(.large)
             case .signedIn(let pubId):
-                HomeView(publicId: pubId, pendingInviteCode: $sessionVM.pendingInviteCode, selectedTab: $selectedTab)
+                HomeView(publicId: pubId, pendingInviteCode: $sessionVM.pendingInviteCode)
                     .onOpenURL { url in
                         if let code = DeepLinkParser.pairCode(from: url) {
                             sessionVM.pendingInviteCode = code
-                            selectedTab = 1
                         }
                     }
             }
@@ -37,23 +36,55 @@ struct SessionGateView: View {
 
 private struct IdentifiedAlert: Identifiable { let id = UUID(); let message: String }
 
-// MARK: - HomeView with Tabs
+// MARK: - HomeView with Hamburger Menu
 struct HomeView: View {
+    enum Section { case lists, pairing, settings }
     let publicId: PublicUserId
     @Binding var pendingInviteCode: String?
-    @Binding var selectedTab: Int
+    @State private var section: Section = .lists
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            ShoppingListView()
-                .tabItem { Label("Lists", systemImage: "list.bullet") }
-                .tag(0)
-            PairingHostView(publicId: publicId, pendingInviteCode: $pendingInviteCode)
-                .tabItem { Label("Pairing", systemImage: "person.2") }
-                .tag(1)
-            NavigationView { SettingsView(publicId: publicId) }
-                .tabItem { Label("Settings", systemImage: "gearshape") }
-                .tag(2)
+        Group {
+            switch section {
+            case .lists:
+                ShoppingListView()
+                    .overlay(alignment: .topTrailing) {
+                        HamburgerMenuButton(section: $section)
+                            .padding(.top, 12)
+                            .padding(.trailing, 12)
+                    }
+            case .pairing:
+                PairingHostView(publicId: publicId, pendingInviteCode: $pendingInviteCode) {
+                    HamburgerMenuButton(section: $section)
+                }
+            case .settings:
+                NavigationView {
+                    SettingsView(publicId: publicId)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar { ToolbarItem(placement: .navigationBarTrailing) { HamburgerMenuButton(section: $section) } }
+                }
+            }
+        }
+        .onChange(of: pendingInviteCode) { _, new in
+            if let code = new, !code.isEmpty { section = .pairing }
+        }
+    }
+}
+
+// MARK: - Hamburger Button
+private struct HamburgerMenuButton: View {
+    @Binding var section: HomeView.Section
+    var body: some View {
+        Menu {
+            Button(action: { section = .lists }) { Label("Lists", systemImage: "list.bullet") }
+            Button(action: { section = .pairing }) { Label("Pairing", systemImage: "person.2") }
+            Button(action: { section = .settings }) { Label("Settings", systemImage: "gearshape") }
+        } label: {
+            Image(systemName: "line.3.horizontal")
+                .font(.title3.weight(.semibold))
+                .padding(10)
+                .background(Circle().fill(Color.theme.accent))
+                .foregroundColor(Color.theme.background)
         }
     }
 }
@@ -63,11 +94,14 @@ struct PairingHostView: View {
     let publicId: PublicUserId
     @Binding var pendingInviteCode: String?
     @StateObject private var vm: PairingViewModel
+    private let trailingMenu: AnyView?
 
-    init(publicId: PublicUserId, pendingInviteCode: Binding<String?>) {
+    init(publicId: PublicUserId, pendingInviteCode: Binding<String?>, @ViewBuilder trailingMenu: () -> some View = { EmptyView() }) {
         self.publicId = publicId
         self._pendingInviteCode = pendingInviteCode
         _vm = StateObject(wrappedValue: PairingViewModel(myId: publicId, pairingRepo: FirebasePairingRepository()))
+        let view = trailingMenu()
+        self.trailingMenu = (view is EmptyView) ? nil : AnyView(view)
     }
 
     var body: some View {
@@ -106,6 +140,9 @@ struct PairingHostView: View {
                 .padding(.vertical)
             }
             .navigationTitle("Pairing")
+            .toolbar {
+                if let trailingMenu { ToolbarItem(placement: .navigationBarTrailing) { trailingMenu } }
+            }
         }
         .onChange(of: pendingInviteCode) { _, new in
             if let code = new, !code.isEmpty { Task { await vm.acceptInvite(code: code) }; pendingInviteCode = nil }
