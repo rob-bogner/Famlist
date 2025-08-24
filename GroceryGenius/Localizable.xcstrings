@@ -1,9 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "-" : {
       "localizations" : {
         "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "-"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "-"
@@ -15,8 +24,14 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "%lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "&lid"
           }
         }
       }
@@ -44,14 +59,34 @@
             "state" : "translated",
             "value" : "+"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+"
+          }
         }
       }
     },
     "Accept" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "annehmen"
+          }
+        }
+      }
     },
     "Accept invite" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einladung annehmen"
+          }
+        }
+      }
     },
     "addItem.title" : {
       "extractionState" : "manual",
@@ -71,7 +106,14 @@
       }
     },
     "Approve" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zustimmen"
+          }
+        }
+      }
     },
     "button.addItem" : {
       "extractionState" : "manual",
@@ -125,14 +167,34 @@
       }
     },
     "Copy" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren"
+          }
+        }
+      }
     },
     "Copy code" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code kopieren"
+          }
+        }
+      }
     },
     "decrement" : {
       "localizations" : {
         "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Decrement"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Decrement"
@@ -141,7 +203,14 @@
       }
     },
     "Deny" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablehnen"
+          }
+        }
+      }
     },
     "editItem.title" : {
       "extractionState" : "manual",
@@ -161,10 +230,24 @@
       }
     },
     "Enter code" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code eigeben"
+          }
+        }
+      }
     },
     "Error" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler"
+          }
+        }
+      }
     },
     "error.repository.decode" : {
       "extractionState" : "manual",
@@ -354,17 +437,44 @@
       }
     },
     "From: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von: %@"
+          }
+        }
+      }
     },
     "Generate" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generieren"
+          }
+        }
+      }
     },
     "Identity" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identität"
+          }
+        }
+      }
     },
     "increment" : {
       "localizations" : {
         "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Increment"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Increment"
@@ -373,17 +483,44 @@
       }
     },
     "Invite a partner" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade einen Partner ein"
+          }
+        }
+      }
     },
     "List Sharing" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teilen von Listen"
+          }
+        }
+      }
     },
     "Lists" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen"
+          }
+        }
+      }
     },
     "Measure" : {
       "localizations" : {
         "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Maßeinheit"
+          }
+        },
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maßeinheit"
@@ -409,22 +546,64 @@
       }
     },
     "My Public ID" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meine Öffentliche ID"
+          }
+        }
+      }
     },
     "No lists yet" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Listen"
+          }
+        }
+      }
     },
     "No partners yet" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Partner"
+          }
+        }
+      }
     },
     "OK" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
     },
     "Pairing" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopplung"
+          }
+        }
+      }
     },
     "Partners" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partner"
+          }
+        }
+      }
     },
     "photo.add" : {
       "extractionState" : "manual",
@@ -563,7 +742,14 @@
       }
     },
     "Private" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privat"
+          }
+        }
+      }
     },
     "productImage.title" : {
       "extractionState" : "manual",
@@ -651,7 +837,14 @@
       }
     },
     "Requests" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfragen"
+          }
+        }
+      }
     },
     "section.checkedItems.title" : {
       "extractionState" : "manual",
@@ -671,16 +864,44 @@
       }
     },
     "Settings" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen"
+          }
+        }
+      }
     },
     "Share" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teilen"
+          }
+        }
+      }
     },
     "Share link" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link teilen"
+          }
+        }
+      }
     },
     "Shared with: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teilen mit: %@"
+          }
+        }
+      }
     },
     "shoppingList.title" : {
       "extractionState" : "manual",
@@ -1329,7 +1550,14 @@
       }
     },
     "Your User ID" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Benutzer ID"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
