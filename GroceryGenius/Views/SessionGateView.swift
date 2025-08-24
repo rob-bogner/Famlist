@@ -76,9 +76,15 @@ private struct HamburgerMenuButton: View {
     @Binding var section: HomeView.Section
     var body: some View {
         Menu {
-            Button(action: { section = .lists }) { Label("Lists", systemImage: "list.bullet") }
-            Button(action: { section = .pairing }) { Label("Pairing", systemImage: "person.2") }
-            Button(action: { section = .settings }) { Label("Settings", systemImage: "gearshape") }
+            Button(action: { section = .lists }) {
+                Label { Text("menu.lists", tableName: "Localizable") } icon: { Image(systemName: "list.bullet") }
+            }
+            Button(action: { section = .pairing }) {
+                Label { Text("menu.pairing", tableName: "Localizable") } icon: { Image(systemName: "person.2") }
+            }
+            Button(action: { section = .settings }) {
+                Label { Text("menu.settings", tableName: "Localizable") } icon: { Image(systemName: "gearshape") }
+            }
         } label: {
             Image(systemName: "line.3.horizontal")
                 .font(.title3.weight(.semibold))
@@ -111,37 +117,40 @@ struct PairingHostView: View {
         NavigationView {
             ZStack(alignment: .top) {
                 Color.theme.background.ignoresSafeArea()
-                AccentHeader(title: "Pairing", style: .plain)
+                AccentHeader(title: String(localized: "pairing.title"), style: .plain)
                     .frame(height: headerHeight)
                     .zIndex(0)
                 VStack(spacing: 0) {
                     Spacer().frame(height: contentOffsetBelowHeader)
                     ScrollView {
                         VStack(alignment: .leading, spacing: 16) {
-                            GroupBox("My Public ID") {
+                            GroupBox {
                                 HStack { Text(publicId.value).font(.callout).textSelection(.enabled); Spacer() }
-                            }.padding(.horizontal)
-                            GroupBox("Invite a partner") {
+                            } label: { Text("pairing.myPublicId", tableName: "Localizable") }
+                            .padding(.horizontal)
+                            GroupBox {
                                 HStack {
                                     Text(vm.inviteCode.isEmpty ? "—" : vm.inviteCode).font(.title2.monospaced())
                                     Spacer()
-                                    Button("Generate") { Task { await vm.generateInvite() } }
+                                    Button(action: { Task { await vm.generateInvite() } }) { Text("pairing.generate", tableName: "Localizable") }
                                 }
                                 if !vm.inviteCode.isEmpty {
                                     let link = "gg://pair/\(vm.inviteCode)"
                                     QRCodeView(text: link).frame(width: 160, height: 160)
                                     HStack {
-                                        Button("Copy code") { UIPasteboard.general.string = vm.inviteCode }
-                                        Button("Share link") {
+                                        Button(action: { UIPasteboard.general.string = vm.inviteCode }) { Text("pairing.copyCode", tableName: "Localizable") }
+                                        Button(action: {
                                             let av = UIActivityViewController(activityItems: [URL(string: link)!], applicationActivities: nil)
                                             UIApplication.shared.topMostViewController()?.present(av, animated: true)
-                                        }
+                                        }) { Text("pairing.shareLink", tableName: "Localizable") }
                                     }
                                 }
-                            }.padding(.horizontal)
-                            GroupBox("Accept invite") {
+                            } label: { Text("pairing.invitePartner", tableName: "Localizable") }
+                            .padding(.horizontal)
+                            GroupBox {
                                 AcceptInviteView(pendingInviteCode: $pendingInviteCode) { code in Task { await vm.acceptInvite(code: code) } }
-                            }.padding(.horizontal)
+                            } label: { Text("pairing.acceptInvite", tableName: "Localizable") }
+                            .padding(.horizontal)
                             ApprovalsListView(vm: vm)
                                 .padding(.horizontal)
                             PartnersListView(partners: vm.partners)
@@ -176,18 +185,22 @@ struct SettingsView: View {
     var body: some View {
         ZStack(alignment: .top) {
             Color.theme.background.ignoresSafeArea()
-            AccentHeader(title: "Settings", style: .plain)
+            AccentHeader(title: String(localized: "settings.title"), style: .plain)
                 .frame(height: headerHeight)
             VStack(spacing: 0) {
                 Spacer().frame(height: contentOffsetBelowHeader)
                 Form {
-                    Section("Identity") {
-                        HStack { Text("Your User ID"); Spacer(); Text(publicId.value).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled) }
+                    Section {
                         HStack {
-                            Button("Copy") { UIPasteboard.general.string = publicId.value }
-                            ShareLink("Share", item: publicId.value)
+                            Text("settings.userId", tableName: "Localizable")
+                            Spacer()
+                            Text(publicId.value).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
                         }
-                    }
+                        HStack {
+                            Button(action: { UIPasteboard.general.string = publicId.value }) { Text("settings.copy", tableName: "Localizable") }
+                            ShareLink(item: publicId.value) { Text("settings.share", tableName: "Localizable") }
+                        }
+                    } header: { Text("settings.identity", tableName: "Localizable") }
                 }
             }
         }
@@ -203,10 +216,10 @@ struct AcceptInviteView: View {
     @State private var code: String = ""
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            TextField("Enter code", text: Binding(get: { pendingInviteCode ?? code }, set: { code = $0 }))
+            TextField(LocalizedStringKey("pairing.enterCode"), text: Binding(get: { pendingInviteCode ?? code }, set: { code = $0 }))
                 .textFieldStyle(.roundedBorder)
                 .textInputAutocapitalization(.characters)
-            Button("Accept") { onSubmit(pendingInviteCode ?? code) }
+            Button(action: { onSubmit(pendingInviteCode ?? code) }) { Text("pairing.accept", tableName: "Localizable") }
                 .buttonStyle(.borderedProminent)
         }
     }
@@ -217,14 +230,18 @@ struct ApprovalsListView: View {
     @ObservedObject var vm: PairingViewModel
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Requests").font(.headline)
+            Text("pairing.requests", tableName: "Localizable").font(.headline)
             ForEach(vm.incoming, id: \.id) { req in
                 HStack {
-                    Text("From: \(req.from.value)").font(.subheadline).lineLimit(1)
+                    HStack(spacing: 4) {
+                        Text("pairing.from", tableName: "Localizable").font(.subheadline)
+                        Text(req.from.value).font(.subheadline).lineLimit(1)
+                    }
                     Spacer()
                     if req.status == .pending {
-                        Button("Approve") { Task { await vm.approve(req) } }
-                        Button("Deny") { Task { await vm.deny(req) } }.foregroundColor(.red)
+                        Button(action: { Task { await vm.approve(req) } }) { Text("pairing.approve", tableName: "Localizable") }
+                        Button(action: { Task { await vm.deny(req) } }) { Text("pairing.deny", tableName: "Localizable") }
+                            .foregroundColor(.red)
                     } else {
                         Text(req.status.rawValue.capitalized).foregroundStyle(.secondary)
                     }
@@ -239,9 +256,9 @@ struct PartnersListView: View {
     let partners: [PublicUserId]
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Partners").font(.headline)
+            Text("pairing.partners", tableName: "Localizable").font(.headline)
             if partners.isEmpty {
-                Text("No partners yet").foregroundStyle(.secondary)
+                Text("pairing.noPartners", tableName: "Localizable").foregroundStyle(.secondary)
             } else {
                 ForEach(partners, id: \.self) { p in HStack { Text(p.value); Spacer() } }
             }

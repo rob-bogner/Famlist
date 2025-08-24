@@ -79,9 +79,9 @@ final class FirebasePairingRepository: PairingRepository {
         return PairingRequest(id: doc.documentID, from: PublicUserId(from), toCode: code, status: PairingStatus(rawValue: statusRaw) ?? .pending, createdAt: createdAt)
     }
 
-    // Base32 (Crockford subset) encode 5 bytes to 8 chars
+    // Base32 (Crockford) encode 5 bytes to 8 chars
     private func base32(_ bytes: [UInt8]) -> String {
-        let alphabet = Array("ABCDEFGHJKMNPQRSTUVWXYZ23456789") // no I,L,O,0,1
+        let alphabet = Array("0123456789ABCDEFGHJKMNPQRSTVWXYZ") // excludes I, L, O, U
         var value: UInt64 = 0
         for b in bytes { value = (value << 8) | UInt64(b) }
         var out = ""

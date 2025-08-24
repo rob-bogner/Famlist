@@ -68,26 +68,6 @@
         }
       }
     },
-    "Accept" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "annehmen"
-          }
-        }
-      }
-    },
-    "Accept invite" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einladung annehmen"
-          }
-        }
-      }
-    },
     "addItem.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -101,16 +81,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add Item"
-          }
-        }
-      }
-    },
-    "Approve" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zustimmen"
           }
         }
       }
@@ -166,26 +136,6 @@
         }
       }
     },
-    "Copy" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopieren"
-          }
-        }
-      }
-    },
-    "Copy code" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Code kopieren"
-          }
-        }
-      }
-    },
     "decrement" : {
       "localizations" : {
         "de" : {
@@ -198,16 +148,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Decrement"
-          }
-        }
-      }
-    },
-    "Deny" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ablehnen"
           }
         }
       }
@@ -229,22 +169,18 @@
         }
       }
     },
-    "Enter code" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Code eigeben"
-          }
-        }
-      }
-    },
     "Error" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Fehler"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fehler"
+            "value" : "Error"
           }
         }
       }
@@ -436,36 +372,6 @@
         }
       }
     },
-    "From: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Von: %@"
-          }
-        }
-      }
-    },
-    "Generate" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Generieren"
-          }
-        }
-      }
-    },
-    "Identity" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Identität"
-          }
-        }
-      }
-    },
     "increment" : {
       "localizations" : {
         "de" : {
@@ -482,32 +388,18 @@
         }
       }
     },
-    "Invite a partner" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lade einen Partner ein"
-          }
-        }
-      }
-    },
     "List Sharing" : {
       "localizations" : {
-        "en" : {
+        "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Teilen von Listen"
           }
-        }
-      }
-    },
-    "Lists" : {
-      "localizations" : {
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Listen"
+            "value" : "List sharing"
           }
         }
       }
@@ -523,7 +415,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maßeinheit"
+            "value" : "Measure"
           }
         }
       }
@@ -545,38 +437,78 @@
         }
       }
     },
-    "My Public ID" : {
+    "menu.lists" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Listen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meine Öffentliche ID"
+            "value" : "Lists"
+          }
+        }
+      }
+    },
+    "menu.pairing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kopplung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing"
+          }
+        }
+      }
+    },
+    "menu.settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Einstellungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         }
       }
     },
     "No lists yet" : {
       "localizations" : {
-        "en" : {
+        "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Noch keine Listen"
           }
-        }
-      }
-    },
-    "No partners yet" : {
-      "localizations" : {
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Noch keine Partner"
+            "value" : "No lists yet"
           }
         }
       }
     },
     "OK" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -585,22 +517,258 @@
         }
       }
     },
-    "Pairing" : {
+    "pairing.accept" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Akzeptieren"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Accept"
+          }
+        }
+      }
+    },
+    "pairing.acceptInvite" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Einladung annehmen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept invite"
+          }
+        }
+      }
+    },
+    "pairing.approve" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bestätigen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approve"
+          }
+        }
+      }
+    },
+    "pairing.copyCode" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Code kopieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy code"
+          }
+        }
+      }
+    },
+    "pairing.deny" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ablehnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deny"
+          }
+        }
+      }
+    },
+    "pairing.enterCode" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Code eingeben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter Code"
+          }
+        }
+      }
+    },
+    "pairing.from" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Von"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From"
+          }
+        }
+      }
+    },
+    "pairing.generate" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Generieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate"
+          }
+        }
+      }
+    },
+    "pairing.invitePartner" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Partner einladen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite partner"
+          }
+        }
+      }
+    },
+    "pairing.myPublicId" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Meine öffentliche ID"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My public ID"
+          }
+        }
+      }
+    },
+    "pairing.noPartners" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Keine Partner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No partners"
+          }
+        }
+      }
+    },
+    "pairing.partners" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Partner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partners"
+          }
+        }
+      }
+    },
+    "pairing.requests" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Anfragen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requests"
+          }
+        }
+      }
+    },
+    "pairing.shareLink" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "& Link teilen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "& Share link"
+          }
+        }
+      }
+    },
+    "pairing.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "Kopplung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing"
           }
         }
       }
     },
     "Partners" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Partner"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Partner"
+            "value" : "Partners"
           }
         }
       }
@@ -743,10 +911,16 @@
     },
     "Private" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Privat"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Privat"
+            "value" : "Private"
           }
         }
       }
@@ -836,16 +1010,6 @@
         }
       }
     },
-    "Requests" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anfragen"
-          }
-        }
-      }
-    },
     "section.checkedItems.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -863,42 +1027,100 @@
         }
       }
     },
-    "Settings" : {
+    "settings.copy" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kopieren"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Copy"
+          }
+        }
+      }
+    },
+    "settings.identity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identität"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identity"
+          }
+        }
+      }
+    },
+    "settings.share" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "& Teilen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "& Share"
+          }
+        }
+      }
+    },
+    "settings.title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "Einstellungen"
           }
-        }
-      }
-    },
-    "Share" : {
-      "localizations" : {
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Teilen"
+            "value" : "Settings"
           }
         }
       }
     },
-    "Share link" : {
+    "settings.userId" : {
+      "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Benutzer ID"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Link teilen"
+            "value" : "User ID"
           }
         }
       }
     },
     "Shared with: %@" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Teilen mit: %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Teilen mit: %@"
+            "value" : "Shared with: %@"
           }
         }
       }
@@ -1545,16 +1767,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invalid number"
-          }
-        }
-      }
-    },
-    "Your User ID" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deine Benutzer ID"
           }
         }
       }
