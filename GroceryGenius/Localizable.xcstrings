@@ -47,6 +47,12 @@
         }
       }
     },
+    "Accept" : {
+
+    },
+    "Accept invite" : {
+
+    },
     "addItem.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -63,6 +69,9 @@
           }
         }
       }
+    },
+    "Approve" : {
+
     },
     "button.addItem" : {
       "extractionState" : "manual",
@@ -115,6 +124,12 @@
         }
       }
     },
+    "Copy" : {
+
+    },
+    "Copy code" : {
+
+    },
     "decrement" : {
       "localizations" : {
         "de" : {
@@ -124,6 +139,9 @@
           }
         }
       }
+    },
+    "Deny" : {
+
     },
     "editItem.title" : {
       "extractionState" : "manual",
@@ -141,6 +159,12 @@
           }
         }
       }
+    },
+    "Enter code" : {
+
+    },
+    "Error" : {
+
     },
     "error.repository.decode" : {
       "extractionState" : "manual",
@@ -329,6 +353,15 @@
         }
       }
     },
+    "From: %@" : {
+
+    },
+    "Generate" : {
+
+    },
+    "Identity" : {
+
+    },
     "increment" : {
       "localizations" : {
         "de" : {
@@ -338,6 +371,15 @@
           }
         }
       }
+    },
+    "Invite a partner" : {
+
+    },
+    "List Sharing" : {
+
+    },
+    "Lists" : {
+
     },
     "Measure" : {
       "localizations" : {
@@ -365,6 +407,24 @@
           }
         }
       }
+    },
+    "My Public ID" : {
+
+    },
+    "No lists yet" : {
+
+    },
+    "No partners yet" : {
+
+    },
+    "OK" : {
+
+    },
+    "Pairing" : {
+
+    },
+    "Partners" : {
+
     },
     "photo.add" : {
       "extractionState" : "manual",
@@ -502,6 +562,9 @@
         }
       }
     },
+    "Private" : {
+
+    },
     "productImage.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -587,6 +650,9 @@
         }
       }
     },
+    "Requests" : {
+
+    },
     "section.checkedItems.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -603,6 +669,18 @@
           }
         }
       }
+    },
+    "Settings" : {
+
+    },
+    "Share" : {
+
+    },
+    "Share link" : {
+
+    },
+    "Shared with: %@" : {
+
     },
     "shoppingList.title" : {
       "extractionState" : "manual",
@@ -1249,6 +1327,9 @@
           }
         }
       }
+    },
+    "Your User ID" : {
+
     }
   },
   "version" : "1.0"

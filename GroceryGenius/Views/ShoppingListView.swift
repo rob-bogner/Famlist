@@ -75,7 +75,7 @@ struct ShoppingListView: View {
                 }
                 .zIndex(2)
             }
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity.combined(with: .move(edge: .trailing))))
         }
         .navigationViewStyle(StackNavigationViewStyle())

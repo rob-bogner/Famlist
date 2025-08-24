@@ -69,6 +69,9 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Brand or manufacturer of the product (e.g., "Weihenstephan").
     var brand: String?
 
+    /// Parent grocery list identifier. Defaults to "default" for backwards compatibility.
+    var listId: String
+
     // MARK: - Initializer
 
     /// Initializes a new `ItemModel` instance.
@@ -84,6 +87,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ///   - category: Optional category of the product, defaults to nil.
     ///   - productDescription: Exact product designation (e.g., "Organic Whole Milk 3.5%"), defaults to nil.
     ///   - brand: Brand or manufacturer of the product (e.g., "Weihenstephan"), defaults to nil.
+    ///   - listId: Parent grocery list identifier, defaults to "default" to preserve existing behavior.
     init(
         id: String = UUID().uuidString, // Generates a unique ID if none provided
         imageData: String? = nil, // Default image data is nil
@@ -94,7 +98,8 @@ struct ItemModel: Identifiable, Hashable, Codable {
         isChecked: Bool = false, // Default to unchecked
         category: String? = nil, // Default category is nil (optional)
         productDescription: String? = nil, // Default product description is nil
-        brand: String? = nil // Default brand is nil
+        brand: String? = nil, // Default brand is nil
+        listId: String = "default" // Default list id
     ) {
         self.id = id // Assigns the unique identifier
         self.imageData = imageData // Assigns the optional Base64 image data
@@ -106,5 +111,26 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.category = category // Assigns the optional product category
         self.productDescription = productDescription // Assigns the exact product designation
         self.brand = brand // Assigns the brand or manufacturer
+        self.listId = listId // Assigns the parent grocery list id
+    }
+
+    // MARK: - Codable (custom Decodable for backward compatibility)
+    private enum CodingKeys: String, CodingKey {
+        case id, imageData, name, units, measure, price, isChecked, category, productDescription, brand, listId
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.imageData = try container.decodeIfPresent(String.self, forKey: .imageData)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.units = try container.decode(Int.self, forKey: .units)
+        self.measure = try container.decode(String.self, forKey: .measure)
+        self.price = try container.decode(Double.self, forKey: .price)
+        self.isChecked = try container.decode(Bool.self, forKey: .isChecked)
+        self.category = try container.decodeIfPresent(String.self, forKey: .category)
+        self.productDescription = try container.decodeIfPresent(String.self, forKey: .productDescription)
+        self.brand = try container.decodeIfPresent(String.self, forKey: .brand)
+        self.listId = try container.decodeIfPresent(String.self, forKey: .listId) ?? "default"
     }
 }

@@ -5,23 +5,7 @@
  Last Updated: 17.08.2025
 
  Overview:
- Application entry point. Configures Firebase and locks orientation to portrait. Injects global ListViewModel and presents ShoppingListView.
-
- Responsibilities / Includes:
- - Firebase initialization
- - Orientation lock (portrait)
- - Root scene/window creation via WindowGroup
- - EnvironmentObject injection of ListViewModel
-
- Design Notes:
- - Orientation lock implemented using UIApplicationDelegateAdaptor + geometry update for iOS 16+
- - Consider moving DI (view model) into a lightweight container if scale increases
- - Using NavigationStack (future refactor) could simplify navigation state handling
-
- Possible Enhancements:
- - Add app-wide error logging/analytics bootstrap
- - Introduce feature flags or remote config fetch during init
- - Support dynamic orientation for image picker only (temporarily overriding lock)
+ Application entry point. Configures Firebase and locks orientation to portrait. Routes into SessionGateView (onboarding/auth) and injects dependencies.
 */
 
 import SwiftUI
@@ -39,6 +23,18 @@ struct GroceryGeniusApp: App {
 
     init() {
         FirebaseApp.configure()
+        #if DEBUG
+        if let app = FirebaseApp.app() {
+            let o = app.options
+            // Cast to optional to handle both optional and non-optional properties uniformly without warnings
+            let pid = (o.projectID as String?) ?? "-"
+            let cid = (o.clientID as String?) ?? "-"
+            let bid = (o.bundleID as String?) ?? (Bundle.main.bundleIdentifier ?? "-")
+            print("[Firebase] projectID=\(pid) appID=\(o.googleAppID) clientID=\(cid) bundleID=\(bid)")
+        } else {
+            print("[Firebase] FirebaseApp not configured. Ensure GoogleService-Info.plist is in target and FirebaseApp.configure() is called.")
+        }
+        #endif
         UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
         if #available(iOS 16.0, *) {
             UIApplication.shared.connectedScenes.forEach { scene in
@@ -51,7 +47,8 @@ struct GroceryGeniusApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ShoppingListView()
+            // Root gate now auto-provisions a user id
+            SessionGateView(idService: FirestoreUserIdService())
                 .environmentObject(ListViewModel())
         }
     }

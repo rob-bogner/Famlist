@@ -31,7 +31,7 @@
 */
 
 import Foundation
-import FirebaseFirestore
+@preconcurrency import FirebaseFirestore
 
 /// Firestore-backed repository (singleton) for ItemModel entities.
 final class FirestoreManager: ItemsRepository {
