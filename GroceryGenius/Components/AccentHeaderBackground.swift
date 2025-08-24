@@ -32,7 +32,7 @@ struct AccentHeaderBackground: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                Rectangle()
                     .fill(Color.theme.accent)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .cornerRadius(32, corners: [.bottomLeft, .bottomRight])
