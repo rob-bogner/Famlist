@@ -94,4 +94,40 @@ private struct RoundedCorner: Shape {
     }
 }
 
-#Preview { AccentHeaderBackground() }
+// MARK: - Header Style & Composite Header (title + optional progress)
+enum AccentHeaderStyle { case withProgress, plain }
+
+struct AccentHeader: View {
+    let title: String
+    var style: AccentHeaderStyle = .withProgress
+    @EnvironmentObject private var listViewModel: ListViewModel
+
+    private var headerHeight: CGFloat { UIScreen.main.bounds.height * DS.Layout.headerHeightRatio }
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            AccentHeaderBackground()
+                .frame(height: headerHeight)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.largeTitle.bold())
+                    .foregroundColor(Color.theme.background)
+                    .padding(.top, 30)
+                    .padding(.leading, 18)
+                if style == .withProgress {
+                    ShoppingListProgressView(listViewModel: listViewModel)
+                        .padding(.top, 8)
+                }
+                Spacer(minLength: 4)
+            }
+            .frame(height: headerHeight, alignment: .top)
+        }
+    }
+}
+
+#Preview {
+    VStack(spacing: 0) {
+        AccentHeader(title: "Preview", style: .withProgress)
+        Spacer()
+    }
+}

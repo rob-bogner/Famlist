@@ -104,45 +104,58 @@ struct PairingHostView: View {
         self.trailingMenu = (view is EmptyView) ? nil : AnyView(view)
     }
 
+    private var headerHeight: CGFloat { UIScreen.main.bounds.height * DS.Layout.headerHeightRatio }
+    private var contentOffsetBelowHeader: CGFloat { headerHeight * 0.75 }
+
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    GroupBox("My Public ID") {
-                        HStack { Text(publicId.value).font(.callout).textSelection(.enabled); Spacer() }
-                    }.padding(.horizontal)
-                    GroupBox("Invite a partner") {
-                        HStack {
-                            Text(vm.inviteCode.isEmpty ? "—" : vm.inviteCode).font(.title2.monospaced())
-                            Spacer()
-                            Button("Generate") { Task { await vm.generateInvite() } }
-                        }
-                        if !vm.inviteCode.isEmpty {
-                            let link = "gg://pair/\(vm.inviteCode)"
-                            QRCodeView(text: link).frame(width: 160, height: 160)
-                            HStack {
-                                Button("Copy code") { UIPasteboard.general.string = vm.inviteCode }
-                                Button("Share link") {
-                                    let av = UIActivityViewController(activityItems: [URL(string: link)!], applicationActivities: nil)
-                                    UIApplication.shared.topMostViewController()?.present(av, animated: true)
+            ZStack(alignment: .top) {
+                Color.theme.background.ignoresSafeArea()
+                AccentHeader(title: "Pairing", style: .plain)
+                    .frame(height: headerHeight)
+                    .zIndex(0)
+                VStack(spacing: 0) {
+                    Spacer().frame(height: contentOffsetBelowHeader)
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            GroupBox("My Public ID") {
+                                HStack { Text(publicId.value).font(.callout).textSelection(.enabled); Spacer() }
+                            }.padding(.horizontal)
+                            GroupBox("Invite a partner") {
+                                HStack {
+                                    Text(vm.inviteCode.isEmpty ? "—" : vm.inviteCode).font(.title2.monospaced())
+                                    Spacer()
+                                    Button("Generate") { Task { await vm.generateInvite() } }
                                 }
-                            }
+                                if !vm.inviteCode.isEmpty {
+                                    let link = "gg://pair/\(vm.inviteCode)"
+                                    QRCodeView(text: link).frame(width: 160, height: 160)
+                                    HStack {
+                                        Button("Copy code") { UIPasteboard.general.string = vm.inviteCode }
+                                        Button("Share link") {
+                                            let av = UIActivityViewController(activityItems: [URL(string: link)!], applicationActivities: nil)
+                                            UIApplication.shared.topMostViewController()?.present(av, animated: true)
+                                        }
+                                    }
+                                }
+                            }.padding(.horizontal)
+                            GroupBox("Accept invite") {
+                                AcceptInviteView(pendingInviteCode: $pendingInviteCode) { code in Task { await vm.acceptInvite(code: code) } }
+                            }.padding(.horizontal)
+                            ApprovalsListView(vm: vm)
+                                .padding(.horizontal)
+                            PartnersListView(partners: vm.partners)
+                                .padding(.horizontal)
                         }
-                    }.padding(.horizontal)
-                    GroupBox("Accept invite") {
-                        AcceptInviteView(pendingInviteCode: $pendingInviteCode) { code in Task { await vm.acceptInvite(code: code) } }
-                    }.padding(.horizontal)
-                    ApprovalsListView(vm: vm)
-                        .padding(.horizontal)
-                    PartnersListView(partners: vm.partners)
-                        .padding(.horizontal)
+                        .padding(.vertical)
+                    }
                 }
-                .padding(.vertical)
+                .zIndex(1)
             }
-            .navigationTitle("Pairing")
             .toolbar {
                 if let trailingMenu { ToolbarItem(placement: .navigationBarTrailing) { trailingMenu } }
             }
+            .toolbarBackground(.hidden, for: .navigationBar)
         }
         .onChange(of: pendingInviteCode) { _, new in
             if let code = new, !code.isEmpty { Task { await vm.acceptInvite(code: code) }; pendingInviteCode = nil }
@@ -156,17 +169,30 @@ struct PairingHostView: View {
 // MARK: - Settings (User ID display only)
 struct SettingsView: View {
     let publicId: PublicUserId
+
+    private var headerHeight: CGFloat { UIScreen.main.bounds.height * DS.Layout.headerHeightRatio }
+    private var contentOffsetBelowHeader: CGFloat { headerHeight * 0.75 }
+
     var body: some View {
-        Form {
-            Section("Identity") {
-                HStack { Text("Your User ID"); Spacer(); Text(publicId.value).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled) }
-                HStack {
-                    Button("Copy") { UIPasteboard.general.string = publicId.value }
-                    ShareLink("Share", item: publicId.value)
+        ZStack(alignment: .top) {
+            Color.theme.background.ignoresSafeArea()
+            AccentHeader(title: "Settings", style: .plain)
+                .frame(height: headerHeight)
+            VStack(spacing: 0) {
+                Spacer().frame(height: contentOffsetBelowHeader)
+                Form {
+                    Section("Identity") {
+                        HStack { Text("Your User ID"); Spacer(); Text(publicId.value).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled) }
+                        HStack {
+                            Button("Copy") { UIPasteboard.general.string = publicId.value }
+                            ShareLink("Share", item: publicId.value)
+                        }
+                    }
                 }
             }
         }
-        .navigationTitle("Settings")
+        .navigationTitle("")
+        .toolbarBackground(.hidden, for: .navigationBar)
     }
 }
 
