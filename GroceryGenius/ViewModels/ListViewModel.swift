@@ -65,14 +65,24 @@ class ListViewModel: ObservableObject {
     func addItem(_ item: ItemModel) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
-        repository.addItem(normalized, completion: nil)
+        repository.addItem(normalized) { [weak self] error in
+            if let error {
+                DispatchQueue.main.async { self?.errorMessage = error.localizedDescription }
+            }
+        }
     }
     func updateItem(_ item: ItemModel) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
-        repository.updateItem(normalized, completion: nil)
+        repository.updateItem(normalized) { [weak self] error in
+            if let error { DispatchQueue.main.async { self?.errorMessage = error.localizedDescription } }
+        }
     }
-    func deleteItem(_ item: ItemModel) { repository.deleteItem(item, completion: nil) }
+    func deleteItem(_ item: ItemModel) {
+        repository.deleteItem(item) { [weak self] error in
+            if let error { DispatchQueue.main.async { self?.errorMessage = error.localizedDescription } }
+        }
+    }
     func toggleItemChecked(_ item: ItemModel) { var copy = item; copy.isChecked.toggle(); updateItem(copy) }
 
     // MARK: - Derived Projections

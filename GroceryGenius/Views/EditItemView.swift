@@ -151,8 +151,8 @@ struct EditItemView: View {
     /// Save all changes to the item and update the model
     private func saveChanges() {
         let sanitizedName = ItemInputValidator.sanitizedName(name)
-        // Convert selected image to base64 string, if available
-        let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+        // Convert selected image to base64 string with size-aware compression
+        let imageBase64 = imageToBase64(selectedImage)
         // Create the updated ItemModel
         let updatedItem = ItemModel(
             id: item.id,

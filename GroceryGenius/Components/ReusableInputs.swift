@@ -29,18 +29,40 @@
 */
 
 import SwiftUI
-import UIKit
+import PhotosUI
+import AVFoundation
+import CoreHaptics
 
 // MARK: - Haptics
-private func lightHaptic() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+private func lightHaptic() {
+    let caps = CHHapticEngine.capabilitiesForHardware()
+    guard caps.supportsHaptics else { return }
+    do {
+        let engine = try CHHapticEngine()
+        try engine.start()
+        let ev = CHHapticEvent(eventType: .hapticTransient,
+                               parameters: [
+                                   CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.4),
+                                   CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.4)
+                               ],
+                               relativeTime: 0)
+        let pattern = try CHHapticPattern(events: [ev], parameters: [])
+        let player = try engine.makePlayer(with: pattern)
+        try player.start(atTime: 0)
+        engine.notifyWhenPlayersFinished { _ in .stopEngine }
+    } catch { /* no-op fallback */ }
+}
 
 // MARK: - PhotoField
 struct PhotoField: View {
     @Binding var image: UIImage?
-    @State private var isPicker = false
     @State private var showSource = false
-    @State private var source: UIImagePickerController.SourceType = .photoLibrary
     @State private var showRemoveConfirm = false
+    @State private var presentLibrary = false
+    @State private var presentCamera = false
+    @State private var pickerItem: PhotosPickerItem?
+
+    private var cameraAvailable: Bool { AVCaptureDevice.default(for: .video) != nil }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -98,14 +120,29 @@ struct PhotoField: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .confirmationDialog(String(localized: "photo.selectSource.title"), isPresented: $showSource, titleVisibility: .visible) {
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button(String(localized: "photo.take")) { source = .camera; isPicker = true }
+            if cameraAvailable {
+                Button(String(localized: "photo.take")) { presentCamera = true }
             }
-            Button(String(localized: "photo.choose")) { source = .photoLibrary; isPicker = true }
+            Button(String(localized: "photo.choose")) { presentLibrary = true }
             if image != nil { Button(String(localized: "photo.removeCurrent.action"), role: .destructive) { image = nil } }
             Button(String(localized: "photo.cancel"), role: .cancel) {}
         }
-        .sheet(isPresented: $isPicker) { ImagePicker(selectedImage: $image, isPresented: $isPicker, sourceType: source) }
+        // Library
+        .photosPicker(isPresented: $presentLibrary, selection: $pickerItem, matching: .images, preferredItemEncoding: .automatic)
+        .onChange(of: pickerItem) { _, newItem in
+            guard let item = newItem else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let ui = UIImage(data: data) {
+                    await MainActor.run { self.image = ui }
+                }
+                await MainActor.run { self.presentLibrary = false }
+            }
+        }
+        // Camera
+        .sheet(isPresented: $presentCamera) {
+            ImagePicker(selectedImage: $image, isPresented: $presentCamera, sourceType: .camera)
+        }
     }
 }
 

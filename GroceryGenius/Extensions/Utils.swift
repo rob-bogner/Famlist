@@ -25,12 +25,44 @@
 import Foundation
 import UIKit
 
-/// Encodes an optional UIImage into a Base64 string (JPEG, quality 0.8).
-/// - Parameter image: Source image.
+/// Encodes an optional UIImage into a Base64 string with size-aware compression.
+/// Downscales to maxDimension and adjusts JPEG quality to keep payload under maxBytes.
+/// - Parameters:
+///   - image: Source image.
+///   - maxBytes: Target maximum encoded size (default ~600 KB to stay below Firestore 1 MB document limits including other fields).
+///   - maxDimension: Longest side after downscaling (points assumed = pixels for JPEG here).
+///   - minQuality: Lower bound for JPEG quality when searching.
 /// - Returns: Base64 string or nil if image is nil / encoding fails.
-func imageToBase64(_ image: UIImage?) -> String? {
-    guard let image, let data = image.jpegData(compressionQuality: 0.8) else { return nil }
-    return data.base64EncodedString()
+func imageToBase64(_ image: UIImage?, maxBytes: Int = 600_000, maxDimension: CGFloat = 1024, minQuality: CGFloat = 0.5) -> String? {
+    guard let image else { return nil }
+
+    // 1) Downscale if needed (preserve aspect)
+    let resized: UIImage = {
+        let w = image.size.width, h = image.size.height
+        let longest = max(w, h)
+        guard longest > maxDimension, longest > 0 else { return image }
+        let scale = maxDimension / longest
+        let newSize = CGSize(width: max(1, w * scale), height: max(1, h * scale))
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1 // work in pixel space for predictable size
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: newSize)) }
+    }()
+
+    // 2) Binary search JPEG quality to fit under maxBytes
+    var low: CGFloat = minQuality
+    var high: CGFloat = 0.9
+    var bestData: Data? = nil
+
+    for _ in 0..<6 { // 6 iterations are enough to converge
+        let q = (low + high) / 2
+        guard let data = resized.jpegData(compressionQuality: q) else { break }
+        if data.count <= maxBytes { bestData = data; low = q } else { high = q }
+    }
+
+    let finalData = bestData ?? resized.jpegData(compressionQuality: minQuality)
+    guard let finalData else { return nil }
+    return finalData.base64EncodedString()
 }
 
 /// Decodes an optional Base64 string into UIImage.
