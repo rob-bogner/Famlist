@@ -85,6 +85,10 @@ private struct HamburgerMenuButton: View {
             Button(action: { section = .settings }) {
                 Label { Text("menu.settings", tableName: "Localizable") } icon: { Image(systemName: "gearshape") }
             }
+            // New entry: Import Recipe Keeper
+            Button(action: { ImportCoordinator.presentImport() }) {
+                Label { Text("menu.importRecipeKeeper", tableName: "Localizable") } icon: { Image(systemName: "tray.and.arrow.down") }
+            }
         } label: {
             Image(systemName: "line.3.horizontal")
                 .font(.title3.weight(.semibold))
