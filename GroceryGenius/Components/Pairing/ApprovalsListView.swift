@@ -1,0 +1,28 @@
+// ApprovalsListView.swift
+// Extracted from original SessionGateView.swift
+import SwiftUI
+
+struct ApprovalsListView: View {
+    @ObservedObject var vm: PairingViewModel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("pairing.requests", tableName: "Localizable").font(.headline)
+            ForEach(vm.incoming, id: \.id) { req in
+                HStack {
+                    HStack(spacing: 4) {
+                        Text("pairing.from", tableName: "Localizable").font(.subheadline)
+                        Text(req.from.value).font(.subheadline).lineLimit(1)
+                    }
+                    Spacer()
+                    if req.status == .pending {
+                        Button(action: { Task { await vm.approve(req) } }) { Text("pairing.approve", tableName: "Localizable") }
+                        Button(action: { Task { await vm.deny(req) } }) { Text("pairing.deny", tableName: "Localizable") }
+                            .foregroundColor(.red)
+                    } else {
+                        Text(req.status.rawValue.capitalized).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+}

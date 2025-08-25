@@ -1,8 +1,6 @@
 // MARK: - ListSharing Views
 import SwiftUI
 
-private struct IdentifiedAlert: Identifiable { let id = UUID(); let message: String }
-
 struct ListSharingView: View {
     let publicId: PublicUserId
     @State private var lists: [GroceryList] = []
