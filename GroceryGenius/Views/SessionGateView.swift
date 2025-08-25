@@ -297,3 +297,8 @@ private enum QRCodeGenerator {
         return context.createCGImage(transformed, from: rect)
     }
 }
+
+#Preview {
+    SessionGateView(idService: PreviewUserIdService(), recipeImportPresenter: PreviewImportPresenter())
+        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+}

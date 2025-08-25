@@ -140,4 +140,4 @@ struct ShoppingListView: View {
     }
 }
 
-#Preview { ShoppingListView().environmentObject(ListViewModel()) }
+#Preview { ShoppingListView().environmentObject(ListViewModel(repository: PreviewItemsRepository())) }

@@ -184,5 +184,5 @@ struct EditItemView: View {
         productDescription: "Organic whole milk 3.5%",
         brand: "Brand"
     ))
-    .environmentObject(ListViewModel())
+    .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
 }

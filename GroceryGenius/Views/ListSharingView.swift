@@ -9,8 +9,14 @@ struct ListSharingView: View {
     @State private var partners: [PublicUserId] = []
     @State private var errorMessage: String?
 
-    private let listRepo = FirestoreListRepository()
-    private let pairingRepo = FirebasePairingRepository()
+    private let listRepo: ListRepository
+    private let pairingRepo: PairingRepository
+
+    init(publicId: PublicUserId, listRepo: ListRepository = FirestoreListRepository(), pairingRepo: PairingRepository = FirebasePairingRepository()) {
+        self.publicId = publicId
+        self.listRepo = listRepo
+        self.pairingRepo = pairingRepo
+    }
 
     var body: some View {
         List {
@@ -74,5 +80,11 @@ private struct ListSharingDetailView: View {
         .alert(item: Binding(get: { (localError ?? vm.errorMessage).map { IdentifiedAlert(message: $0) } }, set: { _ in localError = nil; vm.errorMessage = nil })) { ia in
             Alert(title: Text("Error"), message: Text(ia.message), dismissButton: .default(Text("OK")))
         }
+    }
+}
+
+#Preview {
+    NavigationStack {
+        ListSharingView(publicId: PreviewData.publicId, listRepo: PreviewListRepository(), pairingRepo: PreviewPairingRepository())
     }
 }

@@ -103,4 +103,4 @@ struct ListView: View {
     }
 }
 
-#Preview { ListView().environmentObject(ListViewModel()) }
+#Preview { ListView().environmentObject(ListViewModel(repository: PreviewItemsRepository())) }
