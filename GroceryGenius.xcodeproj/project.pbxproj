@@ -47,6 +47,8 @@
         EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */; };
         EE1234572F00000100AAAAAA /* ImportPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1234562F00000100AAAAAA /* ImportPreviewView.swift */; };
         EE1234592F00000200AAAAAA /* ImportPreviewRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1234582F00000200AAAAAA /* ImportPreviewRow.swift */; };
+        EEABCDEF2F01000100AAAAAA /* DeepLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEABCDEE2F01000100AAAAAA /* DeepLinkParser.swift */; };
+        EEDEF0012F01010100AAAAAA /* SessionGateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDEF0002F01010100AAAAAA /* SessionGateViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -84,6 +86,8 @@
         EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModalView.swift; sourceTree = "<group>"; };
         EE1234562F00000100AAAAAA /* ImportPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportPreviewView.swift; sourceTree = "<group>"; };
         EE1234582F00000200AAAAAA /* ImportPreviewRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportPreviewRow.swift; sourceTree = "<group>"; };
+        EEABCDEE2F01000100AAAAAA /* DeepLinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkParser.swift; sourceTree = "<group>"; };
+        EEDEF0002F01010100AAAAAA /* SessionGateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionGateViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -154,6 +158,7 @@
                 EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */,
                 EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */,
                 EE6115EA2B48440E0043736A /* Color.swift */,
+                EEABCDEE2F01000100AAAAAA /* DeepLinkParser.swift */,
             );
             path = Extensions;
             sourceTree = "<group>";
@@ -208,6 +213,7 @@
                 EE0C60EF2E59D12E00C6CF65 /* PairingViewModel.swift */,
                 EE0C60F02E59D12E00C6CF65 /* SessionViewModel.swift */,
                 EE6115E72B4467070043736A /* ListViewModel.swift */,
+                EEDEF0002F01010100AAAAAA /* SessionGateViewModel.swift */,
             );
             path = ViewModels;
             sourceTree = "<group>";
@@ -321,6 +327,8 @@
                 EE0C60ED2E59D11C00C6CF65 /* SessionGateView.swift in Sources */,
                 EE1234572F00000100AAAAAA /* ImportPreviewView.swift in Sources */,
                 EE1234592F00000200AAAAAA /* ImportPreviewRow.swift in Sources */,
+                EEABCDEF2F01000100AAAAAA /* DeepLinkParser.swift in Sources */,
+                EEDEF0012F01010100AAAAAA /* SessionGateViewModel.swift in Sources */,
             );
             runOnlyForDeploymentPostprocessing = 0;
         };

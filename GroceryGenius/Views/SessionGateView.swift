@@ -1,34 +1,27 @@
 // MARK: - SessionGateView
 import SwiftUI
-import UIKit
 
 struct SessionGateView: View {
-    @StateObject private var sessionVM: SessionViewModel
-    @State private var selectedTab: Int = 0 // 0: Lists, 1: Pairing
+    @StateObject private var vm: SessionGateViewModel
 
-    init(idService: UserIdService) {
-        _sessionVM = StateObject(wrappedValue: SessionViewModel(idService: idService))
+    init(idService: UserIdService, recipeImportPresenter: RecipeImportPresenting = RecipeImportPresenter()) {
+        _vm = StateObject(wrappedValue: SessionGateViewModel(idService: idService, recipeImportPresenter: recipeImportPresenter))
     }
 
     var body: some View {
         Group {
-            switch sessionVM.state {
+            switch vm.sessionState {
             case .initializing:
                 ProgressView().controlSize(.large)
             case .signedIn(let pubId):
-                HomeView(publicId: pubId, pendingInviteCode: $sessionVM.pendingInviteCode)
-                    .onOpenURL { url in
-                        if let code = DeepLinkParser.pairCode(from: url) {
-                            sessionVM.pendingInviteCode = code
-                        }
-                    }
+                HomeView(publicId: pubId, pendingInviteCode: $vm.pendingInviteCode, onImport: { vm.presentImport() })
+                    .onOpenURL { url in vm.handleOpenURL(url) }
             }
         }
-        .environmentObject(sessionVM)
         .alert(item: Binding(get: {
-            if let msg = sessionVM.errorMessage { return IdentifiedAlert(message: msg) }
+            if let msg = vm.errorMessage { return IdentifiedAlert(message: msg) }
             return nil
-        }, set: { _ in sessionVM.errorMessage = nil })) { ia in
+        }, set: { _ in vm.errorMessage = nil })) { ia in
             Alert(title: Text("Error"), message: Text(ia.message), dismissButton: .default(Text("OK")))
         }
     }
@@ -41,6 +34,7 @@ struct HomeView: View {
     enum Section { case lists, pairing, settings }
     let publicId: PublicUserId
     @Binding var pendingInviteCode: String?
+    let onImport: () -> Void
     @State private var section: Section = .lists
 
     var body: some View {
@@ -49,19 +43,19 @@ struct HomeView: View {
             case .lists:
                 ShoppingListView()
                     .overlay(alignment: .topTrailing) {
-                        HamburgerMenuButton(section: $section)
+                        HamburgerMenuButton(section: $section, onImport: onImport)
                             .padding(.top, 12)
                             .padding(.trailing, 12)
                     }
             case .pairing:
                 PairingHostView(publicId: publicId, pendingInviteCode: $pendingInviteCode) {
-                    HamburgerMenuButton(section: $section)
+                    HamburgerMenuButton(section: $section, onImport: onImport)
                 }
             case .settings:
-                NavigationView {
+                NavigationStack {
                     SettingsView(publicId: publicId)
                         .navigationBarTitleDisplayMode(.inline)
-                        .toolbar { ToolbarItem(placement: .navigationBarTrailing) { HamburgerMenuButton(section: $section) } }
+                        .toolbar { ToolbarItem(placement: .navigationBarTrailing) { HamburgerMenuButton(section: $section, onImport: onImport) } }
                 }
             }
         }
@@ -74,6 +68,7 @@ struct HomeView: View {
 // MARK: - Hamburger Button
 private struct HamburgerMenuButton: View {
     @Binding var section: HomeView.Section
+    var onImport: () -> Void = {}
     var body: some View {
         Menu {
             Button(action: { section = .lists }) {
@@ -85,8 +80,8 @@ private struct HamburgerMenuButton: View {
             Button(action: { section = .settings }) {
                 Label { Text("menu.settings", tableName: "Localizable") } icon: { Image(systemName: "gearshape") }
             }
-            // New entry: Import Recipe Keeper
-            Button(action: { ImportCoordinator.presentImport() }) {
+            // Import Recipe Keeper via VM
+            Button(action: { onImport() }) {
                 Label { Text("menu.importRecipeKeeper", tableName: "Localizable") } icon: { Image(systemName: "tray.and.arrow.down") }
             }
         } label: {
@@ -114,56 +109,60 @@ struct PairingHostView: View {
         self.trailingMenu = (view is EmptyView) ? nil : AnyView(view)
     }
 
-    private var headerHeight: CGFloat { UIScreen.main.bounds.height * DS.Layout.headerHeightRatio }
-    private var contentOffsetBelowHeader: CGFloat { headerHeight * 0.75 }
-
     var body: some View {
-        NavigationView {
-            ZStack(alignment: .top) {
-                Color.theme.background.ignoresSafeArea()
-                AccentHeader(title: String(localized: "pairing.title"), style: .plain)
-                    .frame(height: headerHeight)
-                    .zIndex(0)
-                VStack(spacing: 0) {
-                    Spacer().frame(height: contentOffsetBelowHeader)
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-                            GroupBox {
-                                HStack { Text(publicId.value).font(.callout).textSelection(.enabled); Spacer() }
-                            } label: { Text("pairing.myPublicId", tableName: "Localizable") }
-                            .padding(.horizontal)
-                            GroupBox {
-                                HStack {
-                                    Text(vm.inviteCode.isEmpty ? "—" : vm.inviteCode).font(.title2.monospaced())
-                                    Spacer()
-                                    Button(action: { Task { await vm.generateInvite() } }) { Text("pairing.generate", tableName: "Localizable") }
-                                }
-                                if !vm.inviteCode.isEmpty {
-                                    let link = "gg://pair/\(vm.inviteCode)"
-                                    QRCodeView(text: link).frame(width: 160, height: 160)
+        NavigationStack {
+            GeometryReader { proxy in
+                let headerHeight: CGFloat = proxy.size.height * DS.Layout.headerHeightRatio
+                let contentOffsetBelowHeader: CGFloat = headerHeight * 0.75
+                ZStack(alignment: .top) {
+                    Color.theme.background.ignoresSafeArea()
+                    AccentHeader(title: String(localized: "pairing.title"), style: .plain)
+                        .frame(height: headerHeight)
+                        .zIndex(0)
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: contentOffsetBelowHeader)
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 16) {
+                                GroupBox {
+                                    HStack { Text(publicId.value).font(.callout).textSelection(.enabled); Spacer() }
+                                } label: { Text("pairing.myPublicId", tableName: "Localizable") }
+                                .padding(.horizontal)
+                                GroupBox {
                                     HStack {
-                                        Button(action: { UIPasteboard.general.string = vm.inviteCode }) { Text("pairing.copyCode", tableName: "Localizable") }
-                                        Button(action: {
-                                            let av = UIActivityViewController(activityItems: [URL(string: link)!], applicationActivities: nil)
-                                            UIApplication.shared.topMostViewController()?.present(av, animated: true)
-                                        }) { Text("pairing.shareLink", tableName: "Localizable") }
+                                        Text(vm.inviteCode.isEmpty ? "—" : vm.inviteCode).font(.title2.monospaced())
+                                        Spacer()
+                                        Button(action: { Task { await vm.generateInvite() } }) { Text("pairing.generate", tableName: "Localizable") }
                                     }
-                                }
-                            } label: { Text("pairing.invitePartner", tableName: "Localizable") }
-                            .padding(.horizontal)
-                            GroupBox {
-                                AcceptInviteView(pendingInviteCode: $pendingInviteCode) { code in Task { await vm.acceptInvite(code: code) } }
-                            } label: { Text("pairing.acceptInvite", tableName: "Localizable") }
-                            .padding(.horizontal)
-                            ApprovalsListView(vm: vm)
+                                    if !vm.inviteCode.isEmpty {
+                                        let link = "gg://pair/\(vm.inviteCode)"
+                                        QRCodeView(text: link).frame(width: 160, height: 160)
+                                        HStack {
+                                            // Repurpose Copy to Share invite code directly
+                                            ShareLink(item: vm.inviteCode) { Text("pairing.copyCode", tableName: "Localizable") }
+                                            // Share link preference: URL if valid, else fallback to code string
+                                            if let url = URL(string: link) {
+                                                ShareLink(item: url) { Text("pairing.shareLink", tableName: "Localizable") }
+                                            } else {
+                                                ShareLink(item: vm.inviteCode) { Text("pairing.shareLink", tableName: "Localizable") }
+                                            }
+                                        }
+                                    }
+                                } label: { Text("pairing.invitePartner", tableName: "Localizable") }
                                 .padding(.horizontal)
-                            PartnersListView(partners: vm.partners)
+                                GroupBox {
+                                    AcceptInviteView(pendingInviteCode: $pendingInviteCode) { code in Task { await vm.acceptInvite(code: code) } }
+                                } label: { Text("pairing.acceptInvite", tableName: "Localizable") }
                                 .padding(.horizontal)
+                                ApprovalsListView(vm: vm)
+                                    .padding(.horizontal)
+                                PartnersListView(partners: vm.partners)
+                                    .padding(.horizontal)
+                            }
+                            .padding(.vertical)
                         }
-                        .padding(.vertical)
                     }
+                    .zIndex(1)
                 }
-                .zIndex(1)
             }
             .toolbar {
                 if let trailingMenu { ToolbarItem(placement: .navigationBarTrailing) { trailingMenu } }
@@ -183,28 +182,30 @@ struct PairingHostView: View {
 struct SettingsView: View {
     let publicId: PublicUserId
 
-    private var headerHeight: CGFloat { UIScreen.main.bounds.height * DS.Layout.headerHeightRatio }
-    private var contentOffsetBelowHeader: CGFloat { headerHeight * 0.75 }
-
     var body: some View {
-        ZStack(alignment: .top) {
-            Color.theme.background.ignoresSafeArea()
-            AccentHeader(title: String(localized: "settings.title"), style: .plain)
-                .frame(height: headerHeight)
-            VStack(spacing: 0) {
-                Spacer().frame(height: contentOffsetBelowHeader)
-                Form {
-                    Section {
-                        HStack {
-                            Text("settings.userId", tableName: "Localizable")
-                            Spacer()
-                            Text(publicId.value).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
-                        }
-                        HStack {
-                            Button(action: { UIPasteboard.general.string = publicId.value }) { Text("settings.copy", tableName: "Localizable") }
-                            ShareLink(item: publicId.value) { Text("settings.share", tableName: "Localizable") }
-                        }
-                    } header: { Text("settings.identity", tableName: "Localizable") }
+        GeometryReader { proxy in
+            let headerHeight: CGFloat = proxy.size.height * DS.Layout.headerHeightRatio
+            let contentOffsetBelowHeader: CGFloat = headerHeight * 0.75
+            ZStack(alignment: .top) {
+                Color.theme.background.ignoresSafeArea()
+                AccentHeader(title: String(localized: "settings.title"), style: .plain)
+                    .frame(height: headerHeight)
+                VStack(spacing: 0) {
+                    Spacer().frame(height: contentOffsetBelowHeader)
+                    Form {
+                        Section {
+                            HStack {
+                                Text("settings.userId", tableName: "Localizable")
+                                Spacer()
+                                Text(publicId.value).font(.footnote).foregroundStyle(.secondary).textSelection(.enabled)
+                            }
+                            HStack {
+                                // Repurpose copy to share sheet (still labeled by localization key)
+                                ShareLink(item: publicId.value) { Text("settings.copy", tableName: "Localizable") }
+                                ShareLink(item: publicId.value) { Text("settings.share", tableName: "Localizable") }
+                            }
+                        } header: { Text("settings.identity", tableName: "Localizable") }
+                    }
                 }
             }
         }
@@ -270,29 +271,29 @@ struct PartnersListView: View {
     }
 }
 
-// MARK: - QRCodeView
+// MARK: - QRCodeView (CGImage based)
 struct QRCodeView: View {
     let text: String
     var body: some View {
-        if let img = QRGenerator.qrImage(from: text) {
-            Image(uiImage: img).interpolation(.none).resizable().scaledToFit()
+        if let cg = QRCodeGenerator.cgImage(from: text) {
+            Image(decorative: cg, scale: 1, orientation: .up)
+                .interpolation(.none)
+                .resizable()
+                .scaledToFit()
         } else { EmptyView() }
     }
 }
 
-// MARK: - Helpers
-struct DeepLinkParser { static func pairCode(from url: URL) -> String? { guard url.scheme == "gg", url.host == "pair" else { return nil }; return url.lastPathComponent.uppercased() } }
-
-private struct QRGenerator {
-    static func qrImage(from string: String) -> UIImage? {
+private enum QRCodeGenerator {
+    static let context = CIContext(options: nil)
+    static func cgImage(from string: String) -> CGImage? {
         guard let data = string.data(using: .utf8), let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
         filter.setValue(data, forKey: "inputMessage")
         filter.setValue("M", forKey: "inputCorrectionLevel")
         guard let outputImage = filter.outputImage else { return nil }
         let scaleX: CGFloat = 8, scaleY: CGFloat = 8
         let transformed = outputImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
-        return UIImage(ciImage: transformed)
+        let rect = transformed.extent.integral
+        return context.createCGImage(transformed, from: rect)
     }
 }
-
-private extension UIApplication { func topMostViewController(base: UIViewController? = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow?.rootViewController }.first) -> UIViewController? { if let nav = base as? UINavigationController { return topMostViewController(base: nav.visibleViewController) } ; if let tab = base as? UITabBarController { return tab.selectedViewController.flatMap { topMostViewController(base: $0) } } ; if let presented = base?.presentedViewController { return topMostViewController(base: presented) } ; return base } }
