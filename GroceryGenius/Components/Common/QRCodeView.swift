@@ -30,3 +30,11 @@ enum QRCodeGenerator {
         return context.createCGImage(transformed, from: rect)
     }
 }
+
+#if DEBUG
+#Preview("QR") {
+    QRCodeView(text: "gg://pair/ABCD1")
+        .frame(width: 160, height: 160)
+        .padding()
+}
+#endif

@@ -50,6 +50,8 @@ struct ShoppingListProgressView: View {
     }
 }
 
+#if DEBUG
 #Preview {
-    ShoppingListProgressView(listViewModel: ListViewModel()) // Preview with a new ListViewModel instance
+    ShoppingListProgressView(listViewModel: ListViewModel(repository: PreviewItemsRepository()))
 }
+#endif

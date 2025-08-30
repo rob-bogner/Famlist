@@ -199,14 +199,28 @@ private struct CameraCaptureView: View {
                         .contentShape(Circle())
                 }
                 Spacer()
-                // Right spacer to balance layout
-                Color.clear.frame(width: 44, height: 1)
             }
-            .padding()
-            .background(
-                LinearGradient(gradient: Gradient(colors: [Color.black.opacity(0.0), Color.black.opacity(0.45)]), startPoint: .top, endPoint: .bottom)
-                    .ignoresSafeArea()
-            )
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+            .background(Color.clear.ignoresSafeArea())
         }
     }
 }
+
+#if DEBUG
+private struct ImagePickerPreviewHost: View {
+    @State private var img: UIImage? = nil
+    @State private var show = false
+    var body: some View {
+        VStack(spacing: 12) {
+            if let img { Image(uiImage: img).resizable().scaledToFit().frame(height: 120) }
+            Button("Present Library") { show = true }
+        }
+        .sheet(isPresented: $show) {
+            ImagePicker(selectedImage: $img, isPresented: $show, sourceType: .library)
+        }
+        .padding()
+    }
+}
+#Preview("ImagePicker – Library") { ImagePickerPreviewHost() }
+#endif

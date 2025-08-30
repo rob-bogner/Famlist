@@ -16,3 +16,14 @@ struct AcceptInviteView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Accept Invite – empty") {
+    AcceptInviteView(pendingInviteCode: .constant(nil), onSubmit: { _ in })
+        .padding()
+}
+#Preview("Accept Invite – prefilled") {
+    AcceptInviteView(pendingInviteCode: .constant("ABCD1"), onSubmit: { _ in })
+        .padding()
+}
+#endif

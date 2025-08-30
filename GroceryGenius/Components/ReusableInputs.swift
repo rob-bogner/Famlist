@@ -308,3 +308,22 @@ struct PriceField: View {
         }
     }
 }
+
+#if DEBUG
+private struct PhotoFieldPreviewHost: View {
+    @State var img: UIImage? = nil
+    var body: some View { PhotoField(image: $img).padding() }
+}
+#Preview("PhotoField – empty") { PhotoFieldPreviewHost() }
+private struct QuantityMeasureRowPreviewHost: View {
+    @State var units: String = "1"
+    @State var measure: String = "l"
+    var body: some View { QuantityMeasureRow(units: $units, measure: $measure) .padding() }
+}
+#Preview("Quantity + Measure") { QuantityMeasureRowPreviewHost() }
+private struct PriceFieldPreviewHost: View {
+    @State var price: String = "1.99"
+    var body: some View { PriceField(price: $price).padding() }
+}
+#Preview("PriceField") { PriceFieldPreviewHost() }
+#endif

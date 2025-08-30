@@ -36,3 +36,19 @@ struct HomeView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Home – Lists (Light)") {
+    HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant(nil), onImport: {})
+        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+}
+#Preview("Home – Lists (Dark)") {
+    HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant(nil), onImport: {})
+        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+        .preferredColorScheme(.dark)
+}
+#Preview("Home – Pairing (pending code)") {
+    HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant("ABCD1"), onImport: {})
+        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+}
+#endif

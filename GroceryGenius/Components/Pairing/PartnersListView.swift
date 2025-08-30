@@ -15,3 +15,8 @@ struct PartnersListView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Partners – empty") { PartnersListView(partners: []).padding() }
+#Preview("Partners – with data") { PartnersListView(partners: PreviewData.partners).padding() }
+#endif

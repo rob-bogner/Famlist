@@ -26,3 +26,15 @@ struct ApprovalsListView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Approvals") {
+    let repo = PreviewPairingRepository(partners: PreviewData.partners)
+    repo.incoming = [
+        PairingRequest(id: UUID().uuidString, from: PublicUserId("genius-111"), toCode: "PREV-1234", status: .pending, createdAt: Date()),
+        PairingRequest(id: UUID().uuidString, from: PublicUserId("genius-222"), toCode: "PREV-5678", status: .approved, createdAt: Date().addingTimeInterval(-3600))
+    ]
+    let vm = PairingViewModel(myId: PreviewData.publicId, pairingRepo: repo)
+    return ApprovalsListView(vm: vm).padding()
+}
+#endif

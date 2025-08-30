@@ -36,3 +36,7 @@ struct SettingsView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
     }
 }
+
+#if DEBUG
+#Preview("Settings") { SettingsView(publicId: PreviewData.publicId) }
+#endif

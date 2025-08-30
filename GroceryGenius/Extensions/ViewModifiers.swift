@@ -277,3 +277,27 @@ extension View {
         modifier(CapsuleBorderModifier(color: color, lineWidth: lineWidth))
     }
 }
+
+#if DEBUG
+#Preview("PrimaryButton") {
+    PrimaryButton(title: "Add") {}
+        .padding()
+}
+private struct QuantityStepperPreviewHost: View {
+    @State var value: Int = 2
+    var body: some View { QuantityStepper(value: $value, range: 0...9).padding() }
+}
+#Preview("QuantityStepper") { QuantityStepperPreviewHost() }
+#Preview("ProgressCard") {
+    ProgressCard(title: "Progress", progress: 0.4, label: "2 / 5")
+        .padding()
+        .background(Color.theme.background)
+}
+#Preview("SectionHeader") { SectionHeader(title: "Checked Items").padding().background(Color.theme.background) }
+private struct MeasurePickerPreviewHost: View {
+    @State var selection: String = "l"
+    var body: some View { MeasurePicker(selection: $selection).padding() }
+}
+#Preview("MeasurePicker") { MeasurePickerPreviewHost() }
+#Preview("Thumbnail – empty") { Thumbnail(image: nil).padding() }
+#endif

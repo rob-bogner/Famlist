@@ -29,3 +29,14 @@ struct HamburgerMenuButton: View {
         }
     }
 }
+
+#if DEBUG
+private struct HamburgerMenuButtonPreviewHost: View {
+    @State var section: HomeView.Section = .lists
+    var body: some View {
+        HamburgerMenuButton(section: $section, onImport: {})
+            .padding()
+    }
+}
+#Preview("Hamburger") { HamburgerMenuButtonPreviewHost() }
+#endif

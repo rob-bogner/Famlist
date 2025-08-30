@@ -8,6 +8,7 @@ struct PairingHostView: View {
     @StateObject private var vm: PairingViewModel
     private let trailingMenu: AnyView?
 
+    // Production initializer (no debug-only params)
     init(publicId: PublicUserId, pendingInviteCode: Binding<String?>, @ViewBuilder trailingMenu: () -> some View = { EmptyView() }) {
         self.publicId = publicId
         self._pendingInviteCode = pendingInviteCode
@@ -84,3 +85,24 @@ struct PairingHostView: View {
         }
     }
 }
+
+#if DEBUG
+extension PairingHostView {
+    // Debug-only initializer to inject a mock view model factory for previews
+    init(publicId: PublicUserId, pendingInviteCode: Binding<String?>, @ViewBuilder trailingMenu: () -> some View = { EmptyView() }, viewModelFactory: @escaping () -> PairingViewModel) {
+        self.publicId = publicId
+        self._pendingInviteCode = pendingInviteCode
+        _vm = StateObject(wrappedValue: viewModelFactory())
+        let view = trailingMenu()
+        self.trailingMenu = (view is EmptyView) ? nil : AnyView(view)
+    }
+}
+
+#Preview("Pairing") {
+    PairingHostView(
+        publicId: PreviewData.publicId,
+        pendingInviteCode: .constant(nil),
+        viewModelFactory: { PairingViewModel(myId: PreviewData.publicId, pairingRepo: PreviewPairingRepository()) }
+    )
+}
+#endif

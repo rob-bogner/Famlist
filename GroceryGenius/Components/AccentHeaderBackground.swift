@@ -125,9 +125,12 @@ struct AccentHeader: View {
     }
 }
 
+#if DEBUG
 #Preview {
     VStack(spacing: 0) {
         AccentHeader(title: "Preview", style: .withProgress)
+            .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
         Spacer()
     }
 }
+#endif
