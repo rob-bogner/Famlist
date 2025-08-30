@@ -9,24 +9,12 @@ final class FirestoreListRepository: ListRepository {
     func observeLists(for owner: PublicUserId) -> AsyncStream<[GroceryList]> {
         let ownerId = owner.value
         return AsyncStream { continuation in
-            var snapshots: [String: [GroceryList]] = [:]
-            func emit() {
-                let combined = Array(snapshots.values).flatMap { $0 }
-                continuation.yield(dedup(combined))
-            }
-            let ownedListener = db.collection(collection).whereField("owner", isEqualTo: ownerId)
+            let listener = db.collection(collection).whereField("ownerPublicId", isEqualTo: ownerId)
                 .addSnapshotListener { snap, _ in
                     let lists = snap?.documents.compactMap { Self.decode(doc: $0) } ?? []
-                    snapshots["owned"] = lists
-                    emit()
+                    continuation.yield(lists)
                 }
-            let sharedListener = db.collection(collection).whereField("sharedWith", arrayContains: ownerId)
-                .addSnapshotListener { snap, _ in
-                    let lists = snap?.documents.compactMap { Self.decode(doc: $0) } ?? []
-                    snapshots["shared"] = lists
-                    emit()
-                }
-            continuation.onTermination = { _ in ownedListener.remove(); sharedListener.remove() }
+            continuation.onTermination = { _ in listener.remove() }
         }
     }
 
@@ -38,17 +26,29 @@ final class FirestoreListRepository: ListRepository {
     }
     func deleteList(id: String) async throws { try await db.collection(collection).document(id).delete() }
 
+    func ensureDefaultList(for owner: PublicUserId) async throws {
+        let defaultId = "default"
+        let doc = db.collection(collection).document(defaultId)
+        let snap = try await doc.getDocument()
+        if snap.exists { return }
+        let list = GroceryList(id: defaultId, owner: owner, name: "My List")
+        try await doc.setData(Self.encode(list))
+    }
+
     private static func encode(_ list: GroceryList) -> [String: Any] {
         [
-            "owner": list.owner.value,
+            "ownerPublicId": list.ownerPublicId,
             "name": list.name,
-            "items": list.items.map { ["id": $0.id, "title": $0.title, "qty": $0.qty, "unit": $0.unit, "checked": $0.checked] },
+            "items": list.items.map { [
+                "id": $0.id, "title": $0.title, "qty": $0.qty, "unit": $0.unit, "checked": $0.checked
+            ] },
+            // Keep sharedWith for compatibility with existing UI; not used for scoping
             "sharedWith": Array(list.sharedWith.map { $0.value })
         ]
     }
     private static func decode(doc: QueryDocumentSnapshot) -> GroceryList? {
         let data = doc.data()
-        guard let owner = data["owner"] as? String, let name = data["name"] as? String else { return nil }
+        guard let ownerPid = data["ownerPublicId"] as? String, let name = data["name"] as? String else { return nil }
         let itemsArr = data["items"] as? [[String: Any]] ?? []
         let items: [GroceryItem] = itemsArr.compactMap { item in
             guard let id = item["id"] as? String, let title = item["title"] as? String else { return nil }
@@ -58,12 +58,6 @@ final class FirestoreListRepository: ListRepository {
             return GroceryItem(id: id, title: title, qty: qty, unit: unit, checked: checked)
         }
         let shared = Set((data["sharedWith"] as? [String] ?? []).map(PublicUserId.init))
-        return GroceryList(id: doc.documentID, owner: PublicUserId(owner), name: name, items: items, sharedWith: shared)
-    }
-    private func dedup(_ lists: [GroceryList]) -> [GroceryList] {
-        var seen = Set<String>()
-        var result: [GroceryList] = []
-        for l in lists { if !seen.contains(l.id) { seen.insert(l.id); result.append(l) } }
-        return result
+        return GroceryList(id: doc.documentID, owner: PublicUserId(ownerPid), name: name, items: items, sharedWith: shared, ownerPublicId: ownerPid)
     }
 }

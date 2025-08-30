@@ -24,8 +24,8 @@ final class SessionGateViewModel: ObservableObject {
 
     private var cancellables: Set<AnyCancellable> = []
 
-    init(idService: UserIdService, recipeImportPresenter: RecipeImportPresenting) {
-        self.sessionVM = SessionViewModel(idService: idService)
+    init(idService: UserIdService, listRepo: ListRepository, recipeImportPresenter: RecipeImportPresenting) {
+        self.sessionVM = SessionViewModel(idService: idService, listRepo: listRepo)
         self.recipeImportPresenter = recipeImportPresenter
         bindSession()
     }

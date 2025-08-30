@@ -51,10 +51,10 @@ final class FirestoreUserRepository: UserRepository {
         // Delete auth map entry
         let mapDoc = db.collection(authMap).document(sha256Hex(uid))
         batch.deleteDocument(mapDoc)
-        // Collect lists owned by user
-        let owned = try await db.collection("lists").whereField("owner", isEqualTo: publicId.value).getDocuments()
+        // Collect lists owned by user (scoped via ownerPublicId)
+        let owned = try await db.collection("lists").whereField("ownerPublicId", isEqualTo: publicId.value).getDocuments()
         for doc in owned.documents { batch.deleteDocument(doc.reference) }
-        // Remove user from sharedWith arrays
+        // Remove user from sharedWith arrays of other lists
         let shared = try await db.collection("lists").whereField("sharedWith", arrayContains: publicId.value).getDocuments()
         for doc in shared.documents { batch.updateData(["sharedWith": FieldValue.arrayRemove([publicId.value])], forDocument: doc.reference) }
         // Delete pairing requests involving user

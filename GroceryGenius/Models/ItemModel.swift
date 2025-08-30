@@ -41,6 +41,9 @@ struct ItemModel: Identifiable, Hashable, Codable {
     
     /// Unique identifier for the item.
     let id: String
+
+    /// Owner public id for scoping (redundant to path but useful for rules/audit)
+    var ownerPublicId: String?
     
     /// Base64-encoded image data representing a captured or selected photo.
     var imageData: String?
@@ -78,6 +81,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ///
     /// - Parameters:
     ///   - id: Unique identifier, defaults to a new random UUID.
+    ///   - ownerPublicId: Optional owner public id for scoping, defaults to nil.
     ///   - imageData: Optional Base64-encoded image data, defaults to nil.
     ///   - name: Name of the item, defaults to an empty string.
     ///   - units: Number of units, defaults to 1.
@@ -90,6 +94,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ///   - listId: Parent grocery list identifier, defaults to "default" to preserve existing behavior.
     init(
         id: String = UUID().uuidString, // Generates a unique ID if none provided
+        ownerPublicId: String? = nil,
         imageData: String? = nil, // Default image data is nil
         name: String = "", // Default name is an empty string
         units: Int = 1, // Default to 1 unit
@@ -102,6 +107,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         listId: String = "default" // Default list id
     ) {
         self.id = id // Assigns the unique identifier
+        self.ownerPublicId = ownerPublicId
         self.imageData = imageData // Assigns the optional Base64 image data
         self.name = name // Assigns the item's name
         self.units = units // Assigns the quantity of the item
@@ -116,12 +122,13 @@ struct ItemModel: Identifiable, Hashable, Codable {
 
     // MARK: - Codable (custom Decodable for backward compatibility)
     private enum CodingKeys: String, CodingKey {
-        case id, imageData, name, units, measure, price, isChecked, category, productDescription, brand, listId
+        case id, ownerPublicId, imageData, name, units, measure, price, isChecked, category, productDescription, brand, listId
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
+        self.ownerPublicId = try container.decodeIfPresent(String.self, forKey: .ownerPublicId)
         self.imageData = try container.decodeIfPresent(String.self, forKey: .imageData)
         self.name = try container.decode(String.self, forKey: .name)
         self.units = try container.decode(Int.self, forKey: .units)

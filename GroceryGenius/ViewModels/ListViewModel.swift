@@ -36,53 +36,79 @@ import SwiftUI
 import FirebaseFirestore
 
 /// ViewModel encapsulating shopping list state and Firestore synchronization.
+@MainActor
 class ListViewModel: ObservableObject {
     // MARK: - Dependencies & Core State
     private let repository: ItemsRepository
     @Published var items: [ItemModel] = []
     @Published var selectedItem: ItemModel?
-    private var listener: ItemsRepository.ListenerToken?
+    private var itemsTask: Task<Void, Never>?
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
 
-    // MARK: - Lifecycle
-    init(repository: ItemsRepository = FirestoreManager.shared) {
-        self.repository = repository
-        startListeningToFirestore()
-    }
-    deinit { (listener as? ListenerRegistration)?.remove() }
+    private var owner: PublicUserId?
+    private var listId: String?
 
-    // MARK: - Real-time Listener
-    func startListeningToFirestore() {
-        listener = repository.addListener { [weak self] items in
-            DispatchQueue.main.async {
-                withAnimation { self?.items = items }
+    // MARK: - Lifecycle
+    init(repository: ItemsRepository = FirestoreItemsRepository()) {
+        self.repository = repository
+    }
+    deinit { itemsTask?.cancel() }
+
+    // MARK: - Configuration & Listener
+    func configure(publicId: PublicUserId, listId: String) {
+        self.owner = publicId
+        self.listId = listId
+        itemsTask?.cancel()
+        itemsTask = Task { [weak self] in
+            guard let self = self else { return }
+            for await snapshot in self.repository.observeItems(for: publicId, listId: listId) {
+                await MainActor.run { withAnimation { self.items = snapshot } }
             }
         }
     }
 
     // MARK: - CRUD
     func addItem(_ item: ItemModel) {
+        guard let owner, let listId else { errorMessage = "Not configured"; return }
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
-        repository.addItem(normalized) { [weak self] error in
-            if let error {
-                DispatchQueue.main.async { self?.errorMessage = error.localizedDescription }
-            }
+        let payload = NewItemPayload(
+            id: item.id,
+            imageData: item.imageData,
+            name: normalized.name,
+            units: normalized.units,
+            measure: normalized.measure,
+            price: normalized.price,
+            isChecked: normalized.isChecked,
+            category: normalized.category,
+            productDescription: normalized.productDescription,
+            brand: normalized.brand
+        )
+        Task { [weak self] in
+            do { _ = try await self?.repository.createItem(for: owner, listId: listId, payload: payload) }
+            catch { await MainActor.run { self?.errorMessage = error.localizedDescription } }
         }
     }
+
     func updateItem(_ item: ItemModel) {
+        guard let owner, let listId else { errorMessage = "Not configured"; return }
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
-        repository.updateItem(normalized) { [weak self] error in
-            if let error { DispatchQueue.main.async { self?.errorMessage = error.localizedDescription } }
+        Task { [weak self] in
+            do { try await self?.repository.updateItem(for: owner, listId: listId, item: normalized) }
+            catch { await MainActor.run { self?.errorMessage = error.localizedDescription } }
         }
     }
+
     func deleteItem(_ item: ItemModel) {
-        repository.deleteItem(item) { [weak self] error in
-            if let error { DispatchQueue.main.async { self?.errorMessage = error.localizedDescription } }
+        guard let owner, let listId else { errorMessage = "Not configured"; return }
+        Task { [weak self] in
+            do { try await self?.repository.deleteItem(for: owner, listId: listId, itemId: item.id) }
+            catch { await MainActor.run { self?.errorMessage = error.localizedDescription } }
         }
     }
+
     func toggleItemChecked(_ item: ItemModel) { var copy = item; copy.isChecked.toggle(); updateItem(copy) }
 
     // MARK: - Derived Projections
@@ -94,14 +120,28 @@ class ListViewModel: ObservableObject {
 
     // MARK: - View Input Helpers
     func addItemFromInput(name: String, units: String, measure: String, image: UIImage? = nil) {
+        guard let owner, let listId else { errorMessage = "Not configured"; return }
         isLoading = true
         let imageBase64 = imageToBase64(image)
         let canonical = canonicalizeMeasure(measure)
-        let newItem = ItemModel(imageData: imageBase64, name: name, units: Int(units) ?? 1, measure: canonical, price: 0.0, isChecked: false)
-        repository.addItem(newItem) { [weak self] error in
-            DispatchQueue.main.async {
-                self?.isLoading = false
-                if let error { self?.errorMessage = error.localizedDescription }
+        let payload = NewItemPayload(
+            id: nil,
+            imageData: imageBase64,
+            name: name,
+            units: Int(units) ?? 1,
+            measure: canonical,
+            price: 0.0,
+            isChecked: false,
+            category: nil,
+            productDescription: nil,
+            brand: nil
+        )
+        Task { [weak self] in
+            do {
+                _ = try await self?.repository.createItem(for: owner, listId: listId, payload: payload)
+                await MainActor.run { self?.isLoading = false }
+            } catch {
+                await MainActor.run { self?.isLoading = false; self?.errorMessage = error.localizedDescription }
             }
         }
     }
@@ -122,11 +162,13 @@ class ListViewModel: ObservableObject {
         brand: String?,
         image: UIImage?
     ) {
+        guard let owner, let listId else { errorMessage = "Not configured"; return }
         isLoading = true
         let imageBase64 = imageToBase64(image)
         let canonical = canonicalizeMeasure(measure)
         let updated = ItemModel(
             id: id,
+            ownerPublicId: owner.value,
             imageData: imageBase64,
             name: name,
             units: Int(units) ?? 1,
@@ -135,12 +177,15 @@ class ListViewModel: ObservableObject {
             isChecked: isChecked,
             category: category,
             productDescription: productDescription,
-            brand: brand
+            brand: brand,
+            listId: listId
         )
-        repository.updateItem(updated) { [weak self] error in
-            DispatchQueue.main.async {
-                self?.isLoading = false
-                if let error { self?.errorMessage = error.localizedDescription }
+        Task { [weak self] in
+            do {
+                try await self?.repository.updateItem(for: owner, listId: listId, item: updated)
+                await MainActor.run { self?.isLoading = false }
+            } catch {
+                await MainActor.run { self?.isLoading = false; self?.errorMessage = error.localizedDescription }
             }
         }
     }

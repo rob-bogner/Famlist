@@ -8,6 +8,7 @@ struct HomeView: View {
     @Binding var pendingInviteCode: String?
     let onImport: () -> Void
     @State private var section: Section = .lists
+    @EnvironmentObject private var listViewModel: ListViewModel
 
     var body: some View {
         Group {
@@ -31,6 +32,7 @@ struct HomeView: View {
                 }
             }
         }
+        .onAppear { listViewModel.configure(publicId: publicId, listId: "default") }
         .onChange(of: pendingInviteCode) { _, new in
             if let code = new, !code.isEmpty { section = .pairing }
         }
@@ -40,15 +42,15 @@ struct HomeView: View {
 #if DEBUG
 #Preview("Home – Lists (Light)") {
     HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant(nil), onImport: {})
-        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+        .environmentObject(makePreviewListVM())
 }
 #Preview("Home – Lists (Dark)") {
     HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant(nil), onImport: {})
-        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+        .environmentObject(makePreviewListVM())
         .preferredColorScheme(.dark)
 }
 #Preview("Home – Pairing (pending code)") {
     HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant("ABCD1"), onImport: {})
-        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+        .environmentObject(makePreviewListVM())
 }
 #endif

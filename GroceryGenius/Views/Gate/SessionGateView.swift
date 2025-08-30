@@ -5,8 +5,8 @@ import SwiftUI
 struct SessionGateView: View {
     @StateObject private var vm: SessionGateViewModel
 
-    init(idService: UserIdService, recipeImportPresenter: RecipeImportPresenting = RecipeImportPresenter()) {
-        _vm = StateObject(wrappedValue: SessionGateViewModel(idService: idService, recipeImportPresenter: recipeImportPresenter))
+    init(idService: UserIdService, listRepo: ListRepository = FirestoreListRepository(), recipeImportPresenter: RecipeImportPresenting = RecipeImportPresenter()) {
+        _vm = StateObject(wrappedValue: SessionGateViewModel(idService: idService, listRepo: listRepo, recipeImportPresenter: recipeImportPresenter))
     }
 
     var body: some View {
@@ -32,6 +32,6 @@ struct SessionGateView: View {
 struct IdentifiedAlert: Identifiable { let id = UUID(); let message: String }
 
 #Preview {
-    SessionGateView(idService: PreviewUserIdService(), recipeImportPresenter: PreviewImportPresenter())
-        .environmentObject(ListViewModel(repository: PreviewItemsRepository()))
+    SessionGateView(idService: PreviewUserIdService(), listRepo: PreviewListRepository(), recipeImportPresenter: PreviewImportPresenter())
+        .environmentObject(makePreviewListVM())
 }

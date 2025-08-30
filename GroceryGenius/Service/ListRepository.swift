@@ -6,4 +6,6 @@ protocol ListRepository: Sendable {
     func createList(_ list: GroceryList) async throws
     func updateList(_ list: GroceryList) async throws
     func deleteList(id: String) async throws
+    // Ensure exactly one default list exists for the owner (idempotent)
+    func ensureDefaultList(for owner: PublicUserId) async throws
 }

@@ -136,5 +136,5 @@ struct AddItemView: View {
 #Preview {
     /// Preview provider for AddItemView.
     AddItemView()
-        .environmentObject(ListViewModel(repository: PreviewItemsRepository())) // Inject preview VM (no Firebase)
+        .environmentObject(makePreviewListVM()) // Inject preview VM (no Firebase)
 }

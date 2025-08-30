@@ -33,8 +33,8 @@
 import Foundation
 @preconcurrency import FirebaseFirestore
 
-/// Firestore-backed repository (singleton) for ItemModel entities.
-final class FirestoreManager: ItemsRepository {
+/// Firestore-backed legacy helper for ItemModel entities (unscoped). Kept for backward compatibility in isolated flows.
+final class FirestoreManager {
     // MARK: - Constants
     static let shared = FirestoreManager()
     private let db = Firestore.firestore()
@@ -42,9 +42,9 @@ final class FirestoreManager: ItemsRepository {
 
     private init() {}
 
-    // MARK: - Real-time Listener
+    // MARK: - Real-time Listener (legacy)
     @discardableResult
-    func addListener(onUpdate: @escaping ([ItemModel]) -> Void) -> ListenerToken {
+    func addListener(onUpdate: @escaping ([ItemModel]) -> Void) -> ListenerRegistration {
         db.collection(collection).addSnapshotListener { snapshot, error in
             guard let documents = snapshot?.documents else {
                 print("⚠️ Firestore snapshot empty – \(error?.localizedDescription ?? "unknown error")")
@@ -55,10 +55,10 @@ final class FirestoreManager: ItemsRepository {
                 try? doc.data(as: ItemModel.self)
             }
             onUpdate(items)
-        } as ListenerRegistration
+        }
     }
 
-    // MARK: - CRUD
+    // MARK: - CRUD (legacy, unscoped)
     func addItem(_ item: ItemModel, completion: ((Error?) -> Void)? = nil) {
         do {
             try db.collection(collection).document(item.id).setData(from: item)

@@ -46,13 +46,26 @@ enum ItemsRepositoryError: Error, LocalizedError {
     }
 }
 
+// MARK: - Creation Payload
+
+struct NewItemPayload: Sendable, Codable, Hashable {
+    var id: String?
+    var imageData: String?
+    var name: String
+    var units: Int
+    var measure: String
+    var price: Double
+    var isChecked: Bool
+    var category: String?
+    var productDescription: String?
+    var brand: String?
+}
+
 // MARK: - Protocol
 
-protocol ItemsRepository {
-    typealias ListenerToken = AnyObject
-    @discardableResult
-    func addListener(onUpdate: @escaping ([ItemModel]) -> Void) -> ListenerToken
-    func addItem(_ item: ItemModel, completion: ((Error?) -> Void)?)
-    func updateItem(_ item: ItemModel, completion: ((Error?) -> Void)?)
-    func deleteItem(_ item: ItemModel, completion: ((Error?) -> Void)?)
+protocol ItemsRepository: Sendable {
+    func observeItems(for owner: PublicUserId, listId: String) -> AsyncStream<[ItemModel]>
+    func createItem(for owner: PublicUserId, listId: String, payload: NewItemPayload) async throws -> ItemModel
+    func updateItem(for owner: PublicUserId, listId: String, item: ItemModel) async throws
+    func deleteItem(for owner: PublicUserId, listId: String, itemId: String) async throws
 }

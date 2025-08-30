@@ -26,12 +26,15 @@ enum UserStatus: String, Codable, Sendable { case active, disabled }
 struct GroceryList: Codable, Identifiable, Sendable, Hashable {
     let id: String
     let owner: PublicUserId
+    // New: explicit owner public id for Firestore scoping
+    var ownerPublicId: String
     var name: String
     var items: [GroceryItem]
     var sharedWith: Set<PublicUserId>
-    init(id: String = UUID().uuidString, owner: PublicUserId, name: String, items: [GroceryItem] = [], sharedWith: Set<PublicUserId> = []) {
+    init(id: String = UUID().uuidString, owner: PublicUserId, name: String, items: [GroceryItem] = [], sharedWith: Set<PublicUserId> = [], ownerPublicId: String? = nil) {
         self.id = id
         self.owner = owner
+        self.ownerPublicId = ownerPublicId ?? owner.value
         self.name = name
         self.items = items
         self.sharedWith = sharedWith
