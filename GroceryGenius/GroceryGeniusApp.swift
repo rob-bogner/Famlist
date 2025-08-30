@@ -48,7 +48,7 @@ struct GroceryGeniusApp: App {
     var body: some Scene {
         WindowGroup {
             // Root gate now auto-provisions a user id
-            SessionGateView(idService: FirestoreUserIdService())
+            SessionGateView(idService: DefaultUserIdService())
                 .environmentObject(ListViewModel())
         }
     }

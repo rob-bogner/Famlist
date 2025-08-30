@@ -62,10 +62,11 @@ private final class PreviewToken: NSObject {
 
 // MARK: - ListRepository (preview)
 final class PreviewListRepository: ListRepository {
-    private var lists: [GroceryList]
+    var lists: [GroceryList]
     init(lists: [GroceryList] = PreviewData.lists) { self.lists = lists }
     func observeLists(for owner: PublicUserId) -> AsyncStream<[GroceryList]> {
         AsyncStream { continuation in
+            // Filter by owner (include shared lists if desired in the future)
             let owned = self.lists.filter { $0.owner == owner }
             continuation.yield(owned)
         }
@@ -75,6 +76,7 @@ final class PreviewListRepository: ListRepository {
     func deleteList(id: String) async throws { lists.removeAll { $0.id == id } }
 }
 
+// Preview-only: mutable class with Sendable protocol conformance; safe due to single-threaded preview usage.
 extension PreviewListRepository: @unchecked Sendable {}
 
 // MARK: - PairingRepository (preview)
@@ -93,6 +95,7 @@ final class PreviewPairingRepository: PairingRepository {
 
 // MARK: - UserIdService (preview)
 struct PreviewUserIdService: UserIdService {
+    func getOrCreatePublicId() async throws -> PublicUserId { PreviewData.publicId }
     func getOrCreateUserId() async throws -> PublicUserId { PreviewData.publicId }
     func currentLocalId() -> PublicUserId? { PreviewData.publicId }
 }

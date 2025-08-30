@@ -24,7 +24,7 @@ final class SessionViewModel: ObservableObject {
 
     func bootstrap() async {
         do {
-            let id = try await idService.getOrCreateUserId()
+            let id = try await idService.getOrCreatePublicId()
             state = .signedIn(id)
         } catch {
             self.errorMessage = error.localizedDescription
