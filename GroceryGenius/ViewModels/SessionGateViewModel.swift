@@ -10,13 +10,11 @@ protocol RecipeImportPresenting {
 
 @MainActor
 final class SessionGateViewModel: ObservableObject {
-    enum Section { case lists, pairing, settings }
+    enum Section { case lists, settings }
 
     // Exposed state for the View
     @Published private(set) var sessionState: SessionViewModel.State = .initializing
     @Published var errorMessage: String?
-    @Published var pendingInviteCode: String?
-    @Published var section: Section = .lists
 
     // Dependencies
     private let sessionVM: SessionViewModel
@@ -41,25 +39,9 @@ final class SessionGateViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.errorMessage = $0 }
             .store(in: &cancellables)
-
-        sessionVM.$pendingInviteCode
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] code in
-                self?.pendingInviteCode = code
-                // Navigation decision: jump to pairing if a code arrives
-                if let c = code, !c.isEmpty { self?.section = .pairing }
-            }
-            .store(in: &cancellables)
     }
 
     // MARK: - Intents
-    func handleOpenURL(_ url: URL) {
-        // Delegate deep link parsing to the same helper
-        if let code = DeepLinkParser.pairCode(from: url) {
-            pendingInviteCode = code
-        }
-    }
-
     func presentImport() {
         recipeImportPresenter.presentImport()
     }

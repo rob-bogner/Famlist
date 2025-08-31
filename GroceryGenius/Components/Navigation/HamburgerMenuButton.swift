@@ -10,9 +10,6 @@ struct HamburgerMenuButton: View {
             Button(action: { section = .lists }) {
                 Label { Text("menu.lists", tableName: "Localizable") } icon: { Image(systemName: "list.bullet") }
             }
-            Button(action: { section = .pairing }) {
-                Label { Text("menu.pairing", tableName: "Localizable") } icon: { Image(systemName: "person.2") }
-            }
             Button(action: { section = .settings }) {
                 Label { Text("menu.settings", tableName: "Localizable") } icon: { Image(systemName: "gearshape") }
             }

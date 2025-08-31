@@ -14,9 +14,6 @@ final class SessionViewModel: ObservableObject {
     private let clock: Clock
     private let listRepo: ListRepository
 
-    // Deep link pairing code (if any)
-    @Published var pendingInviteCode: String?
-
     init(idService: UserIdService, listRepo: ListRepository, clock: Clock = SystemClock()) {
         self.idService = idService
         self.listRepo = listRepo

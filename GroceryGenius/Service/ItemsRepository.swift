@@ -69,3 +69,26 @@ protocol ItemsRepository: Sendable {
     func updateItem(for owner: PublicUserId, listId: String, item: ItemModel) async throws
     func deleteItem(for owner: PublicUserId, listId: String, itemId: String) async throws
 }
+
+// MARK: - List Context (for shared vs user-scoped items)
+struct ListContext: Sendable, Hashable {
+    let owner: PublicUserId
+    let listId: String
+    let sharedListId: String? // nil → user scope; otherwise shared scope
+}
+
+// MARK: - Context-first convenience APIs (defaulted to existing methods)
+extension ItemsRepository {
+    func observeItems(in ctx: ListContext) -> AsyncStream<[ItemModel]> {
+        observeItems(for: ctx.owner, listId: ctx.listId)
+    }
+    func createItem(in ctx: ListContext, payload: NewItemPayload) async throws -> ItemModel {
+        try await createItem(for: ctx.owner, listId: ctx.listId, payload: payload)
+    }
+    func updateItem(in ctx: ListContext, item: ItemModel) async throws {
+        try await updateItem(for: ctx.owner, listId: ctx.listId, item: item)
+    }
+    func deleteItem(in ctx: ListContext, itemId: String) async throws {
+        try await deleteItem(for: ctx.owner, listId: ctx.listId, itemId: itemId)
+    }
+}

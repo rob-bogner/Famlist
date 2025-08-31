@@ -15,8 +15,7 @@ struct SessionGateView: View {
             case .initializing:
                 ProgressView().controlSize(.large)
             case .signedIn(let pubId):
-                HomeView(publicId: pubId, pendingInviteCode: $vm.pendingInviteCode, onImport: { vm.presentImport() })
-                    .onOpenURL { url in vm.handleOpenURL(url) }
+                HomeView(publicId: pubId, onImport: { vm.presentImport() })
             }
         }
         .alert(item: Binding(get: {

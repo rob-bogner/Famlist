@@ -39,7 +39,8 @@ import FirebaseFirestore
 @MainActor
 class ListViewModel: ObservableObject {
     // MARK: - Dependencies & Core State
-    private let repository: ItemsRepository
+    private let itemsRepository: ItemsRepository
+    private let listRepository: ListRepository
     @Published var items: [ItemModel] = []
     @Published var selectedItem: ItemModel?
     private var itemsTask: Task<Void, Never>?
@@ -48,10 +49,16 @@ class ListViewModel: ObservableObject {
 
     private var owner: PublicUserId?
     private var listId: String?
+    private var listContext: ListContext?
 
     // MARK: - Lifecycle
-    init(repository: ItemsRepository = FirestoreItemsRepository()) {
-        self.repository = repository
+    init(itemsRepository: ItemsRepository = FirestoreItemsRepository(), listRepository: ListRepository = FirestoreListRepository()) {
+        self.itemsRepository = itemsRepository
+        self.listRepository = listRepository
+    }
+    // Backward-compatible convenience initializer used by previews and some views
+    convenience init(repository: ItemsRepository) {
+        self.init(itemsRepository: repository, listRepository: FirestoreListRepository())
     }
     deinit { itemsTask?.cancel() }
 
@@ -62,15 +69,22 @@ class ListViewModel: ObservableObject {
         itemsTask?.cancel()
         itemsTask = Task { [weak self] in
             guard let self = self else { return }
-            for await snapshot in self.repository.observeItems(for: publicId, listId: listId) {
-                await MainActor.run { withAnimation { self.items = snapshot } }
+            do {
+                let list = try await self.listRepository.getList(for: publicId, listId: listId)
+                let ctx = ListContext(owner: publicId, listId: list.id, sharedListId: list.sharedListId)
+                self.listContext = ctx
+                for await snapshot in self.itemsRepository.observeItems(in: ctx) {
+                    await MainActor.run { withAnimation { self.items = snapshot } }
+                }
+            } catch {
+                await MainActor.run { self.errorMessage = error.localizedDescription }
             }
         }
     }
 
     // MARK: - CRUD
     func addItem(_ item: ItemModel) {
-        guard let owner, let listId else { errorMessage = "Not configured"; return }
+        guard let ctx = listContext else { errorMessage = "Not configured"; return }
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         let payload = NewItemPayload(
@@ -86,25 +100,25 @@ class ListViewModel: ObservableObject {
             brand: normalized.brand
         )
         Task { [weak self] in
-            do { _ = try await self?.repository.createItem(for: owner, listId: listId, payload: payload) }
+            do { _ = try await self?.itemsRepository.createItem(in: ctx, payload: payload) }
             catch { await MainActor.run { self?.errorMessage = error.localizedDescription } }
         }
     }
 
     func updateItem(_ item: ItemModel) {
-        guard let owner, let listId else { errorMessage = "Not configured"; return }
+        guard let ctx = listContext else { errorMessage = "Not configured"; return }
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         Task { [weak self] in
-            do { try await self?.repository.updateItem(for: owner, listId: listId, item: normalized) }
+            do { try await self?.itemsRepository.updateItem(in: ctx, item: normalized) }
             catch { await MainActor.run { self?.errorMessage = error.localizedDescription } }
         }
     }
 
     func deleteItem(_ item: ItemModel) {
-        guard let owner, let listId else { errorMessage = "Not configured"; return }
+        guard let ctx = listContext else { errorMessage = "Not configured"; return }
         Task { [weak self] in
-            do { try await self?.repository.deleteItem(for: owner, listId: listId, itemId: item.id) }
+            do { try await self?.itemsRepository.deleteItem(in: ctx, itemId: item.id) }
             catch { await MainActor.run { self?.errorMessage = error.localizedDescription } }
         }
     }
@@ -120,7 +134,7 @@ class ListViewModel: ObservableObject {
 
     // MARK: - View Input Helpers
     func addItemFromInput(name: String, units: String, measure: String, image: UIImage? = nil) {
-        guard let owner, let listId else { errorMessage = "Not configured"; return }
+        guard let ctx = listContext else { errorMessage = "Not configured"; return }
         isLoading = true
         let imageBase64 = imageToBase64(image)
         let canonical = canonicalizeMeasure(measure)
@@ -138,7 +152,7 @@ class ListViewModel: ObservableObject {
         )
         Task { [weak self] in
             do {
-                _ = try await self?.repository.createItem(for: owner, listId: listId, payload: payload)
+                _ = try await self?.itemsRepository.createItem(in: ctx, payload: payload)
                 await MainActor.run { self?.isLoading = false }
             } catch {
                 await MainActor.run { self?.isLoading = false; self?.errorMessage = error.localizedDescription }
@@ -162,13 +176,13 @@ class ListViewModel: ObservableObject {
         brand: String?,
         image: UIImage?
     ) {
-        guard let owner, let listId else { errorMessage = "Not configured"; return }
+        guard let ctx = listContext else { errorMessage = "Not configured"; return }
         isLoading = true
         let imageBase64 = imageToBase64(image)
         let canonical = canonicalizeMeasure(measure)
         let updated = ItemModel(
             id: id,
-            ownerPublicId: owner.value,
+            ownerPublicId: ctx.owner.value,
             imageData: imageBase64,
             name: name,
             units: Int(units) ?? 1,
@@ -178,11 +192,11 @@ class ListViewModel: ObservableObject {
             category: category,
             productDescription: productDescription,
             brand: brand,
-            listId: listId
+            listId: ctx.listId
         )
         Task { [weak self] in
             do {
-                try await self?.repository.updateItem(for: owner, listId: listId, item: updated)
+                try await self?.itemsRepository.updateItem(in: ctx, item: updated)
                 await MainActor.run { self?.isLoading = false }
             } catch {
                 await MainActor.run { self?.isLoading = false; self?.errorMessage = error.localizedDescription }

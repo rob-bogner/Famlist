@@ -3,9 +3,8 @@
 import SwiftUI
 
 struct HomeView: View {
-    enum Section { case lists, pairing, settings }
+    enum Section { case lists, settings }
     let publicId: PublicUserId
-    @Binding var pendingInviteCode: String?
     let onImport: () -> Void
     @State private var section: Section = .lists
     @EnvironmentObject private var listViewModel: ListViewModel
@@ -20,10 +19,6 @@ struct HomeView: View {
                             .padding(.top, 12)
                             .padding(.trailing, 12)
                     }
-            case .pairing:
-                PairingHostView(publicId: publicId, pendingInviteCode: $pendingInviteCode) {
-                    HamburgerMenuButton(section: $section, onImport: onImport)
-                }
             case .settings:
                 NavigationStack {
                     SettingsView(publicId: publicId)
@@ -33,24 +28,17 @@ struct HomeView: View {
             }
         }
         .onAppear { listViewModel.configure(publicId: publicId, listId: "default") }
-        .onChange(of: pendingInviteCode) { _, new in
-            if let code = new, !code.isEmpty { section = .pairing }
-        }
     }
 }
 
 #if DEBUG
 #Preview("Home – Lists (Light)") {
-    HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant(nil), onImport: {})
+    HomeView(publicId: PreviewData.publicId, onImport: {})
         .environmentObject(makePreviewListVM())
 }
 #Preview("Home – Lists (Dark)") {
-    HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant(nil), onImport: {})
+    HomeView(publicId: PreviewData.publicId, onImport: {})
         .environmentObject(makePreviewListVM())
         .preferredColorScheme(.dark)
-}
-#Preview("Home – Pairing (pending code)") {
-    HomeView(publicId: PreviewData.publicId, pendingInviteCode: .constant("ABCD1"), onImport: {})
-        .environmentObject(makePreviewListVM())
 }
 #endif

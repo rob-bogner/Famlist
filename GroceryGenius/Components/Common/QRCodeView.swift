@@ -33,7 +33,7 @@ enum QRCodeGenerator {
 
 #if DEBUG
 #Preview("QR") {
-    QRCodeView(text: "gg://pair/ABCD1")
+    QRCodeView(text: "https://example.com")
         .frame(width: 160, height: 160)
         .padding()
 }

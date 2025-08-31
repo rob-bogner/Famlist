@@ -8,4 +8,9 @@ protocol ListRepository: Sendable {
     func deleteList(id: String) async throws
     // Ensure exactly one default list exists for the owner (idempotent)
     func ensureDefaultList(for owner: PublicUserId) async throws
+    // NEW
+    func getList(for owner: PublicUserId, listId: String) async throws -> GroceryList
+    func createSharedList(owners: [PublicUserId]) async throws -> SharedList
+    func attachListToShared(owner: PublicUserId, listId: String, sharedId: String) async throws
+    func getSharedList(by id: String) async throws -> SharedList?
 }

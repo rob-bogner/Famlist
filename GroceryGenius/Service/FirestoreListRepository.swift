@@ -35,8 +35,44 @@ final class FirestoreListRepository: ListRepository {
         try await doc.setData(Self.encode(list))
     }
 
+    // NEW: Fetch single list
+    func getList(for owner: PublicUserId, listId: String) async throws -> GroceryList {
+        let doc = try await db.collection(collection).document(listId).getDocument()
+        guard let data = doc.data(), let list = Self.decodeRaw(id: doc.documentID, data: data) else { throw ItemsRepositoryError.notFound }
+        guard list.ownerPublicId == owner.value else { throw ItemsRepositoryError.notFound }
+        return list
+    }
+
+    // NEW: Shared lists support (we use a top-level collection shared_lists due to Firestore path constraints)
+    private var sharedLists: CollectionReference { db.collection("shared_lists") }
+
+    func createSharedList(owners: [PublicUserId]) async throws -> SharedList {
+        let id = UUID().uuidString
+        let shared = SharedList(id: id, owners: owners.map { $0.value }, createdAt: Date())
+        try await sharedLists.document(id).setData([
+            "owners": shared.owners,
+            "createdAt": Timestamp(date: shared.createdAt)
+        ])
+        return shared
+    }
+
+    func attachListToShared(owner: PublicUserId, listId: String, sharedId: String) async throws {
+        try await db.collection(collection).document(listId).setData([
+            "sharedListId": sharedId,
+            "ownerPublicId": owner.value
+        ], merge: true)
+    }
+
+    func getSharedList(by id: String) async throws -> SharedList? {
+        let doc = try await sharedLists.document(id).getDocument()
+        guard let data = doc.data() else { return nil }
+        let owners = data["owners"] as? [String] ?? []
+        let createdAt = (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+        return SharedList(id: doc.documentID, owners: owners, createdAt: createdAt)
+    }
+
     private static func encode(_ list: GroceryList) -> [String: Any] {
-        [
+        var dict: [String: Any] = [
             "ownerPublicId": list.ownerPublicId,
             "name": list.name,
             "items": list.items.map { [
@@ -45,9 +81,13 @@ final class FirestoreListRepository: ListRepository {
             // Keep sharedWith for compatibility with existing UI; not used for scoping
             "sharedWith": Array(list.sharedWith.map { $0.value })
         ]
+        if let sid = list.sharedListId { dict["sharedListId"] = sid }
+        return dict
     }
     private static func decode(doc: QueryDocumentSnapshot) -> GroceryList? {
-        let data = doc.data()
+        decodeRaw(id: doc.documentID, data: doc.data())
+    }
+    private static func decodeRaw(id: String, data: [String: Any]) -> GroceryList? {
         guard let ownerPid = data["ownerPublicId"] as? String, let name = data["name"] as? String else { return nil }
         let itemsArr = data["items"] as? [[String: Any]] ?? []
         let items: [GroceryItem] = itemsArr.compactMap { item in
@@ -58,6 +98,7 @@ final class FirestoreListRepository: ListRepository {
             return GroceryItem(id: id, title: title, qty: qty, unit: unit, checked: checked)
         }
         let shared = Set((data["sharedWith"] as? [String] ?? []).map(PublicUserId.init))
-        return GroceryList(id: doc.documentID, owner: PublicUserId(ownerPid), name: name, items: items, sharedWith: shared, ownerPublicId: ownerPid)
+        let sharedListId = data["sharedListId"] as? String
+        return GroceryList(id: id, owner: PublicUserId(ownerPid), name: name, items: items, sharedWith: shared, ownerPublicId: ownerPid, sharedListId: sharedListId)
     }
 }

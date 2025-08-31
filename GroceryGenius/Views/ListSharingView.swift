@@ -4,16 +4,13 @@ import SwiftUI
 struct ListSharingView: View {
     let publicId: PublicUserId
     @State private var lists: [GroceryList] = []
-    @State private var partners: [PublicUserId] = []
     @State private var errorMessage: String?
 
     private let listRepo: ListRepository
-    private let pairingRepo: PairingRepository
 
-    init(publicId: PublicUserId, listRepo: ListRepository = FirestoreListRepository(), pairingRepo: PairingRepository = FirebasePairingRepository()) {
+    init(publicId: PublicUserId, listRepo: ListRepository = FirestoreListRepository()) {
         self.publicId = publicId
         self.listRepo = listRepo
-        self.pairingRepo = pairingRepo
     }
 
     var body: some View {
@@ -23,7 +20,7 @@ struct ListSharingView: View {
                 Text("No lists yet").foregroundStyle(.secondary)
             }
             ForEach(ownedLists, id: \.id) { list in
-                NavigationLink(destination: ListSharingDetailView(list: list, partners: partners, repo: listRepo)) {
+                NavigationLink(destination: ListSharingDetailView(list: list, partners: [], repo: listRepo)) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(list.name).font(.headline)
                         let shared = list.sharedWith.map { $0.value }.sorted()
@@ -38,7 +35,7 @@ struct ListSharingView: View {
             }
         }
         .navigationTitle("List Sharing")
-        .onAppear { observeLists(); reloadPartners() }
+        .onAppear { observeLists() }
         .alert(item: Binding(get: { errorMessage.map { IdentifiedAlert(message: $0) } }, set: { _ in errorMessage = nil })) { ia in
             Alert(title: Text("Error"), message: Text(ia.message), dismissButton: .default(Text("OK")))
         }
@@ -51,7 +48,6 @@ struct ListSharingView: View {
             }
         }
     }
-    private func reloadPartners() { Task { do { partners = try await pairingRepo.listPartners(of: publicId) } catch { errorMessage = error.localizedDescription } } }
 }
 
 private struct ListSharingDetailView: View {
@@ -83,6 +79,6 @@ private struct ListSharingDetailView: View {
 
 #Preview {
     NavigationStack {
-        ListSharingView(publicId: PreviewData.publicId, listRepo: PreviewListRepository(), pairingRepo: PreviewPairingRepository())
+        ListSharingView(publicId: PreviewData.publicId, listRepo: PreviewListRepository())
     }
 }

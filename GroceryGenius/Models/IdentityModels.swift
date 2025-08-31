@@ -31,13 +31,16 @@ struct GroceryList: Codable, Identifiable, Sendable, Hashable {
     var name: String
     var items: [GroceryItem]
     var sharedWith: Set<PublicUserId>
-    init(id: String = UUID().uuidString, owner: PublicUserId, name: String, items: [GroceryItem] = [], sharedWith: Set<PublicUserId> = [], ownerPublicId: String? = nil) {
+    // NEW: if set, items live in shared collection
+    var sharedListId: String?
+    init(id: String = UUID().uuidString, owner: PublicUserId, name: String, items: [GroceryItem] = [], sharedWith: Set<PublicUserId> = [], ownerPublicId: String? = nil, sharedListId: String? = nil) {
         self.id = id
         self.owner = owner
         self.ownerPublicId = ownerPublicId ?? owner.value
         self.name = name
         self.items = items
         self.sharedWith = sharedWith
+        self.sharedListId = sharedListId
     }
 }
 
@@ -54,6 +57,13 @@ struct GroceryItem: Codable, Identifiable, Sendable, Hashable {
         self.unit = unit
         self.checked = checked
     }
+}
+
+// NEW: Shared list metadata stored under shared/lists/{sharedListId}
+struct SharedList: Codable, Identifiable, Sendable, Hashable {
+    let id: String
+    var owners: [String]
+    var createdAt: Date
 }
 
 // MARK: - Pairing
