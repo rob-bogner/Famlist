@@ -41,8 +41,11 @@ struct ItemModel: Identifiable, Hashable, Codable {
     
     /// Unique identifier for the item.
     let id: String
-    
-    /// Base64-encoded image data representing a captured or selected photo.
+
+    /// Public or signed URL to the image stored in Supabase Storage (preferred going forward).
+    var imageUrl: String?
+
+    /// Base64-encoded image data representing a captured or selected photo. Deprecated; kept for backward compatibility during migration.
     var imageData: String?
     
     /// Name of the item (e.g., "Milk", "Bread").
@@ -69,12 +72,19 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Brand or manufacturer of the product (e.g., "Weihenstephan").
     var brand: String?
 
+    /// Owning list UUID as String (maps to items.list_id in DB).
+    var listId: String?
+
+    /// Optional owner public id, if available (maps to items.ownerPublicId in DB).
+    var ownerPublicId: String?
+
     // MARK: - Initializer
 
     /// Initializes a new `ItemModel` instance.
     ///
     /// - Parameters:
     ///   - id: Unique identifier, defaults to a new random UUID.
+    ///   - imageUrl: Optional image URL (Supabase Storage), defaults to nil.
     ///   - imageData: Optional Base64-encoded image data, defaults to nil.
     ///   - name: Name of the item, defaults to an empty string.
     ///   - units: Number of units, defaults to 1.
@@ -84,8 +94,11 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ///   - category: Optional category of the product, defaults to nil.
     ///   - productDescription: Exact product designation (e.g., "Organic Whole Milk 3.5%"), defaults to nil.
     ///   - brand: Brand or manufacturer of the product (e.g., "Weihenstephan"), defaults to nil.
+    ///   - listId: Identifier of the containing list, defaults to nil (set by caller when known).
+    ///   - ownerPublicId: Optional owner public id used for sharing features.
     init(
         id: String = UUID().uuidString, // Generates a unique ID if none provided
+        imageUrl: String? = nil,
         imageData: String? = nil, // Default image data is nil
         name: String = "", // Default name is an empty string
         units: Int = 1, // Default to 1 unit
@@ -94,9 +107,12 @@ struct ItemModel: Identifiable, Hashable, Codable {
         isChecked: Bool = false, // Default to unchecked
         category: String? = nil, // Default category is nil (optional)
         productDescription: String? = nil, // Default product description is nil
-        brand: String? = nil // Default brand is nil
+        brand: String? = nil, // Default brand is nil
+        listId: String? = nil, // Default to nil
+        ownerPublicId: String? = nil
     ) {
         self.id = id // Assigns the unique identifier
+        self.imageUrl = imageUrl
         self.imageData = imageData // Assigns the optional Base64 image data
         self.name = name // Assigns the item's name
         self.units = units // Assigns the quantity of the item
@@ -106,5 +122,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.category = category // Assigns the optional product category
         self.productDescription = productDescription // Assigns the exact product designation
         self.brand = brand // Assigns the brand or manufacturer
+        self.listId = listId
+        self.ownerPublicId = ownerPublicId
     }
 }

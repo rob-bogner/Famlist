@@ -33,7 +33,7 @@ struct ListView: View {
     @State private var showEditItemView: Bool = false
 
     var body: some View {
-        List {
+        SwiftUI.List {
             uncheckedItemsSection
             checkedItemsSection
         }

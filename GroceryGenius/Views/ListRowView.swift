@@ -35,13 +35,30 @@ struct ModalPhoto: Identifiable, Equatable {
 }
 
 struct ItemThumbnail: View {
+    let imageUrl: String?
     let base64: String?
     let onTap: (UIImage?) -> Void
+    @State private var loadedRemoteImage: UIImage? = nil
+
     var body: some View {
-        let image = ImageCache.shared.image(fromBase64: base64)
+        let url = imageUrl.flatMap(URL.init(string:))
         Group {
-            if let image = image {
-                Image(uiImage: image).resizable().scaledToFit()
+            if let url {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        Image("defaultImage").resizable().scaledToFit()
+                    case .success(let image):
+                        image.resizable().scaledToFit()
+                            .onAppear { loadRemoteUIImage(from: url) }
+                    case .failure:
+                        Image("defaultImage").resizable().scaledToFit()
+                    @unknown default:
+                        Image("defaultImage").resizable().scaledToFit()
+                    }
+                }
+            } else if let img = ImageCache.shared.image(fromBase64: base64) {
+                Image(uiImage: img).resizable().scaledToFit()
             } else {
                 Image("defaultImage").resizable().scaledToFit()
             }
@@ -49,7 +66,22 @@ struct ItemThumbnail: View {
         .roundedCorners(5)
         .padding(10)
         .frame(width: 50, height: 50)
-        .onTapGesture { onTap(image) }
+        .onTapGesture { onTap(loadedImageForTap(hasRemoteURL: url != nil)) }
+    }
+
+    private func loadedImageForTap(hasRemoteURL: Bool) -> UIImage? {
+        if hasRemoteURL { return loadedRemoteImage }
+        return ImageCache.shared.image(fromBase64: base64)
+    }
+
+    private func loadRemoteUIImage(from url: URL) {
+        // Fetch once to enable fullscreen modal with UIImage
+        guard loadedRemoteImage == nil else { return }
+        Task {
+            if let (data, _) = try? await URLSession.shared.data(from: url), let ui = UIImage(data: data) {
+                loadedRemoteImage = ui
+            }
+        }
     }
 }
 
@@ -88,9 +120,6 @@ struct ListRowView: View {
     
     @State private var modalPhoto: ModalPhoto?
     
-    // MARK: - Computed Views
-    
-    
     // MARK: - Body
     
     /// The main body view of the row, composing image, name, and details with styling.
@@ -100,7 +129,7 @@ struct ListRowView: View {
                 .ignoresSafeArea()
 
             HStack(alignment: .top) {
-                ItemThumbnail(base64: item.imageData) { tapped in
+                ItemThumbnail(imageUrl: item.imageUrl, base64: item.imageData) { tapped in
                     modalPhoto = ModalPhoto(image: tapped)
                 }
 

@@ -8,10 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		EE0C60CB2E52403600C6CF65 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = EE0C60CA2E52403600C6CF65 /* Localizable.xcstrings */; };
-		EE2BAC402DB917D50082D950 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* FirebaseFirestore */; };
-		EE2BAC462DB9261F0082D950 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = EE2BAC452DB9261F0082D950 /* GoogleService-Info.plist */; };
-		EE2BAC4A2DBA3D800082D950 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC492DBA3D800082D950 /* FirebaseFirestore */; };
-		EE2BAC4C2DBA3D800082D950 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC4B2DBA3D800082D950 /* FirebaseFirestoreCombine-Community */; };
 		EE4B8CD22B52BD0B006FBBED /* EditItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */; };
 		EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */; };
 		EE6115E82B4467070043736A /* ListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6115E72B4467070043736A /* ListViewModel.swift */; };
@@ -24,17 +20,16 @@
 		EE69A4FE2B14F046007C3515 /* ListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4FD2B14F046007C3515 /* ListRowView.swift */; };
 		EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7872302B1E3ED600FDD00B /* AddItemView.swift */; };
 		EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */; };
-		EE873CE62E3FA20100F3FF82 /* SVGKit in Frameworks */ = {isa = PBXBuildFile; productRef = EE873CE52E3FA20100F3FF82 /* SVGKit */; };
-		EE873CE82E3FA20100F3FF82 /* SVGKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EE873CE72E3FA20100F3FF82 /* SVGKitSwift */; };
 		EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */; };
+		EEA16FF92E663FC80050436C /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA16FF82E663FC80050436C /* Secrets.plist */; };
 		EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC082E50C95A00C037F1 /* ImageCache.swift */; };
 		EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */; };
 		EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */; };
 		EEC3BC0E2E50D5A800C037F1 /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC0D2E50D5A800C037F1 /* Validation.swift */; };
+		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
 		EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FB2B4C5A4100330CE5 /* ListView.swift */; };
 		EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */; };
 		EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */; };
-		EEFA09E52E2CE7A200B2F2B0 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		EEFA09EB2E2CED5000B2F2B0 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */; };
 		EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */; };
 /* End PBXBuildFile section */
@@ -56,6 +51,7 @@
 		EE7872302B1E3ED600FDD00B /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
 		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
 		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageFullscreenView.swift; sourceTree = "<group>"; };
+		EEA16FF82E663FC80050436C /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		EEC3BC082E50C95A00C037F1 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableInputs.swift; sourceTree = "<group>"; };
@@ -76,11 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE2BAC4C2DBA3D800082D950 /* FirebaseFirestoreCombine-Community in Frameworks */,
-				EE2BAC402DB917D50082D950 /* FirebaseFirestore in Frameworks */,
-				EE873CE82E3FA20100F3FF82 /* SVGKitSwift in Frameworks */,
-				EE873CE62E3FA20100F3FF82 /* SVGKit in Frameworks */,
-				EE2BAC4A2DBA3D800082D950 /* FirebaseFirestore in Frameworks */,
+				EEE000012E00000000000001 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,6 +128,7 @@
 		EE69A4D92B14CB78007C3515 = {
 			isa = PBXGroup;
 			children = (
+				EEA16FF82E663FC80050436C /* Secrets.plist */,
 				EE2BAC452DB9261F0082D950 /* GoogleService-Info.plist */,
 				EE69A4E42B14CB78007C3515 /* GroceryGenius */,
 				EE69A4E32B14CB78007C3515 /* Products */,
@@ -202,6 +195,9 @@
 				EE2BAC412DB917E20082D950 /* Service */,
 			);
 			name = GroceryGenius;
+			packageProductDependencies = (
+				EE2BAC3F2DB917D50082D950 /* Supabase */,
+			);
 			productName = GroceryGenius;
 			productReference = EE69A4E22B14CB78007C3515 /* GroceryGenius.app */;
 			productType = "com.apple.product-type.application";
@@ -231,8 +227,7 @@
 			);
 			mainGroup = EE69A4D92B14CB78007C3515;
 			packageReferences = (
-				EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */,
+				EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			productRefGroup = EE69A4E32B14CB78007C3515 /* Products */;
 			projectDirPath = "";
@@ -248,10 +243,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EEA16FF92E663FC80050436C /* Secrets.plist in Resources */,
 				EE69A4ED2B14CB79007C3515 /* Preview Assets.xcassets in Resources */,
 				EE0C60CB2E52403600C6CF65 /* Localizable.xcstrings in Resources */,
 				EE69A4EA2B14CB79007C3515 /* Assets.xcassets in Resources */,
-				EE2BAC462DB9261F0082D950 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,7 +265,6 @@
 				EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
-				EEFA09E52E2CE7A200B2F2B0 /* (null) in Sources */,
 				EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */,
 				EEC3BC0E2E50D5A800C037F1 /* Validation.swift in Sources */,
 				EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */,
@@ -498,49 +492,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+		EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 11.12.0;
-			};
-		};
-		EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SVGKit/SVGKit";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.0;
+				minimumVersion = 2.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		EE2BAC3F2DB917D50082D950 /* FirebaseFirestore */ = {
+		EE2BAC3F2DB917D50082D950 /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
-		EE2BAC492DBA3D800082D950 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
-		EE2BAC4B2DBA3D800082D950 /* FirebaseFirestoreCombine-Community */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = "FirebaseFirestoreCombine-Community";
-		};
-		EE873CE52E3FA20100F3FF82 /* SVGKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */;
-			productName = SVGKit;
-		};
-		EE873CE72E3FA20100F3FF82 /* SVGKitSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EE873CE42E3FA20100F3FF82 /* XCRemoteSwiftPackageReference "SVGKit" */;
-			productName = SVGKitSwift;
+			package = EE2BAC3E2DB917D50082D950 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
