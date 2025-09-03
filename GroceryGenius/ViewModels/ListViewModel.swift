@@ -34,7 +34,7 @@ import SwiftUI
 class ListViewModel: ObservableObject {
     // MARK: - Dependencies & Core State
     private let repository: ItemsRepository
-    let listId: UUID
+    private(set) var listId: UUID
 
     @Published var items: [ItemModel] = []
     @Published var selectedItem: ItemModel?
@@ -50,6 +50,15 @@ class ListViewModel: ObservableObject {
         startObserving()
     }
     deinit { observeTask?.cancel() }
+
+    // MARK: - List Switching
+    func switchList(to newId: UUID) {
+        guard newId != self.listId else { return }
+        observeTask?.cancel()
+        self.listId = newId
+        self.items = []
+        startObserving()
+    }
 
     // MARK: - Real-time Observation
     private func startObserving() {

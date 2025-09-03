@@ -36,7 +36,6 @@
 
 /* Begin PBXFileReference section */
 		EE0C60CA2E52403600C6CF65 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		EE2BAC452DB9261F0082D950 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditItemView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		EE6115E72B4467070043736A /* ListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModel.swift; sourceTree = "<group>"; };
@@ -129,7 +128,6 @@
 			isa = PBXGroup;
 			children = (
 				EEA16FF82E663FC80050436C /* Secrets.plist */,
-				EE2BAC452DB9261F0082D950 /* GoogleService-Info.plist */,
 				EE69A4E42B14CB78007C3515 /* GroceryGenius */,
 				EE69A4E32B14CB78007C3515 /* Products */,
 			);

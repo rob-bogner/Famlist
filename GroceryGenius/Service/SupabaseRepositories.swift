@@ -203,10 +203,10 @@ final class SupabaseItemsRepository: ItemsRepository {
         if finalImageData == nil, let base64 = item.imageData { finalImageData = base64 }
         struct NewRow: Codable {
             let id: UUID, listId: UUID, ownerPublicId: String?
-            let imageData: String?, imageUrl: String?
+            let imageData: String?
             let name: String, units: Int, measure: String, price: Double
             let isChecked: Bool, category: String?, productDescription: String?, brand: String?
-            enum CodingKeys: String, CodingKey { case id; case listId = "list_id"; case ownerPublicId = "ownerpublicid"; case imageData = "imagedata"; case imageUrl; case name, units, measure, price, isChecked, category; case productDescription = "productdescription"; case brand }
+            enum CodingKeys: String, CodingKey { case id; case listId = "list_id"; case ownerPublicId = "ownerpublicid"; case imageData = "imagedata"; case name, units, measure, price, isChecked, category; case productDescription = "productdescription"; case brand }
         }
         let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID()
         let row = NewRow(
@@ -214,7 +214,6 @@ final class SupabaseItemsRepository: ItemsRepository {
             listId: listUUID,
             ownerPublicId: item.ownerPublicId,
             imageData: finalImageData,
-            imageUrl: item.imageUrl,
             name: item.name, units: item.units, measure: item.measure, price: item.price,
             isChecked: item.isChecked, category: item.category,
             productDescription: item.productDescription, brand: item.brand
@@ -244,7 +243,6 @@ final class SupabaseItemsRepository: ItemsRepository {
         if finalImageData == nil, let base64 = item.imageData { finalImageData = base64 }
         struct UpdateRow: Encodable {
             let imageData: String?
-            let imageUrl: String?
             let name: String
             let units: Int
             let measure: String
@@ -253,11 +251,10 @@ final class SupabaseItemsRepository: ItemsRepository {
             let category: String?
             let productDescription: String?
             let brand: String?
-            enum CodingKeys: String, CodingKey { case imageData = "imagedata"; case imageUrl; case name, units, measure, price, isChecked, category; case productDescription = "productdescription"; case brand }
+            enum CodingKeys: String, CodingKey { case imageData = "imagedata"; case name, units, measure, price, isChecked, category; case productDescription = "productdescription"; case brand }
         }
         let payload = UpdateRow(
             imageData: finalImageData,
-            imageUrl: item.imageUrl,
             name: item.name,
             units: item.units,
             measure: item.measure,
