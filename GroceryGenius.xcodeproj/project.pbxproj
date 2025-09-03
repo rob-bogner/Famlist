@@ -22,6 +22,8 @@
 		EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */; };
 		EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */; };
 		EEA16FF92E663FC80050436C /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA16FF82E663FC80050436C /* Secrets.plist */; };
+		EEA16FFB2E68600A0050436C /* PreviewMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA16FFA2E68600A0050436C /* PreviewMocks.swift */; };
+		EEA16FFD2E6860120050436C /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA16FFC2E6860120050436C /* Toast.swift */; };
 		EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC082E50C95A00C037F1 /* ImageCache.swift */; };
 		EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */; };
 		EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */; };
@@ -51,6 +53,8 @@
 		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
 		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageFullscreenView.swift; sourceTree = "<group>"; };
 		EEA16FF82E663FC80050436C /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
+		EEA16FFA2E68600A0050436C /* PreviewMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewMocks.swift; sourceTree = "<group>"; };
+		EEA16FFC2E6860120050436C /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 		EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		EEC3BC082E50C95A00C037F1 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableInputs.swift; sourceTree = "<group>"; };
@@ -102,6 +106,7 @@
 		EE52222D2DBEDD0800AB84EF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				EEA16FFC2E6860120050436C /* Toast.swift */,
 				EEC3BC0D2E50D5A800C037F1 /* Validation.swift */,
 				EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */,
 				EEC3BC082E50C95A00C037F1 /* ImageCache.swift */,
@@ -144,6 +149,7 @@
 		EE69A4E42B14CB78007C3515 /* GroceryGenius */ = {
 			isa = PBXGroup;
 			children = (
+				EEA16FFA2E68600A0050436C /* PreviewMocks.swift */,
 				EE0C60CA2E52403600C6CF65 /* Localizable.xcstrings */,
 				EE69A4E52B14CB78007C3515 /* GroceryGeniusApp.swift */,
 				EE52222D2DBEDD0800AB84EF /* Components */,
@@ -256,6 +262,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */,
+				EEA16FFB2E68600A0050436C /* PreviewMocks.swift in Sources */,
 				EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */,
 				EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */,
 				EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */,
@@ -266,6 +273,7 @@
 				EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */,
 				EEC3BC0E2E50D5A800C037F1 /* Validation.swift in Sources */,
 				EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */,
+				EEA16FFD2E6860120050436C /* Toast.swift in Sources */,
 				EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */,
 				EE69A4E82B14CB78007C3515 /* ShoppingListView.swift in Sources */,
 				EEFA09EB2E2CED5000B2F2B0 /* Utils.swift in Sources */,

@@ -1,56 +1,62 @@
-// MARK: - Validation.swift
-
 /*
- File: Validation.swift
- Project: GroceryGenius
- Created: 31.05.2025 (est.)
- Last Updated: 17.08.2025
+ Validation.swift
 
- Overview:
- Central validation helpers for item form input (name, units, price). Provides lightweight string validation & sanitation used by Add/Edit views.
+ GroceryGenius
+ Created on: 31.05.2025 (est.)
+ Last updated on: 03.09.2025
 
- Responsibilities / Includes:
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+ - Central validation helpers for item form input (name, units, price). Provides lightweight string validation & sanitation used by Add/Edit views.
+
+ 🛠 Includes:
  - Name validation (non-empty, minimal length)
  - Units validation (numeric, range constraints)
  - Price validation (optional numeric)
  - Convenience: sanitized name & composite persistence check
 
- Design Notes:
+ 🔰 Notes for Beginners:
  - Keeps logic pure (no side effects) for easy unit testing.
  - Returns optional localized error key string; nil means valid.
  - Range & limits are conservative; adapt as business rules evolve.
 
- Possible Enhancements:
- - Add per-field enum for richer error metadata.
- - Support localized number parsing based on current Locale.
- - Add category / description validation rules if requirements emerge.
-*/
-import Foundation
+ 📝 Last Change:
+ - Replaced ad-hoc header with standardized block and kept pure validation functions. No functional changes.
+ ------------------------------------------------------------------------
+ */
 
-struct ItemInputValidator {
-    static func validateName(_ name: String) -> String? {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return String(localized: "validation.name.empty") }
-        if trimmed.count < 2 { return String(localized: "validation.name.short") }
-        return nil
+import Foundation // Foundation used for String trimming utilities.
+
+/// Pure helper struct containing static validation functions for item input fields.
+struct ItemInputValidator { // Namespace struct; no instances required.
+    /// Validates the item name; returns a localized error message or nil if valid.
+    static func validateName(_ name: String) -> String? { // Name must not be empty and have at least 2 characters.
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines) // Remove spaces/newlines around the text.
+        if trimmed.isEmpty { return String(localized: "validation.name.empty") } // Error when empty.
+        if trimmed.count < 2 { return String(localized: "validation.name.short") } // Error when too short.
+        return nil // Valid name.
     }
-    static func validateUnits(_ units: String) -> String? {
-        if units.isEmpty { return String(localized: "validation.units.missing") }
-        guard let v = Int(units) else { return String(localized: "validation.units.nan") }
-        if v < 1 { return String(localized: "validation.units.min") }
-        if v > 999 { return String(localized: "validation.units.max") }
-        return nil
+    /// Validates units text for numeric content and range boundaries.
+    static func validateUnits(_ units: String) -> String? { // Units must be a number within 1...999.
+        if units.isEmpty { return String(localized: "validation.units.missing") } // Error when missing.
+        guard let v = Int(units) else { return String(localized: "validation.units.nan") } // Not a number.
+        if v < 1 { return String(localized: "validation.units.min") } // Below minimum.
+        if v > 999 { return String(localized: "validation.units.max") } // Above maximum.
+        return nil // Valid units.
     }
-    static func validatePrice(_ price: String) -> String? {
-        if price.isEmpty { return nil } // Price optional
-        let normalized = price.replacingOccurrences(of: ",", with: ".")
-        guard Double(normalized) != nil else { return String(localized: "validation.price.invalid") }
-        return nil
+    /// Validates a price string; empty is allowed, otherwise must be a number.
+    static func validatePrice(_ price: String) -> String? { // Price optional; if provided must parse.
+        if price.isEmpty { return nil } // Price optional.
+        let normalized = price.replacingOccurrences(of: ",", with: ".") // Normalize comma decimal to dot.
+        guard Double(normalized) != nil else { return String(localized: "validation.price.invalid") } // Not a number.
+        return nil // Valid price.
     }
-    static func sanitizedName(_ name: String) -> String {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// Returns a trimmed name used for persistence.
+    static func sanitizedName(_ name: String) -> String { // Trims spaces/newlines for storage.
+        name.trimmingCharacters(in: .whitespacesAndNewlines) // Return trimmed value.
     }
-    static func canPersist(name: String, units: String) -> Bool {
-        validateName(name) == nil && validateUnits(units) == nil
+    /// Combined validity for the minimum fields required to persist.
+    static func canPersist(name: String, units: String) -> Bool { // Minimal checks for enabling Save button.
+        validateName(name) == nil && validateUnits(units) == nil // True when both fields are valid.
     }
-}
+} // end ItemInputValidator

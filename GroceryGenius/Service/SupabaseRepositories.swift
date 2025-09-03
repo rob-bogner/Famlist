@@ -1,167 +1,188 @@
-// MARK: - Supabase Repositories (Profiles, Lists, Items, Categories)
+/*
+ Supabase Repositories (Profiles, Lists, Items, Categories)
 
-import Foundation
-import Supabase
+ GroceryGenius
+ Created on: 01.07.2025 (est.)
+ Last updated on: 03.09.2025
+
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+ - Concrete Supabase-backed repository implementations for profiles, lists, categories, and items.
+
+ 🛠 Includes:
+ - Data models for Profile, List, Category (Codable) and repository protocols + Supabase implementations.
+
+ 🔰 Notes for Beginners:
+ - Repositories hide Supabase specifics from the rest of the app and return Swift models.
+ - Async/await functions perform network/database calls; errors propagate to callers.
+
+ 📝 Last Change:
+ - Added standardized header and light doc comments. No functional changes.
+ ------------------------------------------------------------------------
+ */
+
+import Foundation // Provides UUID, Date, and Codable support used by models.
+import Supabase // Brings in Supabase types for queries and builders.
 
 // MARK: - Shared Models
-struct Profile: Codable, Identifiable, Hashable { let id: UUID; let public_id: String }
+struct Profile: Codable, Identifiable, Hashable { let id: UUID; let public_id: String } // Minimal profile model mapping.
 
-struct List: Codable, Identifiable, Hashable {
-    let id: UUID
-    let owner_id: UUID
-    let title: String
-    let is_default: Bool
-    let created_at: Date?
+struct List: Codable, Identifiable, Hashable { // Represents a shopping list row from the DB.
+    let id: UUID // List id.
+    let owner_id: UUID // Owner UUID.
+    let title: String // Human-readable list title.
+    let is_default: Bool // Whether this is the default list.
+    let created_at: Date? // Creation timestamp.
 }
 
-struct Category: Codable, Identifiable, Hashable {
-    let id: UUID
-    let name: String
-    let emoji: String?
-    let color_hex: String?
-    let profile_id: UUID?
+struct Category: Codable, Identifiable, Hashable { // Category/tag associated with items.
+    let id: UUID // Category id.
+    let name: String // Category name.
+    let emoji: String? // Optional emoji.
+    let color_hex: String? // Optional color hex string.
+    let profile_id: UUID? // Optional profile owner.
 }
 
 // MARK: - Protocols
-protocol ProfilesRepository {
-    func upsertProfile(authUserId: UUID, publicId: String) async throws
-    func myProfile() async throws -> Profile
-    func profileByPublicId(_ publicId: String) async throws -> Profile?
+protocol ProfilesRepository { // Profile-related operations.
+    func upsertProfile(authUserId: UUID, publicId: String) async throws // Create or update current profile.
+    func myProfile() async throws -> Profile // Fetch current profile.
+    func profileByPublicId(_ publicId: String) async throws -> Profile? // Look up profile by public id.
 }
 
-protocol ListsRepository {
-    func ensureDefaultListExists(for owner: UUID) async throws -> List
-    func observeLists(for owner: UUID) -> AsyncStream<[List]>
-    func createList(for owner: UUID, title: String) async throws -> List
-    func addMember(listId: UUID, profileId: UUID) async throws
-    func removeMember(listId: UUID, profileId: UUID) async throws
+protocol ListsRepository { // List-related operations for sharing and creation.
+    func ensureDefaultListExists(for owner: UUID) async throws -> List // Get or create default list.
+    func observeLists(for owner: UUID) -> AsyncStream<[List]> // One-shot stream of lists for owner.
+    func createList(for owner: UUID, title: String) async throws -> List // Insert a new list.
+    func addMember(listId: UUID, profileId: UUID) async throws // Add a member to list.
+    func removeMember(listId: UUID, profileId: UUID) async throws // Remove a member from list.
 }
 
-protocol CategoriesRepository {
-    func all(for profileId: UUID?) async throws -> [Category]
-    func create(name: String, emoji: String?, colorHex: String?) async throws -> Category
+protocol CategoriesRepository { // Category operations.
+    func all(for profileId: UUID?) async throws -> [Category] // Fetch all categories for profile or public ones.
+    func create(name: String, emoji: String?, colorHex: String?) async throws -> Category // Create a new category.
 }
 
 // MARK: - Profiles
-final class SupabaseProfilesRepository: ProfilesRepository {
-    let client: SupabaseClienting
-    init(client: SupabaseClienting) { self.client = client }
+final class SupabaseProfilesRepository: ProfilesRepository { // Supabase-backed profiles repo.
+    let client: SupabaseClienting // Facade client used for queries.
+    init(client: SupabaseClienting) { self.client = client } // Store client.
 
-    func upsertProfile(authUserId: UUID, publicId: String) async throws {
-        struct Row: Codable { let id: UUID; let public_id: String }
-        let row = Row(id: authUserId, public_id: publicId)
-        _ = try await client.from("profiles").upsert(row).execute()
+    func upsertProfile(authUserId: UUID, publicId: String) async throws { // Insert or update the profile row.
+        struct Row: Codable { let id: UUID; let public_id: String } // Payload mapping to table columns.
+        let row = Row(id: authUserId, public_id: publicId) // Build payload.
+        _ = try await client.from("profiles").upsert(row).execute() // Perform upsert; ignore result.
     }
 
-    func myProfile() async throws -> Profile {
-        return try await client.from("profiles").select().single().execute().value
+    func myProfile() async throws -> Profile { // Fetch current user's profile (server infers user).
+        return try await client.from("profiles").select().single().execute().value // Select single row as Profile.
     }
 
-    func profileByPublicId(_ publicId: String) async throws -> Profile? {
-        let rows: [Profile] = try await client.from("profiles").select().eq("public_id", value: publicId).limit(1).execute().value
-        return rows.first
+    func profileByPublicId(_ publicId: String) async throws -> Profile? { // Lookup by public id for sharing links.
+        let rows: [Profile] = try await client.from("profiles").select().eq("public_id", value: publicId).limit(1).execute().value // Query by public_id.
+        return rows.first // Return first or nil.
     }
 }
 
 // MARK: - Lists
-final class SupabaseListsRepository: ListsRepository {
-    let client: SupabaseClienting
-    init(client: SupabaseClienting) { self.client = client }
+final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists repo.
+    let client: SupabaseClienting // Facade client.
+    init(client: SupabaseClienting) { self.client = client } // Store client.
 
-    func ensureDefaultListExists(for owner: UUID) async throws -> List {
-        if let existing: List = try? await client.from("lists").select().eq("owner_id", value: owner.uuidString).eq("is_default", value: true).single().execute().value {
-            return existing
+    func ensureDefaultListExists(for owner: UUID) async throws -> List { // Ensure owner has a default list.
+        if let existing: List = try? await client.from("lists").select().eq("owner_id", value: owner.uuidString).eq("is_default", value: true).single().execute().value { // Try existing default.
+            return existing // Return it if found.
         }
-        struct NewList: Codable { let owner_id: UUID; let title: String; let is_default: Bool }
-        let insert = NewList(owner_id: owner, title: "Einkaufsliste", is_default: true)
-        return try await client.from("lists").insert(insert).select().single().execute().value
+        struct NewList: Codable { let owner_id: UUID; let title: String; let is_default: Bool } // Insert payload.
+        let insert = NewList(owner_id: owner, title: "Einkaufsliste", is_default: true) // Build default list payload.
+        return try await client.from("lists").insert(insert).select().single().execute().value // Insert and return created row.
     }
 
-    func observeLists(for owner: UUID) -> AsyncStream<[List]> {
-        AsyncStream { continuation in
-            Task {
-                let rows: [List] = try await client.from("lists").select().eq("owner_id", value: owner.uuidString).order("created_at").execute().value
-                continuation.yield(rows)
-                continuation.finish()
+    func observeLists(for owner: UUID) -> AsyncStream<[List]> { // Simple one-shot stream to load lists.
+        AsyncStream { continuation in // Construct a stream.
+            Task { // Spawn async work to fetch once then finish.
+                let rows: [List] = try await client.from("lists").select().eq("owner_id", value: owner.uuidString).order("created_at").execute().value // Fetch lists for owner.
+                continuation.yield(rows) // Send result once.
+                continuation.finish() // Close stream.
             }
         }
     }
 
-    func createList(for owner: UUID, title: String) async throws -> List {
-        struct NewList: Codable { let owner_id: UUID; let title: String }
-        return try await client.from("lists").insert(NewList(owner_id: owner, title: title)).select().single().execute().value
+    func createList(for owner: UUID, title: String) async throws -> List { // Insert a new list row.
+        struct NewList: Codable { let owner_id: UUID; let title: String } // Payload mapping.
+        return try await client.from("lists").insert(NewList(owner_id: owner, title: title)).select().single().execute().value // Insert and return row.
     }
 
-    func addMember(listId: UUID, profileId: UUID) async throws {
-        struct LM: Codable { let list_id: UUID; let profile_id: UUID }
-        _ = try await client.from("list_members").insert(LM(list_id: listId, profile_id: profileId)).execute()
+    func addMember(listId: UUID, profileId: UUID) async throws { // Add member to list.
+        struct LM: Codable { let list_id: UUID; let profile_id: UUID } // Mapping for list_members table.
+        _ = try await client.from("list_members").insert(LM(list_id: listId, profile_id: profileId)).execute() // Execute insert.
     }
 
-    func removeMember(listId: UUID, profileId: UUID) async throws {
-        _ = try await client.from("list_members").delete().eq("list_id", value: listId.uuidString).eq("profile_id", value: profileId.uuidString).execute()
+    func removeMember(listId: UUID, profileId: UUID) async throws { // Remove member from list.
+        _ = try await client.from("list_members").delete().eq("list_id", value: listId.uuidString).eq("profile_id", value: profileId.uuidString).execute() // Delete row by composite PK.
     }
 }
 
 // MARK: - Categories
-final class SupabaseCategoriesRepository: CategoriesRepository {
-    let client: SupabaseClienting
-    init(client: SupabaseClienting) { self.client = client }
+final class SupabaseCategoriesRepository: CategoriesRepository { // Supabase-backed categories repo.
+    let client: SupabaseClienting // Facade client.
+    init(client: SupabaseClienting) { self.client = client } // Store client.
 
-    func all(for profileId: UUID?) async throws -> [Category] {
-        var query = client.from("categories").select()
-        if let profileId { query = query.or("profile_id.eq.\(profileId.uuidString),profile_id.is.null") }
-        return try await query.order("name", ascending: true).execute().value
+    func all(for profileId: UUID?) async throws -> [Category] { // Fetch categories visible to profile.
+        var query = client.from("categories").select() // Start base select.
+        if let profileId { query = query.or("profile_id.eq.\(profileId.uuidString),profile_id.is.null") } // Include global (null) or profile-specific.
+        return try await query.order("name", ascending: true).execute().value // Order by name and return values.
     }
 
-    func create(name: String, emoji: String?, colorHex: String?) async throws -> Category {
-        struct New: Codable { let name: String; let emoji: String?; let color_hex: String? }
-        return try await client.from("categories").insert(New(name: name, emoji: emoji, color_hex: colorHex)).select().single().execute().value
+    func create(name: String, emoji: String?, colorHex: String?) async throws -> Category { // Insert category.
+        struct New: Codable { let name: String; let emoji: String?; let color_hex: String? } // Payload mapping.
+        return try await client.from("categories").insert(New(name: name, emoji: emoji, color_hex: colorHex)).select().single().execute().value // Insert and return created row.
     }
 }
 
 // MARK: - Items (Supabase)
-final class SupabaseItemsRepository: ItemsRepository {
-    let client: SupabaseClienting
-    init(client: SupabaseClienting) { self.client = client }
+final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items repo implementing ItemsRepository.
+    let client: SupabaseClienting // Facade client used for DB calls.
+    init(client: SupabaseClienting) { self.client = client } // Store client.
 
     // Track continuations with tokens (Continuation is a struct)
-    private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
+    private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:] // Observers keyed by list id and token.
 
-    func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> {
-        AsyncStream { continuation in
-            let token = UUID()
-            if continuations[listId] == nil { continuations[listId] = [:] }
-            continuations[listId]?[token] = continuation
-            continuation.onTermination = { _ in
-                self.continuations[listId]?.removeValue(forKey: token)
+    func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> { // Start a stream emitting snapshots for a list.
+        AsyncStream { continuation in // Create a stream builder.
+            let token = UUID() // Unique token for this subscriber.
+            if continuations[listId] == nil { continuations[listId] = [:] } // Ensure bucket for list id exists.
+            continuations[listId]?[token] = continuation // Save continuation for later yields.
+            continuation.onTermination = { _ in // Cleanup when subscriber cancels.
+                self.continuations[listId]?.removeValue(forKey: token) // Remove continuation to avoid leaks.
             }
-            Task { await self.fetchAndYield(listId) }
+            Task { await self.fetchAndYield(listId) } // Send initial snapshot asynchronously.
         }
     }
 
     @MainActor
-    private func yield(_ listId: UUID, _ items: [ItemModel]) {
-        continuations[listId]?.values.forEach { $0.yield(items) }
+    private func yield(_ listId: UUID, _ items: [ItemModel]) { // Yield items to all subscribers for a list.
+        continuations[listId]?.values.forEach { $0.yield(items) } // Iterate continuations and push array.
     }
 
-    private func fetchAndYield(_ listId: UUID) async {
-        struct Row: Codable {
-            let id: UUID
-            let listId: UUID
-            let ownerPublicId: String?
-            let imageData: String?
-            let name: String
-            let units: Int
-            let measure: String
-            let price: Double
-            let isChecked: Bool
-            let category: String?
-            let productDescription: String?
-            let brand: String?
-            let position: Int?
-            let createdAt: String?
-            let updatedAt: String?
-            enum CodingKeys: String, CodingKey {
+    private func fetchAndYield(_ listId: UUID) async { // Fetch rows for list and emit snapshot.
+        struct Row: Codable { // Row mapping from DB columns to Swift.
+            let id: UUID // Item id.
+            let listId: UUID // List id the item belongs to.
+            let ownerPublicId: String? // Optional owner public id.
+            let imageData: String? // Base64 image data if any.
+            let name: String // Item name.
+            let units: Int // Units quantity.
+            let measure: String // Measurement unit.
+            let price: Double // Price value.
+            let isChecked: Bool // Checked flag.
+            let category: String? // Category string.
+            let productDescription: String? // Description string.
+            let brand: String? // Brand string.
+            let position: Int? // Optional order position.
+            let createdAt: String? // Created timestamp.
+            let updatedAt: String? // Updated timestamp.
+            enum CodingKeys: String, CodingKey { // Column mapping from snake_case.
                 case id
                 case listId = "list_id"
                 case ownerPublicId = "ownerpublicid"
@@ -173,9 +194,9 @@ final class SupabaseItemsRepository: ItemsRepository {
                 case updatedAt = "updated_at"
             }
         }
-        do {
-            let rows: [Row] = try await client.from("items").select().eq("list_id", value: listId.uuidString).order("position", ascending: true).order("created_at", ascending: true).execute().value
-            let mapped = rows.map { r in
+        do { // Attempt to fetch and map rows.
+            let rows: [Row] = try await client.from("items").select().eq("list_id", value: listId.uuidString).order("position", ascending: true).order("created_at", ascending: true).execute().value // Fetch list's items.
+            let mapped = rows.map { r in // Map DB rows to ItemModel values.
                 ItemModel(
                     id: r.id.uuidString,
                     imageUrl: nil, // prefer signed URLs only; raw imagedata kept in model for backward compat
@@ -192,24 +213,24 @@ final class SupabaseItemsRepository: ItemsRepository {
                     ownerPublicId: r.ownerPublicId
                 )
             }
-            await MainActor.run { self.yield(listId, mapped) }
-        } catch {
-            await MainActor.run { self.yield(listId, []) }
+            await MainActor.run { self.yield(listId, mapped) } // Push snapshot to subscribers on main actor.
+        } catch { // On failure, emit empty snapshot (keep UI stable).
+            await MainActor.run { self.yield(listId, []) } // Emit empty list.
         }
     }
 
-    func createItem(_ item: ItemModel) async throws -> ItemModel {
-        var finalImageData: String? = item.imageData
-        if finalImageData == nil, let base64 = item.imageData { finalImageData = base64 }
-        struct NewRow: Codable {
+    func createItem(_ item: ItemModel) async throws -> ItemModel { // Insert a new item then broadcast a refresh.
+        var finalImageData: String? = item.imageData // Start with existing base64 if present.
+        if finalImageData == nil, let base64 = item.imageData { finalImageData = base64 } // Keep same; placeholder migration hook.
+        struct NewRow: Codable { // Insert payload mapping.
             let id: UUID, listId: UUID, ownerPublicId: String?
             let imageData: String?
             let name: String, units: Int, measure: String, price: Double
             let isChecked: Bool, category: String?, productDescription: String?, brand: String?
             enum CodingKeys: String, CodingKey { case id; case listId = "list_id"; case ownerPublicId = "ownerpublicid"; case imageData = "imagedata"; case name, units, measure, price, isChecked, category; case productDescription = "productdescription"; case brand }
         }
-        let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID()
-        let row = NewRow(
+        let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID() // Resolve list UUID from string or fallback.
+        let row = NewRow( // Build payload for insert.
             id: UUID(uuidString: item.id) ?? UUID(),
             listId: listUUID,
             ownerPublicId: item.ownerPublicId,
@@ -218,9 +239,9 @@ final class SupabaseItemsRepository: ItemsRepository {
             isChecked: item.isChecked, category: item.category,
             productDescription: item.productDescription, brand: item.brand
         )
-        _ = try await client.from("items").insert(row).execute()
-        await fetchAndYield(listUUID)
-        return ItemModel(
+        _ = try await client.from("items").insert(row).execute() // Perform insert.
+        await fetchAndYield(listUUID) // Refresh observers.
+        return ItemModel( // Return the item as stored for local state.
             id: row.id.uuidString,
             imageUrl: item.imageUrl,
             imageData: finalImageData,
@@ -237,11 +258,11 @@ final class SupabaseItemsRepository: ItemsRepository {
         )
     }
 
-    func updateItem(_ item: ItemModel) async throws {
-        var finalImageData: String? = item.imageData
-        let listId = UUID(uuidString: item.listId ?? "") ?? UUID()
-        if finalImageData == nil, let base64 = item.imageData { finalImageData = base64 }
-        struct UpdateRow: Encodable {
+    func updateItem(_ item: ItemModel) async throws { // Update an existing item and broadcast.
+        var finalImageData: String? = item.imageData // Local mutable copy of image.
+        let listId = UUID(uuidString: item.listId ?? "") ?? UUID() // Resolve list id.
+        if finalImageData == nil, let base64 = item.imageData { finalImageData = base64 } // Preserve image data if present.
+        struct UpdateRow: Encodable { // Update payload mapping.
             let imageData: String?
             let name: String
             let units: Int
@@ -253,7 +274,7 @@ final class SupabaseItemsRepository: ItemsRepository {
             let brand: String?
             enum CodingKeys: String, CodingKey { case imageData = "imagedata"; case name, units, measure, price, isChecked, category; case productDescription = "productdescription"; case brand }
         }
-        let payload = UpdateRow(
+        let payload = UpdateRow( // Build payload with updated fields.
             imageData: finalImageData,
             name: item.name,
             units: item.units,
@@ -264,12 +285,12 @@ final class SupabaseItemsRepository: ItemsRepository {
             productDescription: item.productDescription,
             brand: item.brand
         )
-        _ = try await client.from("items").update(payload).eq("id", value: item.id).eq("list_id", value: item.listId ?? "").execute()
-        await fetchAndYield(listId)
+        _ = try await client.from("items").update(payload).eq("id", value: item.id).eq("list_id", value: item.listId ?? "").execute() // Update by id & list.
+        await fetchAndYield(listId) // Refresh observers.
     }
 
-    func deleteItem(id: String, listId: UUID) async throws {
-        _ = try await client.from("items").delete().eq("id", value: id).eq("list_id", value: listId.uuidString).execute()
-        await fetchAndYield(listId)
+    func deleteItem(id: String, listId: UUID) async throws { // Delete item row and broadcast.
+        _ = try await client.from("items").delete().eq("id", value: id).eq("list_id", value: listId.uuidString).execute() // Perform delete.
+        await fetchAndYield(listId) // Refresh observers.
     }
 }
