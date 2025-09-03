@@ -3,35 +3,27 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 26.04.2025
+ Last updated on: 03.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
-
- This file defines the data model for a single shopping list item.
- It now exclusively uses actual photos instead of emoji or symbol placeholders.
- It includes a new optional category field to classify products.
- All other attributes such as name, quantity, measurement unit, price, and check status remain.
- The model is now extended with optional fields for the exact product designation (`productDescription`) and brand/manufacturer (`brand`).
+ - Data model for a single shopping list item. Maps fields to Supabase/Postgres columns and supports SwiftUI (Identifiable) and persistence (Codable).
 
  🛠 Includes:
- - Definition of the `ItemModel` structure without the `image` field
- - Addition of an optional `category` field for product classification
- - Initialization with updated parameters and default values
- - Addition of optional `brand` and `productDescription` for detailed product info
- - Support for SwiftUI (Identifiable) and data persistence (Codable)
+ - ItemModel struct with properties for image, name, units, measure, price, check state, category, description, brand, listId, owner.
+ - Memberwise initializer with defaults for convenience.
 
  🔰 Notes for Beginners:
- - `Identifiable` allows SwiftUI lists to uniquely recognize each item.
- - `Codable` allows easy saving and loading of the model to JSON or databases.
- - The initializer provides default values for convenience.
- - The removal of the `image` string field reflects a shift to using real photos only.
- - The new `category` field helps organize and filter shopping items by type.
- - The new `brand` and `productDescription` fields allow for more detailed product information, such as manufacturer and exact product designation.
- ------------------------------------------------------------------------
-*/
+ - Identifiable helps SwiftUI lists track items by id.
+ - Codable enables encoding/decoding from JSON used by the network/database layer.
+ - listId links the item to a specific list (matches items.list_id in the DB).
 
-import Foundation
+ 📝 Last Change:
+ - Standardized header; expanded field documentation to clarify DB mapping and UI usage. No functional changes.
+ ------------------------------------------------------------------------
+ */
+
+import Foundation // Foundation provides Codable, UUID, and core types used for the model.
 
 /// Represents a single item in the shopping list.
 /// Conforms to `Identifiable`, `Hashable`, and `Codable` for UI rendering, set operations, and persistence.

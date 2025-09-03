@@ -1,87 +1,86 @@
-// MARK: - CustomModalView.swift
-
 /*
- File: CustomModalView.swift
- Project: GroceryGenius
- Created: 30.05.2025 (est.)
- Last Updated: 17.08.2025
+ CustomModalView.swift
 
- Overview:
- Generic modal container with a consistent accent-colored header bar and close action. Used across create / edit / image preview flows to ensure visual consistency.
+ GroceryGenius
+ Created on: 30.05.2025 (est.)
+ Last updated on: 03.09.2025
 
- Responsibilities / Includes:
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+ - Generic modal container with a consistent accent-colored header bar and close action. Used across create/edit/image preview flows to ensure visual consistency.
+
+ 🛠 Includes:
  - Header with centered title + trailing close button
- - Accent background integration
- - Safe-area handling for top inset
- - Generic Content slot via @ViewBuilder
+ - Accent background integration and safe-area handling
+ - Generic Content slot exposed via @ViewBuilder
 
- Design Notes:
- - Fixed header height (52pt) to align with design system rhythm
- - Internally uses GeometryReader only for full-width accent background; avoids layout side-effects
- - Keep logic minimal; state management lives in parent views
+ 🔰 Notes for Beginners:
+ - Fixed header height (52pt) to align with design rhythm; body content is injected by caller.
+ - GeometryReader is used only to size the accent header background.
 
- Possible Enhancements:
- - Add optional leading accessory (e.g. back button)
- - Support ScrollView offset-based shadow/elevation
- - Provide standardized padding tokens for body content
-*/
+ 📝 Last Change:
+ - Standardized header to required format; retained existing preview. No functional changes.
+ ------------------------------------------------------------------------
+ */
 
-import SwiftUI
+import SwiftUI // Imports SwiftUI to build the modal views.
 
-struct ModalHeader: View {
-    let title: String
-    let onClose: () -> Void
-    var body: some View {
-        HStack {
-            Spacer(minLength: 0)
-            Text(title)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(Color.theme.background)
-                .frame(maxWidth: .infinity, alignment: .center)
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .foregroundColor(Color.theme.background)
-                    .padding(6)
-                    .background(Circle().fill(Color.theme.accent))
+/// Small header component for the modal with a centered title and a close button.
+struct ModalHeader: View { // Declares a SwiftUI view used at the top of modals.
+    let title: String // Title text shown in the header.
+    let onClose: () -> Void // Action to execute when the close button is tapped.
+    var body: some View { // Defines the header's layout.
+        HStack { // Horizontal stack for spacing.
+            Spacer(minLength: 0) // Pushes the title to center by taking up space on the leading side.
+            Text(title) // The header title label.
+                .font(.title2) // Uses a reasonably prominent title size.
+                .fontWeight(.semibold) // Slightly bold for emphasis.
+                .foregroundColor(Color.theme.background) // Title color contrasts with accent background.
+                .frame(maxWidth: .infinity, alignment: .center) // Ensure the title is centered across full width.
+            Button(action: onClose) { // Tap to trigger close action.
+                Image(systemName: "xmark") // Cross icon indicating close.
+                    .foregroundColor(Color.theme.background) // Icon color for contrast.
+                    .padding(6) // Expand tap target slightly.
+                    .background(Circle().fill(Color.theme.accent)) // Circle with accent color behind the icon.
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.plain) // Plain style so background we set is visible.
         }
     }
 }
 
 /// Reusable modal shell with accent header & injected content.
-struct CustomModalView<Content: View>: View {
-    let title: String
-    let onClose: () -> Void
-    let content: Content
+struct CustomModalView<Content: View>: View { // Generic over content view type.
+    let title: String // Title to display in the header.
+    let onClose: () -> Void // Callback when user taps close.
+    let content: Content // The injected body content.
 
-    init(title: String, onClose: @escaping () -> Void, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.onClose = onClose
-        self.content = content()
+    /// Initializes the modal with a title, close action, and a content builder.
+    init(title: String, onClose: @escaping () -> Void, @ViewBuilder content: () -> Content) { // Custom initializer to accept a builder.
+        self.title = title // Store the provided title.
+        self.onClose = onClose // Store the close handler.
+        self.content = content() // Build and store the provided content.
     }
 
-    var body: some View {
-        VStack(spacing: 0) {
-            GeometryReader { geometry in
-                ZStack(alignment: .top) {
-                    Color.theme.accent
-                        .frame(width: geometry.size.width, height: 52)
-                        .ignoresSafeArea(.all, edges: .top)
-                    ModalHeader(title: title, onClose: onClose)
-                        .frame(height: 52)
-                        .padding(.horizontal, 16)
+    var body: some View { // Declares the modal layout.
+        VStack(spacing: 0) { // Vertical layout with no spacing between header and content.
+            GeometryReader { geometry in // Provides size to draw the accent header background.
+                ZStack(alignment: .top) { // Stack the colored bar and the header content.
+                    Color.theme.accent // Accent color area behind the header.
+                        .frame(width: geometry.size.width, height: 52) // Fixed 52pt tall header bar.
+                        .ignoresSafeArea(.all, edges: .top) // Extend behind status bar if present.
+                    ModalHeader(title: title, onClose: onClose) // Header with title and close button.
+                        .frame(height: 52) // Match the bar height.
+                        .padding(.horizontal, 16) // Horizontal padding for breathing room.
                 }
             }
-            .frame(height: 52)
-            content
+            .frame(height: 52) // Fix the container height for the header.
+            content // Injected content from the caller.
         }
     }
 }
 
-#Preview {
-    CustomModalView(title: "Modal Title", onClose: {}) {
-        VStack { Text("Modal Content").padding() }
+#Preview { // Inline SwiftUI preview for development.
+    CustomModalView(title: "Modal Title", onClose: {}) { // Create a modal with a sample title and empty close.
+        VStack { Text("Modal Content").padding() } // Provide simple body content for the preview.
     }
 }

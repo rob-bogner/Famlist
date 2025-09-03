@@ -1,42 +1,41 @@
-// MARK: - Color.swift
-
 /*
- File: Color.swift
- Project: GroceryGenius
- Created: 05.01.2024
- Last Updated: 17.08.2025
+ Color.swift
 
- Overview:
- Centralized color theme accessor. Exposes strongly-typed color tokens pulled from the asset catalog to avoid magic strings and scattered color references.
+ GroceryGenius
+ Created on: 05.01.2024
+ Last updated on: 03.09.2025
 
- Responsibilities / Includes:
- - Color.theme namespace
- - ColorTheme struct listing semantic colors (accent, background, card, etc.)
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+ - Centralized color theme accessor. Exposes strongly-typed color tokens pulled from the asset catalog to avoid magic strings and scattered color references.
 
- Design Notes:
- - Keep naming semantic (what the color represents, not the shade)
- - Add new colors only here to maintain discoverability
- - Assets must match the string names exactly
+ 🛠 Includes:
+ - Color.theme namespace and ColorTheme struct listing semantic colors (accent, background, card, etc.).
 
- Possible Enhancements:
- - Provide dynamic variants (e.g. elevated surfaces) if needed later
-*/
+ 🔰 Notes for Beginners:
+ - Keep naming semantic (what the color represents, not the shade).
+ - Assets must match the string names exactly.
 
-import SwiftUI
+ 📝 Last Change:
+ - Standardized header format; no functional changes.
+ ------------------------------------------------------------------------
+ */
 
-extension Color {
+import SwiftUI // Imports SwiftUI to access Color and build UI elements.
+
+extension Color { // Extends SwiftUI's Color type with app-specific helpers.
     /// Application design system color namespace.
-    static let theme = ColorTheme()
+    static let theme = ColorTheme() // Provides strongly-typed access to our palette via Color.theme.
 }
 
 /// Strongly typed palette of semantic colors.
-struct ColorTheme {
-    let accent = Color("AccentColor")
-    let background = Color("BackgroundColor")
-    let card = Color("CardColor")
-    let shadow = Color("ShadowColor")
-    let buttonFillColor = Color("ButtonFillColor")
-    let buttonIconColor = Color("ButtonIconColor")
-    let textColor = Color("TextColor")
-    let universalWhite = Color("universalWhite")
+struct ColorTheme { // Groups all color tokens so you don't sprinkle raw asset names in code.
+    let accent = Color("AccentColor") // Primary accent color used for highlights and buttons.
+    let background = Color("BackgroundColor") // Main app background color.
+    let card = Color("CardColor") // Surface color for cards and panels.
+    let shadow = Color("ShadowColor") // Shadow tint used across components.
+    let buttonFillColor = Color("ButtonFillColor") // Fill color for selected/checked rows.
+    let buttonIconColor = Color("ButtonIconColor") // Strike-through and icon tint for checked states.
+    let textColor = Color("TextColor") // Primary text color for content on light backgrounds.
+    let universalWhite = Color("universalWhite") // Named white to allow light/dark variants in assets.
 }
