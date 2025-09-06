@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 03.09.2025
+ Last updated on: 06.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,7 +17,7 @@
  - Async/await functions perform network/database calls; errors propagate to callers.
 
  📝 Last Change:
- - Added standardized header and light doc comments. No functional changes.
+ - Remove premature unauthenticated guard in myProfile() and correctly fall back to async session when currentUser is nil.
  ------------------------------------------------------------------------
  */
 
@@ -33,6 +33,7 @@ struct List: Codable, Identifiable, Hashable { // Represents a shopping list row
     let title: String // Human-readable list title.
     let is_default: Bool // Whether this is the default list.
     let created_at: Date? // Creation timestamp.
+    let updated_at: Date? // Last update timestamp.
 }
 
 struct Category: Codable, Identifiable, Hashable { // Category/tag associated with items.
@@ -42,6 +43,9 @@ struct Category: Codable, Identifiable, Hashable { // Category/tag associated wi
     let color_hex: String? // Optional color hex string.
     let profile_id: UUID? // Optional profile owner.
 }
+
+/// Authentication-related lightweight error states thrown by repositories when preconditions are not met.
+enum AuthError: Error { case unauthenticated } // Thrown when a call requires a logged-in user but none is present.
 
 // MARK: - Protocols
 protocol ProfilesRepository { // Profile-related operations.
@@ -56,6 +60,8 @@ protocol ListsRepository { // List-related operations for sharing and creation.
     func createList(for owner: UUID, title: String) async throws -> List // Insert a new list.
     func addMember(listId: UUID, profileId: UUID) async throws // Add a member to list.
     func removeMember(listId: UUID, profileId: UUID) async throws // Remove a member from list.
+    // Convenience API returning app-level ListModel for the default list
+    func fetchDefaultList(for ownerId: UUID) async throws -> ListModel // Fetch default list or create it if missing.
 }
 
 protocol CategoriesRepository { // Category operations.
@@ -75,7 +81,26 @@ final class SupabaseProfilesRepository: ProfilesRepository { // Supabase-backed 
     }
 
     func myProfile() async throws -> Profile { // Fetch current user's profile (server infers user).
-        return try await client.from("profiles").select().single().execute().value // Select single row as Profile.
+        // Resolve authenticated user id from the in-memory user or by awaiting the active session
+        if let currentId = client.auth.currentUser?.id { // Prefer currentUser (fast, no await)
+            return try await client
+                .from("profiles")
+                .select("id, public_id, created_at")
+                .eq("id", value: currentId.uuidString)
+                .single()
+                .execute()
+                .value // Decode into Profile
+        }
+        // Fallback: try to read/restore session asynchronously and use its user id
+        guard let session = try? await client.auth.session else { throw AuthError.unauthenticated } // Session fetch will fail if unauthenticated
+        let uid = session.user.id // Extract user id from non-optional Session
+        return try await client
+            .from("profiles")
+            .select("id, public_id, created_at")
+            .eq("id", value: uid.uuidString)
+            .single()
+            .execute()
+            .value // Decode into Profile
     }
 
     func profileByPublicId(_ publicId: String) async throws -> Profile? { // Lookup by public id for sharing links.
@@ -90,12 +115,72 @@ final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists 
     init(client: SupabaseClienting) { self.client = client } // Store client.
 
     func ensureDefaultListExists(for owner: UUID) async throws -> List { // Ensure owner has a default list.
-        if let existing: List = try? await client.from("lists").select().eq("owner_id", value: owner.uuidString).eq("is_default", value: true).single().execute().value { // Try existing default.
-            return existing // Return it if found.
+        // fetch
+        let fetched: [List] = try await client
+            .from("lists")
+            .select("id, owner_id, title, is_default, created_at, updated_at")
+            .eq("owner_id", value: owner.uuidString)
+            .eq("is_default", value: true)
+            .limit(1)
+            .execute()
+            .value
+        if let row = fetched.first { return row } // Return existing default when found.
+        // insert when none exists (let DB set owner_id from auth context)
+        struct NewList: Codable { let title: String; let is_default: Bool } // Insert payload mapping without owner_id.
+        let insert = NewList(title: "My List", is_default: true) // Default title per spec.
+        let inserted: List = try await client
+            .from("lists")
+            .insert(insert)
+            .select("id, owner_id, title, is_default, created_at, updated_at")
+            .single()
+            .execute()
+            .value
+        return inserted // Return created default list row.
+    }
+
+    /// Fetches the default list as an app-level ListModel; creates it if missing. Uses server-side auth for owner_id on insert.
+    func fetchDefaultList(for ownerId: UUID) async throws -> ListModel {
+        // Row mapping for precise column selection
+        struct ListRow: Codable { // Mirrors DB columns.
+            let id: UUID // List id.
+            let owner_id: UUID // Owner id.
+            let title: String // Title.
+            let is_default: Bool // Default flag.
+            let created_at: Date // Created timestamp (non-null in DB schema).
+            let updated_at: Date? // Updated timestamp (nullable for legacy rows).
         }
-        struct NewList: Codable { let owner_id: UUID; let title: String; let is_default: Bool } // Insert payload.
-        let insert = NewList(owner_id: owner, title: "Einkaufsliste", is_default: true) // Build default list payload.
-        return try await client.from("lists").insert(insert).select().single().execute().value // Insert and return created row.
+        // Helper to map DB row -> ListModel with updatedAt fallback
+        func map(_ r: ListRow) -> ListModel { // Convert to app model.
+            ListModel(
+                id: r.id,
+                ownerId: r.owner_id,
+                title: r.title,
+                isDefault: r.is_default,
+                createdAt: r.created_at,
+                updatedAt: r.updated_at ?? r.created_at
+            )
+        }
+        // 1) Try fetch default for owner
+        let fetched: [ListRow] = try await client
+            .from("lists")
+            .select("id, owner_id, title, is_default, created_at, updated_at")
+            .eq("owner_id", value: ownerId.uuidString)
+            .eq("is_default", value: true)
+            .limit(1)
+            .execute()
+            .value
+        if let row = fetched.first { return map(row) } // Found existing.
+        // 2) Not found -> insert default. Let DB derive owner_id from auth.uid() via policy/trigger/default.
+        struct NewList: Codable { let title: String; let is_default: Bool } // Payload without owner.
+        let payload = NewList(title: "My List", is_default: true) // Default attributes.
+        let inserted: ListRow = try await client
+            .from("lists")
+            .insert(payload)
+            .select("id, owner_id, title, is_default, created_at, updated_at")
+            .single()
+            .execute()
+            .value
+        return map(inserted) // Return new default.
     }
 
     func observeLists(for owner: UUID) -> AsyncStream<[List]> { // Simple one-shot stream to load lists.

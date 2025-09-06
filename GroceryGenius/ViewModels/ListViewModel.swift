@@ -5,7 +5,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 03.09.2025
+ Last updated on: 05.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -18,14 +18,15 @@
  - Derived metrics (progressFraction, checked / unchecked arrays)
  - Form & quick‑add bridging helpers (string -> numeric / normalized fields)
  - Lightweight error & loading flags for UI feedback
+ - Default list loading via ListsRepository (fetch or create user default)
 
  🔰 Notes for Beginners:
- - Repository abstraction (ItemsRepository) enables mocking in tests.
+ - Repository abstraction (ItemsRepository, ListsRepository) enables mocking in tests.
  - @Published drives SwiftUI diffing automatically; mutations occur on main thread.
  - All public methods are @MainActor-only because SwiftUI expects UI changes on the main thread.
 
  📝 Last Change:
- - Standardized header and added line-by-line comments to clarify each property and method for beginners. No functional changes.
+ - Added deferred observation support (startImmediately flag) and clearForSignOut() to allow gating DB work until auth is ready and to reset on sign-out.
  ------------------------------------------------------------------------
  */
 
@@ -43,17 +44,53 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     @Published var selectedItem: ItemModel? // The item currently selected for editing (opens EditItemView sheet).
     @Published var errorMessage: String? // Optional error message surfaced to the UI on operation failures.
     @Published var isLoading: Bool = false // Indicates when the view is performing a long-running action.
+    @Published var defaultList: ListModel? = nil // The resolved default list for the current user; nil while loading.
 
     private var observeTask: Task<Void, Never>? = nil // Holds the background task that observes live item changes.
 
+    // Optional ListsRepository used to resolve default list (injected post-init to keep compatibility)
+    private var listsRepository: ListsRepository? = nil // Set via configure(listsRepository:).
+
     // MARK: - Lifecycle
     /// Creates a ListViewModel with a target list and a repository (defaults to preview repo for development/previews).
-    init(listId: UUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID(), repository: ItemsRepository = PreviewItemsRepository()) {
+    /// - Parameters:
+    ///   - listId: Initial list identifier to scope observations to.
+    ///   - repository: ItemsRepository implementation for data access.
+    ///   - startImmediately: Whether to start observing items immediately (set false until auth ready).
+    init(listId: UUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID(), repository: ItemsRepository = PreviewItemsRepository(), startImmediately: Bool = true) {
         self.listId = listId // Store which list we are managing.
         self.repository = repository // Store the data source implementation.
-        startObserving() // Immediately begin listening for item updates for this list.
+        if startImmediately { startObserving() } // Begin listening for item updates only when requested.
     }
     deinit { observeTask?.cancel() } // Cancel the observation task when the view model is released to avoid leaks.
+
+    // MARK: - Configuration
+    /// Injects a ListsRepository used to fetch/create the user's default list.
+    /// - Parameter listsRepository: Concrete implementation (Supabase or Preview) resolving default list rows.
+    func configure(listsRepository: ListsRepository) { // Allow late binding from App entry after client init.
+        self.listsRepository = listsRepository // Store for later use.
+    }
+
+    /// Loads the default list for the given owner and switches observation to it.
+    /// - Parameter ownerId: The profile/user UUID owning the list.
+    func loadDefaultList(ownerId: UUID) {
+        guard let listsRepository else { return } // Nothing to do without a lists repository.
+        if isLoading { return } // Prevent concurrent loads from overlapping.
+        isLoading = true // Show a lightweight loading indicator in the UI.
+        Task { [weak self] in // Perform async fetch on a background task.
+            guard let self else { return } // Capture self.
+            defer { Task { @MainActor in self.isLoading = false } } // Always reset loading flag on completion.
+            do { // Try to fetch or create default list.
+                let list = try await listsRepository.fetchDefaultList(for: ownerId) // Resolve default list.
+                await MainActor.run { // Apply on main actor for UI safety.
+                    self.defaultList = list // Publish resolved default list.
+                    self.switchList(to: list.id) // Switch observation to the new list id.
+                }
+            } catch { // Surface errors to UI.
+                await MainActor.run { self.setError(error) } // Store error message.
+            }
+        }
+    }
 
     // MARK: - List Switching
     /// Switches the active list; cancels current observation and starts a new one for the new list id.
@@ -63,6 +100,28 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         self.listId = newId // Update state with the new list context.
         self.items = [] // Clear current items to avoid showing stale data briefly.
         startObserving() // Start observing items for the new list.
+    }
+
+    /// Clears view model state in response to sign-out.
+    func clearForSignOut() { // Reset state so UI shows the loading/auth gate again.
+        observeTask?.cancel() // Stop observing items.
+        observeTask = nil // Release the task.
+        items = [] // Drop loaded items.
+        selectedItem = nil // Clear selection.
+        defaultList = nil // Forget resolved default list.
+        errorMessage = nil // Clear any error.
+    }
+
+    /// Attempts to fetch the current profile and then load the default list.
+    /// - Parameter profiles: Repository used to fetch the current user's profile.
+    @MainActor
+    func retryLoadDefaultList(using profiles: ProfilesRepository) async { // Helper to trigger default list load post sign-in.
+        do { // Try to fetch profile and then default list.
+            let me = try await profiles.myProfile() // Obtain current profile to access owner id.
+            self.loadDefaultList(ownerId: me.id) // Kick off default list loading.
+        } catch { // Surface any error to UI for visibility.
+            self.errorMessage = (error as NSError).localizedDescription // Store error message for the view to present.
+        }
     }
 
     // MARK: - Real-time Observation

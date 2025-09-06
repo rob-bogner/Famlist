@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 03.09.2025
+ Last updated on: 05.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,7 +17,7 @@
  - The wrapper lets the rest of the app avoid importing Supabase types everywhere.
 
  📝 Last Change:
- - Standardized header and clarified doc comments. No functional changes.
+ - Pass AuthClientOptions(autoRefreshToken: true) to ensure tokens refresh automatically; rely on library defaults for session persistence.
  ------------------------------------------------------------------------
  */
 
@@ -61,8 +61,14 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
     var auth: AuthClient { client.auth } // Forward auth client for sign-in/out operations.
 
     init?(config: SupabaseConfig) { // Failable initializer; returns nil if misconfigured (kept simple here).
-        // Use URL as required by supabase-swift in this project version
-        self.client = SupabaseClient(supabaseURL: config.url, supabaseKey: config.anonKey) // Initialize Supabase client with URL and anon key.
+        // Configure auth to auto-refresh tokens; rely on library defaults for secure storage/persistence.
+        let options = SupabaseClientOptions(
+            auth: SupabaseClientOptions.AuthOptions(
+                autoRefreshToken: true
+            )
+        )
+        // Initialize Supabase client with URL, anon key, and configured options.
+        self.client = SupabaseClient(supabaseURL: config.url, supabaseKey: config.anonKey, options: options) // Create configured client.
     }
 
     func from(_ table: String) -> PostgrestQueryBuilder { client.from(table) } // Forward to the underlying client.
