@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 03.09.2025
+ Last updated on: 04.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -34,12 +34,12 @@ final class PreviewProfilesRepository: ProfilesRepository { // Used by previews 
 /// Preview implementation of ListsRepository with an in-memory list array.
 final class PreviewListsRepository: ListsRepository { // Simple data source for previews.
     private var lists: [List] = [ // Seed one default list.
-        .init(id: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!, owner_id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!, title: "Einkaufsliste", is_default: true, created_at: nil)
+        .init(id: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!, owner_id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!, title: "Einkaufsliste", is_default: true, created_at: nil, updated_at: nil)
     ]
     func ensureDefaultListExists(for owner: UUID) async throws -> List { lists.first { $0.owner_id == owner && $0.is_default } ?? lists[0] } // Return default if exists else first.
     func observeLists(for owner: UUID) -> AsyncStream<[List]> { AsyncStream { $0.yield(self.lists); $0.finish() } } // Emit once and finish.
     func createList(for owner: UUID, title: String) async throws -> List { // Append a new list row.
-        let l = List(id: UUID(), owner_id: owner, title: title, is_default: false, created_at: nil) // Build list.
+        let l = List(id: UUID(), owner_id: owner, title: title, is_default: false, created_at: nil, updated_at: nil) // Build list.
         lists.append(l); return l // Store and return.
     }
     func addMember(listId: UUID, profileId: UUID) async throws {} // No-op in previews.

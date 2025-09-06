@@ -20,6 +20,7 @@
 		EE69A4FE2B14F046007C3515 /* ListRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE69A4FD2B14F046007C3515 /* ListRowView.swift */; };
 		EE7872312B1E3ED600FDD00B /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7872302B1E3ED600FDD00B /* AddItemView.swift */; };
 		EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */; };
+		EE8145712E69E7880066BE58 /* ListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8145702E69E7880066BE58 /* ListModel.swift */; };
 		EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */; };
 		EEA16FF92E663FC80050436C /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA16FF82E663FC80050436C /* Secrets.plist */; };
 		EEA16FFB2E68600A0050436C /* PreviewMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA16FFA2E68600A0050436C /* PreviewMocks.swift */; };
@@ -51,6 +52,7 @@
 		EE69A4FD2B14F046007C3515 /* ListRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListRowView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		EE7872302B1E3ED600FDD00B /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
 		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
+		EE8145702E69E7880066BE58 /* ListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListModel.swift; sourceTree = "<group>"; };
 		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageFullscreenView.swift; sourceTree = "<group>"; };
 		EEA16FF82E663FC80050436C /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEA16FFA2E68600A0050436C /* PreviewMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewMocks.swift; sourceTree = "<group>"; };
@@ -85,6 +87,7 @@
 		EE25EDBC2B406FFA00CA090C /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				EE8145702E69E7880066BE58 /* ListModel.swift */,
 				EE69A4F72B14CC96007C3515 /* ItemModel.swift */,
 			);
 			path = Models;
@@ -268,6 +271,7 @@
 				EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */,
 				EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */,
 				EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */,
+				EE8145712E69E7880066BE58 /* ListModel.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
 				EEFA09F32E2D2BE000B2F2B0 /* CustomModalView.swift in Sources */,

@@ -3,21 +3,20 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 03.09.2025
+ Last updated on: 06.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Application entry point. Configures Supabase client, sets orientation, and wires the root SwiftUI scene with dependencies.
+ - Application entry point. Configures a read-only Supabase repository and shows the list.
 
  🛠 Includes:
- - AppDelegate for orientation lock, InlineToast manager + modifier, Supabase config loader usage, initial list resolution, and a connectivity probe.
+ - AppDelegate for orientation lock and minimal Supabase wiring using a fixed list id.
 
  🔰 Notes for Beginners:
- - @main marks the app’s entry. Dependencies are created in init and injected via environmentObject.
- - Orientation is restricted to portrait for a consistent UX; update if you support landscape.
+ - Simplified to read items from a single fixed list without auth or default-list logic.
 
  📝 Last Change:
- - Standardized file header and moved SyncWaitError out of a generic function to fix a Swift compile error.
+ - Switched to ReadOnlyFixedListItemsRepository and removed auth/default-list bootstrapping.
  ------------------------------------------------------------------------
  */
 
@@ -83,13 +82,12 @@ struct GroceryGeniusApp: App { // Conforms to App to define app lifecycle and sc
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate // Bridges UIKit delegate into SwiftUI.
 
     private let listViewModel: ListViewModel // Root list view model shared via environment.
-    private let toastManager = InlineToastManager() // Toast manager instance injected into root view.
-    private var supabaseClient: AppSupabaseClient? = nil // Optional Supabase client when configuration is available.
+    private let toastManager = InlineToastManager() // Toast manager instance injected into root view
+    private let configMissingToast: Bool // Whether to show a config-missing toast on first render.
 
     /// Initializes dependencies and resolves the initial list context.
     init() { // App initialization occurs before the body is evaluated.
-        // Remove unsupported direct orientation set; we rely on geometryUpdate below
-        // UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        // Orientation request for portrait
         if #available(iOS 16.0, *) { // Use iOS 16 scene geometry APIs when available.
             UIApplication.shared.connectedScenes.forEach { scene in // Iterate all connected scenes (windows).
                 guard let windowScene = scene as? UIWindowScene else { return } // Only handle UIWindowScene instances.
@@ -98,17 +96,17 @@ struct GroceryGeniusApp: App { // Conforms to App to define app lifecycle and sc
                 keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations() // Ask VC to refresh supported orientations.
             }
         }
-        if let config = SupabaseConfigLoader.load(), let client = AppSupabaseClient(config: config) { // Try to load Supabase credentials and create a client.
-            self.supabaseClient = client // Hold onto the client for later use (optional).
-            let listId = GroceryGeniusApp.resolveInitialListId(using: client) // Compute initial list id (persisted or fetched).
-            UserDefaults.standard.set(listId.uuidString, forKey: "CurrentListID") // Persist chosen list id for next app launch.
-            let repo = SupabaseItemsRepository(client: client) // Concrete Items repository backed by Supabase.
-            self.listViewModel = ListViewModel(listId: listId, repository: repo) // Create the view model with current list and repo.
-            GroceryGeniusApp.scheduleConnectivityProbe(client: client, toastManager: toastManager, viewModel: listViewModel) // Schedule a light DB connectivity probe.
-        } else { // Fallback when config is missing or client creation fails.
-            self.listViewModel = ListViewModel() // Use preview/in-memory repository for offline mode.
-            let tm = self.toastManager // Local binding to manager for use inside Task closure.
-            Task { @MainActor in tm.show("Supabase config missing") } // Show a toast informing about missing config.
+        // Use Supabase read-only repo pointing to a fixed list id.
+        if let config = SupabaseConfigLoader.load(), let client = AppSupabaseClient(config: config) { // Load Supabase config and create client.
+            let itemsRepo = ReadOnlyFixedListItemsRepository(client: client) // Read-only repo for fixed list.
+            let fixedList = UUID(uuidString: "10000000-0000-0000-0000-000000000001") ?? UUID() // Fixed list id.
+            self.listViewModel = ListViewModel(listId: fixedList, repository: itemsRepo, startImmediately: true) // VM for the fixed list.
+            self.configMissingToast = false // No toast needed when config is present.
+        } else { // No Supabase config -> show an error and use a minimal preview VM so UI loads.
+            let previewRepo = PreviewItemsRepository() // In-memory items to keep UI responsive.
+            let previewList = UUID(uuidString: "00000000-0000-0000-0000-00000000ABCD") ?? UUID() // Placeholder id for preview.
+            self.listViewModel = ListViewModel(listId: previewList, repository: previewRepo, startImmediately: true) // Do not start observation.
+            self.configMissingToast = true // Defer toast to body task to avoid capturing self in init.
         }
     }
 
@@ -118,119 +116,7 @@ struct GroceryGeniusApp: App { // Conforms to App to define app lifecycle and sc
             ShoppingListView() // Root content view showing the shopping list.
                 .environmentObject(listViewModel) // Inject shared list view model for the entire hierarchy.
                 .toastInline(using: toastManager) // Attach inline toast overlay to the root.
-        }
-    }
-
-    // Resolve initial list id from persisted value, else DB
-    /// Picks the initial list id by checking saved preferences and falling back to database queries.
-    /// - Parameter client: Supabase client used to query the database when needed.
-    /// - Returns: A UUID indicating which list to load initially.
-    private static func resolveInitialListId(using client: AppSupabaseClient) -> UUID { // Static helper avoids capturing self.
-        if let saved = UserDefaults.standard.string(forKey: "CurrentListID"), let savedUUID = UUID(uuidString: saved) { // Try to read previously selected list id from defaults.
-            // Treat zero UUID as invalid
-            let zero = UUID(uuidString: "00000000-0000-0000-0000-000000000001")! // Special invalid/placeholder UUID value.
-            if savedUUID != zero { // Only accept if not the invalid placeholder.
-                // Verify the saved list id actually has items (or at least exists via items reference)
-                do { // Use a tiny query to confirm the list id is used in items table.
-                    struct Row: Decodable { let id: UUID } // Minimal row type to decode select("id").
-                    let rows: [Row] = try awaitResult { // Run async code synchronously with timeout.
-                        try await client.from("items").select("id").eq("list_id", value: saved).limit(1).execute().value // DB query to check existence.
-                    }
-                    if !rows.isEmpty { return savedUUID } // If at least one row exists, keep saved list.
-                } catch { /* fall through to recalc */ } // On failure, just ignore and re-resolve below.
-            }
-        }
-        var resolved: UUID? = nil // Placeholder for the resolved id.
-        let sema = DispatchSemaphore(value: 0) // Semaphore to wait for async work below.
-        Task { // Start an async context to query DB.
-            do { // Attempt several strategies in order.
-                struct Row: Decodable { let listId: UUID; enum CodingKeys: String, CodingKey { case listId = "list_id" } } // Decode list_id column.
-                let items: [Row] = try await client.from("items").select("list_id").order("created_at", ascending: true).limit(1).execute().value // Fetch first item's list_id if any.
-                if let first = items.first { resolved = first.listId; sema.signal(); return } // Use first list id referenced by items.
-                let defaults: [List] = try await client.from("lists").select().eq("is_default", value: true).limit(1).execute().value // Else try default list.
-                if let first = defaults.first { resolved = first.id; sema.signal(); return } // Use default list if present.
-                let any: [List] = try await client.from("lists").select().order("created_at", ascending: true).limit(1).execute().value // Else any list.
-                resolved = any.first?.id // Choose the first by creation date.
-            } catch { // On any error, leave resolved as nil.
-                resolved = nil // Explicit nil to fall back below.
-            }
-            sema.signal() // Release the waiting thread regardless of outcome.
-        }
-        _ = sema.wait(timeout: .now() + 5) // Wait up to 5 seconds for async resolution.
-        return resolved ?? (UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()) // Fallback to placeholder or a random UUID as last resort.
-    }
-
-    // Define error type at type scope (not inside generic function) to satisfy compiler
-    private enum SyncWaitError: Error { case timeout } // Local error describing a timeout in synchronous wait.
-
-    // Helper: run an async block synchronously with a timeout to reuse validator above
-    /// Runs an async throwing operation and waits for completion with a small timeout.
-    /// - Parameter work: Closure for async operation returning a value.
-    /// - Returns: The value returned by the async operation.
-    private static func awaitResult<T>(_ work: @escaping () async throws -> T) throws -> T { // Generic utility to bridge async into sync.
-        let sema = DispatchSemaphore(value: 0) // Semaphore to block the current thread.
-        var result: Result<T, Error>? = nil // Stores the eventual outcome of the async work.
-        Task { // Fire the async task.
-            do { result = .success(try await work()) } catch { result = .failure(error) } // Capture result or error.
-            sema.signal() // Release the waiting thread.
-        }
-        let status = sema.wait(timeout: .now() + 5) // Wait at most 5 seconds.
-        guard status == .success, let unwrapped = result else { throw SyncWaitError.timeout } // Throw timeout if no result.
-        switch unwrapped { case .success(let value): return value; case .failure(let e): throw e } // Return or rethrow depending on result.
-    }
-
-    // Connectivity probe (static to avoid self capture)
-    /// Schedules a lightweight connectivity test to Supabase after app launch.
-    private static func scheduleConnectivityProbe(client: AppSupabaseClient, toastManager: InlineToastManager, viewModel: ListViewModel) { // Static to avoid capturing self strongly.
-        Task { @MainActor in // Run after a brief delay on the main actor for UI
-            try? await Task.sleep(nanoseconds: 5_000_000_000) // Wait 5 seconds to avoid competing with initial UI work.
-            await runConnectivityQuery(client: client, toastManager: toastManager, viewModel: viewModel) // Perform the query and show a toast.
-        }
-    }
-
-    /// Executes a small query to test DB connectivity and optionally switches lists if persisted id has no items.
-    @MainActor
-    private static func runConnectivityQuery(client: AppSupabaseClient, toastManager: InlineToastManager, viewModel: ListViewModel) async { // Annotated @MainActor to safely interact with UI.
-        struct DumpRow: Codable { // Minimal representation of an item row for the connectivity log.
-            let id: UUID // Item id.
-            let listId: UUID // Associated list id.
-            let ownerPublicId: String? // Owner public id if present.
-            let imageData: String? // Base64 image data (legacy field) if present.
-            let name: String // Item name.
-            let units: Int // Units quantity.
-            let measure: String // Measurement unit.
-            let price: Double // Price value.
-            let isChecked: Bool // Checked flag.
-            let category: String? // Optional category.
-            let productDescription: String? // Optional description.
-            let brand: String? // Optional brand.
-            let position: Int? // Optional position for ordering.
-            let createdAt: String? // Creation timestamp string.
-            let updatedAt: String? // Update timestamp string.
-            enum CodingKeys: String, CodingKey { case id; case listId = "list_id"; case ownerPublicId = "ownerpublicid"; case imageData = "imagedata"; case name, units, measure, price, isChecked, category; case productDescription = "productdescription"; case brand, position; case createdAt = "created_at"; case updatedAt = "updated_at" } // Map snake_case columns to camelCase.
-        }
-        do { // Attempt the connectivity queries.
-            let all: [DumpRow] = try await client.from("items").select().order("created_at", ascending: true).execute().value // Fetch all items for logging.
-            var listCount = 0 // Will store count of items for the current list.
-            var savedId: String? = UserDefaults.standard.string(forKey: "CurrentListID") // Read persisted list id if available.
-            if let saved = savedId, let _ = UUID(uuidString: saved) { // Validate saved id shape.
-                let scoped: [DumpRow] = try await client.from("items").select().eq("list_id", value: saved).order("created_at", ascending: true).execute().value // Fetch items for saved list.
-                listCount = scoped.count // Count them.
-                if let data = try? JSONEncoder().encode(scoped), let json = String(data: data, encoding: .utf8) { print("[DB Connectivity] items for list_id=\(saved): \(scoped.count) rows=\n\(json)") } // Log JSON snapshot to console.
-                // Auto-correct: if saved list has zero items but we do have items overall, switch to first list id
-                if listCount == 0, let first = all.first?.listId { // No items for saved id but we have items overall.
-                    let newId = first // Pick the first list id found.
-                    UserDefaults.standard.set(newId.uuidString, forKey: "CurrentListID") // Persist the corrected id.
-                    viewModel.switchList(to: newId) // Ask view model to switch observation to the new list.
-                    toastManager.show("Switched to list • items: \(all.filter{ $0.listId == newId }.count)") // Inform user via toast.
-                    savedId = newId.uuidString // Update local saved id variable too.
-                }
-            }
-            toastManager.show("Connected to DB • items: \(all.count) • list items: \(listCount)") // Show success with counts.
-            if let data = try? JSONEncoder().encode(all), let json = String(data: data, encoding: .utf8) { print("[DB Connectivity] ALL items=\(all.count) rows=\n\(json)") } else { print("[DB Connectivity] ALL items=\(all.count) (JSON encoding failed)") } // Log all items snapshot or failure.
-        } catch { // On failure of any query, surface error.
-            toastManager.show("DB query failed: \(error.localizedDescription)") // Show failure toast with description.
-            print("[DB Connectivity] ERROR: \(error)") // Print error to console for debugging.
+                .task { if configMissingToast { toastManager.show("Supabase config missing") } } // Show toast after init if needed.
         }
     }
 }

@@ -40,6 +40,9 @@ struct PreviewMocks { // Namespace for preview data and factories.
         let repo = PreviewItemsRepository() // In-memory repository for previews.
         let listId = UUID(uuidString: "00000000-0000-0000-0000-00000000ABCD") ?? UUID() // Stable preview list id.
         let vm = ListViewModel(listId: listId, repository: repo) // Start observing immediately.
+        // Provide a fake default list so ShoppingListView preview doesn’t show the loading overlay.
+        let owner = UUID(uuidString: "11111111-1111-1111-1111-111111111111") ?? UUID() // Stable owner id for previews.
+        vm.defaultList = ListModel(id: listId, ownerId: owner, title: "Preview Default List", isDefault: true, createdAt: Date(), updatedAt: Date()) // Seed default list.
         // Seed items asynchronously so the stream delivers them to observers.
         Task {
             for var item in sampleItems { // Copy each sample and assign the preview list id.
