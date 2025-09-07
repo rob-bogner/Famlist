@@ -69,6 +69,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		EE1400242E6D8C15002C20F7 /* Support */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Support; sourceTree = "<group>"; };
 		EE2BAC412DB917E20082D950 /* Service */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Service; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -159,6 +160,7 @@
 				EE25EDBD2B40700500CA090C /* Views */,
 				EE9C2B4E2B407E83009776A0 /* ViewModels */,
 				EE25EDBC2B406FFA00CA090C /* Models */,
+				EE1400242E6D8C15002C20F7 /* Support */,
 				EE2BAC412DB917E20082D950 /* Service */,
 				EE6115E92B4843D80043736A /* Extensions */,
 				EE69A4E92B14CB79007C3515 /* Assets.xcassets */,
@@ -199,6 +201,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				EE1400242E6D8C15002C20F7 /* Support */,
 				EE2BAC412DB917E20082D950 /* Service */,
 			);
 			name = GroceryGenius;

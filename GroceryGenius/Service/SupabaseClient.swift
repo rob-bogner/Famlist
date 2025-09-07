@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 05.09.2025
+ Last updated on: 07.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,7 +17,7 @@
  - The wrapper lets the rest of the app avoid importing Supabase types everywhere.
 
  📝 Last Change:
- - Pass AuthClientOptions(autoRefreshToken: true) to ensure tokens refresh automatically; rely on library defaults for session persistence.
+ - Replace local debug shims with Support/Logger and add safe init/auth logs (no secrets); keep client behavior unchanged.
  ------------------------------------------------------------------------
  */
 
@@ -69,6 +69,27 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         )
         // Initialize Supabase client with URL, anon key, and configured options.
         self.client = SupabaseClient(supabaseURL: config.url, supabaseKey: config.anonKey, options: options) // Create configured client.
+        // Log a safe initialization line (no keys). Only log host part of URL and option flags.
+        _ = logResult(
+            params: (supabaseHost: config.url.host ?? "<nil>", persistSession: true, autoRefreshToken: true),
+            result: "SupabaseClient initialized"
+        )
+        // Optionally check/restore session asynchronously and log outcome without throwing.
+        let authClient = self.client.auth // Snapshot auth client to avoid capturing self.
+        Task.detached {
+            do {
+                _ = try await authClient.session // Attempt to read/restore an existing session.
+                _ = logResult(params: ["restored": true], result: "Auth session ready")
+            } catch {
+                _ = logResult(params: ["restored": false, "error": String(describing: error)], result: "Auth session missing")
+            }
+        }
+        // Optionally observe auth state changes and log lightweight events.
+        Task.detached {
+            for await ev in authClient.authStateChanges {
+                logVoid(params: ["authEvent": String(describing: ev.event)])
+            }
+        }
     }
 
     func from(_ table: String) -> PostgrestQueryBuilder { client.from(table) } // Forward to the underlying client.
@@ -76,11 +97,12 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
     func storageUpload(bucket: String, path: String, data: Data, contentType: String) async throws { // Uploads binary data to storage.
         // Provide a concrete cacheControl to satisfy non-optional String API
         _ = try await client.storage.from(bucket).upload(path, data: data, options: FileOptions(cacheControl: "3600", contentType: contentType, upsert: true)) // Upsert file with cache control.
+        logVoid(params: (bucket: bucket, path: path, contentType: contentType, bytes: data.count)) // Log summary (no payload).
     }
 
     func storageCreateSignedURL(bucket: String, path: String, expiresIn: Int) async throws -> String { // Creates a temporary URL to access a stored file.
         // createSignedURL returns URL; convert to String for consumers
         let url: URL = try await client.storage.from(bucket).createSignedURL(path: path, expiresIn: expiresIn) // Ask storage for a signed URL.
-        return url.absoluteString // Convert to plain string for simple passing around.
+        return logResult(params: (bucket: bucket, path: path, expiresIn: expiresIn), result: url.absoluteString) // Log URL string.
     }
 }
