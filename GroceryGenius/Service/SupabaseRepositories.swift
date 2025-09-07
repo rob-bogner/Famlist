@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 06.09.2025
+ Last updated on: 07.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,7 +17,7 @@
  - Async/await functions perform network/database calls; errors propagate to callers.
 
  📝 Last Change:
- - Remove premature unauthenticated guard in myProfile() and correctly fall back to async session when currentUser is nil.
+ - Replace local debug shims with Support/Logger and keep existing lightweight I/O logs around DB operations.
  ------------------------------------------------------------------------
  */
 
@@ -78,34 +78,38 @@ final class SupabaseProfilesRepository: ProfilesRepository { // Supabase-backed 
         struct Row: Codable { let id: UUID; let public_id: String } // Payload mapping to table columns.
         let row = Row(id: authUserId, public_id: publicId) // Build payload.
         _ = try await client.from("profiles").upsert(row).execute() // Perform upsert; ignore result.
+        logVoid(params: (authUserId: authUserId, publicId: publicId)) // Log completion.
     }
 
     func myProfile() async throws -> Profile { // Fetch current user's profile (server infers user).
         // Resolve authenticated user id from the in-memory user or by awaiting the active session
         if let currentId = client.auth.currentUser?.id { // Prefer currentUser (fast, no await)
-            return try await client
+            let profile: Profile = try await client
                 .from("profiles")
                 .select("id, public_id, created_at")
                 .eq("id", value: currentId.uuidString)
                 .single()
                 .execute()
                 .value // Decode into Profile
+            return logResult(params: ["source": "currentUser"], result: profile)
         }
         // Fallback: try to read/restore session asynchronously and use its user id
         guard let session = try? await client.auth.session else { throw AuthError.unauthenticated } // Session fetch will fail if unauthenticated
         let uid = session.user.id // Extract user id from non-optional Session
-        return try await client
+        let profile: Profile = try await client
             .from("profiles")
             .select("id, public_id, created_at")
             .eq("id", value: uid.uuidString)
             .single()
             .execute()
             .value // Decode into Profile
+        return logResult(params: ["source": "session"], result: profile)
     }
 
     func profileByPublicId(_ publicId: String) async throws -> Profile? { // Lookup by public id for sharing links.
         let rows: [Profile] = try await client.from("profiles").select().eq("public_id", value: publicId).limit(1).execute().value // Query by public_id.
-        return rows.first // Return first or nil.
+        let result = rows.first // Return first or nil.
+        return logResult(params: ["publicId": publicId], result: result)
     }
 }
 
@@ -124,7 +128,7 @@ final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists 
             .limit(1)
             .execute()
             .value
-        if let row = fetched.first { return row } // Return existing default when found.
+        if let row = fetched.first { return logResult(params: (owner: owner, hit: true), result: row) } // Return existing default when found.
         // insert when none exists (let DB set owner_id from auth context)
         struct NewList: Codable { let title: String; let is_default: Bool } // Insert payload mapping without owner_id.
         let insert = NewList(title: "My List", is_default: true) // Default title per spec.
@@ -135,7 +139,7 @@ final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists 
             .single()
             .execute()
             .value
-        return inserted // Return created default list row.
+        return logResult(params: (owner: owner, created: true), result: inserted) // Return created default list row.
     }
 
     /// Fetches the default list as an app-level ListModel; creates it if missing. Uses server-side auth for owner_id on insert.
@@ -169,7 +173,7 @@ final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists 
             .limit(1)
             .execute()
             .value
-        if let row = fetched.first { return map(row) } // Found existing.
+        if let row = fetched.first { return logResult(params: (ownerId: ownerId, hit: true), result: map(row)) } // Found existing.
         // 2) Not found -> insert default. Let DB derive owner_id from auth.uid() via policy/trigger/default.
         struct NewList: Codable { let title: String; let is_default: Bool } // Payload without owner.
         let payload = NewList(title: "My List", is_default: true) // Default attributes.
@@ -180,31 +184,35 @@ final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists 
             .single()
             .execute()
             .value
-        return map(inserted) // Return new default.
+        return logResult(params: (ownerId: ownerId, created: true), result: map(inserted)) // Return new default.
     }
 
     func observeLists(for owner: UUID) -> AsyncStream<[List]> { // Simple one-shot stream to load lists.
-        AsyncStream { continuation in // Construct a stream.
+        let stream = AsyncStream { continuation in // Construct a stream.
             Task { // Spawn async work to fetch once then finish.
                 let rows: [List] = try await client.from("lists").select().eq("owner_id", value: owner.uuidString).order("created_at").execute().value // Fetch lists for owner.
                 continuation.yield(rows) // Send result once.
                 continuation.finish() // Close stream.
             }
         }
+        return logResult(params: ["owner": owner], result: stream)
     }
 
     func createList(for owner: UUID, title: String) async throws -> List { // Insert a new list row.
         struct NewList: Codable { let owner_id: UUID; let title: String } // Payload mapping.
-        return try await client.from("lists").insert(NewList(owner_id: owner, title: title)).select().single().execute().value // Insert and return row.
+        let value: List = try await client.from("lists").insert(NewList(owner_id: owner, title: title)).select().single().execute().value // Insert and return row.
+        return logResult(params: (owner: owner, title: title), result: value)
     }
 
     func addMember(listId: UUID, profileId: UUID) async throws { // Add member to list.
         struct LM: Codable { let list_id: UUID; let profile_id: UUID } // Mapping for list_members table.
         _ = try await client.from("list_members").insert(LM(list_id: listId, profile_id: profileId)).execute() // Execute insert.
+        logVoid(params: (listId: listId, profileId: profileId))
     }
 
     func removeMember(listId: UUID, profileId: UUID) async throws { // Remove member from list.
         _ = try await client.from("list_members").delete().eq("list_id", value: listId.uuidString).eq("profile_id", value: profileId.uuidString).execute() // Delete row by composite PK.
+        logVoid(params: (listId: listId, profileId: profileId))
     }
 }
 
@@ -216,12 +224,14 @@ final class SupabaseCategoriesRepository: CategoriesRepository { // Supabase-bac
     func all(for profileId: UUID?) async throws -> [Category] { // Fetch categories visible to profile.
         var query = client.from("categories").select() // Start base select.
         if let profileId { query = query.or("profile_id.eq.\(profileId.uuidString),profile_id.is.null") } // Include global (null) or profile-specific.
-        return try await query.order("name", ascending: true).execute().value // Order by name and return values.
+        let result: [Category] = try await query.order("name", ascending: true).execute().value // Order by name and return values.
+        return logResult(params: ["profileId": profileId as Any], result: result)
     }
 
     func create(name: String, emoji: String?, colorHex: String?) async throws -> Category { // Insert category.
         struct New: Codable { let name: String; let emoji: String?; let color_hex: String? } // Payload mapping.
-        return try await client.from("categories").insert(New(name: name, emoji: emoji, color_hex: colorHex)).select().single().execute().value // Insert and return created row.
+        let result: Category = try await client.from("categories").insert(New(name: name, emoji: emoji, color_hex: colorHex)).select().single().execute().value // Insert and return created row.
+        return logResult(params: (name: name, emoji: emoji as Any, colorHex: colorHex as Any), result: result)
     }
 }
 
@@ -234,7 +244,7 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:] // Observers keyed by list id and token.
 
     func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> { // Start a stream emitting snapshots for a list.
-        AsyncStream { continuation in // Create a stream builder.
+        let stream = AsyncStream { continuation in // Create a stream builder.
             let token = UUID() // Unique token for this subscriber.
             if continuations[listId] == nil { continuations[listId] = [:] } // Ensure bucket for list id exists.
             continuations[listId]?[token] = continuation // Save continuation for later yields.
@@ -243,6 +253,7 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
             }
             Task { await self.fetchAndYield(listId) } // Send initial snapshot asynchronously.
         }
+        return logResult(params: ["listId": listId], result: stream)
     }
 
     @MainActor
@@ -299,8 +310,10 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
                 )
             }
             await MainActor.run { self.yield(listId, mapped) } // Push snapshot to subscribers on main actor.
+            logVoid(params: (listId: listId, itemsCount: mapped.count)) // Log yield summary.
         } catch { // On failure, emit empty snapshot (keep UI stable).
             await MainActor.run { self.yield(listId, []) } // Emit empty list.
+            logVoid(params: (listId: listId, itemsCount: 0, note: "fetchError"))
         }
     }
 
@@ -326,7 +339,7 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
         )
         _ = try await client.from("items").insert(row).execute() // Perform insert.
         await fetchAndYield(listUUID) // Refresh observers.
-        return ItemModel( // Return the item as stored for local state.
+        let model = ItemModel( // Return the item as stored for local state.
             id: row.id.uuidString,
             imageUrl: item.imageUrl,
             imageData: finalImageData,
@@ -341,6 +354,7 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
             listId: listUUID.uuidString,
             ownerPublicId: item.ownerPublicId
         )
+        return logResult(params: (itemId: model.id, listId: listUUID), result: model)
     }
 
     func updateItem(_ item: ItemModel) async throws { // Update an existing item and broadcast.
@@ -372,10 +386,12 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
         )
         _ = try await client.from("items").update(payload).eq("id", value: item.id).eq("list_id", value: item.listId ?? "").execute() // Update by id & list.
         await fetchAndYield(listId) // Refresh observers.
+        logVoid(params: (itemId: item.id, listId: listId))
     }
 
     func deleteItem(id: String, listId: UUID) async throws { // Delete item row and broadcast.
         _ = try await client.from("items").delete().eq("id", value: id).eq("list_id", value: listId.uuidString).execute() // Perform delete.
         await fetchAndYield(listId) // Refresh observers.
+        logVoid(params: (id: id, listId: listId))
     }
 }
