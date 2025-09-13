@@ -37,6 +37,24 @@
         }
       }
     },
+    "auth.email.placeholder" : {
+
+    },
+    "auth.error.noClient" : {
+
+    },
+    "auth.error.title" : {
+
+    },
+    "auth.signin.button" : {
+
+    },
+    "auth.signout.button" : {
+
+    },
+    "auth.title" : {
+
+    },
     "button.addItem" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -87,6 +105,9 @@
           }
         }
       }
+    },
+    "common.ok" : {
+
     },
     "decrement" : {
 
@@ -317,6 +338,9 @@
           }
         }
       }
+    },
+    "menu.accessibility.hamburger" : {
+
     },
     "photo.add" : {
       "extractionState" : "manual",

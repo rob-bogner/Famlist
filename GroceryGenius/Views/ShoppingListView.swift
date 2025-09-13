@@ -17,7 +17,7 @@
  - The quick-add expands inline; the full AddItemView is presented as a sheet for more details.
 
  📝 Last Change:
- - Standardized header and preview uses PreviewMocks for consistent demo data. No functional changes.
+ - Added a top-left hamburger menu for signing out, using AppSessionViewModel. No functional changes.
  ------------------------------------------------------------------------
  */
 
@@ -27,6 +27,7 @@ import SwiftUI // Imports SwiftUI for declarative UI building blocks and propert
 /// The main screen showing the shopping list with a decorative header and actions.
 struct ShoppingListView: View { // Declares a SwiftUI view type.
     @EnvironmentObject var listViewModel: ListViewModel // Shared data source and actions across the hierarchy.
+    @EnvironmentObject var session: AppSessionViewModel // Session VM used to perform sign-out from the hamburger menu.
     @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
     @State private var quickAddActive: Bool = false // Tracks whether the inline quick-add text field is expanded.
     @State private var quickAddText: String = "" // Holds the text typed into the quick-add field.
@@ -54,6 +55,11 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 }
                 .frame(height: headerHeight, alignment: .top) // Constrain header content to the header area.
                 .zIndex(1) // Float above the background.
+                .overlay(alignment: .topTrailing) { // Overlay a hamburger menu at the top-right corner of the header.
+                    hamburgerMenu // The menu with sign-out action.
+                        .padding(.top, 30) // Align vertically with the title's top padding.
+                        .padding(.trailing, 18) // Align horizontally with the header's trailing edge.
+                }
                 VStack(spacing: 0) { // Main content column with list and floating button.
                     Spacer().frame(height: contentOffsetBelowHeader) // Push list down so it starts under the header.
                     ZStack(alignment: .bottomTrailing) { // Layer the list and the floating add button.
@@ -79,6 +85,23 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
             AddItemView() // The modal for adding a new item with more fields.
                 .presentationDetents([.fraction(0.45), .large, .medium]) // Allow snap heights for the sheet.
                 .presentationCornerRadius(15) // Rounded top corners for a modern look.
+        }
+    }
+
+    // MARK: - Hamburger Menu
+    /// A top-left hamburger menu with session-related actions.
+    private var hamburgerMenu: some View { // Computed view returning the menu for the header.
+        Menu { // Menu content listing actions.
+            Button(role: .destructive) { // Destructive styling to indicate a session-affecting action.
+                session.signOut() // Trigger sign-out which removes the saved session and resets UI state.
+            } label: { // Label for the sign-out action.
+                Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right") // Accessible label and icon.
+            }
+        } label: { // The tappable hamburger icon shown in the header.
+            Image(systemName: "line.3.horizontal") // Standard hamburger icon.
+                .font(.title2.weight(.bold)) // Visible size and weight.
+                .foregroundColor(Color.theme.background) // Contrast icon against the accent header background.
+                .accessibilityLabel(Text(String(localized: "menu.accessibility.hamburger"))) // VoiceOver label.
         }
     }
 
@@ -140,5 +163,13 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
 }
 
 #Preview { // SwiftUI live preview for this view.
-    ShoppingListView().environmentObject(PreviewMocks.makeListViewModelWithSamples()) // Inject a preview model to render content.
+    // Build preview dependencies and inject both list and session view models.
+    let listVM = PreviewMocks.makeListViewModelWithSamples() // In-memory list VM with sample items.
+    let sessionVM = AppSessionViewModel(client: nil, // No real client in previews.
+                                        profiles: PreviewProfilesRepository(), // Preview profiles repo.
+                                        lists: PreviewListsRepository(), // Preview lists repo.
+                                        listViewModel: listVM) // Inject list VM.
+    return ShoppingListView() // Render the list view.
+        .environmentObject(listVM) // Provide list view model to the environment.
+        .environmentObject(sessionVM) // Provide session view model for the hamburger menu.
 }

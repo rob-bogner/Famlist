@@ -30,6 +30,9 @@
 		EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */; };
 		EEC3BC0E2E50D5A800C037F1 /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC0D2E50D5A800C037F1 /* Validation.swift */; };
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
+		EEE9C8F92E6DE91B00A599C6 /* AppSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE9C8F82E6DE91B00A599C6 /* AppSessionViewModel.swift */; };
+		EEE9C8FC2E6DE92700A599C6 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE9C8FB2E6DE92700A599C6 /* RootView.swift */; };
+		EEE9C8FD2E6DE92700A599C6 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE9C8FA2E6DE92700A599C6 /* AuthView.swift */; };
 		EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FB2B4C5A4100330CE5 /* ListView.swift */; };
 		EEF472FE2B4C5C2000330CE5 /* ShoppingListProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */; };
 		EEFA09E32E2CE31200B2F2B0 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */; };
@@ -61,6 +64,10 @@
 		EEC3BC082E50C95A00C037F1 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableInputs.swift; sourceTree = "<group>"; };
 		EEC3BC0D2E50D5A800C037F1 /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
+		EEE9C8F82E6DE91B00A599C6 /* AppSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSessionViewModel.swift; sourceTree = "<group>"; };
+		EEE9C8FA2E6DE92700A599C6 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		EEE9C8FB2E6DE92700A599C6 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		EEE9C8FE2E6DE9CC00A599C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EEF472FB2B4C5A4100330CE5 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListProgressView.swift; sourceTree = "<group>"; };
 		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
@@ -97,6 +104,8 @@
 		EE25EDBD2B40700500CA090C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				EEE9C8FA2E6DE92700A599C6 /* AuthView.swift */,
+				EEE9C8FB2E6DE92700A599C6 /* RootView.swift */,
 				EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */,
 				EE69A4E72B14CB78007C3515 /* ShoppingListView.swift */,
 				EEF472FB2B4C5A4100330CE5 /* ListView.swift */,
@@ -153,6 +162,7 @@
 		EE69A4E42B14CB78007C3515 /* GroceryGenius */ = {
 			isa = PBXGroup;
 			children = (
+				EEE9C8FE2E6DE9CC00A599C6 /* Info.plist */,
 				EEA16FFA2E68600A0050436C /* PreviewMocks.swift */,
 				EE0C60CA2E52403600C6CF65 /* Localizable.xcstrings */,
 				EE69A4E52B14CB78007C3515 /* GroceryGeniusApp.swift */,
@@ -180,6 +190,7 @@
 		EE9C2B4E2B407E83009776A0 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				EEE9C8F82E6DE91B00A599C6 /* AppSessionViewModel.swift */,
 				EE6115E72B4467070043736A /* ListViewModel.swift */,
 			);
 			path = ViewModels;
@@ -274,6 +285,7 @@
 				EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */,
 				EEC3BC0B2E50C95A00C037F1 /* ReusableInputs.swift in Sources */,
 				EEC3BC0C2E50C95A00C037F1 /* DesignSystem.swift in Sources */,
+				EEE9C8F92E6DE91B00A599C6 /* AppSessionViewModel.swift in Sources */,
 				EE8145712E69E7880066BE58 /* ListModel.swift in Sources */,
 				EE52222F2DBEDD2100AB84EF /* ImagePicker.swift in Sources */,
 				EE69A4F82B14CC96007C3515 /* ItemModel.swift in Sources */,
@@ -289,6 +301,8 @@
 				EE69A4E62B14CB78007C3515 /* GroceryGeniusApp.swift in Sources */,
 				EE6115E82B4467070043736A /* ListViewModel.swift in Sources */,
 				EE6115EB2B48440E0043736A /* Color.swift in Sources */,
+				EEE9C8FC2E6DE92700A599C6 /* RootView.swift in Sources */,
+				EEE9C8FD2E6DE92700A599C6 /* AuthView.swift in Sources */,
 				EEF472FC2B4C5A4100330CE5 /* ListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -429,6 +443,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"GroceryGenius/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GroceryGenius/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Grocery Genius";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Wir benötigen Zugriff auf die Kamera, um Fotos als Produktbild aufzunehmen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -460,6 +475,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"GroceryGenius/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GroceryGenius/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Grocery Genius";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Wir benötigen Zugriff auf die Kamera, um Fotos als Produktbild aufzunehmen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

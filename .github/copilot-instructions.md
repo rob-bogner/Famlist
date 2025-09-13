@@ -1,10 +1,9 @@
 ✅ Do
 
 Target & Architecture
-    •    Always target iOS 17+
-    •    Use SwiftUI only (no UIKit)
-    •    Follow MVVM pattern
-    •    Keep code encapsulated, modular, and testable via protocols/DI
+    •    iOS 17+ only, SwiftUI only (no UIKit).
+    •    MVVM pattern.
+    •    Encapsulated & modular code; testable via protocols/DI.
 
 File Header (every file)
 
@@ -17,127 +16,96 @@ File Header (every file)
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Short description of what this file does and why it exists.
+ - What this file does & why.
 
  🛠 Includes:
- - Key types, functions, and their purpose.
+ - Key types, functions, purpose.
 
  🔰 Notes for Beginners:
- - Explain the role of this file in simple words.
- - Mention pitfalls or reasons behind implementation choices.
+ - Explain role in simple words.
+ - Pitfalls/choices.
 
  📝 Last Change:
- - What was changed and WHY it was changed.
+ - What & WHY it was changed.
  ------------------------------------------------------------------------
 */
 
 Comments
-    •    Every function/initializer/struct/enum/class gets a doc comment (///) explaining purpose, parameters, return value, special considerations.
-    •    Every single line of code has a beginner-friendly comment (/// above or // at end of line).
-    •    Explain even trivial lines (import SwiftUI, {}, .padding()).
-    •    Example: .padding(.horizontal) // adds horizontal space (left + right) around this view
-    •    All SwiftUI previews must exist and be commented line by line.
+    •    Every type/func/init gets a /// doc comment (purpose, params, return, notes).
+    •    Every line has beginner-friendly comment (explain even trivial ones).
+    •    SwiftUI previews must exist, commented line by line.
 
 Project Structure
-    •    Folders: Models/, Views/, ViewModels/, Repositories/, Services/, Support/ (e.g., UI/DesignSystem, Utilities)
-    •    Use descriptive names, no abbreviations.
-    •    Promote reusability, avoid duplication.
-    •    Follow Swift & SwiftUI best practices.
+    •    Folders: Models/, Views/, ViewModels/, Repositories/, Services/, Support/.
+    •    Descriptive names, no abbreviations.
+    •    Reuse components, avoid duplication.
 
-Separation of Concerns (strict)
-    •    GroceryGeniusApp.swift: Only composition & dependency injection (create clients, repositories, view models, scene).
-    •    ❗️No UI logic, no business logic, no toasts, no network calls with business rules here.
-    •    If needed, kick off work via .task on a root View or expose a method on a ViewModel.
-    •    Views: UI only (layout, rendering, user intents). No direct DB calls. Bind to a ViewModel.
-    •    ViewModels: Orchestrate use cases, call repositories/services, manage state.
-    •    Update @Published on MainActor.
-    •    Use isLoading with defer to reset.
-    •    Cancel previous tasks on input changes (e.g., list switch).
-    •    Repositories: Data access only (Supabase I/O). No UI, no toasts. Return domain models or DTOs.
-    •    Services (e.g., AuthService): Cross-cutting concerns like Auth session restore, auth state stream.
+Separation of Concerns
+    •    GroceryGeniusApp.swift: composition & DI only. ❗️No UI, toasts, or DB calls.
+    •    Views: layout + user intents only.
+    •    ViewModels: orchestrate use cases, call repos/services, manage state (@Published, @MainActor).
+    •    Repos: DB access only, no UI.
+    •    Services: cross-cutting concerns (e.g., Auth).
 
-Error Handling & UX
-    •    Surface errors via ViewModel state (e.g., @Published var errorMessage: String?) and show them in Views (Toast/Alert).
-    •    Do not present toasts from App or Repositories.
-    •    Use clear, actionable messages (e.g., “Not signed in. Please sign in to load your list.”).
-    •    Prefer typed errors where practical; never silently swallow errors.
+Error Handling
+    •    Expose errors via ViewModel state (@Published var errorMessage).
+    •    Show in Views (toast/alert).
+    •    Clear, actionable messages.
 
-Concurrency & Performance
-    •    Use async/await; avoid DispatchSemaphore or sync bridges.
-    •    UI state updates on MainActor (@MainActor or await MainActor.run).
-    •    Guard against concurrent loads (if isLoading { return }) and always defer { isLoading = false }.
-    •    Avoid heavy work in Views; move to ViewModel/Service.
+Concurrency
+    •    Use async/await only.
+    •    UI updates on MainActor.
+    •    Guard with isLoading; reset in defer.
+    •    Cancel old tasks when inputs change.
 
-Supabase & RLS (security-first)
-    •    Client options: persistSession: true, autoRefreshToken: true.
-    •    Never embed Service Role key in the app (use Anon key only).
-    •    Call DB only when a session exists (if required by RLS).
-    •    Use precise projection: avoid select("*") unless necessary; select explicit columns.
-    •    When expecting 1 row use .single(); otherwise use .limit(1) and pick .first.
-    •    Filter items by list_id and respect RLS.
-    •    Do not send owner_id from the client when server policies/trigger infer it.
-    •    Handle not found vs real errors distinctly (e.g., fetch default list → create if not found; otherwise rethrow).
+Supabase & RLS
+    •    Use anon key only (never Service Role key).
+    •    Persist session, auto-refresh.
+    •    Use explicit selects; .single() when 1 row expected.
+    •    Don’t send owner_id if server sets it.
+    •    Handle “not found” vs real errors distinctly.
 
 Localization & Accessibility
-    •    Use LocalizedStringKey for user-facing text; avoid hard-coded strings.
-    •    Provide meaningful accessibilityLabel where appropriate.
+    •    Use LocalizedStringKey, no hard-coded strings.
+    •    Provide accessibilityLabel where relevant.
 
 ⸻
 
-📝 Git Workflow & Commit Conventions
+📝 Git Workflow
 
-Commit Rules
-    •    No commits or pushes unless I explicitly request and confirm.
-    •    Commit messages must follow the format:
-[PREFIX](optional-scope): short message
-    •    Use present tense and imperative mood:
-✅ “Fix layout bug”
-❌ “Fixed layout bug” or “Fixes layout bug”
+Rules
+    •    No commits/pushes unless I explicitly request.
+    •    Commit format:
+[PREFIX](optional-scope): short present-tense message
 
-Commit Prefixes & Meaning
+Prefixes
+    •    FEAT / ENHANCE = features.
+    •    REFACTOR / STYLE / PERF = code quality.
+    •    FIX / HOTFIX = bug fixes.
+    •    DOCS, TEST, BUILD, CI, CHORE = as named.
 
-Component    Prefix    Description
-🚀 Features & Changes    FEAT    New feature / functionality
-    ENHANCE    Improvement of existing features (non-breaking)
-🛠️ Code Quality & Refactors    REFACTOR    Code restructuring without behavior change
-    STYLE    Formatting, whitespace, code style (no logic change)
-    PERF    Performance optimization
-🐛 Bug Fixing    FIX    Bugfix
-    HOTFIX    Critical bugfix, usually directly on main
-📚 Documentation    DOCS    Documentation changes (README, comments, wiki)
-🧪 Testing    TEST    Add or modify tests
-🔧 Build & Infra    BUILD    Build system changes (e.g., Xcode, SwiftPM, Docker)
-    CI    CI/CD changes (GitHub Actions, pipelines)
-⚙️ Misc    CHORE    Maintenance (deps update, cleanup, no functional change)
-
-Commit Style Example
+Example
 
 STYLE(ProductImageFullscreenView): Align modal header with EditItemView
 
-- Match header title and xmark dismiss button styling to EditItemView
-- Use identical top and horizontal padding for consistent visual appearance
-- Ensure accent color and font size are the same as EditItemView
-
+- Match title & xmark styling
+- Use identical padding & accent color
 #UI #consistency
 
-✅ Commit Checklist
-    •    Correct prefix chosen?
-    •    (Optional) Scope added? (FEAT(auth): Add login flow)
-    •    Short, precise title in present tense
-    •    (Optional) Description with details
-    •    (Optional) BREAKING CHANGE: note if API/model/behavior changed
-    •    (Optional) Footer with Issue reference (Fixes #123, Refs JIRA-456)
+Checklist
+    •    Correct prefix?
+    •    Optional scope?
+    •    Short, imperative title.
+    •    Add description/footers only if needed.
 
 ⸻
 
 ❌ Don’t
     •    Don’t use UIKit.
-    •    Don’t skip comments on any line.
-    •    Don’t commit or push without explicit approval.
-    •    Don’t use unclear or abbreviated names.
-    •    Don’t break MVVM separation.
-    •    Don’t put UI/business logic in GroceryGeniusApp.swift.
-    •    Don’t perform DB calls in Views or the App file.
-    •    Don’t swallow errors or print in production; surface via ViewModel and UI.
-    •    Don’t block threads or use DispatchSemaphore in app code.
-    •    Don’t use unscoped/unclear commit messages.
+    •    Don’t skip comments.
+    •    Don’t break MVVM.
+    •    Don’t put logic in App.swift.
+    •    Don’t DB-call in Views/App.
+    •    Don’t swallow errors.
+    •    Don’t block threads.
+    •    Don’t use unclear commit messages.

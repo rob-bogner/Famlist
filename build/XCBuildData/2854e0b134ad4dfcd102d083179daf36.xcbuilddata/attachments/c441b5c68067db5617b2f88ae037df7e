@@ -1,0 +1,368 @@
+{
+  "" : {
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGenius-master.dia",
+    "emit-module-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGenius-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGenius-master-emit-module.dia",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGenius-master.swiftdeps"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/AccentHeaderBackground.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AccentHeaderBackground~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/CustomModalView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/CustomModalView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/DesignSystem.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/DesignSystem~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/ImageCache.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImageCache~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/ImagePicker.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ImagePicker~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/ReusableInputs.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReusableInputs~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/ShoppingListProgressView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListProgressView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/Toast.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Toast~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Components/Validation.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Validation~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Extensions/Color.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Color~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Extensions/Utils.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Utils~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Extensions/ViewModifiers.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ViewModifiers~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/GroceryGeniusApp.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GroceryGeniusApp~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Models/ItemModel.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemModel~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Models/ListModel.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListModel~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/PreviewMocks.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewMocks~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/AuthService.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AuthService~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/ItemsRepository.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ItemsRepository~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/KeychainService.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/KeychainService~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/ListsRepository.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListsRepository~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/PreviewRepositories.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/PreviewRepositories~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/ProvisioningService.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProvisioningService~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/ReadOnlyFixedListItemsRepository.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ReadOnlyFixedListItemsRepository~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/SupabaseClient.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseClient~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Service/SupabaseRepositories.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/SupabaseRepositories~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Support/Logger.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/Logger~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/ViewModels/AppSessionViewModel.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppSessionViewModel~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/ViewModels/ListViewModel.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListViewModel~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Views/AddItemView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AddItemView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Views/AppRootView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/AppRootView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Views/EditItemView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/EditItemView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Views/ListRowView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListRowView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Views/ListView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ListView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Views/ProductImageFullscreenView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ProductImageFullscreenView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/GroceryGenius/Views/ShoppingListView.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/ShoppingListView~partial.swiftmodule"
+  },
+  "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/robertbogner/GitPrivate/GroceryGenius/build/GroceryGenius.build/Debug-iphoneos/GroceryGenius.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}
