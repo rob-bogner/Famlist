@@ -32,6 +32,28 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
     @Published var isAuthenticated: Bool = false // Whether the user is authenticated.
     @Published var isLoading: Bool = false // Whether a background operation is in progress.
     @Published var errorMessage: String? = nil // Optional, user-presentable error message.
+    @Published var isRestoringSession: Bool = false // Whether session restoration is in progress.
+
+    // MARK: - Lightweight Toasts
+    @Published var toastMessage: String? = nil
+    private var toastClearTask: Task<Void, Never>? = nil
+
+    /// Cold-start phases for user-visible toasts/logs
+    enum Phase: String {
+        case sessionRestore
+        case profile
+        case defaultList
+        case itemsSnapshot
+
+        var label: String {
+            switch self {
+            case .sessionRestore: return String(localized: "startup.phase.sessionRestore")
+            case .profile: return String(localized: "startup.phase.profile")
+            case .defaultList: return String(localized: "startup.phase.defaultList")
+            case .itemsSnapshot: return String(localized: "startup.phase.itemsSnapshot")
+            }
+        }
+    }
 
     // MARK: - Dependencies
     private let client: SupabaseClienting? // Supabase client facade (optional to allow preview-only construction).
@@ -50,6 +72,25 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
         self.profiles = profiles // Save profiles repository.
         self.lists = lists // Save lists repository.
         self.listViewModel = listViewModel // Save list VM to switch/observe after login.
+        Task { await self.restoreSession() } // Restore session on init.
+    }
+
+    /// Logs and shows a transient toast for the given cold-start phase.
+    func markPhase(_ phase: Phase) async {
+        // Log to console using lightweight logger if available, else print
+        logVoid(params: ["phase": phase.rawValue, "label": phase.label])
+        await showToast(phase.label)
+    }
+
+    /// Presents a toast message for a short duration and auto-clears it.
+    private func showToast(_ message: String) async {
+        self.toastMessage = message
+        // Cancel any existing auto-clear task
+        toastClearTask?.cancel()
+        toastClearTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000) // 2s
+            await MainActor.run { self?.toastMessage = nil }
+        }
     }
 
     // MARK: - Auth
@@ -75,40 +116,43 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
     }
 
     /// Tries to restore a persisted Supabase session on app launch.
-    func restoreSession() {
+    func restoreSession() async {
+        await markPhase(.sessionRestore)
         guard let client else { // Without client, default to unauthenticated previews.
             self.isAuthenticated = false // Keep unauthenticated in design previews.
             return // Exit early.
         }
         if isLoading { return } // Avoid overlapping calls.
         isLoading = true // Set loading flag while checking session.
-        Task { // Perform async work.
-            defer { Task { @MainActor in self.isLoading = false } } // Reset loading when done.
-            do { // Attempt to read an existing session.
-                let session = try await client.auth.session // May throw if no session present.
-                _ = logResult(params: ["hasSession": true], result: session.user.id) // Log success with user id.
-                self.isAuthenticated = true // Flip on the auth gate.
-                await self.handleAuthCompletion() // Proceed to load profile and default list.
-            } catch { // No session or another error.
-                _ = logResult(params: ["hasSession": false, "error": String(describing: error)], result: "no-session") // Log failure.
-                self.isAuthenticated = false // Stay at auth gate.
-            }
+        isRestoringSession = true // Mark session restoration in progress.
+        defer { Task { @MainActor in self.isLoading = false; self.isRestoringSession = false } } // Reset loading and restoration when done.
+        do { // Attempt to read an existing session.
+            let session = try await client.auth.session // May throw if no session present.
+            _ = logResult(params: ["hasSession": true], result: session.user.id) // Log success with user id.
+            self.isAuthenticated = true // Flip on the auth gate.
+            await self.handleAuthCompletion() // Proceed to load profile and default list.
+        } catch { // No session or another error.
+            _ = logResult(params: ["hasSession": false, "error": String(describing: error)], result: "no-session") // Log failure.
+            self.isAuthenticated = false // Stay at auth gate.
         }
     }
 
     /// Completes auth after handling the magic link deep link; loads profile and default list then starts item observation.
     func handleAuthCompletion() async { // Called after deep link or on successful restore.
-        if isLoading { return } // Prevent overlapping bootstraps.
+        //if isLoading { return } // Prevent overlapping bootstraps.
         isLoading = true // Indicate background work.
         defer { self.isLoading = false } // Ensure loading resets when function exits.
         do { // Bootstrap profile and list.
+            await markPhase(.profile)
             let me = try await profiles.myProfile() // Load current profile from the server.
+            await markPhase(.defaultList)
             let defaultList = try await lists.fetchDefaultList(for: me.id) // Ensure a default list exists and fetch it.
             _ = logResult(params: (profileId: me.id, defaultListId: defaultList.id), result: "bootstrapped") // Log IDs for debugging.
             // Inform the ListViewModel to use ListsRepository and switch to default list id.
             listViewModel.configure(listsRepository: lists) // Inject ListsRepository for potential later usage.
             listViewModel.defaultList = defaultList // Publish the resolved default list.
             listViewModel.switchList(to: defaultList.id) // This starts observing items for the list.
+            await markPhase(.itemsSnapshot)
             self.isAuthenticated = true // Mark session as authenticated.
         } catch { // Bubble error to UI.
             self.errorMessage = (error as NSError).localizedDescription // Store readable error.
@@ -156,3 +200,4 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
         }
     }
 }
+

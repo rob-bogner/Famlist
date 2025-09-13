@@ -30,18 +30,18 @@ struct RootView: View { // SwiftUI View declaration.
 
     var body: some View { // Root view body.
         Group { // Conditional container to switch views without rebuilding hierarchy unnecessarily.
-            if session.isAuthenticated { // If authenticated, show the main app UI.
+            if session.isRestoringSession { // If session is restoring, show a loading indicator.
+                ProgressView() // Show a spinner while restoring session.
+                    .accessibilityLabel(Text(String(localized: "auth.session.restoring"))) // Accessibility label for loading.
+            } else if session.isAuthenticated { // If authenticated and not restoring, show the main app UI.
                 ShoppingListView() // Main list UI.
                     .environmentObject(listViewModel) // Ensure list VM is available to descendants.
-            } else { // Not authenticated yet -> present sign-in form.
+            } else { // Not authenticated and not restoring -> present sign-in form.
                 AuthView() // Email magic-link sign-in screen.
             }
         }
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
-        }
-        .task { // Run once on appearance to attempt session restore.
-            session.restoreSession() // Ask session VM to restore any persisted session.
         }
     }
 }
