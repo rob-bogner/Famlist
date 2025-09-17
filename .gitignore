@@ -1,0 +1,51 @@
+# .gitignore for GroceryGenius
+#
+# This file tells git which files/folders to ignore in version control.
+#
+# ------------------------------------------------------------------------
+# 📄 File Overview:
+# - Prevents sensitive or build files from being committed.
+#
+# 🛠 Includes:
+# - Secrets.plist (local secrets, never commit!)
+# - Xcode build folders
+# - User/workspace settings
+# - Derived data
+#
+# 🔰 Notes for Beginners:
+# - Never commit Secrets.plist or build outputs.
+# - Only commit source code and config you want to share.
+#
+# 📝 Last Change:
+# - Initial creation to enforce secrets and build output exclusion.
+# ------------------------------------------------------------------------
+
+# Xcode build output
+build/
+*.xcworkspace/
+*.xcuserstate
+*.xcuserdata/
+*.xcuserdatad/
+*.DS_Store
+
+# Derived data
+DerivedData/
+
+# Local secrets (never commit!)
+Secrets.plist
+
+# SwiftPM build artifacts
+.build/
+
+# User-specific settings
+*.swp
+*.swo
+*.xcuserstate
+
+# Logs
+*.log
+
+# By default, ignore everything in build/
+/build/*
+
+# End of .gitignore
