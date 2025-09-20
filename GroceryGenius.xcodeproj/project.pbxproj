@@ -22,7 +22,7 @@
 		EE79338E2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */; };
 		EE8145712E69E7880066BE58 /* ListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8145702E69E7880066BE58 /* ListModel.swift */; };
 		EE9B091E2DFF04D90024DC13 /* ProductImageFullscreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */; };
-		EEA16FF92E663FC80050436C /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA16FF82E663FC80050436C /* Secrets.plist */; };
+		EEA1455C2E7B106B00A043A5 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA1455B2E7B106B00A043A5 /* Secrets.plist */; };
 		EEA16FFB2E68600A0050436C /* PreviewMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA16FFA2E68600A0050436C /* PreviewMocks.swift */; };
 		EEA16FFD2E6860120050436C /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA16FFC2E6860120050436C /* Toast.swift */; };
 		EEC3BC0A2E50C95A00C037F1 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC082E50C95A00C037F1 /* ImageCache.swift */; };
@@ -57,7 +57,7 @@
 		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
 		EE8145702E69E7880066BE58 /* ListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListModel.swift; sourceTree = "<group>"; };
 		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageFullscreenView.swift; sourceTree = "<group>"; };
-		EEA16FF82E663FC80050436C /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
+		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEA16FFA2E68600A0050436C /* PreviewMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewMocks.swift; sourceTree = "<group>"; };
 		EEA16FFC2E6860120050436C /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 		EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
@@ -145,7 +145,7 @@
 		EE69A4D92B14CB78007C3515 = {
 			isa = PBXGroup;
 			children = (
-				EEA16FF82E663FC80050436C /* Secrets.plist */,
+				EEA1455B2E7B106B00A043A5 /* Secrets.plist */,
 				EE69A4E42B14CB78007C3515 /* GroceryGenius */,
 				EE69A4E32B14CB78007C3515 /* Products */,
 			);
@@ -264,7 +264,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EEA16FF92E663FC80050436C /* Secrets.plist in Resources */,
+				EEA1455C2E7B106B00A043A5 /* Secrets.plist in Resources */,
 				EE69A4ED2B14CB79007C3515 /* Preview Assets.xcassets in Resources */,
 				EE0C60CB2E52403600C6CF65 /* Localizable.xcstrings in Resources */,
 				EE69A4EA2B14CB79007C3515 /* Assets.xcassets in Resources */,
