@@ -41,38 +41,38 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		EE0C60CA2E52403600C6CF65 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Shared/Resources/Localizable.xcstrings; sourceTree = "<group>"; };
-		EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ItemManagement/Views/EditItemView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ItemManagement/Components/ImagePicker.swift; sourceTree = "<group>"; };
-		EE6115E72B4467070043736A /* ListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ShoppingList/ViewModels/ListViewModel.swift; sourceTree = "<group>"; };
-		EE6115EA2B48440E0043736A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Extensions/Color.swift; sourceTree = "<group>"; };
+		EE0C60CA2E52403600C6CF65 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		EE4B8CD12B52BD0B006FBBED /* EditItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditItemView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		EE52222E2DBEDD1B00AB84EF /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
+		EE6115E72B4467070043736A /* ListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModel.swift; sourceTree = "<group>"; };
+		EE6115EA2B48440E0043736A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* GroceryGenius.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GroceryGenius.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		EE69A4E52B14CB78007C3515 /* GroceryGeniusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/GroceryGeniusApp.swift; sourceTree = "<group>"; };
-		EE69A4E72B14CB78007C3515 /* ShoppingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ShoppingList/Views/ShoppingListView.swift; sourceTree = "<group>"; };
-		EE69A4E92B14CB79007C3515 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Shared/Resources/Assets.xcassets; sourceTree = "<group>"; };
+		EE69A4E52B14CB78007C3515 /* GroceryGeniusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryGeniusApp.swift; sourceTree = "<group>"; };
+		EE69A4E72B14CB78007C3515 /* ShoppingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListView.swift; sourceTree = "<group>"; };
+		EE69A4E92B14CB79007C3515 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EE69A4EC2B14CB79007C3515 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		EE69A4F72B14CC96007C3515 /* ItemModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ItemManagement/Models/ItemModel.swift; sourceTree = "<group>"; };
-		EE69A4FD2B14F046007C3515 /* ListRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ShoppingList/Views/ListRowView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		EE7872302B1E3ED600FDD00B /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ItemManagement/Views/AddItemView.swift; sourceTree = "<group>"; };
-		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Components/AccentHeaderBackground.swift; sourceTree = "<group>"; };
-		EE8145702E69E7880066BE58 /* ListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Lists/Models/ListModel.swift; sourceTree = "<group>"; };
-		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ItemManagement/Views/ProductImageFullscreenView.swift; sourceTree = "<group>"; };
+		EE69A4F72B14CC96007C3515 /* ItemModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemModel.swift; sourceTree = "<group>"; };
+		EE69A4FD2B14F046007C3515 /* ListRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListRowView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		EE7872302B1E3ED600FDD00B /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
+		EE79338D2DEA47BD00A8BEA9 /* AccentHeaderBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentHeaderBackground.swift; sourceTree = "<group>"; };
+		EE8145702E69E7880066BE58 /* ListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListModel.swift; sourceTree = "<group>"; };
+		EE9B091D2DFF04D90024DC13 /* ProductImageFullscreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageFullscreenView.swift; sourceTree = "<group>"; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
-		EEA16FFA2E68600A0050436C /* PreviewMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Resources/PreviewMocks.swift; sourceTree = "<group>"; };
-		EEA16FFC2E6860120050436C /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Components/Toast.swift; sourceTree = "<group>"; };
-		EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/DesignSystem/DesignSystem.swift; sourceTree = "<group>"; };
-		EEC3BC082E50C95A00C037F1 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Storage/ImageCache.swift; sourceTree = "<group>"; };
-		EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ItemManagement/Components/ReusableInputs.swift; sourceTree = "<group>"; };
-		EEC3BC0D2E50D5A800C037F1 /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Utils/Validation.swift; sourceTree = "<group>"; };
-		EEE9C8F82E6DE91B00A599C6 /* AppSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppSessionViewModel.swift; sourceTree = "<group>"; };
-		EEE9C8FA2E6DE92700A599C6 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Authentication/Views/AuthView.swift; sourceTree = "<group>"; };
-		EEE9C8FB2E6DE92700A599C6 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/RootView.swift; sourceTree = "<group>"; };
-		EEE9C8FE2E6DE9CC00A599C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Supporting Files/Info.plist"; sourceTree = "<group>"; };
-		EEF472FB2B4C5A4100330CE5 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ShoppingList/Views/ListView.swift; sourceTree = "<group>"; };
-		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ShoppingList/Components/ShoppingListProgressView.swift; sourceTree = "<group>"; };
-		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Extensions/ViewModifiers.swift; sourceTree = "<group>"; };
-		EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Extensions/Utils.swift; sourceTree = "<group>"; };
-		EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Components/CustomModalView.swift; sourceTree = "<group>"; };
+		EEA16FFA2E68600A0050436C /* PreviewMocks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewMocks.swift; sourceTree = "<group>"; };
+		EEA16FFC2E6860120050436C /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
+		EEC3BC072E50C95A00C037F1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		EEC3BC082E50C95A00C037F1 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
+		EEC3BC092E50C95A00C037F1 /* ReusableInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableInputs.swift; sourceTree = "<group>"; };
+		EEC3BC0D2E50D5A800C037F1 /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
+		EEE9C8F82E6DE91B00A599C6 /* AppSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSessionViewModel.swift; sourceTree = "<group>"; };
+		EEE9C8FA2E6DE92700A599C6 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		EEE9C8FB2E6DE92700A599C6 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		EEE9C8FE2E6DE9CC00A599C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EEF472FB2B4C5A4100330CE5 /* ListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
+		EEF472FD2B4C5C2000330CE5 /* ShoppingListProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingListProgressView.swift; sourceTree = "<group>"; };
+		EEFA09E22E2CE31200B2F2B0 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
+		EEFA09EA2E2CED5000B2F2B0 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		EEFA09F22E2D2BE000B2F2B0 /* CustomModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModalView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
