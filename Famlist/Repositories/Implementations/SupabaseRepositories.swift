@@ -129,9 +129,9 @@ final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists 
             .execute()
             .value
         if let row = fetched.first { return logResult(params: (owner: owner, hit: true), result: row) } // Return existing default when found.
-        // insert when none exists (let DB set owner_id from auth context)
-        struct NewList: Codable { let title: String; let is_default: Bool } // Insert payload mapping without owner_id.
-        let insert = NewList(title: "My List", is_default: true) // Default title per spec.
+        // insert when none exists - explicitly set owner_id to avoid RLS violations
+        struct NewList: Codable { let owner_id: String; let title: String; let is_default: Bool } // Insert payload with explicit owner_id.
+        let insert = NewList(owner_id: owner.uuidString, title: "My List", is_default: true) // Default title with explicit owner.
         let inserted: List = try await client
             .from("lists")
             .insert(insert)
@@ -174,9 +174,9 @@ final class SupabaseListsRepository: ListsRepository { // Supabase-backed lists 
             .execute()
             .value
         if let row = fetched.first { return logResult(params: (ownerId: ownerId, hit: true), result: map(row)) } // Found existing.
-        // 2) Not found -> insert default. Let DB derive owner_id from auth.uid() via policy/trigger/default.
-        struct NewList: Codable { let title: String; let is_default: Bool } // Payload without owner.
-        let payload = NewList(title: "My List", is_default: true) // Default attributes.
+        // 2) Not found -> insert default with explicit owner_id to avoid RLS violations.
+        struct NewList: Codable { let owner_id: String; let title: String; let is_default: Bool } // Payload with explicit owner.
+        let payload = NewList(owner_id: ownerId.uuidString, title: "My List", is_default: true) // Default attributes with owner.
         let inserted: ListRow = try await client
             .from("lists")
             .insert(payload)

@@ -11,15 +11,17 @@
 
  🛠 Includes:
  - AppSessionViewModel orchestrating Supabase auth restore, magic-link completion, and default list loading via repositories.
+ - Automatic new user onboarding with profile and default list creation.
 
  🔰 Notes for Beginners:
  - This ViewModel owns simple flags (isAuthenticated, isLoading, errorMessage) and calls repositories after login.
  - Views bind to these flags to show AuthView or the main ShoppingListView.
  - Uses async/await and ensures UI mutations occur on the main thread (@MainActor).
+ - Handles both existing users (direct profile load) and new users (auto profile creation).
 
  📝 Last Change:
- - Fixed session cleanup bug: use .global scope for signOut to prevent stale sessions after re-login.
- - Re-enabled isLoading guard in handleAuthCompletion to prevent race conditions.
+ - Added new user onboarding: createProfileForNewUser() with automatic public_id generation.
+ - Enhanced handleAuthCompletion() to handle missing profiles gracefully.
  ------------------------------------------------------------------------
  */
 
@@ -144,7 +146,19 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
         defer { self.isLoading = false } // Ensure loading resets when function exits.
         do { // Bootstrap profile and list.
             await markPhase(.profile)
-            let me = try await profiles.myProfile() // Load current profile from the server.
+            
+            // Try to load existing profile, create new one if it doesn't exist (new user scenario)
+            let me: Profile
+            do {
+                me = try await profiles.myProfile() // Load current profile from the server.
+                logVoid(params: ["action": "loadProfile", "status": "existing", "profileId": me.id]) // Log existing user.
+            } catch {
+                // Profile doesn't exist - this is a new user, create profile automatically
+                logVoid(params: ["action": "loadProfile", "status": "notFound", "creating": true]) // Log new user detection.
+                me = try await createProfileForNewUser() // Create new profile for first-time user.
+                logVoid(params: ["action": "createProfile", "status": "created", "profileId": me.id]) // Log profile creation.
+            }
+            
             await markPhase(.defaultList)
             let defaultList = try await lists.fetchDefaultList(for: me.id) // Ensure a default list exists and fetch it.
             _ = logResult(params: (profileId: me.id, defaultListId: defaultList.id), result: "bootstrapped") // Log IDs for debugging.
@@ -174,6 +188,41 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
                 self.errorMessage = (error as NSError).localizedDescription // Human-friendly message.
             }
         }
+    }
+
+    // MARK: - New User Onboarding
+    /// Creates a profile for a new user who doesn't have one yet (first-time magic link sign-up).
+    /// - Returns: The newly created Profile with generated public_id.
+    private func createProfileForNewUser() async throws -> Profile {
+        guard let client else { 
+            throw NSError(domain: "AppSessionViewModel", code: 401, userInfo: [NSLocalizedDescriptionKey: "No client available"]) 
+        } // Ensure we have a client.
+        
+        // Get the authenticated user ID from the current session
+        let userId: UUID
+        if let currentId = client.auth.currentUser?.id {
+            userId = currentId // Use cached user ID if available.
+        } else {
+            let session = try await client.auth.session // Fallback to session lookup.
+            userId = session.user.id // Extract user ID from session.
+        }
+        
+        // Generate a unique public_id for sharing lists (8-character alphanumeric)
+        let publicId = generatePublicId()
+        
+        // Create the profile using the repository
+        try await profiles.upsertProfile(authUserId: userId, publicId: publicId)
+        
+        // Fetch and return the newly created profile
+        let newProfile = try await profiles.myProfile()
+        return newProfile
+    }
+    
+    /// Generates a random 8-character alphanumeric string for public_id.
+    /// - Returns: A string like "A3K9M2X7" for sharing purposes.
+    private func generatePublicId() -> String {
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" // Use uppercase and numbers for clarity.
+        return String((0..<8).map { _ in characters.randomElement()! }) // Generate 8 random characters.
     }
 
     // MARK: - Sign Out
