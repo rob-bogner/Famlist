@@ -140,7 +140,6 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
 
     /// Completes auth after handling the magic link deep link; loads profile and default list then starts item observation.
     func handleAuthCompletion() async { // Called after deep link or on successful restore.
-        //if isLoading { return } // Prevent overlapping bootstraps.
         isLoading = true // Indicate background work.
         defer { self.isLoading = false } // Ensure loading resets when function exits.
         do { // Bootstrap profile and list.
