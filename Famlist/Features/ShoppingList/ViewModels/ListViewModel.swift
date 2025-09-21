@@ -5,7 +5,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 05.09.2025
+ Last updated on: 21.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -26,7 +26,8 @@
  - All public methods are @MainActor-only because SwiftUI expects UI changes on the main thread.
 
  📝 Last Change:
- - Added deferred observation support (startImmediately flag) and clearForSignOut() to allow gating DB work until auth is ready and to reset on sign-out.
+ - Fixed sign-out state reset: clearForSignOut() now resets listId to default UUID to ensure switchList works correctly after re-login.
+ - Removed debug logging statements after confirming the fix works.
  ------------------------------------------------------------------------
  */
 
@@ -110,6 +111,8 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         selectedItem = nil // Clear selection.
         defaultList = nil // Forget resolved default list.
         errorMessage = nil // Clear any error.
+        // Reset listId to default so switchList will work again after re-login
+        listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
     }
 
     /// Attempts to fetch the current profile and then load the default list.

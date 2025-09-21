@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 07.09.2025
- Last updated on: 07.09.2025
+ Last updated on: 21.09.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -18,7 +18,8 @@
  - Uses async/await and ensures UI mutations occur on the main thread (@MainActor).
 
  📝 Last Change:
- - Initial creation adding Supabase OTP sign-in and deep link handling, plus session restore and list bootstrap.
+ - Fixed session cleanup bug: use .global scope for signOut to prevent stale sessions after re-login.
+ - Re-enabled isLoading guard in handleAuthCompletion to prevent race conditions.
  ------------------------------------------------------------------------
  */
 
@@ -185,7 +186,7 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
             defer { Task { @MainActor in self.isLoading = false } } // Always reset loading when done.
             do { // Attempt to revoke session and clear local state.
                 if let client { // Proceed only when a Supabase client exists (runtime mode).
-                    try await client.auth.signOut() // Ask Supabase to invalidate tokens and remove Keychain session.
+                    try await client.auth.signOut(scope: .global) // Ask Supabase to invalidate tokens and remove Keychain session.
                     logVoid(params: ["action": "signOut", "status": "ok"]) // Log successful sign-out.
                 }
                 await MainActor.run { // Ensure UI state changes happen on the main thread.
