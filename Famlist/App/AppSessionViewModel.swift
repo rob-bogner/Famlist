@@ -118,6 +118,52 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
         }
     }
 
+    /// Signs in with email and password - works in simulator unlike magic links.
+    /// - Parameters:
+    ///   - email: The user's email address.
+    ///   - password: The user's password.
+    func signInWithEmailPassword(email: String, password: String) {
+        guard let client else { // Ensure we have a client capable of auth calls.
+            self.errorMessage = String(localized: "auth.error.noClient") // Surface a user-friendly message.
+            return // Nothing to do in previews without a Supabase client.
+        }
+        if isLoading { return } // Prevent concurrent sign-in attempts.
+        isLoading = true // Flip loading on for button spinners.
+        Task { // Run async Supabase call.
+            defer { Task { @MainActor in self.isLoading = false } } // Always turn loading off when done.
+            do { // Attempt email/password sign-in.
+                try await client.auth.signIn(email: email, password: password) // Direct sign-in with credentials.
+                logVoid(params: ["email": email, "method": "password"]) // Log successful sign-in.
+                await self.handleAuthCompletion() // Proceed to load profile and default list.
+            } catch { // Capture and present error.
+                self.errorMessage = (error as NSError).localizedDescription // Convert to readable message.
+            }
+        }
+    }
+
+    /// Signs up a new user with email and password - creates account immediately.
+    /// - Parameters:
+    ///   - email: The new user's email address.
+    ///   - password: The new user's password.
+    func signUpWithEmailPassword(email: String, password: String) {
+        guard let client else { // Ensure we have a client capable of auth calls.
+            self.errorMessage = String(localized: "auth.error.noClient") // Surface a user-friendly message.
+            return // Nothing to do in previews without a Supabase client.
+        }
+        if isLoading { return } // Prevent concurrent sign-up attempts.
+        isLoading = true // Flip loading on for button spinners.
+        Task { // Run async Supabase call.
+            defer { Task { @MainActor in self.isLoading = false } } // Always turn loading off when done.
+            do { // Attempt email/password sign-up.
+                try await client.auth.signUp(email: email, password: password) // Create new account.
+                logVoid(params: ["email": email, "method": "signup"]) // Log successful sign-up.
+                await self.handleAuthCompletion() // Proceed to load profile and default list.
+            } catch { // Capture and present error.
+                self.errorMessage = (error as NSError).localizedDescription // Convert to readable message.
+            }
+        }
+    }
+
     /// Tries to restore a persisted Supabase session on app launch.
     func restoreSession() async {
         await markPhase(.sessionRestore)
