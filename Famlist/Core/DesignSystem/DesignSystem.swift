@@ -56,4 +56,11 @@ struct DS { // DS groups spacing, radius, animation, and layout constants.
         static let itemImage: CGSize = .init(width: 50, height: 50) // Small item image size
         static let thumbnail: CGSize = .init(width: 100, height: 100) // Larger thumbnail size
     }
+    
+    /// List-specific styling tokens for iOS-version-agnostic appearance.
+    struct List { // Controls spacing and insets within SwiftUI Lists.
+        static let rowSpacing: CGFloat = 4 // Consistent vertical spacing between list rows across iOS versions (compact)
+        static let rowInsets: EdgeInsets = EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16) // Uniform row insets (compact)
+        static let sectionSpacing: CGFloat = 16 // Spacing between sections in the list
+    }
 }

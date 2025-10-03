@@ -132,6 +132,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                     .offset(x: quickAddActive ? -8 : 0) // Nudge left when the field is visible.
                     .animation(.easeInOut(duration: 0.24), value: quickAddActive) // Animate the nudge.
             }
+            .buttonStyle(.plain) // Remove iOS default button styling to prevent gray border on iOS 26 devices.
             .simultaneousGesture(LongPressGesture(minimumDuration: 0.7).onEnded { _ in // Long-press opens the full add form.
                 quickAddActive = false // Collapse inline field if open.
                 quickAddText = "" // Clear any partial input.

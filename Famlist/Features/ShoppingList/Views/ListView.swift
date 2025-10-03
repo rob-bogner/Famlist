@@ -35,6 +35,8 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
             checkedItemsSection // Then optionally show items that are already checked.
         }
         .listStyle(PlainListStyle()) // Use plain style for a clean, minimal look.
+        .listRowSpacing(DS.List.rowSpacing) // Explicit row spacing for iOS version consistency.
+        .environment(\.defaultMinListRowHeight, 0) // Remove minimum row height to prevent unwanted spacing.
         .sheet(isPresented: $showEditItemView) { // Present the edit sheet when toggled on.
             if let selectedItem = listViewModel.selectedItem { // Only show if we have a selected item.
                 EditItemView(item: selectedItem) // Inject the selected item into the editor.
@@ -50,6 +52,7 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
     private var uncheckedItemsSection: some View { // Computed view for unchecked items.
         ForEach(listViewModel.uncheckedItems) { item in // Iterate each unchecked item and make a row.
             ListRowView(item: item) // Render a row UI for the item.
+                .listRowInsets(DS.List.rowInsets) // Explicit insets for consistent appearance across iOS versions.
                 .listRowSeparator(.hidden) // Hide the default list separators for a card look.
                 .listRowBackground(Color.theme.background) // Match row background to our theme.
                 .swipeActions(allowsFullSwipe: false) { // Trailing swipe actions (no full swipe commit).
@@ -81,6 +84,7 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
                 Section(header: SectionHeader(title: String(localized: "section.checkedItems.title"))) { // Section with a reusable header.
                     ForEach(listViewModel.checkedItems) { item in // Iterate all checked items.
                         ListRowView(item: item) // Render each checked item.
+                            .listRowInsets(DS.List.rowInsets) // Explicit insets for consistent appearance across iOS versions.
                             .listRowSeparator(.hidden) // Hide default separators.
                             .listRowBackground(Color.theme.background) // Match theme.
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) { // Trailing swipe to uncheck.

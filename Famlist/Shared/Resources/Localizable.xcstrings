@@ -883,9 +883,6 @@
         }
       }
     },
-    "Quick Test Accounts (Simulator Only)" : {
-
-    },
     "quickadd.placeholder" : {
       "extractionState" : "manual",
       "localizations" : {
