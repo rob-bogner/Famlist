@@ -22,6 +22,7 @@
  */
 
 import SwiftUI // Imports SwiftUI for declarative UI building blocks and property wrappers.
+import UIKit
 
 
 /// The main screen showing the shopping list with a decorative header and actions.
@@ -33,15 +34,14 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     @State private var quickAddText: String = "" // Holds the text typed into the quick-add field.
     @FocusState private var quickAddFocused: Bool // Indicates whether the quick-add field currently has keyboard focus.
 
-    private var headerHeight: CGFloat { UIScreen.main.bounds.height * DS.Layout.headerHeightRatio } // Computes header height based on the screen height.
-    private var contentOffsetBelowHeader: CGFloat { headerHeight * 0.75 } // Offset so content begins overlapping under the header.
+    private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
 
     var body: some View { // The view’s content and layout tree.
         NavigationView { // Embed in navigation for consistent behavior and potential future navigation.
             ZStack(alignment: .top) { // Stack layers starting from the top of the screen.
                 Color.theme.background.ignoresSafeArea() // Fill the background with the app theme color, including safe areas.
                 AccentHeaderBackground() // Decorative accent background with rounded bottom corners.
-                    .frame(height: headerHeight) // Give the header a fixed height.
+                    .frame(height: DS.Layout.headerFixedHeight) // Give the header a fixed height.
                     .zIndex(0) // Place behind other layers.
                 VStack(alignment: .leading, spacing: 12) { // Header content: title and progress.
                     Text(String(localized: "shoppingList.title")) // Localized title text.
@@ -53,7 +53,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                         .padding(.top, 8) // Space below the title.
                     Spacer().frame(height: 4) // Tiny spacer to balance layout visually.
                 }
-                .frame(height: headerHeight, alignment: .top) // Constrain header content to the header area.
+ //               .frame(height: headerHeight, alignment: .top) // Constrain header content to the header area.
                 .zIndex(1) // Float above the background.
                 .overlay(alignment: .topTrailing) { // Overlay a hamburger menu at the top-right corner of the header.
                     hamburgerMenu // The menu with sign-out action.
@@ -103,6 +103,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 .foregroundColor(Color.theme.background) // Contrast icon against the accent header background.
                 .accessibilityLabel(Text(String(localized: "menu.accessibility.hamburger"))) // VoiceOver label.
         }
+        .buttonStyle(.plain) // Match add button styling to prevent iOS 26 from adding a bordered capsule look.
     }
 
     // MARK: - Quick Add Button & Field

@@ -26,10 +26,19 @@
  */
 
 import SwiftUI // Imports SwiftUI to build the decorative background view.
+import UIKit
 
 
 /// Background view that paints the accent header with rounded bottom corners and subtle decorations.
 struct AccentHeaderBackground: View { // Declares a SwiftUI View for the header background.
+    private var safeAreaTop: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first(where: { $0.isKeyWindow })?
+            .safeAreaInsets.top ?? 0
+    }
+
     var body: some View { // Body describing layout and drawing.
         GeometryReader { geometry in // Reads container size to size shapes accordingly.
             ZStack { // Overlay shapes in a stack.
@@ -37,46 +46,10 @@ struct AccentHeaderBackground: View { // Declares a SwiftUI View for the header 
                     .fill(Color.theme.accent) // Fill with accent color from theme.
                     .frame(width: geometry.size.width, height: geometry.size.height) // Match the available size.
                     .cornerRadius(32, corners: [.bottomLeft, .bottomRight]) // Extra rounding for bottom corners only.
-                AccentDecorations(width: geometry.size.width, height: geometry.size.height) // Draw decorative strokes.
             }
             .edgesIgnoringSafeArea(.top) // Extend behind system status bar area at top.
         }
-        .frame(height: UIScreen.main.bounds.height * DS.Layout.headerHeightRatio) // Fixed height relative to screen height.
-    }
-}
-
-/// Lightweight decorative strokes layered over the header background.
-private struct AccentDecorations: View { // Private helper view for decorations.
-    let width: CGFloat // Available width from parent.
-    let height: CGFloat // Available height from parent.
-    var body: some View { // Describe decorative shapes.
-        ZStack { // Layer multiple strokes.
-            RoundedRectangle(cornerRadius: 24) // Outer stroked rounded rect.
-                .stroke( // Outline with gradient stroke.
-                    LinearGradient( // Horizontal gradient from leading to trailing.
-                        gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.37), Color.pink.opacity(0.37)]), // Soft colors.
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
-                    lineWidth: 3 // Stroke width.
-                )
-                .frame(width: width * 0.5, height: 150) // Scale based on container width.
-                .rotationEffect(.degrees(-15)) // Tilt slightly for visual interest.
-                .offset(x: -width * 0.15, y: 1) // Position to left.
-
-            RoundedRectangle(cornerRadius: 30) // Inner stroked rounded rect.
-                .stroke( // Outline with a stronger gradient.
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.purple.opacity(0.6), Color.pink.opacity(0.5)]), // Stronger colors.
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
-                    lineWidth: 2 // Slightly thinner stroke.
-                )
-                .frame(width: width * 0.54, height: 112) // Slightly larger width but shorter height.
-                .rotationEffect(.degrees(-15)) // Same tilt for consistency.
-                .offset(x: width * 0.2, y: 20) // Position to right.
-        }
+        .frame(height: DS.Layout.headerFixedHeight + safeAreaTop) // Fixed height plus safe-area inset for consistent look across devices.
     }
 }
 
