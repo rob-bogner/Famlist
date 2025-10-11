@@ -34,6 +34,9 @@ DerivedData/
 # Local secrets (never commit!)
 Secrets.plist
 
+# AI development instructions (workspace-specific)
+.github/copilot-instructions.md
+
 # SwiftPM build artifacts
 .build/
 
