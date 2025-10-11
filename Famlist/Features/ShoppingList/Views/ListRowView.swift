@@ -59,9 +59,9 @@ struct ItemThumbnail: View { // Reusable thumbnail component for a list row.
                 Image("defaultImage").resizable().scaledToFit() // Default placeholder image.
             }
         }
-        .roundedCorners(5) // Slightly rounded edges.
-        .padding(10) // Breathing room around the thumbnail.
-        .frame(width: 50, height: 50) // Match design system item image size.
+        .roundedCorners(10) // Slightly rounded edges.
+        .padding(.horizontal, 10) // Breathing room left/right of thumbnail.
+        .frame(width: 80, height: 80) // Larger size for better visibility and touch target.
         .onTapGesture { onTap(loadedImageForTap(hasRemoteURL: url != nil)) } // Emit the best UIImage we have to open fullscreen.
     }
 
@@ -91,7 +91,18 @@ struct ItemTitle: View { // Simple text styling component.
         Text(text) // The item name.
             .font(.headline) // Prominent headline font.
             .strikethrough(checked, color: checked ? Color.theme.buttonIconColor : .clear) // Strike-through when checked.
-            .frame(alignment: .leading) // Align to leading in parent stack.
+            .frame(maxWidth: .infinity, alignment: .leading) // Full width, aligned to leading.
+    }
+}
+
+/// Brand/product description line displayed below the title.
+struct ItemBrand: View { // Secondary product information component.
+    let brand: String // Brand name.
+    var body: some View { // Render the brand.
+        Text(brand) // The brand name.
+            .font(.subheadline) // Smaller font than title.
+            .foregroundColor(.secondary) // Subtle color for less emphasis.
+            .frame(maxWidth: .infinity, alignment: .leading) // Full width, aligned to leading.
     }
 }
 
@@ -102,10 +113,13 @@ struct ItemMeta: View { // Secondary information about the item.
     let price: Double // Price per unit.
     var body: some View { // Compose meta content.
         let displayMeasure = measure.isEmpty ? "" : Measure.fromExternal(measure).localizedName // Localize measure when present.
-        HStack { // Layout: units+measure left, price right.
+        HStack { // Layout: units+measure left, price right (if present).
             Text(displayMeasure.isEmpty ? "\(units)" : "\(units) \(displayMeasure)") // Display either only units or units + measure.
-            Spacer() // Push price to trailing edge.
-            Text(Formatting.priceText(price)) // Localized currency rendering.
+            
+            if price > 0 { // Only show price if it's greater than zero.
+                Spacer() // Push price to trailing edge.
+                Text(Formatting.priceText(price)) // Localized currency rendering.
+            }
         }
         .font(.subheadline) // Subtle font for meta info.
     }
@@ -129,18 +143,31 @@ struct ListRowView: View { // Main row view combining thumbnail, title, and meta
             Color.theme.background // Card background color to match list.
                 .ignoresSafeArea() // Extend background color to edges.
 
-            HStack(alignment: .top) { // Horizontal layout of thumbnail and text column.
+            HStack(alignment: .center, spacing: DS.Spacing.xs) { // Horizontal layout with vertically centered thumbnail, reduced spacing for tighter layout.
                 ItemThumbnail(imageUrl: item.imageUrl, base64: item.imageData) { tapped in // Thumbnail with tap callback.
                     modalPhoto = ModalPhoto(image: tapped) // Prepare modal data with the tapped image.
                 }
 
-                VStack(alignment: .leading) { // Text column: title + meta.
-                    ItemTitle(text: item.name, checked: item.isChecked) // Title with strike-through when checked.
-                    Spacer() // Push meta to bottom for a tidy look.
-                    ItemMeta(units: item.units, measure: item.measure, price: item.price) // Units/measure/price line.
+                VStack(alignment: .leading, spacing: 0) { // Text column with custom spacing between elements.
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) { // Title and brand grouped together with tight spacing (4pt).
+                        ItemTitle(text: item.name, checked: item.isChecked) // Title with strike-through when checked.
+                        
+                        if let brand = item.brand, !brand.isEmpty { // Only show brand if present.
+                            ItemBrand(brand: brand) // Brand line below title.
+                        } else {
+                            Text(" ") // Invisible placeholder to maintain consistent row height when brand is missing.
+                                .font(.subheadline) // Same size as ItemBrand.
+                                .frame(maxWidth: .infinity, alignment: .leading) // Match ItemBrand frame.
+                        }
+                    }
+                    
+                    Spacer() // Push meta to bottom, creating larger gap between brand and meta.
+                    
+                    ItemMeta(units: item.units, measure: item.measure, price: item.price) // Units/measure/price line at bottom.
                 }
-                .padding(.trailing, 7) // Space from right edge to avoid clipping.
-                .padding(.vertical, 7) // Vertical padding around text.
+                .padding(.vertical, 8) // Small padding at top and bottom for breathing room from card edges.
+                .frame(minHeight: 70) // Minimum height ensures consistent rows, padding adds to this.
+                .padding(.trailing, 10) // Space from right edge to avoid clipping.
             }
             .background(item.isChecked ? Color.theme.buttonFillColor : Color.clear) // Tint background when checked.
             .cardStyle() // Rounded card styling from DesignSystem.
