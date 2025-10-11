@@ -120,6 +120,8 @@ struct EditItemView: View { // Declares the SwiftUI view for editing items.
             .onChange(of: price) { _ , _ in validatePrice() } // Revalidate on price changes.
             .presentationDetents([.height(570)]) // Preferred heights for this sheet.
         }
+        .presentationBackground(Color.theme.card) // Force a consistent backdrop instead of OS-tinted material.
+        .background(Color.theme.card) // Secondary fallback when presentationBackground is unavailable.
     }
 
     // MARK: - Validation Helpers

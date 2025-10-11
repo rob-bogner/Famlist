@@ -68,6 +68,7 @@ struct PhotoField: View { // Reusable control for picking/removing a photo.
                         .frame(width: 120, height: 120) // Same square size as a selected image.
                     }
                     .accessibilityLabel(String(localized: "photo.add")) // VoiceOver label for the add button.
+                    .buttonStyle(.plain) // Prevent iOS 26 from adding tinted borders to our custom-styled tile.
                 }
             }
             .background(Color.theme.card.opacity(0.4)) // Slight tinted background for visibility.
@@ -89,6 +90,7 @@ struct PhotoField: View { // Reusable control for picking/removing a photo.
                         .background(Circle().fill(Color.black.opacity(0.55))) // Dark circular background.
                         .padding(4) // Spacing from the edges.
                 }
+                .buttonStyle(.plain) // Keep the floating close pill borderless across iOS versions.
                 .accessibilityLabel(String(localized: "photo.remove.action")) // A11y label.
                 .confirmationDialog(String(localized: "photo.remove.confirmTitle"), isPresented: $showRemoveConfirm, titleVisibility: .visible) { // Confirm removal.
                     Button(String(localized: "photo.remove.action"), role: .destructive) { image = nil } // Remove photo.
@@ -153,6 +155,7 @@ struct QuantityMeasureRow: View { // Lets users set a quantity and pick a unit.
             }
             .layoutPriority(1) // Give measure button priority to avoid truncation.
             .accessibilityLabel(String(localized: "measure.placeholder")) // VoiceOver label.
+            .buttonStyle(.plain) // Avoid system-added outlines on the custom measure picker control.
             .sheet(isPresented: $showMeasurePicker) { // Wheel picker sheet.
                 MeasureWheelPicker(selection: $measure)
                     .presentationDetents([.fraction(0.35)]) // Compact height.
@@ -165,6 +168,7 @@ struct QuantityMeasureRow: View { // Lets users set a quantity and pick a unit.
                         .frame(width: controlHeight, height: controlHeight) // Square touch area.
                         .background(Capsule().fill(atMin ? Color.gray.opacity(0.35) : Color.accentColor)) // Gray when disabled.
                 }.disabled(atMin).accessibilityLabel("decrement") // Disable at min.
+                .buttonStyle(.plain) // Keep capsule buttons borderless under iOS 26.
                 Button { increment() } label: { // Increase value.
                     Image(systemName: "plus") // Plus icon.
                         .font(.system(size: 20, weight: .semibold)) // Icon size.
@@ -172,6 +176,7 @@ struct QuantityMeasureRow: View { // Lets users set a quantity and pick a unit.
                         .frame(width: controlHeight, height: controlHeight) // Square touch area.
                         .background(Capsule().fill(atMax ? Color.gray.opacity(0.35) : Color.accentColor)) // Gray when disabled.
                 }.disabled(atMax).accessibilityLabel("increment") // Disable at max.
+                .buttonStyle(.plain) // Remove default bordered style on increment button.
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading) // Expand horizontally.

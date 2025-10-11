@@ -51,7 +51,7 @@ struct DS { // DS groups spacing, radius, animation, and layout constants.
     }
     /// Layout metrics (sizes and ratios).
     struct Layout { // Common dimensions maintaining visual rhythm.
-        static let headerFixedHeight: CGFloat = 200 // Fixed decorative header height (excluding safe-area padding)
+        static let headerFixedHeight: CGFloat = 160 // Fixed decorative header height (excluding safe-area padding)
         static let headerBottomSpacing: CGFloat = 12 // Space between header and the list content for consistent breathing room
         static let quickAddHeight: CGFloat = 48 // Height for quick-add control area
         static let itemImage: CGSize = .init(width: 50, height: 50) // Small item image size
