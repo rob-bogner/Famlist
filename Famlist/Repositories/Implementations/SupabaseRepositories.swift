@@ -294,12 +294,11 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
         
         let channel = client.realtime.channel(channelId) // Create a named channel for this list.
         
-        // Create AsyncStreams for each change type using postgresChange (NOT onPostgresChange)
-        // Tutorial uses: channel.postgresChange(InsertAction.self, table: "messages")
-        // Note: Using deprecated filter syntax until new syntax is clarified - functionality works correctly
-        let insertions = channel.postgresChange(InsertAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of INSERT events.
-        let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of UPDATE events.
-        let deletions = channel.postgresChange(DeleteAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of DELETE events.
+        // Create AsyncStreams for each change type using postgresChange with type-safe filter syntax
+        // Uses RealtimePostgresFilter enum: .eq("column", value: "value") instead of string-based filters
+        let insertions = channel.postgresChange(InsertAction.self, schema: "public", table: "items", filter: .eq("list_id", value: listId.uuidString)) // Stream of INSERT events.
+        let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: "items", filter: .eq("list_id", value: listId.uuidString)) // Stream of UPDATE events.
+        let deletions = channel.postgresChange(DeleteAction.self, schema: "public", table: "items", filter: .eq("list_id", value: listId.uuidString)) // Stream of DELETE events.
         
         // Subscribe to the channel BEFORE consuming the streams using subscribeWithError for proper error handling
         do {
