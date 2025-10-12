@@ -3,21 +3,37 @@
 
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 07.09.2025
+ Last updated on: 11.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Concrete Supabase-backed repository implementations for profiles, lists, categories, and items.
+ - Concrete Supabase-back            // Ensure channel is set up before yielding data
+            if continuations[listId]?.isEmpty == false && channels[listId] == nil { // First observer for this list.
+                await self.setupRealtimeChannel(for: listId) // Setup and WAIT for channel to be ready.
+            }
+            
+            continuation.onTermination = { _ in // Cleanup when subscriber cancels.
+                self.continuations[listId]?.removeValue(forKey: token) // Remove continuation to avoid leaks.
+                // If no more observers for this list, remove the Realtime channel
+                if self.continuations[listId]?.isEmpty == true { // Last observer removed.
+                    self.teardownRealtimeChannel(for: listId) // Clean up channel.
+                    self.continuations.removeValue(forKey: listId) // Remove empty bucket.
+                }
+            }
+            await self.fetchAndYield(listId) // Send initial snapshot AFTER channel is set up. implementations for profiles, lists, categories, and items.
 
  🛠 Includes:
  - Data models for Profile, List, Category (Codable) and repository protocols + Supabase implementations.
+ - Realtime synchronization: SupabaseItemsRepository subscribes to Realtime channels for live cross-device updates.
 
  🔰 Notes for Beginners:
  - Repositories hide Supabase specifics from the rest of the app and return Swift models.
  - Async/await functions perform network/database calls; errors propagate to callers.
+ - Realtime channels automatically sync changes across devices (iPad ↔ iPhone) when items are added/updated/deleted.
 
  📝 Last Change:
- - Replace local debug shims with Support/Logger and keep existing lightweight I/O logs around DB operations.
+ - Added Realtime channel subscription in SupabaseItemsRepository.observeItems() for cross-device synchronization.
+ - Channels are created on first observer and cleaned up when last observer unsubscribes.
  ------------------------------------------------------------------------
  */
 
@@ -242,18 +258,88 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
 
     // Track continuations with tokens (Continuation is a struct)
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:] // Observers keyed by list id and token.
+    
+    // Track Realtime channels for each list to enable cleanup on unsubscribe
+    private var channels: [UUID: RealtimeChannelV2] = [:] // Realtime channels keyed by list id.
 
     func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> { // Start a stream emitting snapshots for a list.
         let stream = AsyncStream { continuation in // Create a stream builder.
             let token = UUID() // Unique token for this subscriber.
             if continuations[listId] == nil { continuations[listId] = [:] } // Ensure bucket for list id exists.
             continuations[listId]?[token] = continuation // Save continuation for later yields.
+            
+            // Set up Realtime subscription if this is the first observer for this list
+            if self.continuations[listId]?.count == 1, self.channels[listId] == nil { // First subscriber for this list.
+                Task { await self.setupRealtimeChannel(for: listId) } // Create Realtime channel asynchronously.
+            }
+            
             continuation.onTermination = { _ in // Cleanup when subscriber cancels.
                 self.continuations[listId]?.removeValue(forKey: token) // Remove continuation to avoid leaks.
+                // If no more observers for this list, remove the Realtime channel
+                if self.continuations[listId]?.isEmpty == true { // Last observer removed.
+                    self.teardownRealtimeChannel(for: listId) // Clean up channel.
+                    self.continuations.removeValue(forKey: listId) // Remove empty bucket.
+                }
             }
             Task { await self.fetchAndYield(listId) } // Send initial snapshot asynchronously.
         }
         return logResult(params: ["listId": listId], result: stream)
+    }
+    
+    /// Sets up a Realtime channel to listen for changes on the items table for a specific list.
+    /// Following the pattern from: https://ardyan.medium.com/building-chat-app-with-supabase-swiftui-in-under-100-lines-of-code-d01285f6e87a
+    private func setupRealtimeChannel(for listId: UUID) async { // Subscribe to Realtime events using AsyncStream pattern like tutorial.
+        let channelId = "public:items:\(listId)" // Unique channel topic - uses "public:" prefix like tutorial.
+        logVoid(params: (listId: listId, action: "setupChannel", channelId: channelId)) // Log channel setup.
+        
+        let channel = client.realtime.channel(channelId) // Create a named channel for this list.
+        
+        // Create AsyncStreams for each change type using postgresChange (NOT onPostgresChange)
+        // Tutorial uses: channel.postgresChange(InsertAction.self, table: "messages")
+        // Note: Using deprecated filter syntax until new syntax is clarified - functionality works correctly
+        let insertions = channel.postgresChange(InsertAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of INSERT events.
+        let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of UPDATE events.
+        let deletions = channel.postgresChange(DeleteAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of DELETE events.
+        
+        // Subscribe to the channel BEFORE consuming the streams (like tutorial: await channel.subscribe())
+        // Note: Using deprecated subscribe() until subscribeWithError() usage is clarified - functionality works correctly
+        await channel.subscribe() // Start subscription.
+        logVoid(params: (listId: listId, action: "channelSubscribed", channelId: channelId)) // Log successful subscription.
+        
+        // Store channel for later cleanup
+        channels[listId] = channel // Save channel reference.
+        
+        // Process insertions in background task (like tutorial: for await insertion in insertions)
+        Task {
+            for await insertion in insertions { // AsyncStream-based iteration over INSERT events.
+                logVoid(params: (listId: listId, action: "realtimeInsert", record: insertion.record)) // Log INSERT.
+                await fetchAndYield(listId) // Refresh data.
+            }
+        }
+        
+        // Process updates in background task
+        Task {
+            for await update in updates { // AsyncStream-based iteration over UPDATE events.
+                logVoid(params: (listId: listId, action: "realtimeUpdate", record: update.record)) // Log UPDATE.
+                await fetchAndYield(listId) // Refresh data.
+            }
+        }
+        
+        // Process deletions in background task
+        Task {
+            for await deletion in deletions { // AsyncStream-based iteration over DELETE events.
+                logVoid(params: (listId: listId, action: "realtimeDelete", oldRecord: deletion.oldRecord)) // Log DELETE.
+                await fetchAndYield(listId) // Refresh data.
+            }
+        }
+    }
+    
+    /// Tears down the Realtime channel for a specific list when no more observers exist.
+    private func teardownRealtimeChannel(for listId: UUID) { // Unsubscribe and clean up channel.
+        guard let channel = channels[listId] else { return } // Nothing to do if no channel exists.
+        Task { await channel.unsubscribe() } // Unsubscribe asynchronously.
+        channels.removeValue(forKey: listId) // Remove from tracking.
+        logVoid(params: (listId: listId, action: "teardownRealtimeChannel")) // Log cleanup.
     }
 
     @MainActor

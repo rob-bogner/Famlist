@@ -49,6 +49,7 @@ enum SupabaseConfigLoader { // Helper namespace for loading configuration from S
 // MARK: - Facade Protocols
 protocol SupabaseClienting { // Protocol to hide concrete Supabase types from the rest of the app.
     var auth: AuthClient { get } // Exposes auth for login-related tasks if needed.
+    var realtime: RealtimeClientV2 { get } // Exposes Realtime V2 client for live subscriptions.
     // Query entry point using new API
     func from(_ table: String) -> PostgrestQueryBuilder // Returns a query builder for the given table.
     // Minimal storage helpers to avoid exposing StorageClient type in public API
@@ -59,6 +60,7 @@ protocol SupabaseClienting { // Protocol to hide concrete Supabase types from th
 final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around SupabaseClient conforming to our facade.
     let client: SupabaseClient // The underlying Supabase client instance.
     var auth: AuthClient { client.auth } // Forward auth client for sign-in/out operations.
+    var realtime: RealtimeClientV2 { client.realtimeV2 } // Forward Realtime V2 client for live subscriptions.
 
     init?(config: SupabaseConfig) { // Failable initializer; returns nil if misconfigured (kept simple here).
         // Configure auth to auto-refresh tokens; rely on library defaults for secure storage/persistence.
@@ -106,3 +108,4 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         return logResult(params: (bucket: bucket, path: path, expiresIn: expiresIn), result: url.absoluteString) // Log URL string.
     }
 }
+
