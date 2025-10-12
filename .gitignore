@@ -34,6 +34,9 @@ DerivedData/
 # Local secrets (never commit!)
 Secrets.plist
 
+# VS Code settings (contains Supabase keys)
+.vscode/settings.json
+
 # AI development instructions (workspace-specific)
 .github/copilot-instructions.md
 
