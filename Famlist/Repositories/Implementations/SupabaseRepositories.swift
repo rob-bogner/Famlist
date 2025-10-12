@@ -301,10 +301,14 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
         let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of UPDATE events.
         let deletions = channel.postgresChange(DeleteAction.self, schema: "public", table: "items", filter: "list_id=eq.\(listId.uuidString)") // Stream of DELETE events.
         
-        // Subscribe to the channel BEFORE consuming the streams (like tutorial: await channel.subscribe())
-        // Note: Using deprecated subscribe() until subscribeWithError() usage is clarified - functionality works correctly
-        await channel.subscribe() // Start subscription.
-        logVoid(params: (listId: listId, action: "channelSubscribed", channelId: channelId)) // Log successful subscription.
+        // Subscribe to the channel BEFORE consuming the streams using subscribeWithError for proper error handling
+        do {
+            try await channel.subscribeWithError() // Start subscription with error reporting.
+            logVoid(params: (listId: listId, action: "channelSubscribed", channelId: channelId, status: "success")) // Log successful subscription.
+        } catch {
+            logVoid(params: (listId: listId, action: "channelSubscribed", channelId: channelId, status: "failed", error: String(describing: error))) // Log subscription error.
+            return // Don't start listening tasks if subscription failed.
+        }
         
         // Store channel for later cleanup
         channels[listId] = channel // Save channel reference.
