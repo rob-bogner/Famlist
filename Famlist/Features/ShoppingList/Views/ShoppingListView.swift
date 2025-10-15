@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 03.09.2025
+ Last updated on: 12.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,11 +17,12 @@
  - The quick-add expands inline; the full AddItemView is presented as a sheet for more details.
 
  📝 Last Change:
- - Added a top-left hamburger menu for signing out, using AppSessionViewModel. No functional changes.
+ - Configured the view to inject SwiftData stores so ListViewModel can operate in local-first mode.
  ------------------------------------------------------------------------
  */
 
 import SwiftUI // Imports SwiftUI for declarative UI building blocks and property wrappers.
+import SwiftData // Provides ModelContext access for SwiftData-backed persistence.
 import UIKit
 
 
@@ -29,10 +30,12 @@ import UIKit
 struct ShoppingListView: View { // Declares a SwiftUI view type.
     @EnvironmentObject var listViewModel: ListViewModel // Shared data source and actions across the hierarchy.
     @EnvironmentObject var session: AppSessionViewModel // Session VM used to perform sign-out from the hamburger menu.
+    @Environment(\.modelContext) private var modelContext // SwiftData context injected from GroceryGeniusApp.
     @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
     @State private var quickAddActive: Bool = false // Tracks whether the inline quick-add text field is expanded.
     @State private var quickAddText: String = "" // Holds the text typed into the quick-add field.
     @FocusState private var quickAddFocused: Bool // Indicates whether the quick-add field currently has keyboard focus.
+    @State private var didConfigurePersistence: Bool = false // Ensures we only configure SwiftData stores once per view lifecycle.
 
     private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
 
@@ -85,6 +88,15 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
             AddItemView() // The modal for adding a new item with more fields.
                 .presentationDetents([.fraction(0.45), .large, .medium]) // Allow snap heights for the sheet.
                 .presentationCornerRadius(15) // Rounded top corners for a modern look.
+        }
+        .task { // Configure SwiftData-backed stores once the view appears.
+            guard !didConfigurePersistence else { return }
+            await MainActor.run {
+                let itemStore = SwiftDataItemStore(context: modelContext)
+                let listStore = SwiftDataListStore(context: modelContext)
+                listViewModel.configure(localItemStore: itemStore, listStore: listStore)
+                didConfigurePersistence = true
+            }
         }
     }
 
@@ -172,6 +184,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                                         lists: PreviewListsRepository(), // Preview lists repo.
                                         listViewModel: listVM) // Inject list VM.
     return ShoppingListView() // Render the list view.
+        .modelContainer(PersistenceController.preview.container) // Provide in-memory SwiftData container for previews.
         .environmentObject(listVM) // Provide list view model to the environment.
         .environmentObject(sessionVM) // Provide session view model for the hamburger menu.
 }

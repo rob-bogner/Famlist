@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EE2B2C582E9BF77200935BCB /* ItemEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C552E9BF77200935BCB /* ItemEntity.swift */; };
+		EE2B2C592E9BF77200935BCB /* ListEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C562E9BF77200935BCB /* ListEntity.swift */; };
+		EE2B2C5B2E9BF8A200935BCB /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C5A2E9BF8A200935BCB /* PersistenceController.swift */; };
+		EE2B2C5E2E9BF9BE00935BCB /* ItemEntity+Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C5C2E9BF9BE00935BCB /* ItemEntity+Mapping.swift */; };
+		EE2B2C5F2E9BF9BE00935BCB /* ListEntity+Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C5D2E9BF9BE00935BCB /* ListEntity+Mapping.swift */; };
+		EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */; };
+		EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C602E9BF9E500935BCB /* SwiftDataItemStore.swift */; };
 		EEA1455C2E7B106B00A043A5 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA1455B2E7B106B00A043A5 /* Secrets.plist */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
 		EEB660412E7F37A9006CB1EB /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB660082E7F37A9006CB1EB /* ImageCache.swift */; };
@@ -47,6 +54,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		EE2B2C552E9BF77200935BCB /* ItemEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemEntity.swift; sourceTree = "<group>"; };
+		EE2B2C562E9BF77200935BCB /* ListEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListEntity.swift; sourceTree = "<group>"; };
+		EE2B2C5A2E9BF8A200935BCB /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		EE2B2C5C2E9BF9BE00935BCB /* ItemEntity+Mapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemEntity+Mapping.swift"; sourceTree = "<group>"; };
+		EE2B2C5D2E9BF9BE00935BCB /* ListEntity+Mapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListEntity+Mapping.swift"; sourceTree = "<group>"; };
+		EE2B2C602E9BF9E500935BCB /* SwiftDataItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataItemStore.swift; sourceTree = "<group>"; };
+		EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataListStore.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* Famlist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Famlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEB660002E7F37A9006CB1EB /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
@@ -99,6 +113,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		EE2B2C572E9BF77200935BCB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				EE2B2C5C2E9BF9BE00935BCB /* ItemEntity+Mapping.swift */,
+				EE2B2C5D2E9BF9BE00935BCB /* ListEntity+Mapping.swift */,
+				EE2B2C552E9BF77200935BCB /* ItemEntity.swift */,
+				EE2B2C562E9BF77200935BCB /* ListEntity.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 		EE69A4D92B14CB78007C3515 = {
 			isa = PBXGroup;
 			children = (
@@ -145,6 +170,9 @@
 		EEB660092E7F37A9006CB1EB /* Storage */ = {
 			isa = PBXGroup;
 			children = (
+				EE2B2C602E9BF9E500935BCB /* SwiftDataItemStore.swift */,
+				EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */,
+				EE2B2C5A2E9BF8A200935BCB /* PersistenceController.swift */,
 				EEB660082E7F37A9006CB1EB /* ImageCache.swift */,
 			);
 			path = Storage;
@@ -370,6 +398,7 @@
 		EEB6603E2E7F37A9006CB1EB /* Famlist */ = {
 			isa = PBXGroup;
 			children = (
+				EE2B2C572E9BF77200935BCB /* Models */,
 				EEB660712E7F39EF006CB1EB /* Preview Content */,
 				EEB6606D2E7F381A006CB1EB /* App */,
 				EEB6600D2E7F37A9006CB1EB /* Core */,
@@ -482,6 +511,8 @@
 				EEB660422E7F37A9006CB1EB /* ShoppingListView.swift in Sources */,
 				EEB660432E7F37A9006CB1EB /* SupabaseClient.swift in Sources */,
 				EEB660442E7F37A9006CB1EB /* Toast.swift in Sources */,
+				EE2B2C5E2E9BF9BE00935BCB /* ItemEntity+Mapping.swift in Sources */,
+				EE2B2C5F2E9BF9BE00935BCB /* ListEntity+Mapping.swift in Sources */,
 				EEB660452E7F37A9006CB1EB /* Color.swift in Sources */,
 				EEB660462E7F37A9006CB1EB /* PreviewMocks.swift in Sources */,
 				EEB660472E7F37A9006CB1EB /* ListViewModel.swift in Sources */,
@@ -502,9 +533,14 @@
 				EEB660572E7F37A9006CB1EB /* ItemsRepository.swift in Sources */,
 				EEB660582E7F37A9006CB1EB /* AccentHeaderBackground.swift in Sources */,
 				EEB660592E7F37A9006CB1EB /* Validation.swift in Sources */,
+				EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */,
+				EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */,
 				EEB6605A2E7F37A9006CB1EB /* AuthView.swift in Sources */,
 				EEB6605B2E7F37A9006CB1EB /* ImagePicker.swift in Sources */,
 				EEB6606E2E7F381A006CB1EB /* AppSessionViewModel.swift in Sources */,
+				EE2B2C582E9BF77200935BCB /* ItemEntity.swift in Sources */,
+				EE2B2C5B2E9BF8A200935BCB /* PersistenceController.swift in Sources */,
+				EE2B2C592E9BF77200935BCB /* ListEntity.swift in Sources */,
 				EEB6606F2E7F381A006CB1EB /* GroceryGeniusApp.swift in Sources */,
 				EEB660702E7F381A006CB1EB /* RootView.swift in Sources */,
 				EEB6605C2E7F37A9006CB1EB /* ShoppingListProgressView.swift in Sources */,

@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 07.09.2025
+ Last updated on: 12.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,11 +17,12 @@
  - When Supabase config is missing, preview/in-memory repositories are used so the app still runs.
 
  📝 Last Change:
- - Replaced read-only fixed list bootstrap with proper DI for auth flow (AppSessionViewModel + RootView).
+ - Wired in SwiftData model container so the app shares the same persistence stack everywhere.
  ------------------------------------------------------------------------
  */
 
 import SwiftUI // SwiftUI defines the App protocol and view system used in this project.
+import SwiftData // SwiftData provides the local model container for offline-first storage.
 
 /// The main application type; entry point marked with @main.
 @main
@@ -29,10 +30,19 @@ struct GroceryGeniusApp: App { // Conforms to App to define app lifecycle and sc
     // MARK: - Root ViewModels
     private let listViewModel: ListViewModel // Shared list VM used by list screens.
     private let sessionViewModel: AppSessionViewModel // Root session/auth coordinator.
+    private let modelContainer: ModelContainer // Shared SwiftData container backing local-first storage.
 
     // MARK: - Init (Dependency Composition)
     /// Initializes repositories and view models for the app.
     init() { // Construct dependencies for the running app.
+        let persistenceController: PersistenceController // Decide which persistence flavour to use.
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" { // Detect SwiftUI preview context.
+            persistenceController = .preview // Use transient in-memory storage during previews.
+        } else {
+            persistenceController = .shared // Use the disk-backed container for the live app.
+        }
+        self.modelContainer = persistenceController.container // Store container for scene modifier injection.
+
         if let config = SupabaseConfigLoader.load(), // Try to load Supabase secrets from bundle.
            let client = AppSupabaseClient(config: config) { // Initialize the Supabase client if configured.
             // Repositories backed by Supabase.
@@ -66,6 +76,7 @@ struct GroceryGeniusApp: App { // Conforms to App to define app lifecycle and sc
             RootView() // Root view deciding between AuthView and ShoppingListView.
                 .environmentObject(sessionViewModel) // Inject shared session VM for auth state.
                 .environmentObject(listViewModel) // Inject shared list VM for list screens.
+                .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
         }
     }
 }

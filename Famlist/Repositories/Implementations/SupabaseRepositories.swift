@@ -1,41 +1,16 @@
 /*
- Supabase Repositories (Profiles, Lists, Items, Categories)
-
+ SupabaseRepositories.swift
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 11.10.2025
+ Last updated on: 12.10.2025
 
  ------------------------------------------------------------------------
- 📄 File Overview:
- - Concrete Supabase-back            // Ensure channel is set up before yielding data
-            if continuations[listId]?.isEmpty == false && channels[listId] == nil { // First observer for this list.
-                await self.setupRealtimeChannel(for: listId) // Setup and WAIT for channel to be ready.
-            }
-            
-            continuation.onTermination = { _ in // Cleanup when subscriber cancels.
-                self.continuations[listId]?.removeValue(forKey: token) // Remove continuation to avoid leaks.
-                // If no more observers for this list, remove the Realtime channel
-                if self.continuations[listId]?.isEmpty == true { // Last observer removed.
-                    self.teardownRealtimeChannel(for: listId) // Clean up channel.
-                    self.continuations.removeValue(forKey: listId) // Remove empty bucket.
-                }
-            }
-            await self.fetchAndYield(listId) // Send initial snapshot AFTER channel is set up. implementations for profiles, lists, categories, and items.
-
- 🛠 Includes:
- - Data models for Profile, List, Category (Codable) and repository protocols + Supabase implementations.
- - Realtime synchronization: SupabaseItemsRepository subscribes to Realtime channels for live cross-device updates.
-
- 🔰 Notes for Beginners:
- - Repositories hide Supabase specifics from the rest of the app and return Swift models.
- - Async/await functions perform network/database calls; errors propagate to callers.
- - Realtime channels automatically sync changes across devices (iPad ↔ iPhone) when items are added/updated/deleted.
-
- 📝 Last Change:
- - Added Realtime channel subscription in SupabaseItemsRepository.observeItems() for cross-device synchronization.
- - Channels are created on first observer and cleaned up when last observer unsubscribes.
+ 📄 File Overview: Concrete Supabase-backed repositories for profiles, lists, categories, and items.
+ 🛠 Includes: Protocol conformances, realtime observers, shared data models, and CRUD helpers.
+ 🔰 Notes for Beginners: These repositories isolate Supabase-specific logic; UI/ViewModels should depend on the protocols instead of concrete types.
+ 📝 Last Change: Avoid clearing local caches when network fetches fail to support the local-first flow.
  ------------------------------------------------------------------------
- */
+*/
 
 import Foundation // Provides UUID, Date, and Codable support used by models.
 import Supabase // Brings in Supabase types for queries and builders.
@@ -400,9 +375,8 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
             }
             await MainActor.run { self.yield(listId, mapped) } // Push snapshot to subscribers on main actor.
             logVoid(params: (listId: listId, itemsCount: mapped.count)) // Log yield summary.
-        } catch { // On failure, emit empty snapshot (keep UI stable).
-            await MainActor.run { self.yield(listId, []) } // Emit empty list.
-            logVoid(params: (listId: listId, itemsCount: 0, note: "fetchError"))
+        } catch { // On failure, keep previous snapshot to preserve offline data.
+            logVoid(params: (listId: listId, note: "fetchError", error: String(describing: error)))
         }
     }
 

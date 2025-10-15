@@ -5,7 +5,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 21.09.2025
+ Last updated on: 12.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -26,8 +26,7 @@
  - All public methods are @MainActor-only because SwiftUI expects UI changes on the main thread.
 
  📝 Last Change:
- - Fixed sign-out state reset: clearForSignOut() now resets listId to default UUID to ensure switchList works correctly after re-login.
- - Removed debug logging statements after confirming the fix works.
+ - Integrated SwiftData local store awareness for offline-first flows and pending sync tracking.
  ------------------------------------------------------------------------
  */
 
@@ -51,6 +50,8 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
 
     // Optional ListsRepository used to resolve default list (injected post-init to keep compatibility)
     private var listsRepository: ListsRepository? = nil // Set via configure(listsRepository:).
+    private var itemStore: SwiftDataItemStore? = nil // Local SwiftData store for offline persistence.
+    private var listStore: SwiftDataListStore? = nil // Local SwiftData store for list metadata.
 
     // MARK: - Lifecycle
     /// Creates a ListViewModel with a target list and a repository (defaults to preview repo for development/previews).
@@ -72,11 +73,24 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         self.listsRepository = listsRepository // Store for later use.
     }
 
+    /// Injects SwiftData stores enabling local-first persistence for lists and items.
+    /// - Parameters:
+    ///   - itemStore: Store managing ItemEntity records within SwiftData.
+    ///   - listStore: Store managing ListEntity records within SwiftData.
+    func configure(localItemStore itemStore: SwiftDataItemStore, listStore: SwiftDataListStore) {
+        self.itemStore = itemStore
+        self.listStore = listStore
+    }
+
     /// Loads the default list for the given owner and switches observation to it.
     /// - Parameter ownerId: The profile/user UUID owning the list.
     func loadDefaultList(ownerId: UUID) {
         guard let listsRepository else { return } // Nothing to do without a lists repository.
         if isLoading { return } // Prevent concurrent loads from overlapping.
+        if defaultList == nil, let cached = loadCachedDefaultList(ownerId: ownerId) { // Try to reuse cached list for instant UI boot.
+            defaultList = cached
+            switchList(to: cached.id)
+        }
         isLoading = true // Show a lightweight loading indicator in the UI.
         Task { [weak self] in // Perform async fetch on a background task.
             guard let self else { return } // Capture self.
@@ -86,6 +100,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
                 await MainActor.run { // Apply on main actor for UI safety.
                     self.defaultList = list // Publish resolved default list.
                     self.switchList(to: list.id) // Switch observation to the new list id.
+                    self.persistDefaultList(list) // Mirror list locally for offline usage.
                 }
             } catch { // Surface errors to UI.
                 await MainActor.run { self.setError(error) } // Store error message.
@@ -113,6 +128,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         errorMessage = nil // Clear any error.
         // Reset listId to default so switchList will work again after re-login
         listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
+        refreshItemsFromStore() // Clear cached SwiftData snapshot from the published array.
     }
 
     /// Attempts to fetch the current profile and then load the default list.
@@ -131,10 +147,15 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Starts (or restarts) the background observation of items for the current listId.
     private func startObserving() {
         observeTask?.cancel() // Ensure any previous observer is cancelled before starting a new one.
+        loadLocalSnapshot() // Seed UI with locally cached items before remote stream responds.
         observeTask = Task { [weak self] in // Spawn a new child task that will live until cancelled.
             guard let self else { return } // Capture self weakly to avoid retain cycles.
             for await snapshot in repository.observeItems(listId: listId) { // Iterate updates as they arrive from repository.
-                await MainActor.run { withAnimation { self.items = snapshot } } // Apply with animation on main thread for smooth UI.
+                await MainActor.run {
+                    let merged = self.mergeRemoteSnapshot(snapshot)
+                    withAnimation { self.items = merged } // Apply with animation on main thread for smooth UI.
+                    self.persistRemoteSnapshot(snapshot) // Mirror remote snapshot into SwiftData for offline usage.
+                }
             }
         }
     }
@@ -145,28 +166,59 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         var normalized = item // Work on a mutable copy to keep parameter immutable.
         normalized.measure = canonicalizeMeasure(item.measure) // Normalize user-provided measure to a known token.
         normalized.listId = normalized.listId ?? listId.uuidString // Ensure the item carries the current list id.
+        storePendingChange(for: normalized, status: .pendingCreate) // Persist locally so offline UI updates immediately.
         Task { [weak self] in // Run the repository call asynchronously.
-            do { _ = try await self?.repository.createItem(normalized) } // Create item in the repository.
-            catch { self?.setError(error) } // Surface any error to UI.
+            guard let self else { return }
+            do {
+                let created = try await self.repository.createItem(normalized) // Create item in the repository.
+                await MainActor.run { self.updateSyncStatus(for: created.id, status: .synced) }
+            } catch {
+                await MainActor.run {
+                    self.updateSyncStatus(for: normalized.id, status: .failed)
+                    self.setError(error)
+                }
+            }
         }
     }
-
     /// Updates an existing item after normalizing fields.
     func updateItem(_ item: ItemModel) {
         var normalized = item // Copy for mutation.
         normalized.measure = canonicalizeMeasure(item.measure) // Normalize measure text.
         normalized.listId = normalized.listId ?? listId.uuidString // Ensure list context is present.
+        storePendingChange(for: normalized, status: .pendingUpdate) // Persist change locally while remote call runs.
         Task { [weak self] in // Perform async update.
-            do { try await self?.repository.updateItem(normalized) } // Persist changes.
-            catch { self?.setError(error) } // Show error.
+            guard let self else { return }
+            do {
+                try await self.repository.updateItem(normalized) // Persist changes.
+                await MainActor.run { self.updateSyncStatus(for: normalized.id, status: .synced) }
+            } catch {
+                await MainActor.run {
+                    self.updateSyncStatus(for: normalized.id, status: .failed)
+                    self.setError(error)
+                }
+            }
         }
     }
 
     /// Deletes an item by id within the current list.
     func deleteItem(_ item: ItemModel) {
+        markItemDeleted(item) // Soft-delete locally first for immediate UI feedback.
         Task { [weak self] in // Async call wrapper.
-            do { try await self?.repository.deleteItem(id: item.id, listId: self?.listId ?? UUID()) } // Delete by id for active list.
-            catch { self?.setError(error) } // Show error if it fails.
+            guard let self else { return }
+            do {
+                try await self.repository.deleteItem(id: item.id, listId: self.listId) // Delete by id for active list.
+                await MainActor.run {
+                    if let uuid = UUID(uuidString: item.id) {
+                        try? self.itemStore?.purge(id: uuid) // Remove tombstone after remote confirmation.
+                        self.refreshItemsFromStore()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.updateSyncStatus(for: item.id, status: .failed)
+                    self.setError(error)
+                }
+            }
         }
     }
 
@@ -196,10 +248,19 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         let imageBase64 = imageToBase64(image) // Convert optional image to Base64 string for persistence.
         let canonical = canonicalizeMeasure(measure) // Normalize measure before storing.
         let newItem = ItemModel(imageData: imageBase64, name: name, units: Int(units) ?? 1, measure: canonical, price: 0.0, isChecked: false, listId: listId.uuidString) // Build model.
+        storePendingChange(for: newItem, status: .pendingCreate) // Mirror locally so UI updates even offline.
         Task { [weak self] in // Persist asynchronously to keep UI responsive.
-            do { _ = try await self?.repository.createItem(newItem) } // Create in repository.
-            catch { self?.setError(error) } // Show error if it fails.
-            await MainActor.run { self?.isLoading = false } // Hide loading flag on main thread.
+            guard let self else { return }
+            do {
+                let created = try await self.repository.createItem(newItem) // Create in repository.
+                await MainActor.run { self.updateSyncStatus(for: created.id, status: .synced) }
+            } catch {
+                await MainActor.run {
+                    self.updateSyncStatus(for: newItem.id, status: .failed)
+                    self.setError(error)
+                }
+            }
+            await MainActor.run { self.isLoading = false } // Hide loading flag on main thread.
         }
     }
 
@@ -239,12 +300,165 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
             brand: brand,
             listId: listId.uuidString
         ) // Construct the updated model to persist.
+        storePendingChange(for: updated, status: .pendingUpdate) // Persist local mutation to keep UI responsive.
         Task { [weak self] in // Async persistence.
-            do { try await self?.repository.updateItem(updated) } // Update in repository.
-            catch { self?.setError(error) } // Show error.
-            await MainActor.run { self?.isLoading = false } // Reset loading flag.
+            guard let self else { return }
+            do {
+                try await self.repository.updateItem(updated) // Update in repository.
+                await MainActor.run { self.updateSyncStatus(for: updated.id, status: .synced) }
+            } catch {
+                await MainActor.run {
+                    self.updateSyncStatus(for: updated.id, status: .failed)
+                    self.setError(error)
+                }
+            }
+            await MainActor.run { self.isLoading = false } // Reset loading flag.
         }
     }
+
+    // MARK: - Local Persistence
+    /// Loads cached items from SwiftData and applies them to the published `items` array.
+    private func loadLocalSnapshot() {
+        guard let itemStore else { return }
+        do {
+            let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
+            withAnimation { self.items = localItems }
+        } catch {
+            logVoid(params: (note: "loadLocalSnapshot", error: (error as NSError).localizedDescription))
+        }
+    }
+
+    /// Persists a remote snapshot into SwiftData so offline mode mirrors the latest server state.
+    private func persistRemoteSnapshot(_ snapshot: [ItemModel]) {
+        guard let itemStore else { return }
+        do {
+            let remoteIds = Set(snapshot.map { $0.id })
+            for model in snapshot {
+                let entity = try itemStore.upsert(model: model)
+                entity.setSyncStatus(.synced)
+            }
+            let existing = try itemStore.fetchItems(listId: listId, includeDeleted: true)
+            for entity in existing where entity.syncStatus == .synced && !remoteIds.contains(entity.id.uuidString) {
+                try itemStore.purge(id: entity.id)
+            }
+            try itemStore.save()
+        } catch {
+            logVoid(params: (note: "persistRemoteSnapshot", error: (error as NSError).localizedDescription))
+        }
+    }
+
+    /// Merges the latest remote snapshot with unsynced local mutations to provide a consistent view.
+    private func mergeRemoteSnapshot(_ snapshot: [ItemModel]) -> [ItemModel] {
+        guard let itemStore else { return snapshot }
+        do {
+            let localEntities = try itemStore.fetchItems(listId: listId, includeDeleted: true)
+            var merged = Dictionary(uniqueKeysWithValues: snapshot.map { ($0.id, $0) })
+            for entity in localEntities {
+                let id = entity.id.uuidString
+                switch entity.syncStatus {
+                case .pendingDelete:
+                    merged.removeValue(forKey: id)
+                case .pendingCreate, .pendingUpdate, .pendingRecovery, .failed:
+                    merged[id] = entity.toItemModel()
+                case .synced:
+                    break
+                }
+            }
+            var ordered: [ItemModel] = []
+            for item in snapshot {
+                if let value = merged.removeValue(forKey: item.id) {
+                    ordered.append(value)
+                }
+            }
+            for entity in localEntities {
+                let key = entity.id.uuidString
+                if let value = merged.removeValue(forKey: key) {
+                    ordered.append(value)
+                }
+            }
+            if !merged.isEmpty { ordered.append(contentsOf: merged.values) }
+            return ordered
+        } catch {
+            logVoid(params: (note: "mergeRemoteSnapshot", error: (error as NSError).localizedDescription))
+            return snapshot
+        }
+    }
+
+    /// Stores a pending change locally and refreshes the published items, keeping offline UI in sync.
+    private func storePendingChange(for item: ItemModel, status: ItemEntity.SyncStatus) {
+        guard let itemStore else { return }
+        do {
+            let entity = try itemStore.upsert(model: item)
+            entity.setSyncStatus(status)
+            try itemStore.save()
+            refreshItemsFromStore()
+        } catch {
+            logVoid(params: (note: "storePendingChange", error: (error as NSError).localizedDescription))
+        }
+    }
+
+    /// Marks an item as deleted in the local store while keeping a tombstone for later sync.
+    private func markItemDeleted(_ item: ItemModel) {
+        guard let itemStore, let uuid = UUID(uuidString: item.id) else { return }
+        do {
+            try itemStore.delete(id: uuid)
+            refreshItemsFromStore()
+        } catch {
+            logVoid(params: (note: "markItemDeleted", error: (error as NSError).localizedDescription))
+        }
+    }
+
+    /// Updates the sync status for an item when a remote operation finishes or fails.
+    private func updateSyncStatus(for itemId: String, status: ItemEntity.SyncStatus) {
+        guard let itemStore, let uuid = UUID(uuidString: itemId) else { return }
+        do {
+            if let entity = try itemStore.fetchItem(id: uuid) {
+                entity.setSyncStatus(status)
+                if status == .failed {
+                    entity.deletedAt = nil // Restore visibility when a delete failed.
+                }
+                try itemStore.save()
+                refreshItemsFromStore()
+            }
+        } catch {
+            logVoid(params: (note: "updateSyncStatus", error: (error as NSError).localizedDescription))
+        }
+    }
+
+    /// Re-reads the current list from SwiftData and publishes it.
+    private func refreshItemsFromStore() {
+        guard let itemStore else { return }
+        do {
+            let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
+            withAnimation { self.items = localItems }
+        } catch {
+            logVoid(params: (note: "refreshItemsFromStore", error: (error as NSError).localizedDescription))
+        }
+    }
+
+    /// Reads the cached default list for the given owner when available.
+    private func loadCachedDefaultList(ownerId: UUID) -> ListModel? {
+        guard let listStore else { return nil }
+        do {
+            let lists = try listStore.fetchLists(ownerId: ownerId)
+            return lists.first(where: { $0.isDefault })?.toListModel()
+        } catch {
+            logVoid(params: (note: "loadCachedDefaultList", error: (error as NSError).localizedDescription))
+            return nil
+        }
+    }
+
+    /// Persists the resolved default list into SwiftData for offline reuse.
+    private func persistDefaultList(_ list: ListModel) {
+        guard let listStore else { return }
+        do {
+            _ = try listStore.upsert(model: list)
+            try listStore.save()
+        } catch {
+            logVoid(params: (note: "persistDefaultList", error: (error as NSError).localizedDescription))
+        }
+    }
+
 }
 
 // MARK: - Measure Canonicalization
@@ -261,3 +475,4 @@ private extension ListViewModel {
         self.errorMessage = (error as NSError).localizedDescription // Convert to readable message for UI.
     }
 }
+
