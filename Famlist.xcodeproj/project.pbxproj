@@ -14,6 +14,7 @@
 		EE2B2C5F2E9BF9BE00935BCB /* ListEntity+Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C5D2E9BF9BE00935BCB /* ListEntity+Mapping.swift */; };
 		EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */; };
 		EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C602E9BF9E500935BCB /* SwiftDataItemStore.swift */; };
+		EE2B2C652EA019F500935BCB /* ConnectivityMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C642EA019F500935BCB /* ConnectivityMonitor.swift */; };
 		EEA1455C2E7B106B00A043A5 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA1455B2E7B106B00A043A5 /* Secrets.plist */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
 		EEB660412E7F37A9006CB1EB /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB660082E7F37A9006CB1EB /* ImageCache.swift */; };
@@ -48,7 +49,7 @@
 		EEB660612E7F37A9006CB1EB /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = EEB660382E7F37A9006CB1EB /* Localizable.xcstrings */; };
 		EEB660622E7F37A9006CB1EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EEB660372E7F37A9006CB1EB /* Assets.xcassets */; };
 		EEB6606E2E7F381A006CB1EB /* AppSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6606A2E7F381A006CB1EB /* AppSessionViewModel.swift */; };
-		EEB6606F2E7F381A006CB1EB /* GroceryGeniusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6606B2E7F381A006CB1EB /* GroceryGeniusApp.swift */; };
+		EEB6606F2E7F381A006CB1EB /* FamlistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6606B2E7F381A006CB1EB /* FamlistApp.swift */; };
 		EEB660702E7F381A006CB1EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6606C2E7F381A006CB1EB /* RootView.swift */; };
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
 /* End PBXBuildFile section */
@@ -61,6 +62,7 @@
 		EE2B2C5D2E9BF9BE00935BCB /* ListEntity+Mapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListEntity+Mapping.swift"; sourceTree = "<group>"; };
 		EE2B2C602E9BF9E500935BCB /* SwiftDataItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataItemStore.swift; sourceTree = "<group>"; };
 		EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataListStore.swift; sourceTree = "<group>"; };
+		EE2B2C642EA019F500935BCB /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* Famlist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Famlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEB660002E7F37A9006CB1EB /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
@@ -97,7 +99,7 @@
 		EEB6603C2E7F37A9006CB1EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EEB6603D2E7F37A9006CB1EB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		EEB6606A2E7F381A006CB1EB /* AppSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSessionViewModel.swift; sourceTree = "<group>"; };
-		EEB6606B2E7F381A006CB1EB /* GroceryGeniusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroceryGeniusApp.swift; sourceTree = "<group>"; };
+		EEB6606B2E7F381A006CB1EB /* FamlistApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamlistApp.swift; sourceTree = "<group>"; };
 		EEB6606C2E7F381A006CB1EB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -181,6 +183,7 @@
 		EEB6600C2E7F37A9006CB1EB /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				EE2B2C642EA019F500935BCB /* ConnectivityMonitor.swift */,
 				EEB6600A2E7F37A9006CB1EB /* Logger.swift */,
 				EEB6600B2E7F37A9006CB1EB /* Validation.swift */,
 			);
@@ -414,7 +417,7 @@
 			isa = PBXGroup;
 			children = (
 				EEB6606A2E7F381A006CB1EB /* AppSessionViewModel.swift */,
-				EEB6606B2E7F381A006CB1EB /* GroceryGeniusApp.swift */,
+				EEB6606B2E7F381A006CB1EB /* FamlistApp.swift */,
 				EEB6606C2E7F381A006CB1EB /* RootView.swift */,
 			);
 			path = App;
@@ -533,6 +536,7 @@
 				EEB660572E7F37A9006CB1EB /* ItemsRepository.swift in Sources */,
 				EEB660582E7F37A9006CB1EB /* AccentHeaderBackground.swift in Sources */,
 				EEB660592E7F37A9006CB1EB /* Validation.swift in Sources */,
+				EE2B2C652EA019F500935BCB /* ConnectivityMonitor.swift in Sources */,
 				EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */,
 				EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */,
 				EEB6605A2E7F37A9006CB1EB /* AuthView.swift in Sources */,
@@ -541,7 +545,7 @@
 				EE2B2C582E9BF77200935BCB /* ItemEntity.swift in Sources */,
 				EE2B2C5B2E9BF8A200935BCB /* PersistenceController.swift in Sources */,
 				EE2B2C592E9BF77200935BCB /* ListEntity.swift in Sources */,
-				EEB6606F2E7F381A006CB1EB /* GroceryGeniusApp.swift in Sources */,
+				EEB6606F2E7F381A006CB1EB /* FamlistApp.swift in Sources */,
 				EEB660702E7F381A006CB1EB /* RootView.swift in Sources */,
 				EEB6605C2E7F37A9006CB1EB /* ShoppingListProgressView.swift in Sources */,
 				EEB6605D2E7F37A9006CB1EB /* DesignSystem.swift in Sources */,

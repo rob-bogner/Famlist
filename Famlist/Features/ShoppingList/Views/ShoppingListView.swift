@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 12.10.2025
+ Last updated on: 15.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,7 +17,7 @@
  - The quick-add expands inline; the full AddItemView is presented as a sheet for more details.
 
  📝 Last Change:
- - Configured the view to inject SwiftData stores so ListViewModel can operate in local-first mode.
+ - Added scenePhase handling so the view tells the view model to pause/resume realtime sync around background transitions.
  ------------------------------------------------------------------------
  */
 
@@ -31,6 +31,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     @EnvironmentObject var listViewModel: ListViewModel // Shared data source and actions across the hierarchy.
     @EnvironmentObject var session: AppSessionViewModel // Session VM used to perform sign-out from the hamburger menu.
     @Environment(\.modelContext) private var modelContext // SwiftData context injected from GroceryGeniusApp.
+    @Environment(\.scenePhase) private var scenePhase // Tracks foreground/background transitions for lifecycle-driven sync.
     @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
     @State private var quickAddActive: Bool = false // Tracks whether the inline quick-add text field is expanded.
     @State private var quickAddText: String = "" // Holds the text typed into the quick-add field.
@@ -88,6 +89,16 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
             AddItemView() // The modal for adding a new item with more fields.
                 .presentationDetents([.fraction(0.45), .large, .medium]) // Allow snap heights for the sheet.
                 .presentationCornerRadius(15) // Rounded top corners for a modern look.
+        }
+        .onChange(of: scenePhase) { _, newPhase in // React to lifecycle changes so realtime sync stays reliable.
+            switch newPhase { // Branch on scene state to decide which action to take.
+            case .active: // When the app enters the foreground again.
+                listViewModel.handleAppDidBecomeActive() // Resume observation when the app returns to the foreground.
+            case .background: // When the app transitions to the background.
+                listViewModel.handleAppDidEnterBackground() // Suspend observation when the app backgrounds.
+            default:
+                break // No action required for the inactive transition.
+            }
         }
         .task { // Configure SwiftData-backed stores once the view appears.
             guard !didConfigurePersistence else { return }

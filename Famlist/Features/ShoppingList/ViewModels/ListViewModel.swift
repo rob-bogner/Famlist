@@ -5,7 +5,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 12.10.2025
+ Last updated on: 15.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -26,12 +26,13 @@
  - All public methods are @MainActor-only because SwiftUI expects UI changes on the main thread.
 
  📝 Last Change:
- - Integrated SwiftData local store awareness for offline-first flows and pending sync tracking.
+ - Added connectivity-aware resume/pause handling so realtime sync restarts after backgrounding or offline periods.
  ------------------------------------------------------------------------
  */
 
 import Foundation // Foundation provides UUID, DispatchSemaphore, and base types used here.
 import SwiftUI // SwiftUI is needed for ObservableObject and @Published used by the view model.
+import Combine // Combine provides AnyCancellable used for connectivity monitoring.
 
 /// ViewModel encapsulating shopping list state and repository synchronization.
 @MainActor // Guarantees that all state changes happen on the main thread (UI thread).
@@ -52,6 +53,11 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     private var listsRepository: ListsRepository? = nil // Set via configure(listsRepository:).
     private var itemStore: SwiftDataItemStore? = nil // Local SwiftData store for offline persistence.
     private var listStore: SwiftDataListStore? = nil // Local SwiftData store for list metadata.
+    private var connectivityCancellable: AnyCancellable? = nil // Retains connectivity subscription so it lives with the view model.
+    private var hasObservedActiveList: Bool = false // Tracks whether realtime observation has started at least once.
+
+    /// Enumerates triggers that can resume realtime sync to aid logging and debugging.
+    private enum ResumeTrigger: String { case appForeground, connectivity } // Lists reasons we reattach to remote stream.
 
     // MARK: - Lifecycle
     /// Creates a ListViewModel with a target list and a repository (defaults to preview repo for development/previews).
@@ -64,7 +70,10 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         self.repository = repository // Store the data source implementation.
         if startImmediately { startObserving() } // Begin listening for item updates only when requested.
     }
-    deinit { observeTask?.cancel() } // Cancel the observation task when the view model is released to avoid leaks.
+    deinit {
+        observeTask?.cancel() // Cancel observation task to prevent dangling realtime streams.
+        connectivityCancellable?.cancel() // Stop listening to connectivity changes when the view model deallocates.
+    }
 
     // MARK: - Configuration
     /// Injects a ListsRepository used to fetch/create the user's default list.
@@ -80,6 +89,18 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     func configure(localItemStore itemStore: SwiftDataItemStore, listStore: SwiftDataListStore) {
         self.itemStore = itemStore
         self.listStore = listStore
+    }
+
+    /// Injects the connectivity monitor so the view model can resume realtime sync when the device comes back online.
+    /// - Parameter connectivityMonitor: Shared monitor publishing online/offline state.
+    func configure(connectivityMonitor: ConnectivityMonitor) {
+        connectivityCancellable?.cancel() // Cancel previous subscription if configure gets called again.
+        connectivityCancellable = connectivityMonitor.$isOnline // Observe published online flag.
+            .removeDuplicates() // Ignore duplicate states to avoid redundant resumes.
+            .sink { [weak self] isOnline in // React to connectivity changes.
+                guard let self else { return } // Ensure self still alive.
+                if isOnline { self.resumeRealtimeSync(trigger: .connectivity) } // Resume sync when network becomes reachable.
+            }
     }
 
     /// Loads the default list for the given owner and switches observation to it.
@@ -129,6 +150,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         // Reset listId to default so switchList will work again after re-login
         listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
         refreshItemsFromStore() // Clear cached SwiftData snapshot from the published array.
+        hasObservedActiveList = false // Mark observation as not yet started for the next session.
     }
 
     /// Attempts to fetch the current profile and then load the default list.
@@ -148,6 +170,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     private func startObserving() {
         observeTask?.cancel() // Ensure any previous observer is cancelled before starting a new one.
         loadLocalSnapshot() // Seed UI with locally cached items before remote stream responds.
+        hasObservedActiveList = true // Remember that realtime observation has been initialized at least once.
         observeTask = Task { [weak self] in // Spawn a new child task that will live until cancelled.
             guard let self else { return } // Capture self weakly to avoid retain cycles.
             for await snapshot in repository.observeItems(listId: listId) { // Iterate updates as they arrive from repository.
@@ -158,6 +181,19 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
                 }
             }
         }
+    }
+
+    /// Signals that the app moved into the foreground so realtime sync should resume if it was suspended.
+    func handleAppDidBecomeActive() {
+        resumeRealtimeSync(trigger: .appForeground) // Attempt to resume observation when app becomes active.
+    }
+
+    /// Signals that the app transitioned to background so realtime observation can pause to save resources.
+    func handleAppDidEnterBackground() {
+        guard observeTask != nil else { return } // Nothing to cancel when observation not running.
+        logVoid(params: (action: "pauseRealtimeSync", listId: listId, reason: "background")) // Log suspension for diagnostics.
+        observeTask?.cancel() // Cancel the running observation task so it does not hold resources while backgrounded.
+        observeTask = nil // Release task reference so resume knows to recreate it.
     }
 
     // MARK: - CRUD (bridged to async/await)
@@ -473,6 +509,13 @@ private extension ListViewModel {
     @MainActor
     func setError(_ error: Error) {
         self.errorMessage = (error as NSError).localizedDescription // Convert to readable message for UI.
+    }
+
+    /// Restarts realtime observation if a prior observation existed and logs the trigger for debugging.
+    private func resumeRealtimeSync(trigger: ResumeTrigger) {
+        guard hasObservedActiveList else { return } // Skip until at least one observation has been established.
+        logVoid(params: (action: "resumeRealtimeSync", listId: listId, trigger: trigger.rawValue)) // Log resume attempt with trigger context.
+        startObserving() // Recreate observation and fetch the latest snapshot.
     }
 }
 

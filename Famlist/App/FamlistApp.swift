@@ -26,7 +26,7 @@ import SwiftData // SwiftData provides the local model container for offline-fir
 
 /// The main application type; entry point marked with @main.
 @main
-struct GroceryGeniusApp: App { // Conforms to App to define app lifecycle and scenes.
+struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     // MARK: - Root ViewModels
     private let listViewModel: ListViewModel // Shared list VM used by list screens.
     private let sessionViewModel: AppSessionViewModel // Root session/auth coordinator.
