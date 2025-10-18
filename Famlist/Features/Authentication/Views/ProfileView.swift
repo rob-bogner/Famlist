@@ -179,7 +179,6 @@ struct ProfileView: View {
         username: "johndoe",
         fullName: "John Doe",
         avatarUrl: nil,
-        website: nil,
         createdAt: Date(),
         updatedAt: Date()
     ))

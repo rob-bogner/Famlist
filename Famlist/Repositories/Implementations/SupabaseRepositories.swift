@@ -22,7 +22,6 @@ struct Profile: Codable, Identifiable, Hashable {
     let username: String?
     let fullName: String?
     let avatarUrl: String?
-    let website: String?
     let createdAt: Date?
     let updatedAt: Date?
     
@@ -32,7 +31,6 @@ struct Profile: Codable, Identifiable, Hashable {
         case username
         case fullName = "full_name"
         case avatarUrl = "avatar_url"
-        case website
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }

@@ -72,7 +72,6 @@ struct PreviewMocks { // Namespace for preview data and factories.
             username: "preview_user",
             fullName: "Preview User",
             avatarUrl: nil,
-            website: nil,
             createdAt: Date(),
             updatedAt: Date()
         )

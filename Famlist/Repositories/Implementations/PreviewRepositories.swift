@@ -31,7 +31,6 @@ final class PreviewProfilesRepository: ProfilesRepository { // Used by previews 
         username: "preview_user",
         fullName: "Preview User",
         avatarUrl: nil,
-        website: nil,
         createdAt: Date(),
         updatedAt: Date()
     ) // Seed profile for previews.
@@ -43,7 +42,6 @@ final class PreviewProfilesRepository: ProfilesRepository { // Used by previews 
             username: nil,
             fullName: nil,
             avatarUrl: nil,
-            website: nil,
             createdAt: Date(),
             updatedAt: Date()
         )
