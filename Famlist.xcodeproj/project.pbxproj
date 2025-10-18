@@ -15,6 +15,8 @@
 		EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */; };
 		EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C602E9BF9E500935BCB /* SwiftDataItemStore.swift */; };
 		EE2B2C652EA019F500935BCB /* ConnectivityMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C642EA019F500935BCB /* ConnectivityMonitor.swift */; };
+		EE2B2C672EA3DB2A00935BCB /* ValidatedTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C662EA3DB2A00935BCB /* ValidatedTextField.swift */; };
+		EE2B2C6A2EA3DB6E00935BCB /* ItemFormViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C682EA3DB6E00935BCB /* ItemFormViewModel.swift */; };
 		EEA1455C2E7B106B00A043A5 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA1455B2E7B106B00A043A5 /* Secrets.plist */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
 		EEB660412E7F37A9006CB1EB /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB660082E7F37A9006CB1EB /* ImageCache.swift */; };
@@ -63,6 +65,8 @@
 		EE2B2C602E9BF9E500935BCB /* SwiftDataItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataItemStore.swift; sourceTree = "<group>"; };
 		EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataListStore.swift; sourceTree = "<group>"; };
 		EE2B2C642EA019F500935BCB /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
+		EE2B2C662EA3DB2A00935BCB /* ValidatedTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidatedTextField.swift; sourceTree = "<group>"; };
+		EE2B2C682EA3DB6E00935BCB /* ItemFormViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemFormViewModel.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* Famlist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Famlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEB660002E7F37A9006CB1EB /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
@@ -124,6 +128,14 @@
 				EE2B2C562E9BF77200935BCB /* ListEntity.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		EE2B2C692EA3DB6E00935BCB /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				EE2B2C682EA3DB6E00935BCB /* ItemFormViewModel.swift */,
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 		EE69A4D92B14CB78007C3515 = {
@@ -237,6 +249,7 @@
 		EEB660152E7F37A9006CB1EB /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				EE2B2C662EA3DB2A00935BCB /* ValidatedTextField.swift */,
 				EEB660132E7F37A9006CB1EB /* ImagePicker.swift */,
 				EEB660142E7F37A9006CB1EB /* ReusableInputs.swift */,
 			);
@@ -264,6 +277,7 @@
 		EEB6601C2E7F37A9006CB1EB /* ItemManagement */ = {
 			isa = PBXGroup;
 			children = (
+				EE2B2C692EA3DB6E00935BCB /* ViewModels */,
 				EEB660152E7F37A9006CB1EB /* Components */,
 				EEB660172E7F37A9006CB1EB /* Models */,
 				EEB6601B2E7F37A9006CB1EB /* Views */,
@@ -512,6 +526,7 @@
 				EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */,
 				EEB660412E7F37A9006CB1EB /* ImageCache.swift in Sources */,
 				EEB660422E7F37A9006CB1EB /* ShoppingListView.swift in Sources */,
+				EE2B2C672EA3DB2A00935BCB /* ValidatedTextField.swift in Sources */,
 				EEB660432E7F37A9006CB1EB /* SupabaseClient.swift in Sources */,
 				EEB660442E7F37A9006CB1EB /* Toast.swift in Sources */,
 				EE2B2C5E2E9BF9BE00935BCB /* ItemEntity+Mapping.swift in Sources */,
@@ -535,6 +550,7 @@
 				EEB660562E7F37A9006CB1EB /* ListRowView.swift in Sources */,
 				EEB660572E7F37A9006CB1EB /* ItemsRepository.swift in Sources */,
 				EEB660582E7F37A9006CB1EB /* AccentHeaderBackground.swift in Sources */,
+				EE2B2C6A2EA3DB6E00935BCB /* ItemFormViewModel.swift in Sources */,
 				EEB660592E7F37A9006CB1EB /* Validation.swift in Sources */,
 				EE2B2C652EA019F500935BCB /* ConnectivityMonitor.swift in Sources */,
 				EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */,

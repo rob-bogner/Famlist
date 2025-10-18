@@ -3,132 +3,107 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 03.09.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Modal sheet UI for creating a new shopping list item, capturing name, units, and measure, plus an optional photo.
+ - SwiftUI sheet for adding new items to shopping list with validation
 
  🛠 Includes:
- - PhotoField for image capture/selection, QuantityMeasureRow for units and measure, validation helpers, and a Save button that persists via ListViewModel.
+ - Photo picker integration
+ - Validated name, units, and measure inputs
+ - Integration with ItemFormViewModel for shared validation logic
+ - Primary button for submission
 
  🔰 Notes for Beginners:
- - This view is presented as a sheet and writes to the shared ListViewModel. Inputs are validated before saving. Units are kept as String during editing for better UX.
- - The repository is injected into the ListViewModel; this view doesn’t talk to Supabase directly.
+ - Uses ItemFormViewModel to eliminate validation duplication
+ - Dismisses automatically after successful add
+ - Focus field ensures keyboard appears for name input on load
 
  📝 Last Change:
- - Added standardized header and clarified comments. Updated Preview to use PreviewMocks for consistent sample data. No functional changes.
+ - Refactored to use ItemFormViewModel and ValidatedTextField components
  ------------------------------------------------------------------------
-
  */
 
-import SwiftUI // Imports SwiftUI to build the add item modal and use property wrappers.
+import SwiftUI // SwiftUI framework for declarative UI
 
-/// A view for adding a new item to the shopping list.
-struct AddItemView: View { // Declares the SwiftUI view type for adding items.
+/// View for adding a new item to the shopping list
+struct AddItemView: View {
     
-    // MARK: - Properties
+    // MARK: - Environment & Dependencies
     
-    /// Environment dismiss action to close the current view.
-    @Environment(\.dismiss) private var dismiss // Allows closing the sheet programmatically.
+    @Environment(\.dismiss) var dismiss // Environment value to dismiss the sheet
+    @EnvironmentObject var listViewModel: ListViewModel // Injected list view model for item operations
+    @FocusState private var isItemFieldFocused: Bool // Focus state for name field
     
-    /// Shared list view model injected as environment object.
-    @EnvironmentObject var listViewModel: ListViewModel // Provides actions and data context.
+    // MARK: - State
     
-    /// State for the entered item name.
-    @State private var item: String = "" // Holds the text for the item name.
+    @StateObject private var formVM = ItemFormViewModel() // Shared form ViewModel
     
-    /// State for the entered number of units, stored as string.
-    @State private var units: String = "1" // String to allow partial edits and easy clamping.
-    
-    /// State for the entered measurement unit.
-    @State private var measure: String = "" // Free-form until normalized by view model.
-    
-    /// Focus state to control keyboard focus on the item text field.
-    @FocusState private var isItemFieldFocused: Bool // Focuses name field on appear.
-
-    /// State for the selected image from the image picker.
-    @State private var selectedImage: UIImage? = nil // Optional photo to attach.
-
-    @State private var nameError: String? = nil // Holds inline error for name field.
-    @State private var unitsError: String? = nil // Holds inline error for units field.
-
     // MARK: - Body
     
-    /// The main body view layout.
-    var body: some View { // Composes the modal with form and save button.
-        CustomModalView(title: String(localized: "addItem.title"), onClose: { dismiss() }) { // Modal shell with title and close.
-            VStack(spacing: 16) { // Vertical layout with spacing between sections.
-                ScrollView { // Allows content to scroll if keyboard overlaps.
-                    VStack(spacing: 12) { // Form fields stack.
-                        PhotoField(image: $selectedImage) // Photo picker field.
-                        VStack(alignment: .leading, spacing: 4) { // Name field + error.
-                            TextField(String(localized: "field.name.placeholder"), text: $item) // Name input.
-                                .textFieldStyle(.roundedBorder) // Rounded border style.
-                                .lineLimit(1) // Single-line input.
-                                .focused($isItemFieldFocused) // Focus on appear.
-                                .overlay( // Error border.
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(nameError == nil ? Color.clear : Color.red, lineWidth: 1) // Red when error.
-                                )
-                            if let nameError { Text(nameError).font(.caption2).foregroundColor(.red) } // Inline error text.
+    var body: some View {
+        CustomModalView(title: String(localized: "addItem.title"), onClose: { dismiss() }) {
+            VStack(spacing: 16) {
+                // Scrollable form content
+                ScrollView {
+                    VStack(spacing: 12) {
+                        // Photo picker field
+                        PhotoField(image: $formVM.selectedImage)
+                        
+                        // Validated name field
+                        ValidatedTextField(
+                            placeholder: String(localized: "field.name.placeholder"),
+                            text: $formVM.name,
+                            error: formVM.nameError,
+                            onChanged: { formVM.validateField(.name) }
+                        )
+                        .focused($isItemFieldFocused) // Attach focus state
+                        
+                        // Quantity and measure row with validation
+                        VStack(alignment: .leading, spacing: 4) {
+                            QuantityMeasureRow(units: $formVM.units, measure: $formVM.measure)
+                            if let unitsError = formVM.unitsError {
+                                Text(unitsError)
+                                    .font(.caption2)
+                                    .foregroundColor(.red)
+                            }
                         }
-                        VStack(alignment: .leading, spacing: 4) { // Units + measure row + error.
-                            QuantityMeasureRow(units: $units, measure: $measure) // Units + measure input.
-                            if let unitsError { Text(unitsError).font(.caption2).foregroundColor(.red) } // Inline error text.
-                        }
-                        Spacer(minLength: 0) // Filler to push save button down if content short.
+                        .onChange(of: formVM.units) { _, _ in formVM.validateField(.units) }
+                        
+                        Spacer(minLength: 0)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading) // Stretch horizontally.
-                    .padding(.horizontal) // Standard horizontal padding.
-                    .padding(.vertical, 25) // Top/bottom padding for comfortable spacing.
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.vertical, 25)
                 }
-                PrimaryButton(title: String(localized: "button.addItem")) { // Save button.
-                    // Synchronous validation (state updates apply after return; validate locally first)
-                    let currentNameError = ItemInputValidator.validateName(item) // Validate name.
-                    let currentUnitsError = ItemInputValidator.validateUnits(units) // Validate units.
-                    nameError = currentNameError // Update state to show/hide errors.
-                    unitsError = currentUnitsError // Update state to show/hide errors.
-                    guard currentNameError == nil, currentUnitsError == nil else { return } // Stop if invalid.
-                    let sanitized = ItemInputValidator.sanitizedName(item) // Trim whitespace.
-                    addItemPressed(sanitizedName: sanitized) // Persist the new item.
-                    dismiss() // Close sheet.
+                
+                // Submit button
+                PrimaryButton(title: String(localized: "button.addItem")) {
+                    formVM.validateAll()
+                    guard formVM.isValid else { return }
+                    
+                    let newItem = formVM.toItemModel()
+                    listViewModel.addItem(newItem)
+                    dismiss()
                 }
-                .disabled(!formValid) // Disable when form invalid.
-                .padding(.horizontal) // aligned with text fields horizontally
-                .padding(.bottom, 16) // Space from bottom edge.
+                .disabled(!formVM.isValid)
+                .padding(.horizontal)
+                .padding(.bottom, 16)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // Expand to fill modal.
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .onAppear { isItemFieldFocused = true; validateAll() } // Focus name and validate initial state.
-        .onChange(of: item) { _ , _ in validateName() } // Revalidate name on change.
-        .onChange(of: units) { _ , _ in validateUnits() } // Revalidate units on change.
-        .presentationDetents([.height(500)]) // Preferred modal height for this form.
-    }
-    
-    // MARK: - Validation & Persistence
-    
-    private var formValid: Bool { nameError == nil && unitsError == nil && !item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } // Form validity aggregate.
-    private func validateName() { nameError = ItemInputValidator.validateName(item) } // Validate and store name error.
-    private func validateUnits() { unitsError = ItemInputValidator.validateUnits(units) } // Validate and store units error.
-    private func validateAll() { validateName(); validateUnits() } // Run all validators.
-
-    /// Adds a new item to the shopping list.
-    private func addItemPressed(sanitizedName: String) { // Builds model and delegates to view model.
-        let imageBase64 = imageToBase64(selectedImage) // Convert optional image to Base64.
-        let newItem = ItemModel( // Build a minimal item.
-            imageData: imageBase64, // Optional image data.
-            name: sanitizedName, // Trimmed name.
-            units: Int(units) ?? 1, // Parse units or default to 1.
-            measure: measure, // Free-form measure string.
-            price: 0.0, // Default price.
-            isChecked: false // New items are unchecked.
-        )
-        listViewModel.addItem(newItem) // Ask VM to persist via repository.
+        .onAppear { 
+            isItemFieldFocused = true // Focus name field when view appears
+            formVM.validateAll() 
+        }
+        .presentationDetents([.height(500)])
     }
 }
 
-#Preview { // Preview provider for AddItemView. Uses PreviewMocks to provide a realistic ListViewModel with in-memory data.
-    AddItemView() // Instantiate the add form.
-        .environmentObject(PreviewMocks.makeListViewModelWithSamples()) // Inject a preview VM with sample data.
+// MARK: - Previews
+
+#Preview {
+    AddItemView()
+        .environmentObject(PreviewMocks.makeListViewModelWithSamples())
 }
