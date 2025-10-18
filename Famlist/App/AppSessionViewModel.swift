@@ -105,15 +105,17 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
             return // Nothing to do in previews without a Supabase client.
         }
         if isLoading { return } // Prevent concurrent sign-in attempts.
-        isLoading = true // Flip loading on for button spinners.
-        Task { // Run async Supabase call.
-            defer { Task { @MainActor in self.isLoading = false } } // Always turn loading off when done.
+        
+        Task { @MainActor in
+            isLoading = true // Flip loading on for button spinners.
+            defer { isLoading = false } // Always turn loading off when done.
+            
             do { // Attempt to start OTP sign-in.
                 let redirect = URL(string: "grocerygenius://login-callback")! // URL scheme handled by app for magic-link return.
                 try await client.auth.signInWithOTP(email: email, redirectTo: redirect) // Ask Supabase to send magic link.
                 logVoid(params: (email: email, redirectTo: redirect.absoluteString)) // Log parameters.
             } catch { // Capture and present error.
-                self.errorMessage = (error as NSError).localizedDescription // Convert to readable message.
+                errorMessage = (error as NSError).localizedDescription // Convert to readable message.
             }
         }
     }
@@ -128,15 +130,17 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
             return // Nothing to do in previews without a Supabase client.
         }
         if isLoading { return } // Prevent concurrent sign-in attempts.
-        isLoading = true // Flip loading on for button spinners.
-        Task { // Run async Supabase call.
-            defer { Task { @MainActor in self.isLoading = false } } // Always turn loading off when done.
+        
+        Task { @MainActor in
+            isLoading = true // Flip loading on for button spinners.
+            defer { isLoading = false } // Always turn loading off when done.
+            
             do { // Attempt email/password sign-in.
                 try await client.auth.signIn(email: email, password: password) // Direct sign-in with credentials.
                 logVoid(params: ["email": email, "method": "password"]) // Log successful sign-in.
-                await self.handleAuthCompletion() // Proceed to load profile and default list.
+                await handleAuthCompletion() // Proceed to load profile and default list.
             } catch { // Capture and present error.
-                self.errorMessage = (error as NSError).localizedDescription // Convert to readable message.
+                errorMessage = (error as NSError).localizedDescription // Convert to readable message.
             }
         }
     }
@@ -151,15 +155,17 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
             return // Nothing to do in previews without a Supabase client.
         }
         if isLoading { return } // Prevent concurrent sign-up attempts.
-        isLoading = true // Flip loading on for button spinners.
-        Task { // Run async Supabase call.
-            defer { Task { @MainActor in self.isLoading = false } } // Always turn loading off when done.
+        
+        Task { @MainActor in
+            isLoading = true // Flip loading on for button spinners.
+            defer { isLoading = false } // Always turn loading off when done.
+            
             do { // Attempt email/password sign-up.
                 try await client.auth.signUp(email: email, password: password) // Create new account.
                 logVoid(params: ["email": email, "method": "signup"]) // Log successful sign-up.
-                await self.handleAuthCompletion() // Proceed to load profile and default list.
+                await handleAuthCompletion() // Proceed to load profile and default list.
             } catch { // Capture and present error.
-                self.errorMessage = (error as NSError).localizedDescription // Convert to readable message.
+                errorMessage = (error as NSError).localizedDescription // Convert to readable message.
             }
         }
     }
@@ -172,24 +178,29 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
             return // Exit early.
         }
         if isLoading { return } // Avoid overlapping calls.
+        
         isLoading = true // Set loading flag while checking session.
         isRestoringSession = true // Mark session restoration in progress.
-        defer { Task { @MainActor in self.isLoading = false; self.isRestoringSession = false } } // Reset loading and restoration when done.
+        defer { 
+            isLoading = false
+            isRestoringSession = false
+        } // Reset loading and restoration when done.
+        
         do { // Attempt to read an existing session.
             let session = try await client.auth.session // May throw if no session present.
             _ = logResult(params: ["hasSession": true], result: session.user.id) // Log success with user id.
-            self.isAuthenticated = true // Flip on the auth gate.
-            await self.handleAuthCompletion() // Proceed to load profile and default list.
+            isAuthenticated = true // Flip on the auth gate.
+            await handleAuthCompletion() // Proceed to load profile and default list.
         } catch { // No session or another error.
             _ = logResult(params: ["hasSession": false, "error": String(describing: error)], result: "no-session") // Log failure.
-            self.isAuthenticated = false // Stay at auth gate.
+            isAuthenticated = false // Stay at auth gate.
         }
     }
 
     /// Completes auth after handling the magic link deep link; loads profile and default list then starts item observation.
     func handleAuthCompletion() async { // Called after deep link or on successful restore.
         isLoading = true // Indicate background work.
-        defer { self.isLoading = false } // Ensure loading resets when function exits.
+        defer { isLoading = false } // Ensure loading resets when function exits.
         do { // Bootstrap profile and list.
             await markPhase(.profile)
             
@@ -275,22 +286,22 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
     /// Signs the user out from Supabase and clears local state so the UI returns to the auth screen.
     func signOut() { // Public API called by the UI (hamburger menu) to remove the saved session.
         if isLoading { return } // Avoid overlapping operations while another auth task is running.
-        isLoading = true // Show loading indicator for any interested UI.
-        Task { // Perform async call without blocking the main thread.
-            defer { Task { @MainActor in self.isLoading = false } } // Always reset loading when done.
+        
+        Task { @MainActor in
+            isLoading = true // Show loading indicator for any interested UI.
+            defer { isLoading = false } // Always reset loading when done.
+            
             do { // Attempt to revoke session and clear local state.
                 if let client { // Proceed only when a Supabase client exists (runtime mode).
                     try await client.auth.signOut(scope: .global) // Ask Supabase to invalidate tokens and remove Keychain session.
                     logVoid(params: ["action": "signOut", "status": "ok"]) // Log successful sign-out.
                 }
-                await MainActor.run { // Ensure UI state changes happen on the main thread.
-                    self.listViewModel.clearForSignOut() // Drop any loaded list data to avoid stale UI post-logout.
-                    self.isAuthenticated = false // Flip gate so RootView shows the AuthView.
-                    self.errorMessage = nil // Clear any previous error messages.
-                }
+                listViewModel.clearForSignOut() // Drop any loaded list data to avoid stale UI post-logout.
+                isAuthenticated = false // Flip gate so RootView shows the AuthView.
+                errorMessage = nil // Clear any previous error messages.
             } catch { // Handle and surface errors.
-                await MainActor.run { self.errorMessage = (error as NSError).localizedDescription } // Store readable error.
-                logVoid(params: ["action": "signOut", "status": "error", "message": self.errorMessage ?? ""]) // Log failure.
+                errorMessage = (error as NSError).localizedDescription // Store readable error.
+                logVoid(params: ["action": "signOut", "status": "error", "message": errorMessage ?? ""]) // Log failure.
             }
         }
     }

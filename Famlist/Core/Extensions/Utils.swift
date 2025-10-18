@@ -10,15 +10,15 @@
  - Collection of lightweight utility helpers shared across the app (image <-> Base64 conversion).
 
  🛠 Includes:
- - UIImage -> Base64 encoding helper
+ - Deprecated imageToBase64() wrapper (use UIImage+Utils extension instead)
 
  🔰 Notes for Beginners:
  - JPEG compression is set to 0.8 as a balance of size and quality.
- - Free functions are straightforward to call from anywhere without creating objects.
+ - Use UIImage.toBase64() extension for new code (centralized in UIImage+Utils)
  - For Base64 -> UIImage decoding, use ImageCache.shared.image(fromBase64:) which provides caching.
 
  📝 Last Change:
- - Removed unused base64ToImage() function (dead code; ImageCache provides same functionality with caching).
+ - Deprecated imageToBase64() in favor of centralized UIImage.toBase64() extension.
  ------------------------------------------------------------------------
  */
 
@@ -28,7 +28,7 @@ import UIKit // Provides UIImage used by the helpers
 /// Encodes an optional UIImage into a Base64 string (JPEG, quality 0.8).
 /// - Parameter image: Source image.
 /// - Returns: Base64 string or nil if image is nil / encoding fails.
+@available(*, deprecated, message: "Use UIImage.toBase64() extension instead")
 func imageToBase64(_ image: UIImage?) -> String? {
-    guard let image, let data = image.jpegData(compressionQuality: 0.8) else { return nil } // Convert to JPEG data; bail if conversion fails
-    return data.base64EncodedString() // Convert bytes to Base64 string
+    return image?.toBase64() // Delegate to centralized extension
 }

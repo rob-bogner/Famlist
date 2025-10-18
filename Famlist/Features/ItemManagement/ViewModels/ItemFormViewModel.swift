@@ -117,7 +117,7 @@ final class ItemFormViewModel: ObservableObject {
     /// - Parameter existingId: Optional ID for updates, generates new UUID for creates
     func toItemModel(existingId: String? = nil) -> ItemModel {
         let sanitizedName = ItemInputValidator.sanitizedName(name)
-        let imageBase64 = selectedImage?.jpegData(compressionQuality: 0.8)?.base64EncodedString()
+        let imageBase64 = selectedImage?.toBase64()
         
         return ItemModel(
             id: existingId ?? UUID().uuidString,

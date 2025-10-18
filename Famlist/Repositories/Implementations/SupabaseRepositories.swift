@@ -339,7 +339,6 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
             let category: String? // Category string.
             let productDescription: String? // Description string.
             let brand: String? // Brand string.
-            let position: Int? // Optional order position.
             let createdAt: String? // Created timestamp.
             let updatedAt: String? // Updated timestamp.
             enum CodingKeys: String, CodingKey { // Column mapping from snake_case.
@@ -349,13 +348,13 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
                 case imageData = "imagedata"
                 case name, units, measure, price, isChecked, category
                 case productDescription = "productdescription"
-                case brand, position
+                case brand
                 case createdAt = "created_at"
                 case updatedAt = "updated_at"
             }
         }
         do { // Attempt to fetch and map rows.
-            let rows: [Row] = try await client.from("items").select().eq("list_id", value: listId.uuidString).order("position", ascending: true).order("created_at", ascending: true).execute().value // Fetch list's items.
+            let rows: [Row] = try await client.from("items").select().eq("list_id", value: listId.uuidString).order("created_at", ascending: true).execute().value // Fetch list's items.
             let mapped = rows.map { r in // Map DB rows to ItemModel values.
                 ItemModel(
                     id: r.id.uuidString,
@@ -383,7 +382,7 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
     func createItem(_ item: ItemModel) async throws -> ItemModel { // Insert a new item then broadcast a refresh.
         // Technical Debt: Still using Base64 imageData instead of Storage URLs
         // See ItemModel.swift for migration plan when DB performance becomes an issue
-        var finalImageData: String? = item.imageData // Start with existing base64 if present.
+        let finalImageData: String? = item.imageData // Start with existing base64 if present.
         // Removed redundant check - if imageData is nil, finalImageData is already nil
         struct NewRow: Codable { // Insert payload mapping.
             let id: UUID, listId: UUID, ownerPublicId: String?
@@ -423,7 +422,7 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
     }
 
     func updateItem(_ item: ItemModel) async throws { // Update an existing item and broadcast.
-        var finalImageData: String? = item.imageData // Local mutable copy of image.
+        let finalImageData: String? = item.imageData // Local immutable copy of image.
         let listId = UUID(uuidString: item.listId ?? "") ?? UUID() // Resolve list id.
         // Removed redundant check - if imageData is nil, finalImageData is already nil
         struct UpdateRow: Encodable { // Update payload mapping.

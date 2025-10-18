@@ -77,7 +77,6 @@ extension ItemEntity {
             category: model.category,
             productDescription: model.productDescription,
             brand: model.brand,
-            position: nil,
             createdAt: Date(),
             updatedAt: Date(),
             deletedAt: nil,

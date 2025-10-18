@@ -112,19 +112,19 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
             defaultList = cached
             switchList(to: cached.id)
         }
-        isLoading = true // Show a lightweight loading indicator in the UI.
-        Task { [weak self] in // Perform async fetch on a background task.
+        
+        Task { @MainActor [weak self] in // Perform async fetch on a background task.
             guard let self else { return } // Capture self.
-            defer { Task { @MainActor in self.isLoading = false } } // Always reset loading flag on completion.
+            isLoading = true // Show a lightweight loading indicator in the UI.
+            defer { isLoading = false } // Always reset loading flag on completion.
+            
             do { // Try to fetch or create default list.
                 let list = try await listsRepository.fetchDefaultList(for: ownerId) // Resolve default list.
-                await MainActor.run { // Apply on main actor for UI safety.
-                    self.defaultList = list // Publish resolved default list.
-                    self.switchList(to: list.id) // Switch observation to the new list id.
-                    self.persistDefaultList(list) // Mirror list locally for offline usage.
-                }
+                defaultList = list // Publish resolved default list.
+                switchList(to: list.id) // Switch observation to the new list id.
+                persistDefaultList(list) // Mirror list locally for offline usage.
             } catch { // Surface errors to UI.
-                await MainActor.run { self.setError(error) } // Store error message.
+                setError(error) // Store error message.
             }
         }
     }
@@ -308,7 +308,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Creates and persists a new item from simple text inputs as used by the AddItemView form.
     func addItemFromInput(name: String, units: String, measure: String, image: UIImage? = nil) {
         isLoading = true // Show a lightweight loading indicator in the UI.
-        let imageBase64 = imageToBase64(image) // Convert optional image to Base64 string for persistence.
+        let imageBase64 = image?.toBase64() // Convert optional image to Base64 string for persistence.
         let canonical = canonicalizeMeasure(measure) // Normalize measure before storing.
         let newItem = ItemModel(imageData: imageBase64, name: name, units: Int(units) ?? 1, measure: canonical, price: 0.0, isChecked: false, listId: listId.uuidString) // Build model.
         storePendingChange(for: newItem, status: .pendingCreate) // Mirror locally so UI updates even offline.
@@ -348,7 +348,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         image: UIImage?
     ) {
         isLoading = true // Indicate background work.
-        let imageBase64 = imageToBase64(image) // Convert image to Base64 if present.
+        let imageBase64 = image?.toBase64() // Convert image to Base64 if present.
         let canonical = canonicalizeMeasure(measure) // Normalize measure text.
         let updated = ItemModel(
             id: id,

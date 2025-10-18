@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 27.04.2025 (approx.)
- Last updated on: 03.09.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -15,9 +15,10 @@
  🔰 Notes for Beginners:
  - NSCache auto-purges under memory pressure, making it safe for images.
  - Using the Base64 string as the key is simple but long; consider hashing if memory is a concern.
+ - Now uses centralized UIImage.fromBase64() extension for consistent decoding.
 
  📝 Last Change:
- - Standardized header to the required format; no functional changes.
+ - Refactored to use UIImage+Utils extension for Base64 decoding.
  ------------------------------------------------------------------------
  */
 
@@ -35,7 +36,7 @@ final class ImageCache { // Final so it isn't subclassed; single-purpose utility
     func image(fromBase64 base64: String?) -> UIImage? { // Main API used by list rows to avoid repeated decoding.
         guard let base64, !base64.isEmpty else { return nil } // If input is nil/empty, there's nothing to decode or cache.
         if let cached = cache.object(forKey: base64 as NSString) { return cached } // Return cached image when available.
-        guard let data = Data(base64Encoded: base64), let img = UIImage(data: data) else { return nil } // Decode from Base64 to Data, then to UIImage.
+        guard let img = UIImage.fromBase64(base64) else { return nil } // Decode using centralized extension.
         cache.setObject(img, forKey: base64 as NSString) // Store decoded image so subsequent calls are fast.
         return img // Return the decoded image.
     }

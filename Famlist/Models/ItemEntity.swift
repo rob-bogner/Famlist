@@ -8,7 +8,7 @@
  📄 File Overview: SwiftData item model shared with Supabase JSON payloads.
  🛠 Includes: @Model declaration, Codable bridge, sync-state helpers, relationship to parent list.
  🔰 Notes for Beginners: Represents a product entry; syncStatus steuert, ob Datensätze zur Cloud synchronisiert werden müssen.
- 📝 Last Change: Documented unused position field as technical debt for future consideration.
+ 📝 Last Change: Removed unused position field to reduce technical debt and simplify schema.
  ------------------------------------------------------------------------
 */
 
@@ -40,13 +40,6 @@ final class ItemEntity: Identifiable, Codable {
     var category: String?
     var productDescription: String?
     var brand: String?
-    /// TODO: [Unused Field] Position for manual item ordering
-    /// Current Status: NOT IMPLEMENTED - field exists in DB but no code uses it
-    /// Possible Use Cases:
-    ///   - Drag-and-drop reordering in list
-    ///   - Custom sort order (separate from alphabetical/category)
-    /// Decision: Keep field in DB (no harm) but consider implementing or removing in future refactor
-    var position: Int?
     var createdAt: Date
     var updatedAt: Date
     var deletedAt: Date?
@@ -77,7 +70,6 @@ final class ItemEntity: Identifiable, Codable {
         category: String?,
         productDescription: String?,
         brand: String?,
-        position: Int?,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
     deletedAt: Date? = nil,
@@ -96,7 +88,6 @@ final class ItemEntity: Identifiable, Codable {
         self.category = category
         self.productDescription = productDescription
         self.brand = brand
-        self.position = position
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.deletedAt = deletedAt
@@ -119,7 +110,6 @@ final class ItemEntity: Identifiable, Codable {
         case category
         case productDescription = "productdescription"
         case brand
-        case position
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case deletedAt = "deleted_at"
@@ -140,7 +130,6 @@ final class ItemEntity: Identifiable, Codable {
         let category = try container.decodeIfPresent(String.self, forKey: .category)
         let productDescription = try container.decodeIfPresent(String.self, forKey: .productDescription)
         let brand = try container.decodeIfPresent(String.self, forKey: .brand)
-        let position = try container.decodeIfPresent(Int.self, forKey: .position)
         let createdAt = try container.decode(Date.self, forKey: .createdAt)
         let updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         let deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
@@ -157,7 +146,6 @@ final class ItemEntity: Identifiable, Codable {
             category: category,
             productDescription: productDescription,
             brand: brand,
-            position: position,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -180,7 +168,6 @@ final class ItemEntity: Identifiable, Codable {
         try container.encodeIfPresent(category, forKey: .category)
         try container.encodeIfPresent(productDescription, forKey: .productDescription)
         try container.encodeIfPresent(brand, forKey: .brand)
-        try container.encodeIfPresent(position, forKey: .position)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(updatedAt, forKey: .updatedAt)
         try container.encodeIfPresent(deletedAt, forKey: .deletedAt)
