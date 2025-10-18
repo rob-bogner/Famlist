@@ -2,13 +2,13 @@
  ItemEntity.swift
  GroceryGenius
  Created on: 12.10.2025
- Last updated on: 12.10.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview: SwiftData item model shared with Supabase JSON payloads.
  🛠 Includes: @Model declaration, Codable bridge, sync-state helpers, relationship to parent list.
  🔰 Notes for Beginners: Represents a product entry; syncStatus steuert, ob Datensätze zur Cloud synchronisiert werden müssen.
- 📝 Last Change: Removed explicit SwiftData relationship macro to fix circular reference build errors.
+ 📝 Last Change: Documented unused position field as technical debt for future consideration.
  ------------------------------------------------------------------------
 */
 
@@ -40,6 +40,12 @@ final class ItemEntity: Identifiable, Codable {
     var category: String?
     var productDescription: String?
     var brand: String?
+    /// TODO: [Unused Field] Position for manual item ordering
+    /// Current Status: NOT IMPLEMENTED - field exists in DB but no code uses it
+    /// Possible Use Cases:
+    ///   - Drag-and-drop reordering in list
+    ///   - Custom sort order (separate from alphabetical/category)
+    /// Decision: Keep field in DB (no harm) but consider implementing or removing in future refactor
     var position: Int?
     var createdAt: Date
     var updatedAt: Date

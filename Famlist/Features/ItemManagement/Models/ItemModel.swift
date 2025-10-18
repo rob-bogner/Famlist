@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 03.09.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -19,7 +19,7 @@
  - listId links the item to a specific list (matches items.list_id in the DB).
 
  📝 Last Change:
- - Standardized header; expanded field documentation to clarify DB mapping and UI usage. No functional changes.
+ - Documented imageUrl/imageData migration plan and position field as technical debt.
  ------------------------------------------------------------------------
  */
 
@@ -34,10 +34,19 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Unique identifier for the item.
     let id: String
 
-    /// Public or signed URL to the image stored in Supabase Storage (preferred going forward).
+    /// TODO: [Future Migration] Public or signed URL to image in Supabase Storage
+    /// Current Status: NOT IMPLEMENTED - imageUrl is not used anywhere in the codebase
+    /// Migration Plan: When DB size becomes an issue, migrate to:
+    ///   1. Upload images to Supabase Storage
+    ///   2. Store URLs here instead of Base64
+    ///   3. Implement local cache (Data) for offline availability
+    ///   4. Remove imageData after migration complete
+    /// Trade-off: Base64 works offline but bloats DB; URLs are small but need caching
     var imageUrl: String?
 
-    /// Base64-encoded image data representing a captured or selected photo. Deprecated; kept for backward compatibility during migration.
+    /// Base64-encoded image data for offline-first functionality
+    /// Note: This approach stores images directly in the database which impacts size/performance
+    /// See imageUrl documentation for planned migration path
     var imageData: String?
     
     /// Name of the item (e.g., "Milk", "Bread").
