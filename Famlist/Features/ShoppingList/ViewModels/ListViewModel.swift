@@ -5,7 +5,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 15.10.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -26,7 +26,7 @@
  - All public methods are @MainActor-only because SwiftUI expects UI changes on the main thread.
 
  📝 Last Change:
- - Added connectivity-aware resume/pause handling so realtime sync restarts after backgrounding or offline periods.
+ - Optimized deleteItem() to skip Supabase DELETE for .pendingCreate items (only purge locally).
  ------------------------------------------------------------------------
  */
 
@@ -237,7 +237,34 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     }
 
     /// Deletes an item by id within the current list.
+    /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
+        // Check if this item only exists locally (never synced to Supabase yet)
+        guard let itemStore, let uuid = UUID(uuidString: item.id) else {
+            markItemDeleted(item) // Fallback to normal flow if store unavailable.
+            return
+        }
+        
+        // Fetch the entity to check its sync status
+        guard let entity = try? itemStore.fetchItem(id: uuid) else {
+            markItemDeleted(item) // Fallback to normal flow if entity not found.
+            return
+        }
+        
+        // If item was never synced, just purge it locally without API call
+        if entity.syncStatus == .pendingCreate {
+            do {
+                try itemStore.purge(id: uuid) // Remove from local store completely.
+                refreshItemsFromStore() // Update UI immediately.
+                return // Skip Supabase DELETE call - item never existed there.
+            } catch {
+                logVoid(params: (note: "deleteItem purge failed", error: (error as NSError).localizedDescription))
+                setError(error) // Show error to user if purge fails.
+                return
+            }
+        }
+        
+        // For synced/pendingUpdate/failed items: use normal deletion flow
         markItemDeleted(item) // Soft-delete locally first for immediate UI feedback.
         Task { [weak self] in // Async call wrapper.
             guard let self else { return }
