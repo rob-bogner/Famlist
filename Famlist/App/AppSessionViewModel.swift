@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 07.09.2025
- Last updated on: 21.09.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -12,6 +12,7 @@
  🛠 Includes:
  - AppSessionViewModel orchestrating Supabase auth restore, magic-link completion, and default list loading via repositories.
  - Automatic new user onboarding with profile and default list creation.
+ - currentProfile storage for UI access.
 
  🔰 Notes for Beginners:
  - This ViewModel owns simple flags (isAuthenticated, isLoading, errorMessage) and calls repositories after login.
@@ -20,8 +21,7 @@
  - Handles both existing users (direct profile load) and new users (auto profile creation).
 
  📝 Last Change:
- - Added new user onboarding: createProfileForNewUser() with automatic public_id generation.
- - Enhanced handleAuthCompletion() to handle missing profiles gracefully.
+ - Added currentProfile @Published property for ProfileView access.
  ------------------------------------------------------------------------
  */
 
@@ -36,6 +36,7 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
     @Published var isLoading: Bool = false // Whether a background operation is in progress.
     @Published var errorMessage: String? = nil // Optional, user-presentable error message.
     @Published var isRestoringSession: Bool = false // Whether session restoration is in progress.
+    @Published var currentProfile: Profile? = nil // The currently authenticated user's profile.
 
     // MARK: - Lightweight Toasts
     @Published var toastMessage: String? = nil
@@ -215,6 +216,9 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
                 me = try await createProfileForNewUser() // Create new profile for first-time user.
                 logVoid(params: ["action": "createProfile", "status": "created", "profileId": me.id]) // Log profile creation.
             }
+            
+            // Store profile for access in UI
+            currentProfile = me
             
             await markPhase(.defaultList)
             let defaultList = try await lists.fetchDefaultList(for: me.id) // Ensure a default list exists and fetch it.

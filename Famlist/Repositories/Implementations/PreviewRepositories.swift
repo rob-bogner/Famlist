@@ -25,10 +25,32 @@ import Foundation // Foundation provides UUID, AsyncStream, and basic types for 
 
 /// Preview implementation of ProfilesRepository storing a single profile in memory.
 final class PreviewProfilesRepository: ProfilesRepository { // Used by previews to avoid network.
-    private var profile = Profile(id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!, public_id: "genius-demo") // Seed profile for previews.
-    func upsertProfile(authUserId: UUID, publicId: String) async throws { profile = .init(id: authUserId, public_id: publicId) } // Replace stored profile.
+    private var profile = Profile(
+        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+        publicId: "genius-demo",
+        username: "preview_user",
+        fullName: "Preview User",
+        avatarUrl: nil,
+        website: nil,
+        createdAt: Date(),
+        updatedAt: Date()
+    ) // Seed profile for previews.
+    
+    func upsertProfile(authUserId: UUID, publicId: String) async throws { 
+        profile = Profile(
+            id: authUserId,
+            publicId: publicId,
+            username: nil,
+            fullName: nil,
+            avatarUrl: nil,
+            website: nil,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+    } // Replace stored profile.
+    
     func myProfile() async throws -> Profile { profile } // Return the stored profile.
-    func profileByPublicId(_ publicId: String) async throws -> Profile? { profile.public_id == publicId ? profile : nil } // Match on public id.
+    func profileByPublicId(_ publicId: String) async throws -> Profile? { profile.publicId == publicId ? profile : nil } // Match on public id.
 }
 
 /// Preview implementation of ListsRepository with an in-memory list array.

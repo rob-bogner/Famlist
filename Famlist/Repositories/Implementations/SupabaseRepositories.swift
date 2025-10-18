@@ -16,7 +16,27 @@ import Foundation // Provides UUID, Date, and Codable support used by models.
 import Supabase // Brings in Supabase types for queries and builders.
 
 // MARK: - Shared Models
-struct Profile: Codable, Identifiable, Hashable { let id: UUID; let public_id: String } // Minimal profile model mapping.
+struct Profile: Codable, Identifiable, Hashable {
+    let id: UUID
+    let publicId: String
+    let username: String?
+    let fullName: String?
+    let avatarUrl: String?
+    let website: String?
+    let createdAt: Date?
+    let updatedAt: Date?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case publicId = "public_id"
+        case username
+        case fullName = "full_name"
+        case avatarUrl = "avatar_url"
+        case website
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
 
 struct List: Codable, Identifiable, Hashable { // Represents a shopping list row from the DB.
     let id: UUID // List id.

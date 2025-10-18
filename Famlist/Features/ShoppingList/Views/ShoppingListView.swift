@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 15.10.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -11,13 +11,14 @@
 
  🛠 Includes:
  - Accent header background + title + progress, list content, quick-add input, and modal for full add form.
+ - Hamburger menu with profile view access and sign-out.
 
  🔰 Notes for Beginners:
  - Uses an EnvironmentObject (ListViewModel) so all subviews share the same data.
  - The quick-add expands inline; the full AddItemView is presented as a sheet for more details.
 
  📝 Last Change:
- - Added scenePhase handling so the view tells the view model to pause/resume realtime sync around background transitions.
+ - Added ProfileView integration via hamburger menu.
  ------------------------------------------------------------------------
  */
 
@@ -112,9 +113,17 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     }
 
     // MARK: - Hamburger Menu
+    @State private var showProfileView: Bool = false // Controls ProfileView sheet presentation
+    
     /// A top-left hamburger menu with session-related actions.
     private var hamburgerMenu: some View { // Computed view returning the menu for the header.
         Menu { // Menu content listing actions.
+            Button {
+                showProfileView = true // Show profile view sheet
+            } label: {
+                Label(String(localized: "menu.profile"), systemImage: "person.circle")
+            }
+            
             Button(role: .destructive) { // Destructive styling to indicate a session-affecting action.
                 session.signOut() // Trigger sign-out which removes the saved session and resets UI state.
             } label: { // Label for the sign-out action.
@@ -127,6 +136,12 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 .accessibilityLabel(Text(String(localized: "menu.accessibility.hamburger"))) // VoiceOver label.
         }
         .buttonStyle(.plain) // Match add button styling to prevent iOS 26 from adding a bordered capsule look.
+        .sheet(isPresented: $showProfileView) {
+            if let profile = session.currentProfile {
+                ProfileView(profile: profile)
+                    .environmentObject(session)
+            }
+        }
     }
 
     // MARK: - Quick Add Button & Field

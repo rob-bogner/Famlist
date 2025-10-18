@@ -3,7 +3,7 @@
 
  GroceryGenius
  Created on: 27.11.2023
- Last updated on: 03.09.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -11,6 +11,7 @@
 
  🛠 Includes:
  - PreviewMocks struct with sampleItems and makeListViewModelWithSamples().
+ - makeAppSessionViewModel() for session-related previews.
 
  🔰 Notes for Beginners:
  - This file helps previews render instantly without relying on network backends.
@@ -18,7 +19,7 @@
  - App runtime uses real repositories; this code is for previews only.
 
  📝 Last Change:
- - Replaced the duplicate ShoppingListView with a PreviewMocks helper to avoid type collisions and added beginner-friendly comments. No functional changes to the app.
+ - Added makeAppSessionViewModel() factory for ProfileView previews.
  ------------------------------------------------------------------------
  */
 
@@ -51,6 +52,32 @@ struct PreviewMocks { // Namespace for preview data and factories.
             }
         }
         return vm // Return immediately; items will flow in.
+    }
+    
+    /// Builds an AppSessionViewModel for previews with a sample profile
+    /// - Returns: An AppSessionViewModel with preview data
+    @MainActor
+    static func makeAppSessionViewModel() -> AppSessionViewModel {
+        let listVM = makeListViewModelWithSamples()
+        let sessionVM = AppSessionViewModel(
+            client: nil, // No real client in previews
+            profiles: PreviewProfilesRepository(),
+            lists: PreviewListsRepository(),
+            listViewModel: listVM
+        )
+        // Set a sample profile
+        sessionVM.currentProfile = Profile(
+            id: UUID(),
+            publicId: "ABC12345",
+            username: "preview_user",
+            fullName: "Preview User",
+            avatarUrl: nil,
+            website: nil,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        sessionVM.isAuthenticated = true
+        return sessionVM
     }
 }
 
