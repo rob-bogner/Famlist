@@ -19,6 +19,8 @@
 		EE2B2C6A2EA3DB6E00935BCB /* ItemFormViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C682EA3DB6E00935BCB /* ItemFormViewModel.swift */; };
 		EE2B2C6C2EA3DFD600935BCB /* UIImage+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6B2EA3DFD600935BCB /* UIImage+Utils.swift */; };
 		EE2B2C6E2EA3E52500935BCB /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6D2EA3E52500935BCB /* ProfileView.swift */; };
+		EE2B2C712EA53AA900935BCB /* ClipboardImportParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */; };
+		EE2B2C732EA53ABA00935BCB /* ClipboardImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C722EA53ABA00935BCB /* ClipboardImportView.swift */; };
 		EEA1455C2E7B106B00A043A5 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = EEA1455B2E7B106B00A043A5 /* Secrets.plist */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
 		EEB660412E7F37A9006CB1EB /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB660082E7F37A9006CB1EB /* ImageCache.swift */; };
@@ -71,6 +73,8 @@
 		EE2B2C682EA3DB6E00935BCB /* ItemFormViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemFormViewModel.swift; sourceTree = "<group>"; };
 		EE2B2C6B2EA3DFD600935BCB /* UIImage+Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Utils.swift"; sourceTree = "<group>"; };
 		EE2B2C6D2EA3E52500935BCB /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportParser.swift; sourceTree = "<group>"; };
+		EE2B2C722EA53ABA00935BCB /* ClipboardImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportView.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* Famlist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Famlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEB660002E7F37A9006CB1EB /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
@@ -140,6 +144,14 @@
 				EE2B2C682EA3DB6E00935BCB /* ItemFormViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		EE2B2C702EA53AA900935BCB /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		EE69A4D92B14CB78007C3515 = {
@@ -273,6 +285,7 @@
 		EEB6601B2E7F37A9006CB1EB /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				EE2B2C722EA53ABA00935BCB /* ClipboardImportView.swift */,
 				EEB660182E7F37A9006CB1EB /* AddItemView.swift */,
 				EEB660192E7F37A9006CB1EB /* EditItemView.swift */,
 				EEB6601A2E7F37A9006CB1EB /* ProductImageFullscreenView.swift */,
@@ -283,6 +296,7 @@
 		EEB6601C2E7F37A9006CB1EB /* ItemManagement */ = {
 			isa = PBXGroup;
 			children = (
+				EE2B2C702EA53AA900935BCB /* Services */,
 				EE2B2C692EA3DB6E00935BCB /* ViewModels */,
 				EEB660152E7F37A9006CB1EB /* Components */,
 				EEB660172E7F37A9006CB1EB /* Models */,
@@ -544,6 +558,7 @@
 				EE2B2C6C2EA3DFD600935BCB /* UIImage+Utils.swift in Sources */,
 				EEB6604A2E7F37A9006CB1EB /* ItemModel.swift in Sources */,
 				EEB6604B2E7F37A9006CB1EB /* ListView.swift in Sources */,
+				EE2B2C712EA53AA900935BCB /* ClipboardImportParser.swift in Sources */,
 				EEB6604C2E7F37A9006CB1EB /* Utils.swift in Sources */,
 				EEB6604D2E7F37A9006CB1EB /* SupabaseRepositories.swift in Sources */,
 				EEB6604E2E7F37A9006CB1EB /* EditItemView.swift in Sources */,
@@ -558,6 +573,7 @@
 				EEB660562E7F37A9006CB1EB /* ListRowView.swift in Sources */,
 				EEB660572E7F37A9006CB1EB /* ItemsRepository.swift in Sources */,
 				EEB660582E7F37A9006CB1EB /* AccentHeaderBackground.swift in Sources */,
+				EE2B2C732EA53ABA00935BCB /* ClipboardImportView.swift in Sources */,
 				EE2B2C6A2EA3DB6E00935BCB /* ItemFormViewModel.swift in Sources */,
 				EEB660592E7F37A9006CB1EB /* Validation.swift in Sources */,
 				EE2B2C652EA019F500935BCB /* ConnectivityMonitor.swift in Sources */,

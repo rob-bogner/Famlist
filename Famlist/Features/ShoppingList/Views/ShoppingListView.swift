@@ -114,6 +114,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
 
     // MARK: - Hamburger Menu
     @State private var showProfileView: Bool = false // Controls ProfileView sheet presentation
+    @State private var showImportView: Bool = false // Controls ClipboardImportView sheet presentation
     
     /// A top-left hamburger menu with session-related actions.
     private var hamburgerMenu: some View { // Computed view returning the menu for the header.
@@ -122,6 +123,12 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 showProfileView = true // Show profile view sheet
             } label: {
                 Label(String(localized: "menu.profile"), systemImage: "person.circle")
+            }
+            
+            Button {
+                showImportView = true // Show clipboard import view sheet
+            } label: {
+                Label(String(localized: "menu.import"), systemImage: "doc.on.clipboard")
             }
             
             Button(role: .destructive) { // Destructive styling to indicate a session-affecting action.
@@ -141,6 +148,10 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 ProfileView(profile: profile)
                     .environmentObject(session)
             }
+        }
+        .sheet(isPresented: $showImportView) {
+            ClipboardImportView()
+                .environmentObject(listViewModel)
         }
     }
 
