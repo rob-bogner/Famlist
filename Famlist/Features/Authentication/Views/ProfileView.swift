@@ -37,6 +37,7 @@ struct ProfileView: View {
     
     // MARK: - State
     
+    @State private var email: String = ""
     @State private var username: String = ""
     @State private var fullName: String = ""
     @State private var publicId: String = ""
@@ -62,6 +63,20 @@ struct ProfileView: View {
                     VStack(spacing: DS.Spacing.m) {
                         // Avatar picker
                         PhotoField(image: $selectedAvatar)
+                        
+                        // Email (read-only)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(String(localized: "profile.email.label"))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(email)
+                                .font(.body)
+                                .foregroundColor(.primary)
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                        }
                         
                         // Username field with validation
                         VStack(alignment: .leading, spacing: 4) {
@@ -135,6 +150,7 @@ struct ProfileView: View {
     // MARK: - Helpers
     
     private func populateFields() {
+        email = session.client?.auth.currentUser?.email ?? ""
         username = profile.username ?? ""
         fullName = profile.fullName ?? ""
         publicId = profile.publicId

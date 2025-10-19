@@ -750,6 +750,23 @@
         }
       }
     },
+    "profile.email.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail-Adresse"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email"
+          }
+        }
+      }
+    },
     "profile.publicId.label" : {
       "extractionState" : "manual",
       "localizations" : {

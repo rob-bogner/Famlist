@@ -60,7 +60,7 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
     }
 
     // MARK: - Dependencies
-    private let client: SupabaseClienting? // Supabase client facade (optional to allow preview-only construction).
+    let client: SupabaseClienting? // Supabase client facade (optional to allow preview-only construction).
     private let profiles: ProfilesRepository // Repository to fetch the current profile after login.
     private let lists: ListsRepository // Repository to fetch/create the default list for the profile.
     private unowned let listViewModel: ListViewModel // Reference to list VM to start observing items after login.
