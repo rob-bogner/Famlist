@@ -176,7 +176,15 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
             for await snapshot in repository.observeItems(listId: listId) { // Iterate updates as they arrive from repository.
                 await MainActor.run {
                     let merged = self.mergeRemoteSnapshot(snapshot)
-                    withAnimation { self.items = merged } // Apply with animation on main thread for smooth UI.
+                    let previousCount = self.items.count
+                    let newCount = merged.count
+
+                    // Only animate when items are added or removed, not when updated (to prevent visible re-sorting)
+                    if previousCount != newCount {
+                        withAnimation { self.items = merged }
+                    } else {
+                        self.items = merged
+                    }
                     self.persistRemoteSnapshot(snapshot) // Mirror remote snapshot into SwiftData for offline usage.
                 }
             }
@@ -286,7 +294,14 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     }
 
     /// Toggles the checked state of an item and persists the change via updateItem.
+    /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
     func toggleItemChecked(_ item: ItemModel) {
+        // Optimistic update: Update UI immediately for instant feedback
+        if let index = items.firstIndex(where: { $0.id == item.id }) {
+            items[index].isChecked.toggle()
+        }
+
+        // Then sync to backend
         var copy = item // Copy the item so we can mutate it safely.
         copy.isChecked.toggle() // Flip the boolean from true -> false or vice versa.
         updateItem(copy) // Reuse update flow to persist.
@@ -300,8 +315,10 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Returns a 0...1 fraction for progress UI (0 when list is empty to avoid NaN).
     var progressFraction: Double { totalItemCount == 0 ? 0 : Double(checkedItemCount) / Double(totalItemCount) }
     /// Convenience array of items that are not checked yet.
+    /// Maintains stable sort order by preserving the order from items array.
     var uncheckedItems: [ItemModel] { items.filter { !$0.isChecked } }
     /// Convenience array of items that are checked already.
+    /// Maintains stable sort order by preserving the order from items array.
     var checkedItems: [ItemModel] { items.filter { $0.isChecked } }
 
     // MARK: - View Input Helpers
@@ -411,11 +428,14 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     }
 
     /// Merges the latest remote snapshot with unsynced local mutations to provide a consistent view.
+    /// Preserves the current items array order to prevent re-sorting.
     private func mergeRemoteSnapshot(_ snapshot: [ItemModel]) -> [ItemModel] {
         guard let itemStore else { return snapshot }
         do {
             let localEntities = try itemStore.fetchItems(listId: listId, includeDeleted: true)
             var merged = Dictionary(uniqueKeysWithValues: snapshot.map { ($0.id, $0) })
+
+            // Apply local pending changes
             for entity in localEntities {
                 let id = entity.id.uuidString
                 switch entity.syncStatus {
@@ -427,18 +447,33 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
                     break
                 }
             }
+
+            // Preserve current order by starting with existing items array
             var ordered: [ItemModel] = []
-            for item in snapshot {
-                if let value = merged.removeValue(forKey: item.id) {
-                    ordered.append(value)
+            let currentIds = Set(items.map { $0.id })
+
+            // First, keep all existing items in their current order (updated with new data)
+            for existingItem in items {
+                if let updatedItem = merged.removeValue(forKey: existingItem.id) {
+                    ordered.append(updatedItem)
                 }
             }
+
+            // Then append any new items from snapshot that weren't in current items
+            for item in snapshot {
+                if !currentIds.contains(item.id), let newItem = merged.removeValue(forKey: item.id) {
+                    ordered.append(newItem)
+                }
+            }
+
+            // Finally, append any pending local creates
             for entity in localEntities {
                 let key = entity.id.uuidString
                 if let value = merged.removeValue(forKey: key) {
                     ordered.append(value)
                 }
             }
+
             if !merged.isEmpty { ordered.append(contentsOf: merged.values) }
             return ordered
         } catch {

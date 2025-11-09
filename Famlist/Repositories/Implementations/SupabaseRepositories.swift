@@ -372,7 +372,7 @@ final class SupabaseItemsRepository: ItemsRepository { // Supabase-backed items 
             }
         }
         do { // Attempt to fetch and map rows.
-            let rows: [Row] = try await client.from("items").select().eq("list_id", value: listId.uuidString).order("created_at", ascending: true).execute().value // Fetch list's items.
+            let rows: [Row] = try await client.from("items").select().eq("list_id", value: listId.uuidString).execute().value // Fetch list's items in natural database order.
             let mapped = rows.map { r in // Map DB rows to ItemModel values.
                 ItemModel(
                     id: r.id.uuidString,

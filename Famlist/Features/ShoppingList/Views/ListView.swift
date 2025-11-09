@@ -52,6 +52,7 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
     private var uncheckedItemsSection: some View { // Computed view for unchecked items.
         ForEach(listViewModel.uncheckedItems) { item in // Iterate each unchecked item and make a row.
             ListRowView(item: item) // Render a row UI for the item.
+                .id("unchecked-\(item.id)") // Section-specific ID prevents view reuse between sections
                 .listRowInsets(DS.List.rowInsets) // Explicit insets for consistent appearance across iOS versions.
                 .listRowSeparator(.hidden) // Hide the default list separators for a card look.
                 .listRowBackground(Color.theme.background) // Match row background to our theme.
@@ -84,6 +85,7 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
                 Section(header: SectionHeader(title: String(localized: "section.checkedItems.title"))) { // Section with a reusable header.
                     ForEach(listViewModel.checkedItems) { item in // Iterate all checked items.
                         ListRowView(item: item) // Render each checked item.
+                            .id("checked-\(item.id)") // Section-specific ID prevents view reuse between sections
                             .listRowInsets(DS.List.rowInsets) // Explicit insets for consistent appearance across iOS versions.
                             .listRowSeparator(.hidden) // Hide default separators.
                             .listRowBackground(Color.theme.background) // Match theme.
