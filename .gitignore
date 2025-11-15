@@ -48,6 +48,7 @@ Secrets.plist
 claude.md
 .claude/settings.local.json
 .mcp_supabase.json
+add_files_to_xcode.sh
 
 # SwiftPM build artifacts
 .build/
