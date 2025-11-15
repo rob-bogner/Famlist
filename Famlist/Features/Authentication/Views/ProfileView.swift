@@ -150,7 +150,7 @@ struct ProfileView: View {
     // MARK: - Helpers
     
     private func populateFields() {
-        email = session.client?.auth.currentUser?.email ?? ""
+        email = session.currentUserEmail ?? ""
         username = profile.username ?? ""
         fullName = profile.fullName ?? ""
         publicId = profile.publicId
