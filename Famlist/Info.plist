@@ -15,5 +15,9 @@
 	</array>
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<key>SUPABASE_URL</key>
+	<string>https://mbfztpbwfktiduemqqfe.supabase.co</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iZnp0cGJ3Zmt0aWR1ZW1xcWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NTQyNjcsImV4cCI6MjA3MjIzMDI2N30.CjNmk9oJ2nBoaVjVWnbIcDqGMSJS0uN1hpkqwKtA6xE</string>
 </dict>
 </plist>
