@@ -2,13 +2,13 @@
  SupabaseItemsRepository.swift
  GroceryGenius
  Created on: 01.07.2025 (est.)
- Last updated on: 12.10.2025
+ Last updated on: 18.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview: Supabase-backed implementation of ItemsRepository with Realtime support.
- 🛠 Includes: Item CRUD operations, Realtime channel management, and live updates.
+ 🛠 Includes: Item CRUD operations and live updates orchestration.
  🔰 Notes for Beginners: Isolates Supabase-specific logic from UI/ViewModels.
- 📝 Last Change: Extracted from SupabaseRepositories.swift to follow one-type-per-file rule.
+ 📝 Last Change: Refactored to delegate Realtime channel management to SupabaseRealtimeManager.
  ------------------------------------------------------------------------
 */
 
@@ -17,18 +17,26 @@ import Supabase // Brings in Supabase types for queries and builders.
 
 /// Supabase-backed items repository implementing ItemsRepository.
 final class SupabaseItemsRepository: ItemsRepository {
-    let client: SupabaseClienting // Facade client used for DB calls.
     
-    // Track continuations with tokens (Continuation is a struct)
+    // MARK: - Dependencies
+    
+    let client: SupabaseClienting
+    private let realtimeManager: SupabaseRealtimeManager
+    
+    // MARK: - State
+    
+    /// Track continuations with tokens for each list.
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
     
-    // Track Realtime channels for each list to enable cleanup on unsubscribe
-    private var channels: [UUID: RealtimeChannelV2] = [:]
-
+    // MARK: - Lifecycle
+    
     init(client: SupabaseClienting) {
         self.client = client
+        self.realtimeManager = SupabaseRealtimeManager(client: client)
     }
-
+    
+    // MARK: - Observation
+    
     func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> {
         let stream = AsyncStream { continuation in
             let token = UUID()
@@ -38,101 +46,34 @@ final class SupabaseItemsRepository: ItemsRepository {
             continuations[listId]?[token] = continuation
             
             // Set up Realtime subscription if this is the first observer for this list
-            if self.continuations[listId]?.count == 1, self.channels[listId] == nil {
-                Task { await self.setupRealtimeChannel(for: listId) }
+            if self.continuations[listId]?.count == 1 {
+                Task {
+                    await self.realtimeManager.setupRealtimeChannel(for: listId) { [weak self] in
+                        await self?.fetchAndYield(listId)
+                    }
+                }
             }
             
             continuation.onTermination = { _ in
                 self.continuations[listId]?.removeValue(forKey: token)
                 // If no more observers for this list, remove the Realtime channel
                 if self.continuations[listId]?.isEmpty == true {
-                    self.teardownRealtimeChannel(for: listId)
+                    self.realtimeManager.teardownRealtimeChannel(for: listId)
                     self.continuations.removeValue(forKey: listId)
                 }
             }
-            Task { await self.fetchAndYield(listId) }
+            Task {
+                await self.fetchAndYield(listId)
+            }
         }
         return logResult(params: ["listId": listId], result: stream)
     }
     
-    /// Sets up a Realtime channel to listen for changes on the items table for a specific list.
-    /// Following the pattern from: https://ardyan.medium.com/building-chat-app-with-supabase-swiftui-in-under-100-lines-of-code-d01285f6e87a
-    private func setupRealtimeChannel(for listId: UUID) async {
-        let channelId = "public:items:\(listId)"
-        logVoid(params: (listId: listId, action: "setupChannel", channelId: channelId))
-        
-        let channel = client.realtime.channel(channelId)
-        
-        // Create AsyncStreams for each change type using postgresChange with type-safe filter syntax
-        let insertions = channel.postgresChange(
-            InsertAction.self,
-            schema: "public",
-            table: "items",
-            filter: .eq("list_id", value: listId.uuidString)
-        )
-        let updates = channel.postgresChange(
-            UpdateAction.self,
-            schema: "public",
-            table: "items",
-            filter: .eq("list_id", value: listId.uuidString)
-        )
-        let deletions = channel.postgresChange(
-            DeleteAction.self,
-            schema: "public",
-            table: "items",
-            filter: .eq("list_id", value: listId.uuidString)
-        )
-        
-        // Subscribe to the channel BEFORE consuming the streams
-        do {
-            try await channel.subscribeWithError()
-            logVoid(params: (listId: listId, action: "channelSubscribed", channelId: channelId, status: "success"))
-        } catch {
-            logVoid(params: (listId: listId, action: "channelSubscribed", channelId: channelId, status: "failed", error: String(describing: error)))
-            return
-        }
-        
-        // Store channel for later cleanup
-        channels[listId] = channel
-        
-        // Process insertions in background task
-        Task {
-            for await insertion in insertions {
-                logVoid(params: (listId: listId, action: "realtimeInsert", record: insertion.record))
-                await fetchAndYield(listId)
-            }
-        }
-        
-        // Process updates in background task
-        Task {
-            for await update in updates {
-                logVoid(params: (listId: listId, action: "realtimeUpdate", record: update.record))
-                await fetchAndYield(listId)
-            }
-        }
-        
-        // Process deletions in background task
-        Task {
-            for await deletion in deletions {
-                logVoid(params: (listId: listId, action: "realtimeDelete", oldRecord: deletion.oldRecord))
-                await fetchAndYield(listId)
-            }
-        }
-    }
-    
-    /// Tears down the Realtime channel for a specific list when no more observers exist.
-    private func teardownRealtimeChannel(for listId: UUID) {
-        guard let channel = channels[listId] else { return }
-        Task { await channel.unsubscribe() }
-        channels.removeValue(forKey: listId)
-        logVoid(params: (listId: listId, action: "teardownRealtimeChannel"))
-    }
-
     @MainActor
     private func yield(_ listId: UUID, _ items: [ItemModel]) {
         continuations[listId]?.values.forEach { $0.yield(items) }
     }
-
+    
     private func fetchAndYield(_ listId: UUID) async {
         struct Row: Codable {
             let id: UUID
@@ -166,7 +107,7 @@ final class SupabaseItemsRepository: ItemsRepository {
                 .from("items")
                 .select()
                 .eq("list_id", value: listId.uuidString)
-                .order("created_at", ascending: true) // Sort by creation time to keep stable order
+                .order("created_at", ascending: true)
                 .execute()
                 .value
             let mapped = rows.map { r in
@@ -186,16 +127,22 @@ final class SupabaseItemsRepository: ItemsRepository {
                     ownerPublicId: r.ownerPublicId
                 )
             }
-            await MainActor.run { self.yield(listId, mapped) }
+            await MainActor.run {
+                self.yield(listId, mapped)
+            }
             logVoid(params: (listId: listId, itemsCount: mapped.count))
         } catch {
-            logVoid(params: (listId: listId, note: "fetchError", error: String(describing: error)))
+            logVoid(params: (
+                listId: listId,
+                note: "fetchError",
+                error: String(describing: error)
+            ))
         }
     }
-
+    
+    // MARK: - CRUD Operations
+    
     func createItem(_ item: ItemModel) async throws -> ItemModel {
-        // Technical Debt: Still using Base64 imageData instead of Storage URLs
-        let finalImageData: String? = item.imageData
         struct NewRow: Codable {
             let id: UUID
             let listId: UUID
@@ -224,7 +171,7 @@ final class SupabaseItemsRepository: ItemsRepository {
             id: UUID(uuidString: item.id) ?? UUID(),
             listId: listUUID,
             ownerPublicId: item.ownerPublicId,
-            imageData: finalImageData,
+            imageData: item.imageData,
             name: item.name,
             units: item.units,
             measure: item.measure,
@@ -239,7 +186,7 @@ final class SupabaseItemsRepository: ItemsRepository {
         let model = ItemModel(
             id: row.id.uuidString,
             imageUrl: item.imageUrl,
-            imageData: finalImageData,
+            imageData: item.imageData,
             name: item.name,
             units: item.units,
             measure: item.measure,
@@ -253,16 +200,17 @@ final class SupabaseItemsRepository: ItemsRepository {
         )
         return logResult(params: (itemId: model.id, listId: listUUID), result: model)
     }
-
+    
     func updateItem(_ item: ItemModel) async throws {
         guard let listIdString = item.listId else {
-            throw NSError(domain: "SupabaseItemsRepository", code: 1, userInfo: [NSLocalizedDescriptionKey: "Item update requires valid listId"])
+            throw NSError(
+                domain: "SupabaseItemsRepository",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Item update requires valid listId"]
+            )
         }
-        let finalImageData: String? = item.imageData
         let listId = UUID(uuidString: listIdString) ?? UUID()
         
-        // Custom encodable struct that explicitly encodes nil values as JSON null
-        // This ensures Supabase actually clears the fields instead of skipping them
         struct UpdateRow: Encodable {
             let imageData: String?
             let name: String
@@ -281,7 +229,6 @@ final class SupabaseItemsRepository: ItemsRepository {
                 case brand
             }
             
-            // Custom encoder that explicitly encodes nil values as null
             func encode(to encoder: Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 try container.encode(imageData, forKey: .imageData)
@@ -297,7 +244,7 @@ final class SupabaseItemsRepository: ItemsRepository {
         }
         
         let payload = UpdateRow(
-            imageData: finalImageData,
+            imageData: item.imageData,
             name: item.name,
             units: item.units,
             measure: item.measure,
@@ -317,7 +264,7 @@ final class SupabaseItemsRepository: ItemsRepository {
         await fetchAndYield(listId)
         logVoid(params: (itemId: item.id, listId: listId))
     }
-
+    
     func deleteItem(id: String, listId: UUID) async throws {
         _ = try await client
             .from("items")
@@ -329,4 +276,3 @@ final class SupabaseItemsRepository: ItemsRepository {
         logVoid(params: (id: id, listId: listId))
     }
 }
-

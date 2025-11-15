@@ -67,6 +67,15 @@
 		EEB6608C2E7F37A9006CB1EB /* SupabaseItemsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6608D2E7F37A9006CB1EB /* SupabaseItemsRepository.swift */; };
 		EEB6608E2E7F37A9006CB1EB /* MeasureCanonicalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6608F2E7F37A9006CB1EB /* MeasureCanonicalizer.swift */; };
 		EEB660902E7F37A9006CB1EB /* ItemMergeStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB660912E7F37A9006CB1EB /* ItemMergeStrategy.swift */; };
+		EEC58BBD2EC92049000D3915 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BBB2EC92049000D3915 /* AuthService.swift */; };
+		EEC58BBE2EC92049000D3915 /* OnboardingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BBC2EC92049000D3915 /* OnboardingService.swift */; };
+		EEC58BC12EC92064000D3915 /* AuthTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BBF2EC92064000D3915 /* AuthTestHelpers.swift */; };
+		EEC58BC22EC92064000D3915 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BC02EC92064000D3915 /* AuthViewModel.swift */; };
+		EEC58BC72EC92077000D3915 /* ListViewModel+Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BC42EC92077000D3915 /* ListViewModel+Persistence.swift */; };
+		EEC58BC82EC92077000D3915 /* ListViewModel+InputHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BC32EC92077000D3915 /* ListViewModel+InputHelpers.swift */; };
+		EEC58BC92EC92077000D3915 /* ListViewModel+Projections.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BC52EC92077000D3915 /* ListViewModel+Projections.swift */; };
+		EEC58BCA2EC92077000D3915 /* ListViewModel+RealtimeSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BC62EC92077000D3915 /* ListViewModel+RealtimeSync.swift */; };
+		EEC58BCC2EC92089000D3915 /* SupabaseRealtimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCB2EC92089000D3915 /* SupabaseRealtimeManager.swift */; };
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
 /* End PBXBuildFile section */
 
@@ -134,6 +143,15 @@
 		EEB6608D2E7F37A9006CB1EB /* SupabaseItemsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseItemsRepository.swift; sourceTree = "<group>"; };
 		EEB6608F2E7F37A9006CB1EB /* MeasureCanonicalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureCanonicalizer.swift; sourceTree = "<group>"; };
 		EEB660912E7F37A9006CB1EB /* ItemMergeStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemMergeStrategy.swift; sourceTree = "<group>"; };
+		EEC58BBB2EC92049000D3915 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		EEC58BBC2EC92049000D3915 /* OnboardingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingService.swift; sourceTree = "<group>"; };
+		EEC58BBF2EC92064000D3915 /* AuthTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthTestHelpers.swift; sourceTree = "<group>"; };
+		EEC58BC02EC92064000D3915 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		EEC58BC32EC92077000D3915 /* ListViewModel+InputHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+InputHelpers.swift"; sourceTree = "<group>"; };
+		EEC58BC42EC92077000D3915 /* ListViewModel+Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+Persistence.swift"; sourceTree = "<group>"; };
+		EEC58BC52EC92077000D3915 /* ListViewModel+Projections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+Projections.swift"; sourceTree = "<group>"; };
+		EEC58BC62EC92077000D3915 /* ListViewModel+RealtimeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+RealtimeSync.swift"; sourceTree = "<group>"; };
+		EEC58BCB2EC92089000D3915 /* SupabaseRealtimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseRealtimeManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -262,6 +280,8 @@
 		EEB6600F2E7F37A9006CB1EB /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BBF2EC92064000D3915 /* AuthTestHelpers.swift */,
+				EEC58BC02EC92064000D3915 /* AuthViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -361,6 +381,10 @@
 		EEB660242E7F37A9006CB1EB /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BC32EC92077000D3915 /* ListViewModel+InputHelpers.swift */,
+				EEC58BC42EC92077000D3915 /* ListViewModel+Persistence.swift */,
+				EEC58BC52EC92077000D3915 /* ListViewModel+Projections.swift */,
+				EEC58BC62EC92077000D3915 /* ListViewModel+RealtimeSync.swift */,
 				EEB660232E7F37A9006CB1EB /* ListViewModel.swift */,
 			);
 			path = ViewModels;
@@ -401,6 +425,7 @@
 		EEB6602E2E7F37A9006CB1EB /* Implementations */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BCB2EC92089000D3915 /* SupabaseRealtimeManager.swift */,
 				EEB6602C2E7F37A9006CB1EB /* PreviewRepositories.swift */,
 				EEB660872E7F37A9006CB1EB /* SupabaseProfilesRepository.swift */,
 				EEB660892E7F37A9006CB1EB /* SupabaseListsRepository.swift */,
@@ -463,14 +488,14 @@
 		EEB6603E2E7F37A9006CB1EB /* Famlist */ = {
 			isa = PBXGroup;
 			children = (
-				EE2B2C572E9BF77200935BCB /* Models */,
-				EEB660712E7F39EF006CB1EB /* Preview Content */,
 				EEB6606D2E7F381A006CB1EB /* App */,
 				EEB6600D2E7F37A9006CB1EB /* Core */,
 				EEB6602A2E7F37A9006CB1EB /* Features */,
+				EEB6603C2E7F37A9006CB1EB /* Info.plist */,
+				EE2B2C572E9BF77200935BCB /* Models */,
+				EEB660712E7F39EF006CB1EB /* Preview Content */,
 				EEB660322E7F37A9006CB1EB /* Repositories */,
 				EEB6603B2E7F37A9006CB1EB /* Shared */,
-				EEB6603C2E7F37A9006CB1EB /* Info.plist */,
 			);
 			path = Famlist;
 			sourceTree = "<group>";
@@ -478,6 +503,8 @@
 		EEB6606D2E7F381A006CB1EB /* App */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BBB2EC92049000D3915 /* AuthService.swift */,
+				EEC58BBC2EC92049000D3915 /* OnboardingService.swift */,
 				EEB6606A2E7F381A006CB1EB /* AppSessionViewModel.swift */,
 				EEB6606B2E7F381A006CB1EB /* FamlistApp.swift */,
 				EEB6606C2E7F381A006CB1EB /* RootView.swift */,
@@ -591,6 +618,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */,
+				EEC58BBD2EC92049000D3915 /* AuthService.swift in Sources */,
+				EEC58BBE2EC92049000D3915 /* OnboardingService.swift in Sources */,
 				EEB660412E7F37A9006CB1EB /* ImageCache.swift in Sources */,
 				EEB660422E7F37A9006CB1EB /* ShoppingListView.swift in Sources */,
 				EE2B2C672EA3DB2A00935BCB /* ValidatedTextField.swift in Sources */,
@@ -611,11 +640,16 @@
 				EEB6607A2E7F37A9006CB1EB /* Profile.swift in Sources */,
 				EEB6607C2E7F37A9006CB1EB /* List.swift in Sources */,
 				EEB6607E2E7F37A9006CB1EB /* Category.swift in Sources */,
+				EEC58BC72EC92077000D3915 /* ListViewModel+Persistence.swift in Sources */,
+				EEC58BC82EC92077000D3915 /* ListViewModel+InputHelpers.swift in Sources */,
+				EEC58BC92EC92077000D3915 /* ListViewModel+Projections.swift in Sources */,
+				EEC58BCA2EC92077000D3915 /* ListViewModel+RealtimeSync.swift in Sources */,
 				EEB660802E7F37A9006CB1EB /* AuthError.swift in Sources */,
 				EEB660822E7F37A9006CB1EB /* ProfilesRepository.swift in Sources */,
 				EEB660842E7F37A9006CB1EB /* CategoriesRepository.swift in Sources */,
 				EEB660862E7F37A9006CB1EB /* SupabaseProfilesRepository.swift in Sources */,
 				EEB660882E7F37A9006CB1EB /* SupabaseListsRepository.swift in Sources */,
+				EEC58BCC2EC92089000D3915 /* SupabaseRealtimeManager.swift in Sources */,
 				EEB6608A2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift in Sources */,
 				EEB6608C2E7F37A9006CB1EB /* SupabaseItemsRepository.swift in Sources */,
 				EEB6608E2E7F37A9006CB1EB /* MeasureCanonicalizer.swift in Sources */,
@@ -637,6 +671,8 @@
 				EE2B2C652EA019F500935BCB /* ConnectivityMonitor.swift in Sources */,
 				EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */,
 				EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */,
+				EEC58BC12EC92064000D3915 /* AuthTestHelpers.swift in Sources */,
+				EEC58BC22EC92064000D3915 /* AuthViewModel.swift in Sources */,
 				EEB6605A2E7F37A9006CB1EB /* AuthView.swift in Sources */,
 				EEB6605B2E7F37A9006CB1EB /* ImagePicker.swift in Sources */,
 				EEB6606E2E7F381A006CB1EB /* AppSessionViewModel.swift in Sources */,
@@ -794,8 +830,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -826,8 +862,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
