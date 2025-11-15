@@ -28,6 +28,12 @@ build/
 *.xcuserdatad/
 *.DS_Store
 
+# Xcode schemes with embedded credentials (user-specific)
+# Note: Shared schemes in xcshareddata/ are normally OK to commit,
+# but if they contain environment variables, they should be in xcuserdata/ instead
+*.xcodeproj/**/xcuserdata/
+*.xcworkspace/**/xcuserdata/
+
 # Derived data
 DerivedData/
 
@@ -39,6 +45,9 @@ Secrets.plist
 
 # AI development instructions (workspace-specific)
 .github/copilot-instructions.md
+claude.md
+.claude/settings.local.json
+.mcp_supabase.json
 
 # SwiftPM build artifacts
 .build/

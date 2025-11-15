@@ -33,6 +33,7 @@
 import Foundation // Foundation provides UUID, DispatchSemaphore, and base types used here.
 import SwiftUI // SwiftUI is needed for ObservableObject and @Published used by the view model.
 import Combine // Combine provides AnyCancellable used for connectivity monitoring.
+// Note: ProfilesRepository, ItemMergeStrategy, and MeasureCanonicalizer are in the same module and don't require explicit imports.
 
 /// ViewModel encapsulating shopping list state and repository synchronization.
 @MainActor // Guarantees that all state changes happen on the main thread (UI thread).
@@ -229,16 +230,30 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         var normalized = item // Copy for mutation.
         normalized.measure = canonicalizeMeasure(item.measure) // Normalize measure text.
         normalized.listId = normalized.listId ?? listId.uuidString // Ensure list context is present.
+        
+        // Debug logging to trace the update flow
+        logVoid(params: (
+            action: "updateItem",
+            itemId: normalized.id,
+            brand: normalized.brand ?? "nil",
+            category: normalized.category ?? "nil",
+            description: normalized.productDescription ?? "nil"
+        ))
+        
         storePendingChange(for: normalized, status: .pendingUpdate) // Persist change locally while remote call runs.
         Task { [weak self] in // Perform async update.
             guard let self else { return }
             do {
                 try await self.repository.updateItem(normalized) // Persist changes.
-                await MainActor.run { self.updateSyncStatus(for: normalized.id, status: .synced) }
+                await MainActor.run { 
+                    self.updateSyncStatus(for: normalized.id, status: .synced)
+                    logVoid(params: (action: "updateItem.success", itemId: normalized.id))
+                }
             } catch {
                 await MainActor.run {
                     self.updateSyncStatus(for: normalized.id, status: .failed)
                     self.setError(error)
+                    logVoid(params: (action: "updateItem.error", itemId: normalized.id, error: (error as NSError).localizedDescription))
                 }
             }
         }
@@ -431,55 +446,12 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Preserves the current items array order to prevent re-sorting.
     private func mergeRemoteSnapshot(_ snapshot: [ItemModel]) -> [ItemModel] {
         guard let itemStore else { return snapshot }
-        do {
-            let localEntities = try itemStore.fetchItems(listId: listId, includeDeleted: true)
-            var merged = Dictionary(uniqueKeysWithValues: snapshot.map { ($0.id, $0) })
-
-            // Apply local pending changes
-            for entity in localEntities {
-                let id = entity.id.uuidString
-                switch entity.syncStatus {
-                case .pendingDelete:
-                    merged.removeValue(forKey: id)
-                case .pendingCreate, .pendingUpdate, .pendingRecovery, .failed:
-                    merged[id] = entity.toItemModel()
-                case .synced:
-                    break
-                }
-            }
-
-            // Preserve current order by starting with existing items array
-            var ordered: [ItemModel] = []
-            let currentIds = Set(items.map { $0.id })
-
-            // First, keep all existing items in their current order (updated with new data)
-            for existingItem in items {
-                if let updatedItem = merged.removeValue(forKey: existingItem.id) {
-                    ordered.append(updatedItem)
-                }
-            }
-
-            // Then append any new items from snapshot that weren't in current items
-            for item in snapshot {
-                if !currentIds.contains(item.id), let newItem = merged.removeValue(forKey: item.id) {
-                    ordered.append(newItem)
-                }
-            }
-
-            // Finally, append any pending local creates
-            for entity in localEntities {
-                let key = entity.id.uuidString
-                if let value = merged.removeValue(forKey: key) {
-                    ordered.append(value)
-                }
-            }
-
-            if !merged.isEmpty { ordered.append(contentsOf: merged.values) }
-            return ordered
-        } catch {
-            logVoid(params: (note: "mergeRemoteSnapshot", error: (error as NSError).localizedDescription))
-            return snapshot
-        }
+        let strategy = ItemMergeStrategy(
+            currentItems: items,
+            localStore: itemStore,
+            listId: listId
+        )
+        return strategy.merge(snapshot)
     }
 
     /// Stores a pending change locally and refreshes the published items, keeping offline UI in sync.
@@ -563,9 +535,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
 private extension ListViewModel {
     /// Converts a free-form measure string to a normalized token using the Measure enum.
     func canonicalizeMeasure(_ raw: String) -> String {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines) // Trim spaces.
-        guard !trimmed.isEmpty else { return "" } // Keep empty when user provided nothing.
-        return Measure.fromExternal(trimmed).rawValue // Map to enum case and return its canonical raw value.
+        MeasureCanonicalizer.canonicalize(raw)
     }
     /// Stores a user-presentable error string on the main actor.
     @MainActor

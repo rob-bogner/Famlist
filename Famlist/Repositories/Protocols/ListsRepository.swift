@@ -3,28 +3,66 @@
 
  GroceryGenius
  Created on: 04.09.2025
- Last updated on: 04.09.2025
+ Last updated on: 12.10.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Adds a convenience API on the existing ListsRepository (defined in SupabaseRepositories.swift) to fetch the default list as a ListModel.
+ - Protocol defining list-related repository operations and convenience extension for ListModel.
 
  🛠 Includes:
+ - ListsRepository protocol with list management methods.
  - Protocol extension providing `fetchDefaultList(for:)` that bridges existing ensureDefaultListExists(...) to ListModel.
 
  🔰 Notes for Beginners:
- - The app already had a ListsRepository protocol elsewhere with broader methods.
- - This file doesn’t redefine the protocol to avoid duplication; it adds a convenience method shared by both Supabase and Preview implementations.
+ - Allows swapping between Supabase and preview implementations.
+ - The extension provides a convenience method shared by both Supabase and Preview implementations.
 
  📝 Last Change:
- - Replaced duplicate protocol with a non-conflicting extension that returns ListModel.
+ - Extracted protocol from SupabaseRepositories.swift to follow one-type-per-file rule.
  ------------------------------------------------------------------------
  */
 
 import Foundation // Provides UUID and Date.
 
+/// List-related operations for sharing and creation.
+protocol ListsRepository {
+    /// Get or create default list.
+    /// - Parameter owner: The owner UUID.
+    /// - Returns: The default list row.
+    func ensureDefaultListExists(for owner: UUID) async throws -> List
+    
+    /// One-shot stream of lists for owner.
+    /// - Parameter owner: The owner UUID.
+    /// - Returns: AsyncStream emitting arrays of lists.
+    func observeLists(for owner: UUID) -> AsyncStream<[List]>
+    
+    /// Insert a new list.
+    /// - Parameters:
+    ///   - owner: The owner UUID.
+    ///   - title: The list title.
+    /// - Returns: The newly created list.
+    func createList(for owner: UUID, title: String) async throws -> List
+    
+    /// Add a member to list.
+    /// - Parameters:
+    ///   - listId: The list UUID.
+    ///   - profileId: The profile UUID to add.
+    func addMember(listId: UUID, profileId: UUID) async throws
+    
+    /// Remove a member from list.
+    /// - Parameters:
+    ///   - listId: The list UUID.
+    ///   - profileId: The profile UUID to remove.
+    func removeMember(listId: UUID, profileId: UUID) async throws
+    
+    /// Fetch default list or create it if missing.
+    /// - Parameter ownerId: The owner/profile UUID.
+    /// - Returns: A ListModel representing the default list.
+    func fetchDefaultList(for ownerId: UUID) async throws -> ListModel
+}
+
 /// Convenience API to retrieve the default list as a strongly-typed ListModel.
-extension ListsRepository { // Extend the existing protocol declared in SupabaseRepositories.swift
+extension ListsRepository {
     /// Fetches (or creates) the default list for a given owner and maps it to ListModel.
     /// - Parameter ownerId: The owner/profile UUID.
     /// - Returns: A ListModel representing the default list.

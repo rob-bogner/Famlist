@@ -9,9 +9,11 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>grocerygenius</string>
+				<string>famlist</string>
 			</array>
 		</dict>
 	</array>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 </dict>
 </plist>

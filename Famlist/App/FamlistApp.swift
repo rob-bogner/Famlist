@@ -1,9 +1,9 @@
 /*
- GroceryGeniusApp.swift
+ FamlistApp.swift
 
- GroceryGenius
+ Famlist
  Created on: 27.11.2023
- Last updated on: 15.10.2025
+ Last updated on: 15.11.2025
 
  ------------------------------------------------------------------------
  📄 File Overview:

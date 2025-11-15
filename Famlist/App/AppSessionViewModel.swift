@@ -112,7 +112,7 @@ final class AppSessionViewModel: ObservableObject { // ObservableObject so Swift
             defer { isLoading = false } // Always turn loading off when done.
             
             do { // Attempt to start OTP sign-in.
-                let redirect = URL(string: "grocerygenius://login-callback")! // URL scheme handled by app for magic-link return.
+                let redirect = URL(string: "famlist://login-callback")! // URL scheme handled by app for magic-link return.
                 try await client.auth.signInWithOTP(email: email, redirectTo: redirect) // Ask Supabase to send magic link.
                 logVoid(params: (email: email, redirectTo: redirect.absoluteString)) // Log parameters.
             } catch { // Capture and present error.

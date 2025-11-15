@@ -30,19 +30,41 @@ struct SupabaseConfig: Codable { // Holds the URL and anon key needed to initial
     let anonKey: String // Public anon API key for client apps.
 }
 
-enum SupabaseConfigLoader { // Helper namespace for loading configuration from Secrets.plist.
-    /// Tries to load Supabase config from Secrets.plist in main bundle.
-    /// The file should contain keys: SUPABASE_URL (String) and SUPABASE_ANON_KEY (String)
-    /// Do not commit Secrets.plist.
-    static func load() -> SupabaseConfig? { // Attempts to decode a simple dictionary into SupabaseConfig.
-        guard let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist"), // Locate Secrets.plist in the app bundle.
-              let data = try? Data(contentsOf: url), // Read the plist bytes.
-              let dict = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any], // Parse into a dictionary.
-              let urlString = dict["SUPABASE_URL"] as? String, // Read URL string.
-              let key = dict["SUPABASE_ANON_KEY"] as? String, // Read anon key.
-              let supaURL = URL(string: urlString) // Convert string to URL.
-        else { return nil } // If anything fails, return nil so the app can fall back.
-        return SupabaseConfig(url: supaURL, anonKey: key) // Build config object for use by the client wrapper.
+enum SupabaseConfigLoader { // Helper namespace for loading configuration from Build Settings or local file.
+    /// Tries to load Supabase config from multiple sources (in order of preference):
+    /// 1. Environment Variables (SUPABASE_URL, SUPABASE_ANON_KEY) - set in Xcode Scheme
+    /// 2. Info.plist keys (not recommended for secrets)
+    /// 3. Secrets.plist file in project directory (local development only - NOT bundled in app)
+    /// 
+    /// SECURITY: Secrets.plist is NOT included in Resources build phase, so it won't be bundled.
+    /// The file is only read from the filesystem during development (Xcode copies it to app bundle).
+    /// For production builds, use Environment Variables or a secure secrets management system.
+    static func load() -> SupabaseConfig? {
+        // Try Environment Variables first (preferred for production)
+        if let urlString = ProcessInfo.processInfo.environment["SUPABASE_URL"],
+           let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"],
+           let supaURL = URL(string: urlString) {
+            return SupabaseConfig(url: supaURL, anonKey: key)
+        }
+        
+        // Try Info.plist keys (if configured)
+        if let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
+           let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String,
+           let supaURL = URL(string: urlString) {
+            return SupabaseConfig(url: supaURL, anonKey: key)
+        }
+        
+        // Fallback: Try to load from Secrets.plist file (local development only)
+        // Note: This file is NOT in the Resources build phase, so it won't be bundled in the app
+        if let secretsPath = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
+           let dict = NSDictionary(contentsOfFile: secretsPath) as? [String: Any],
+           let urlString = dict["SUPABASE_URL"] as? String,
+           let key = dict["SUPABASE_ANON_KEY"] as? String,
+           let supaURL = URL(string: urlString) {
+            return SupabaseConfig(url: supaURL, anonKey: key)
+        }
+        
+        return nil // If all sources fail, return nil so the app can fall back to preview repos.
     }
 }
 

@@ -114,8 +114,11 @@ final class ItemFormViewModel: ObservableObject {
     // MARK: - Data Conversion
     
     /// Converts form data to ItemModel for persistence
-    /// - Parameter existingId: Optional ID for updates, generates new UUID for creates
-    func toItemModel(existingId: String? = nil) -> ItemModel {
+    /// - Parameters:
+    ///   - existingId: Optional ID for updates, generates new UUID for creates
+    ///   - listId: Optional listId to preserve when editing
+    ///   - ownerPublicId: Optional owner public ID to preserve when editing
+    func toItemModel(existingId: String? = nil, listId: String? = nil, ownerPublicId: String? = nil) -> ItemModel {
         let sanitizedName = ItemInputValidator.sanitizedName(name)
         let imageBase64 = selectedImage?.toBase64()
         
@@ -129,7 +132,9 @@ final class ItemFormViewModel: ObservableObject {
             isChecked: isChecked,
             category: category.isEmpty ? nil : category,
             productDescription: productDescription.isEmpty ? nil : productDescription,
-            brand: brand.isEmpty ? nil : brand
+            brand: brand.isEmpty ? nil : brand,
+            listId: listId,
+            ownerPublicId: ownerPublicId
         )
     }
     

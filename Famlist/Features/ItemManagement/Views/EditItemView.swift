@@ -93,7 +93,11 @@ struct EditItemView: View { // Declares the SwiftUI view for editing items.
                     formVM.validateAll()
                     guard formVM.isValid else { return }
                     
-                    let updatedItem = formVM.toItemModel(existingId: item.id)
+                    let updatedItem = formVM.toItemModel(
+                        existingId: item.id, 
+                        listId: item.listId,
+                        ownerPublicId: item.ownerPublicId
+                    )
                     listViewModel.updateItem(updatedItem)
                     dismiss()
                 }

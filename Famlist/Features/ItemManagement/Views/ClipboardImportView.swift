@@ -276,7 +276,6 @@ struct ClipboardImportView: View {
         guard !isLoading else { return }
         
         isLoading = true
-        defer { isLoading = false }
         
         let itemsToImport = selectedItems
             .sorted()
@@ -294,14 +293,16 @@ struct ClipboardImportView: View {
             }
         
         // Add items to list
-        Task {
+        Task { @MainActor in
+            defer {
+                isLoading = false
+            }
+            
             for item in itemsToImport {
                 listViewModel.addItem(item)
             }
             
-            await MainActor.run {
-                dismiss()
-            }
+            dismiss()
         }
     }
 }
