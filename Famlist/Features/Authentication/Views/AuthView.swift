@@ -63,6 +63,13 @@ struct AuthView: View { // Declares a SwiftUI View.
     @State private var showErrorAlert: Bool = false // Controls alert presentation when an error occurs.
     @State private var authMode: AuthMode = .auto // Current authentication mode.
     @State private var showPasswordField: Bool = false // Whether to show password field.
+    @FocusState private var focusedField: Field? // Tracks which field currently has focus.
+    
+    /// Enum to identify focusable fields for keyboard navigation.
+    enum Field {
+        case email
+        case password
+    }
     
     /// Authentication modes available in the app.
     enum AuthMode: String, CaseIterable {
@@ -159,10 +166,11 @@ struct AuthView: View { // Declares a SwiftUI View.
                             .keyboardType(.emailAddress) // Use email keyboard.
                             .textInputAutocapitalization(.never) // Do not autocapitalize emails.
                             .autocorrectionDisabled(true) // Disable autocorrect for emails.
+                            .focused($focusedField, equals: .email) // Bind focus state to email field.
                             .submitLabel(showPasswordField ? .next : .go) // Show Next if password field is visible, Go otherwise.
                             .onSubmit { 
                                 if showPasswordField {
-                                    // Move focus to password field (would need @FocusState for full implementation)
+                                    focusedField = .password // Move focus to password field.
                                 } else {
                                     signIn() // Submit if no password field.
                                 }
@@ -175,6 +183,7 @@ struct AuthView: View { // Declares a SwiftUI View.
                         if showPasswordField { // Show password field for email/password auth.
                             SecureField(String(localized: "auth.password.placeholder"), text: $password) // Password field.
                                 .textContentType(.password) // Hint for password autofill.
+                                .focused($focusedField, equals: .password) // Bind focus state to password field.
                                 .submitLabel(.go) // Show Go button.
                                 .onSubmit { signIn() } // Submit on Return key.
                                 .padding(12) // Inner padding for tappable area.
