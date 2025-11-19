@@ -50,6 +50,11 @@ claude.md
 .mcp_supabase.json
 add_files_to_xcode.sh
 
+# AI-generated documentation (workspace-specific)
+USER_GUIDE.md
+TECHNICAL_DOCUMENTATION.md
+.cursor/
+
 # SwiftPM build artifacts
 .build/
 
