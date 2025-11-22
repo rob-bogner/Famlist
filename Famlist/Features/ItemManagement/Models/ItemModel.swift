@@ -79,6 +79,64 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Optional owner public id, if available (maps to items.ownerPublicId in DB).
     var ownerPublicId: String?
 
+    /// Creation timestamp of the item.
+    var createdAt: Date?
+
+    /// Last update timestamp of the item.
+    var updatedAt: Date?
+    
+    // MARK: - CRDT Metadata (Optional for backward compatibility)
+    
+    /// HLC timestamp in milliseconds for causal ordering
+    var hlcTimestamp: Int64?
+    
+    /// HLC logical counter for same-timestamp disambiguation
+    var hlcCounter: Int?
+    
+    /// HLC node identifier (device/user UUID)
+    var hlcNodeId: String?
+    
+    /// Tombstone flag for CRDT deletions
+    var tombstone: Bool?
+    
+    /// Identifier of last modifier (for conflict tracking)
+    var lastModifiedBy: String?
+    
+    // MARK: - Sorting Logic
+    
+    /// Determines the sort order between two items based on creation date and ID.
+    /// Used to ensure consistent sorting across list views and merge strategies.
+    /// - Parameters:
+    ///   - lhs: Left-hand side item.
+    ///   - rhs: Right-hand side item.
+    /// - Returns: True if lhs should come before rhs.
+    static func compare(_ lhs: ItemModel, _ rhs: ItemModel) -> Bool {
+        let leftDate = lhs.createdAt ?? Date.distantPast
+        let rightDate = rhs.createdAt ?? Date.distantPast
+        
+        // Sort by creation date (older items first)
+        // We use a threshold of 1 second to ignore tiny differences during sync
+        if abs(leftDate.timeIntervalSince(rightDate)) > 1 {
+            return leftDate < rightDate
+        }
+        
+        // Fallback to ID for stable sort on identical timestamps
+        return lhs.id < rhs.id
+    }
+    
+    // MARK: - CodingKeys
+    private enum CodingKeys: String, CodingKey {
+        case id, imageUrl, imageData, name, units, measure, price, isChecked, category
+        case productDescription, brand, listId, ownerPublicId
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case hlcTimestamp = "hlc_timestamp"
+        case hlcCounter = "hlc_counter"
+        case hlcNodeId = "hlc_node_id"
+        case tombstone
+        case lastModifiedBy = "last_modified_by"
+    }
+    
     // MARK: - Initializer
 
     /// Initializes a new `ItemModel` instance.
@@ -97,6 +155,13 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ///   - brand: Brand or manufacturer of the product (e.g., "Weihenstephan"), defaults to nil.
     ///   - listId: Identifier of the containing list, defaults to nil (set by caller when known).
     ///   - ownerPublicId: Optional owner public id used for sharing features.
+    ///   - createdAt: Creation timestamp, defaults to now.
+    ///   - updatedAt: Last update timestamp, defaults to now.
+    ///   - hlcTimestamp: HLC timestamp (optional, for CRDT)
+    ///   - hlcCounter: HLC counter (optional, for CRDT)
+    ///   - hlcNodeId: HLC node ID (optional, for CRDT)
+    ///   - tombstone: Tombstone flag (optional, for CRDT deletions)
+    ///   - lastModifiedBy: Last modifier ID (optional, for CRDT)
     init(
         id: String = UUID().uuidString, // Generates a unique ID if none provided
         imageUrl: String? = nil,
@@ -110,7 +175,14 @@ struct ItemModel: Identifiable, Hashable, Codable {
         productDescription: String? = nil, // Default product description is nil
         brand: String? = nil, // Default brand is nil
         listId: String? = nil, // Default to nil
-        ownerPublicId: String? = nil
+        ownerPublicId: String? = nil,
+        createdAt: Date? = nil,
+        updatedAt: Date? = nil,
+        hlcTimestamp: Int64? = nil,
+        hlcCounter: Int? = nil,
+        hlcNodeId: String? = nil,
+        tombstone: Bool? = nil,
+        lastModifiedBy: String? = nil
     ) {
         self.id = id // Assigns the unique identifier
         self.imageUrl = imageUrl
@@ -125,5 +197,12 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.brand = brand // Assigns the brand or manufacturer
         self.listId = listId
         self.ownerPublicId = ownerPublicId
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.hlcTimestamp = hlcTimestamp
+        self.hlcCounter = hlcCounter
+        self.hlcNodeId = hlcNodeId
+        self.tombstone = tombstone
+        self.lastModifiedBy = lastModifiedBy
     }
 }

@@ -37,8 +37,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     @State private var quickAddActive: Bool = false // Tracks whether the inline quick-add text field is expanded.
     @State private var quickAddText: String = "" // Holds the text typed into the quick-add field.
     @FocusState private var quickAddFocused: Bool // Indicates whether the quick-add field currently has keyboard focus.
-    @State private var didConfigurePersistence: Bool = false // Ensures we only configure SwiftData stores once per view lifecycle.
-
+    
     private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
 
     var body: some View { // The view’s content and layout tree.
@@ -99,15 +98,6 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 listViewModel.handleAppDidEnterBackground() // Suspend observation when the app backgrounds.
             default:
                 break // No action required for the inactive transition.
-            }
-        }
-        .task { // Configure SwiftData-backed stores once the view appears.
-            guard !didConfigurePersistence else { return }
-            await MainActor.run {
-                let itemStore = SwiftDataItemStore(context: modelContext)
-                let listStore = SwiftDataListStore(context: modelContext)
-                listViewModel.configure(localItemStore: itemStore, listStore: listStore)
-                didConfigurePersistence = true
             }
         }
     }

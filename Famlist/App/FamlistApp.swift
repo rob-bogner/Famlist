@@ -45,20 +45,53 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
         }
         self.modelContainer = persistenceController.container // Store container for scene modifier injection.
         self.connectivityMonitor = ConnectivityMonitor.shared // Store connectivity monitor for later dependency injection.
+        
+        // Initialize SwiftData stores
+        let itemStore = SwiftDataItemStore(context: modelContainer.mainContext)
+        let listStore = SwiftDataListStore(context: modelContainer.mainContext)
 
         if let config = SupabaseConfigLoader.load(), // Try to load Supabase secrets from bundle.
            let client = AppSupabaseClient(config: config) { // Initialize the Supabase client if configured.
-            // Repositories backed by Supabase.
-            let itemsRepo = SupabaseItemsRepository(client: client) // Items repository using DB backend.
-            let profilesRepo = SupabaseProfilesRepository(client: client) // Profiles repository using DB backend.
-            let listsRepo = SupabaseListsRepository(client: client) // Lists repository using DB backend.
+            // Initialize CRDT components
+            let conflictResolver = ConflictResolver()
+            let hlcGenerator = HybridLogicalClockGenerator()
+            
+            // Repositories backed by Supabase with CRDT support
+            let itemsRepo = SupabaseItemsRepository(
+                client: client,
+                itemStore: itemStore,
+                conflictResolver: conflictResolver
+            )
+            let profilesRepo = SupabaseProfilesRepository(client: client)
+            let listsRepo = SupabaseListsRepository(client: client)
+            
+            // Create operation queue for sync engine
+            let operationQueue = OperationQueue(context: modelContainer.mainContext)
+            
+            // Create sync engine
+            let syncEngine = SyncEngine(
+                repository: itemsRepo,
+                itemStore: itemStore,
+                operationQueue: operationQueue,
+                conflictResolver: conflictResolver,
+                hlcGenerator: hlcGenerator
+            )
+            
             // Create list VM without starting observation; it will start after auth completes.
             let initialList = UUID() // Placeholder id until default list is resolved.
-            let lvm = ListViewModel(listId: initialList, repository: itemsRepo, startImmediately: false) // Defer observation until after login.
-            lvm.configure(connectivityMonitor: connectivityMonitor) // Wire connectivity monitoring so realtime sync resumes when online.
-            self.listViewModel = lvm // Save list VM.
+            let lvm = ListViewModel(
+                listId: initialList,
+                repository: itemsRepo,
+                itemStore: itemStore,
+                listStore: listStore,
+                startImmediately: false
+            )
+            lvm.configure(connectivityMonitor: connectivityMonitor)
+            lvm.configure(syncEngine: syncEngine)
+            self.listViewModel = lvm
+            
             // Create the session VM that coordinates auth and default list bootstrap.
-            self.sessionViewModel = AppSessionViewModel(client: client, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm) // Root VM.
+            self.sessionViewModel = AppSessionViewModel(client: client, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm)
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
             let itemsRepo = PreviewItemsRepository() // Items repo in memory.
@@ -66,7 +99,13 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             let listsRepo = PreviewListsRepository() // Lists repo in memory.
             // Create list VM (observation can start now, but no items until user adds some).
             let previewList = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID() // Stable preview id.
-            let lvm = ListViewModel(listId: previewList, repository: itemsRepo, startImmediately: true) // Start observing immediately in preview mode.
+            let lvm = ListViewModel(
+                listId: previewList,
+                repository: itemsRepo,
+                itemStore: itemStore,
+                listStore: listStore,
+                startImmediately: true
+            ) // Start observing immediately in preview mode.
             lvm.configure(connectivityMonitor: connectivityMonitor) // Wire connectivity monitoring for preview repos too, keeping API usage consistent.
             self.listViewModel = lvm // Save list VM.
             // Session VM without a client (auth disabled in previews); remains unauthenticated.

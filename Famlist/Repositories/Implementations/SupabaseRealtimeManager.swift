@@ -15,6 +15,13 @@
 import Foundation // Provides UUID.
 import Supabase // Brings in Supabase types for Realtime channels.
 
+/// Realtime event types with their payloads
+enum RealtimeEvent {
+    case insert(payload: [String: Any])
+    case update(payload: [String: Any])
+    case delete(payload: [String: Any])
+}
+
 /// Manages Realtime channel lifecycle and streams for a specific list.
 final class SupabaseRealtimeManager {
     
@@ -39,10 +46,10 @@ final class SupabaseRealtimeManager {
     /// Following the pattern from: https://ardyan.medium.com/building-chat-app-with-supabase-swiftui-in-under-100-lines-of-code-d01285f6e87a
     /// - Parameters:
     ///   - listId: The list UUID to monitor.
-    ///   - onUpdate: Callback invoked when any change is detected (insert/update/delete).
+    ///   - onEvent: Callback invoked with event payload for granular processing.
     func setupRealtimeChannel(
         for listId: UUID,
-        onUpdate: @escaping () async -> Void
+        onEvent: @escaping (RealtimeEvent) async -> Void
     ) async {
         let channelId = "public:items:\(listId)"
         logVoid(params: (listId: listId, action: "setupChannel", channelId: channelId))
@@ -96,7 +103,8 @@ final class SupabaseRealtimeManager {
         Task {
             for await insertion in insertions {
                 logVoid(params: (listId: listId, action: "realtimeInsert", record: insertion.record))
-                await onUpdate()
+                let payload = ["record": insertion.record]
+                await onEvent(.insert(payload: payload))
             }
         }
         
@@ -104,7 +112,8 @@ final class SupabaseRealtimeManager {
         Task {
             for await update in updates {
                 logVoid(params: (listId: listId, action: "realtimeUpdate", record: update.record))
-                await onUpdate()
+                let payload = ["record": update.record]
+                await onEvent(.update(payload: payload))
             }
         }
         
@@ -112,7 +121,8 @@ final class SupabaseRealtimeManager {
         Task {
             for await deletion in deletions {
                 logVoid(params: (listId: listId, action: "realtimeDelete", oldRecord: deletion.oldRecord))
-                await onUpdate()
+                let payload = ["old_record": deletion.oldRecord]
+                await onEvent(.delete(payload: payload))
             }
         }
     }

@@ -32,7 +32,9 @@ extension ItemEntity {
             productDescription: productDescription,
             brand: brand,
             listId: listId.uuidString,
-            ownerPublicId: ownerPublicId
+            ownerPublicId: ownerPublicId,
+            createdAt: createdAt,
+            updatedAt: updatedAt
         )
     }
 
@@ -52,6 +54,30 @@ extension ItemEntity {
         if let newListIdString = model.listId, let newListId = UUID(uuidString: newListIdString) {
             self.listId = newListId
         }
+        if let newCreatedAt = model.createdAt {
+            self.createdAt = newCreatedAt
+        }
+        if let newUpdatedAt = model.updatedAt {
+            self.updatedAt = newUpdatedAt
+        }
+        
+        // Apply CRDT metadata if present
+        if let hlcTimestamp = model.hlcTimestamp {
+            self.hlcTimestamp = hlcTimestamp
+        }
+        if let hlcCounter = model.hlcCounter {
+            self.hlcCounter = hlcCounter
+        }
+        if let hlcNodeId = model.hlcNodeId {
+            self.hlcNodeId = hlcNodeId
+        }
+        if let tombstone = model.tombstone {
+            self.tombstone = tombstone
+        }
+        if let lastModifiedBy = model.lastModifiedBy {
+            self.lastModifiedBy = lastModifiedBy
+        }
+        
         self.deletedAt = nil
         self.setSyncStatus(.synced)
     }
@@ -77,11 +103,16 @@ extension ItemEntity {
             category: model.category,
             productDescription: model.productDescription,
             brand: model.brand,
-            createdAt: Date(),
-            updatedAt: Date(),
+            createdAt: model.createdAt ?? Date(),
+            updatedAt: model.updatedAt ?? Date(),
             deletedAt: nil,
             list: listReference,
-            syncStatus: .synced
+            syncStatus: .synced,
+            hlcTimestamp: model.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000),
+            hlcCounter: model.hlcCounter ?? 0,
+            hlcNodeId: model.hlcNodeId ?? "",
+            tombstone: model.tombstone ?? false,
+            lastModifiedBy: model.lastModifiedBy
         )
         return entity
     }

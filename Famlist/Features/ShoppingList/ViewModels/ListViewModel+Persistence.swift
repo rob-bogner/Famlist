@@ -27,7 +27,6 @@
  */
 
 import Foundation // Foundation provides UUID and error handling.
-import SwiftUI // SwiftUI provides withAnimation for smooth UI updates.
 
 // MARK: - Local Persistence
 
@@ -72,12 +71,9 @@ extension ListViewModel {
     
     /// Loads cached items from SwiftData and applies them to the published `items` array.
     internal func loadLocalSnapshot() {
-        guard let itemStore else { return }
         do {
             let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
-            withAnimation {
-                self.items = localItems
-            }
+            applyItems(localItems)
         } catch {
             logVoid(params: (
                 note: "loadLocalSnapshot",
@@ -88,7 +84,6 @@ extension ListViewModel {
     
     /// Persists a remote snapshot into SwiftData so offline mode mirrors the latest server state.
     internal func persistRemoteSnapshot(_ snapshot: [ItemModel]) {
-        guard let itemStore else { return }
         do {
             let remoteIds = Set(snapshot.map { $0.id })
             for model in snapshot {
@@ -111,7 +106,6 @@ extension ListViewModel {
     /// Merges the latest remote snapshot with unsynced local mutations to provide a consistent view.
     /// Preserves the current items array order to prevent re-sorting.
     internal func mergeRemoteSnapshot(_ snapshot: [ItemModel]) -> [ItemModel] {
-        guard let itemStore else { return snapshot }
         let strategy = ItemMergeStrategy(
             currentItems: items,
             localStore: itemStore,
@@ -122,7 +116,6 @@ extension ListViewModel {
     
     /// Stores a pending change locally and refreshes the published items, keeping offline UI in sync.
     internal func storePendingChange(for item: ItemModel, status: ItemEntity.SyncStatus) {
-        guard let itemStore else { return }
         do {
             let entity = try itemStore.upsert(model: item)
             entity.setSyncStatus(status)
@@ -138,7 +131,7 @@ extension ListViewModel {
     
     /// Marks an item as deleted in the local store while keeping a tombstone for later sync.
     internal func markItemDeleted(_ item: ItemModel) {
-        guard let itemStore, let uuid = UUID(uuidString: item.id) else { return }
+        guard let uuid = UUID(uuidString: item.id) else { return }
         do {
             try itemStore.delete(id: uuid)
             refreshItemsFromStore()
@@ -152,7 +145,7 @@ extension ListViewModel {
     
     /// Updates the sync status for an item when a remote operation finishes or fails.
     internal func updateSyncStatus(for itemId: String, status: ItemEntity.SyncStatus) {
-        guard let itemStore, let uuid = UUID(uuidString: itemId) else { return }
+        guard let uuid = UUID(uuidString: itemId) else { return }
         do {
             if let entity = try itemStore.fetchItem(id: uuid) {
                 entity.setSyncStatus(status)
@@ -172,12 +165,9 @@ extension ListViewModel {
     
     /// Re-reads the current list from SwiftData and publishes it.
     internal func refreshItemsFromStore() {
-        guard let itemStore else { return }
         do {
             let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
-            withAnimation {
-                self.items = localItems
-            }
+            applyItems(localItems)
         } catch {
             logVoid(params: (
                 note: "refreshItemsFromStore",
@@ -188,7 +178,6 @@ extension ListViewModel {
     
     /// Reads the cached default list for the given owner when available.
     private func loadCachedDefaultList(ownerId: UUID) -> ListModel? {
-        guard let listStore else { return nil }
         do {
             let lists = try listStore.fetchLists(ownerId: ownerId)
             return lists.first(where: { $0.isDefault })?.toListModel()
@@ -203,7 +192,6 @@ extension ListViewModel {
     
     /// Persists the resolved default list into SwiftData for offline reuse.
     private func persistDefaultList(_ list: ListModel) {
-        guard let listStore else { return }
         do {
             _ = try listStore.upsert(model: list)
             try listStore.save()
@@ -213,6 +201,30 @@ extension ListViewModel {
                 error: (error as NSError).localizedDescription
             ))
         }
+    }
+    
+    /// Applies a new array of items to the published state, avoiding redundant UI updates.
+    /// - Parameter newItems: Items we want to present.
+    internal func applyItems(_ newItems: [ItemModel]) {
+        var resolvedItems = newItems
+        
+        if !pendingAnimatedItemIDs.isEmpty {
+            // Preserve the local ordering for items that currently have an optimistic animation in flight.
+            for pendingId in pendingAnimatedItemIDs {
+                guard let currentIndex = items.firstIndex(where: { $0.id == pendingId }) else { continue }
+                let currentItem = items[currentIndex]
+                
+                if let remoteIndex = resolvedItems.firstIndex(where: { $0.id == pendingId }) {
+                    resolvedItems.remove(at: remoteIndex)
+                }
+                
+                let insertionIndex = min(currentIndex, resolvedItems.count)
+                resolvedItems.insert(currentItem, at: insertionIndex)
+            }
+        }
+        
+        guard items != resolvedItems else { return }
+        self.items = resolvedItems
     }
 }
 

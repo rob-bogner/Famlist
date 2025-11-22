@@ -76,6 +76,14 @@
 		EEC58BC92EC92077000D3915 /* ListViewModel+Projections.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BC52EC92077000D3915 /* ListViewModel+Projections.swift */; };
 		EEC58BCA2EC92077000D3915 /* ListViewModel+RealtimeSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BC62EC92077000D3915 /* ListViewModel+RealtimeSync.swift */; };
 		EEC58BCC2EC92089000D3915 /* SupabaseRealtimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCB2EC92089000D3915 /* SupabaseRealtimeManager.swift */; };
+		EEC58BD62ED1F86D000D3915 /* SyncMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD32ED1F86D000D3915 /* SyncMonitor.swift */; };
+		EEC58BD72ED1F86D000D3915 /* SyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD42ED1F86D000D3915 /* SyncOperation.swift */; };
+		EEC58BD82ED1F86D000D3915 /* HybridLogicalClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCF2ED1F86D000D3915 /* HybridLogicalClock.swift */; };
+		EEC58BD92ED1F86D000D3915 /* RealtimeEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD12ED1F86D000D3915 /* RealtimeEventProcessor.swift */; };
+		EEC58BDA2ED1F86D000D3915 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCD2ED1F86D000D3915 /* ConflictResolver.swift */; };
+		EEC58BDB2ED1F86D000D3915 /* CRDTMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCE2ED1F86D000D3915 /* CRDTMetadata.swift */; };
+		EEC58BDC2ED1F86D000D3915 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */; };
+		EEC58BDD2ED1F86D000D3915 /* OperationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */; };
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
 /* End PBXBuildFile section */
 
@@ -152,6 +160,14 @@
 		EEC58BC52EC92077000D3915 /* ListViewModel+Projections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+Projections.swift"; sourceTree = "<group>"; };
 		EEC58BC62EC92077000D3915 /* ListViewModel+RealtimeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+RealtimeSync.swift"; sourceTree = "<group>"; };
 		EEC58BCB2EC92089000D3915 /* SupabaseRealtimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseRealtimeManager.swift; sourceTree = "<group>"; };
+		EEC58BCD2ED1F86D000D3915 /* ConflictResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
+		EEC58BCE2ED1F86D000D3915 /* CRDTMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CRDTMetadata.swift; sourceTree = "<group>"; };
+		EEC58BCF2ED1F86D000D3915 /* HybridLogicalClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridLogicalClock.swift; sourceTree = "<group>"; };
+		EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationQueue.swift; sourceTree = "<group>"; };
+		EEC58BD12ED1F86D000D3915 /* RealtimeEventProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeEventProcessor.swift; sourceTree = "<group>"; };
+		EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		EEC58BD32ED1F86D000D3915 /* SyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMonitor.swift; sourceTree = "<group>"; };
+		EEC58BD42ED1F86D000D3915 /* SyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncOperation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -261,6 +277,7 @@
 		EEB6600D2E7F37A9006CB1EB /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BD52ED1F86D000D3915 /* Sync */,
 				EEB660022E7F37A9006CB1EB /* DesignSystem */,
 				EEB660052E7F37A9006CB1EB /* Extensions */,
 				EEB660072E7F37A9006CB1EB /* Networking */,
@@ -540,6 +557,21 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		EEC58BD52ED1F86D000D3915 /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				EEC58BCD2ED1F86D000D3915 /* ConflictResolver.swift */,
+				EEC58BCE2ED1F86D000D3915 /* CRDTMetadata.swift */,
+				EEC58BCF2ED1F86D000D3915 /* HybridLogicalClock.swift */,
+				EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */,
+				EEC58BD12ED1F86D000D3915 /* RealtimeEventProcessor.swift */,
+				EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */,
+				EEC58BD32ED1F86D000D3915 /* SyncMonitor.swift */,
+				EEC58BD42ED1F86D000D3915 /* SyncOperation.swift */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -649,6 +681,14 @@
 				EEB660842E7F37A9006CB1EB /* CategoriesRepository.swift in Sources */,
 				EEB660862E7F37A9006CB1EB /* SupabaseProfilesRepository.swift in Sources */,
 				EEB660882E7F37A9006CB1EB /* SupabaseListsRepository.swift in Sources */,
+				EEC58BD62ED1F86D000D3915 /* SyncMonitor.swift in Sources */,
+				EEC58BD72ED1F86D000D3915 /* SyncOperation.swift in Sources */,
+				EEC58BD82ED1F86D000D3915 /* HybridLogicalClock.swift in Sources */,
+				EEC58BD92ED1F86D000D3915 /* RealtimeEventProcessor.swift in Sources */,
+				EEC58BDA2ED1F86D000D3915 /* ConflictResolver.swift in Sources */,
+				EEC58BDB2ED1F86D000D3915 /* CRDTMetadata.swift in Sources */,
+				EEC58BDC2ED1F86D000D3915 /* SyncEngine.swift in Sources */,
+				EEC58BDD2ED1F86D000D3915 /* OperationQueue.swift in Sources */,
 				EEC58BCC2EC92089000D3915 /* SupabaseRealtimeManager.swift in Sources */,
 				EEB6608A2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift in Sources */,
 				EEB6608C2E7F37A9006CB1EB /* SupabaseItemsRepository.swift in Sources */,

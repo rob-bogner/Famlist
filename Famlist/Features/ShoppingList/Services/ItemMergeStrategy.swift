@@ -30,49 +30,35 @@ struct ItemMergeStrategy {
             let localEntities = try localStore.fetchItems(listId: listId, includeDeleted: true)
             var merged = Dictionary(uniqueKeysWithValues: snapshot.map { ($0.id, $0) })
             
-            // Apply local pending changes
+            // Apply local pending changes with "Last Write Wins" logic using timestamps
             for entity in localEntities {
                 let id = entity.id.uuidString
                 switch entity.syncStatus {
                 case .pendingDelete:
                     merged.removeValue(forKey: id)
                 case .pendingCreate, .pendingUpdate, .pendingRecovery, .failed:
+                    // Local pending change always wins over remote snapshot
                     merged[id] = entity.toItemModel()
                 case .synced:
-                    break
+                    // For synced items, check if we have a conflict
+                    if let remoteItem = merged[id], 
+                       let remoteUpdatedAt = remoteItem.updatedAt {
+                         // Note: entity.updatedAt is non-optional in ItemEntity, so we can use it directly.
+                         // If remote is newer, it wins (already in merged).
+                         // If local is newer (shouldn't happen for .synced, but safety net), use local.
+                         if entity.updatedAt > remoteUpdatedAt {
+                             merged[id] = entity.toItemModel()
+                         }
+                    }
                 }
             }
             
-            // Preserve current order by starting with existing items array
-            var ordered: [ItemModel] = []
-            let currentIds = Set(currentItems.map { $0.id })
+            // Rebuild the list with stable sort order
+            // 1. If we have current items, try to preserve their relative order
+            // 2. Sort everything by createdAt to ensure consistent positioning for new items
             
-            // First, keep all existing items in their current order (updated with new data)
-            for existingItem in currentItems {
-                if let updatedItem = merged.removeValue(forKey: existingItem.id) {
-                    ordered.append(updatedItem)
-                }
-            }
-            
-            // Then append any new items from snapshot that weren't in current items
-            for item in snapshot {
-                if !currentIds.contains(item.id), let newItem = merged.removeValue(forKey: item.id) {
-                    ordered.append(newItem)
-                }
-            }
-            
-            // Finally, append any pending local creates
-            for entity in localEntities {
-                let key = entity.id.uuidString
-                if let value = merged.removeValue(forKey: key) {
-                    ordered.append(value)
-                }
-            }
-            
-            if !merged.isEmpty {
-                ordered.append(contentsOf: merged.values)
-            }
-            return ordered
+            let allItems = Array(merged.values)
+            return allItems.sorted(by: ItemModel.compare)
         } catch {
             logVoid(params: (note: "mergeRemoteSnapshot", error: (error as NSError).localizedDescription))
             return snapshot

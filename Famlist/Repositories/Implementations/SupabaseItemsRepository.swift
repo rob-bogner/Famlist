@@ -22,6 +22,7 @@ final class SupabaseItemsRepository: ItemsRepository {
     
     let client: SupabaseClienting
     private let realtimeManager: SupabaseRealtimeManager
+    private let eventProcessor: RealtimeEventProcessor
     
     // MARK: - State
     
@@ -30,9 +31,10 @@ final class SupabaseItemsRepository: ItemsRepository {
     
     // MARK: - Lifecycle
     
-    init(client: SupabaseClienting) {
+    init(client: SupabaseClienting, itemStore: SwiftDataItemStore, conflictResolver: ConflictResolver) {
         self.client = client
         self.realtimeManager = SupabaseRealtimeManager(client: client)
+        self.eventProcessor = RealtimeEventProcessor(conflictResolver: conflictResolver, itemStore: itemStore)
     }
     
     // MARK: - Observation
@@ -48,8 +50,8 @@ final class SupabaseItemsRepository: ItemsRepository {
             // Set up Realtime subscription if this is the first observer for this list
             if self.continuations[listId]?.count == 1 {
                 Task {
-                    await self.realtimeManager.setupRealtimeChannel(for: listId) { [weak self] in
-                        await self?.fetchAndYield(listId)
+                    await self.realtimeManager.setupRealtimeChannel(for: listId) { [weak self] event in
+                        await self?.processRealtimeEvent(event, listId: listId)
                     }
                 }
             }
@@ -72,6 +74,22 @@ final class SupabaseItemsRepository: ItemsRepository {
     @MainActor
     private func yield(_ listId: UUID, _ items: [ItemModel]) {
         continuations[listId]?.values.forEach { $0.yield(items) }
+    }
+    
+    /// Processes a Realtime event using the event processor (granular updates)
+    private func processRealtimeEvent(_ event: RealtimeEvent, listId: UUID) async {
+        switch event {
+        case .insert(let payload):
+            await eventProcessor.processInsertion(payload, listId: listId)
+        case .update(let payload):
+            await eventProcessor.processUpdate(payload, listId: listId)
+        case .delete(let payload):
+            await eventProcessor.processDeletion(payload, listId: listId)
+        }
+        
+        // After processing event, yield updated items from store
+        // Note: This still fetches, but only after event processing, not on every event
+        await fetchAndYield(listId)
     }
     
     private func fetchAndYield(_ listId: UUID) async {

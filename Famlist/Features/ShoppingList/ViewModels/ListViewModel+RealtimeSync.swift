@@ -25,7 +25,6 @@
  */
 
 import Foundation // Foundation provides Task and async/await support.
-import SwiftUI // SwiftUI provides withAnimation for smooth UI updates.
 
 // MARK: - Real-time Observation
 
@@ -41,17 +40,14 @@ extension ListViewModel {
             for await snapshot in repository.observeItems(listId: listId) {
                 await MainActor.run {
                     let merged = self.mergeRemoteSnapshot(snapshot)
-                    let previousCount = self.items.count
-                    let newCount = merged.count
                     
-                    // Only animate when items are added or removed, not when updated
-                    if previousCount != newCount {
-                        withAnimation {
-                            self.items = merged
-                        }
-                    } else {
-                        self.items = merged
+                    // Prevent unnecessary UI updates if the data hasn't effectively changed.
+                    // This is crucial for avoiding "double jumps" or jitters when the server
+                    // confirms an optimistic update that is already displayed correctly.
+                    if self.items != merged {
+                        self.applyItems(merged)
                     }
+                    
                     self.persistRemoteSnapshot(snapshot)
                 }
             }

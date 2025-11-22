@@ -65,12 +65,12 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
                     }
                     .tint(.blue) // Blue for edit.
                     Button(String(localized: "swipe.delete"), systemImage: "trash.circle", role: .destructive) { // Delete action.
-                        withAnimation { listViewModel.deleteItem(item) } // Animate and request deletion through the VM.
+                        listViewModel.deleteItem(item)
                     }
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) { // Leading swipe to quickly check the item.
                     Button(String(localized: "swipe.check"), systemImage: "checkmark.circle") { // Check action.
-                        withAnimation { listViewModel.toggleItemChecked(item) } // Toggle checked state with animation.
+                        listViewModel.toggleItemChecked(item)
                     }
                     .tint(.green) // Green for check.
                 }
@@ -91,13 +91,13 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
                             .listRowBackground(Color.theme.background) // Match theme.
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) { // Trailing swipe to uncheck.
                                 Button(String(localized: "swipe.uncheck"), systemImage: "arrow.uturn.backward.circle") { // Uncheck action.
-                                    withAnimation { listViewModel.toggleItemChecked(item) } // Toggle back to unchecked.
+                                    listViewModel.toggleItemChecked(item)
                                 }
                                 .tint(.yellow) // Yellow indicates undo/uncheck.
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: true) { // Leading swipe to delete.
                                 Button(String(localized: "swipe.delete"), systemImage: "trash.circle") { // Delete action.
-                                    withAnimation { listViewModel.deleteItem(item) } // Delete with animation.
+                                    listViewModel.deleteItem(item)
                                 }
                                 .tint(.red) // Red for destructive action.
                             }

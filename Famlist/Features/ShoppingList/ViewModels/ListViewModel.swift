@@ -60,6 +60,9 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Abstraction over the data source (Supabase or in-memory preview).
     internal let repository: ItemsRepository
     
+    /// Central sync engine for CRDT-based operations (optional, nil in preview mode).
+    internal var syncEngine: SyncEngine?
+    
     /// Current list context; switching replaces the observed stream of items.
     private(set) var listId: UUID
     
@@ -67,10 +70,10 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     internal var listsRepository: ListsRepository?
     
     /// Local SwiftData store for offline persistence.
-    internal var itemStore: SwiftDataItemStore?
+    internal let itemStore: SwiftDataItemStore
     
     /// Local SwiftData store for list metadata.
-    internal var listStore: SwiftDataListStore?
+    internal let listStore: SwiftDataListStore
     
     /// Holds the background task that observes live item changes.
     internal var observeTask: Task<Void, Never>?
@@ -80,6 +83,10 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     
     /// Tracks whether realtime observation has started at least once.
     internal var hasObservedActiveList: Bool = false
+    
+    /// Item identifiers that currently have an optimistic reorder animation in flight.
+    /// While they remain here, we keep the local ordering authoritative to avoid jitter.
+    internal var pendingAnimatedItemIDs: Set<String> = []
     
     /// Enumerates triggers that can resume realtime sync to aid logging and debugging.
     internal enum ResumeTrigger: String {
@@ -93,14 +100,20 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// - Parameters:
     ///   - listId: Initial list identifier to scope observations to.
     ///   - repository: ItemsRepository implementation for data access.
+    ///   - itemStore: SwiftData store for items.
+    ///   - listStore: SwiftData store for lists.
     ///   - startImmediately: Whether to start observing items immediately (set false until auth ready).
     init(
         listId: UUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID(),
         repository: ItemsRepository = PreviewItemsRepository(),
+        itemStore: SwiftDataItemStore,
+        listStore: SwiftDataListStore,
         startImmediately: Bool = true
     ) {
         self.listId = listId // Store which list we are managing.
         self.repository = repository // Store the data source implementation.
+        self.itemStore = itemStore
+        self.listStore = listStore
         if startImmediately {
             startObserving() // Begin listening for item updates only when requested.
         }
@@ -119,15 +132,6 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         self.listsRepository = listsRepository
     }
     
-    /// Injects SwiftData stores enabling local-first persistence for lists and items.
-    /// - Parameters:
-    ///   - itemStore: Store managing ItemEntity records within SwiftData.
-    ///   - listStore: Store managing ListEntity records within SwiftData.
-    func configure(localItemStore itemStore: SwiftDataItemStore, listStore: SwiftDataListStore) {
-        self.itemStore = itemStore
-        self.listStore = listStore
-    }
-    
     /// Injects the connectivity monitor so the view model can resume realtime sync when the device comes back online.
     /// - Parameter connectivityMonitor: Shared monitor publishing online/offline state.
     func configure(connectivityMonitor: ConnectivityMonitor) {
@@ -138,8 +142,18 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
                 guard let self else { return }
                 if isOnline {
                     self.resumeRealtimeSync(trigger: .connectivity)
+                    // Also resume sync engine if available
+                    Task {
+                        await self.syncEngine?.resumeSync()
+                    }
                 }
             }
+    }
+    
+    /// Injects the sync engine for CRDT-based operations
+    /// - Parameter syncEngine: Configured sync engine instance
+    func configure(syncEngine: SyncEngine) {
+        self.syncEngine = syncEngine
     }
     
     // MARK: - List Switching
@@ -173,26 +187,35 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
-        storePendingChange(for: normalized, status: .pendingCreate)
         
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                let created = try await self.repository.createItem(normalized)
-                await MainActor.run {
-                    self.updateSyncStatus(for: created.id, status: .synced)
-                }
-            } catch {
-                await MainActor.run {
-                    self.updateSyncStatus(for: normalized.id, status: .failed)
-                    self.setError(error)
+        // Use SyncEngine if available, otherwise fall back to old approach
+        if let syncEngine = syncEngine {
+            Task {
+                await syncEngine.createItem(normalized)
+            }
+        } else {
+            // Legacy path for preview mode without SyncEngine
+            storePendingChange(for: normalized, status: .pendingCreate)
+            
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let created = try await self.repository.createItem(normalized)
+                    await MainActor.run {
+                        self.updateSyncStatus(for: created.id, status: .synced)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.updateSyncStatus(for: normalized.id, status: .failed)
+                        self.setError(error)
+                    }
                 }
             }
         }
     }
     
     /// Updates an existing item after normalizing fields.
-    func updateItem(_ item: ItemModel) {
+    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
@@ -205,25 +228,49 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
             description: normalized.productDescription ?? "nil"
         ))
         
-        storePendingChange(for: normalized, status: .pendingUpdate)
+        // Track animation state if requested.
+        if trackPendingAnimation {
+            pendingAnimatedItemIDs.insert(normalized.id)
+        }
         
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                try await self.repository.updateItem(normalized)
+        // Use SyncEngine if available, otherwise fall back to old approach
+        if let syncEngine = syncEngine {
+            Task {
+                await syncEngine.updateItem(normalized)
                 await MainActor.run {
-                    self.updateSyncStatus(for: normalized.id, status: .synced)
-                    logVoid(params: (action: "updateItem.success", itemId: normalized.id))
+                    if trackPendingAnimation {
+                        self.pendingAnimatedItemIDs.remove(normalized.id)
+                    }
                 }
-            } catch {
-                await MainActor.run {
-                    self.updateSyncStatus(for: normalized.id, status: .failed)
-                    self.setError(error)
-                    logVoid(params: (
-                        action: "updateItem.error",
-                        itemId: normalized.id,
-                        error: (error as NSError).localizedDescription
-                    ))
+            }
+        } else {
+            // Legacy path for preview mode without SyncEngine
+            storePendingChange(for: normalized, status: .pendingUpdate)
+            
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await self.repository.updateItem(normalized)
+                    await MainActor.run {
+                        self.updateSyncStatus(for: normalized.id, status: .synced)
+                        if trackPendingAnimation {
+                            self.pendingAnimatedItemIDs.remove(normalized.id)
+                        }
+                        logVoid(params: (action: "updateItem.success", itemId: normalized.id))
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.updateSyncStatus(for: normalized.id, status: .failed)
+                        if trackPendingAnimation {
+                            self.pendingAnimatedItemIDs.remove(normalized.id)
+                        }
+                        self.setError(error)
+                        logVoid(params: (
+                            action: "updateItem.error",
+                            itemId: normalized.id,
+                            error: (error as NSError).localizedDescription
+                        ))
+                    }
                 }
             }
         }
@@ -232,7 +279,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Deletes an item by id within the current list.
     /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
-        guard let itemStore, let uuid = UUID(uuidString: item.id) else {
+        guard let uuid = UUID(uuidString: item.id) else {
             markItemDeleted(item)
             return
         }
@@ -258,23 +305,30 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
             }
         }
         
-        // For synced/pendingUpdate/failed items: use normal deletion flow
-        markItemDeleted(item)
-        
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                try await self.repository.deleteItem(id: item.id, listId: self.listId)
-                await MainActor.run {
-                    if let uuid = UUID(uuidString: item.id) {
-                        try? self.itemStore?.purge(id: uuid)
-                        self.refreshItemsFromStore()
+        // Use SyncEngine if available, otherwise fall back to old approach
+        if let syncEngine = syncEngine {
+            Task {
+                await syncEngine.deleteItem(item)
+            }
+        } else {
+            // Legacy path for preview mode without SyncEngine
+            markItemDeleted(item)
+            
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await self.repository.deleteItem(id: item.id, listId: self.listId)
+                    await MainActor.run {
+                        if let uuid = UUID(uuidString: item.id) {
+                            try? self.itemStore.purge(id: uuid)
+                            self.refreshItemsFromStore()
+                        }
                     }
-                }
-            } catch {
-                await MainActor.run {
-                    self.updateSyncStatus(for: item.id, status: .failed)
-                    self.setError(error)
+                } catch {
+                    await MainActor.run {
+                        self.updateSyncStatus(for: item.id, status: .failed)
+                        self.setError(error)
+                    }
                 }
             }
         }
@@ -283,15 +337,24 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Toggles the checked state of an item and persists the change via updateItem.
     /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
     func toggleItemChecked(_ item: ItemModel) {
-        // Optimistic update: Update UI immediately for instant feedback
-        if let index = items.firstIndex(where: { $0.id == item.id }) {
-            items[index].isChecked.toggle()
-        }
+        // Optimistic update:
+        // 1. Remove item from current position
+        // 2. Toggle state
+        // 3. Insert at correct sort position immediately
+        // This prevents the "double jump" effect where item moves to end of section then sorts later.
         
-        // Then sync to backend
-        var copy = item
-        copy.isChecked.toggle()
-        updateItem(copy)
+        if let index = items.firstIndex(where: { $0.id == item.id }) {
+            var updatedItem = items.remove(at: index)
+            updatedItem.isChecked.toggle()
+            
+            // Find correct insertion index using shared sort logic
+            let insertionIndex = items.firstIndex(where: { ItemModel.compare(updatedItem, $0) }) ?? items.count
+            items.insert(updatedItem, at: insertionIndex)
+            
+            pendingAnimatedItemIDs.insert(updatedItem.id)
+            // Then sync to backend
+            updateItem(updatedItem, trackPendingAnimation: true)
+        }
     }
     
     // MARK: - Error Handling

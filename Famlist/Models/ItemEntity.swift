@@ -45,6 +45,23 @@ final class ItemEntity: Identifiable, Codable {
     var deletedAt: Date?
     var list: ListEntity? // Optional reference to parent list without explicit relationship macro to avoid circular issue.
 
+    // MARK: - CRDT Fields
+    
+    /// HLC timestamp in milliseconds for causal ordering
+    var hlcTimestamp: Int64?
+    
+    /// HLC logical counter for same-timestamp disambiguation
+    var hlcCounter: Int?
+    
+    /// HLC node identifier (device/user UUID)
+    var hlcNodeId: String?
+    
+    /// Tombstone flag for CRDT deletions
+    var tombstone: Bool?
+    
+    /// Identifier of last modifier (for conflict tracking)
+    var lastModifiedBy: String?
+
     private var syncStatusRawValue: Int
 
     /// Computed accessor for the item synchronisation state.
@@ -72,9 +89,14 @@ final class ItemEntity: Identifiable, Codable {
         brand: String?,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
-    deletedAt: Date? = nil,
-    list: ListEntity? = nil,
-        syncStatus: SyncStatus = .synced
+        deletedAt: Date? = nil,
+        list: ListEntity? = nil,
+        syncStatus: SyncStatus = .synced,
+        hlcTimestamp: Int64? = nil,
+        hlcCounter: Int? = nil,
+        hlcNodeId: String? = nil,
+        tombstone: Bool? = nil,
+        lastModifiedBy: String? = nil
     ) {
         self.id = id
         self.listId = listId
@@ -92,6 +114,11 @@ final class ItemEntity: Identifiable, Codable {
         self.updatedAt = updatedAt
         self.deletedAt = deletedAt
         self.list = list
+        self.hlcTimestamp = hlcTimestamp
+        self.hlcCounter = hlcCounter
+        self.hlcNodeId = hlcNodeId
+        self.tombstone = tombstone
+        self.lastModifiedBy = lastModifiedBy
         self.syncStatusRawValue = syncStatus.rawValue
     }
 
@@ -113,6 +140,11 @@ final class ItemEntity: Identifiable, Codable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case deletedAt = "deleted_at"
+        case hlcTimestamp = "hlc_timestamp"
+        case hlcCounter = "hlc_counter"
+        case hlcNodeId = "hlc_node_id"
+        case tombstone
+        case lastModifiedBy = "last_modified_by"
     }
 
     /// Decodes the entity from Supabase JSON payloads.
@@ -133,6 +165,14 @@ final class ItemEntity: Identifiable, Codable {
         let createdAt = try container.decode(Date.self, forKey: .createdAt)
         let updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         let deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
+        
+        // CRDT fields with defaults for backward compatibility
+        let hlcTimestamp = try container.decodeIfPresent(Int64.self, forKey: .hlcTimestamp) ?? Int64(Date().timeIntervalSince1970 * 1000)
+        let hlcCounter = try container.decodeIfPresent(Int.self, forKey: .hlcCounter) ?? 0
+        let hlcNodeId = try container.decodeIfPresent(String.self, forKey: .hlcNodeId) ?? ""
+        let tombstone = try container.decodeIfPresent(Bool.self, forKey: .tombstone) ?? false
+        let lastModifiedBy = try container.decodeIfPresent(String.self, forKey: .lastModifiedBy)
+        
         self.init(
             id: id,
             listId: listId,
@@ -149,7 +189,12 @@ final class ItemEntity: Identifiable, Codable {
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
-            syncStatus: .synced
+            syncStatus: .synced,
+            hlcTimestamp: hlcTimestamp,
+            hlcCounter: hlcCounter,
+            hlcNodeId: hlcNodeId,
+            tombstone: tombstone,
+            lastModifiedBy: lastModifiedBy
         )
     }
 
@@ -171,6 +216,13 @@ final class ItemEntity: Identifiable, Codable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(updatedAt, forKey: .updatedAt)
         try container.encodeIfPresent(deletedAt, forKey: .deletedAt)
+        
+        // Encode CRDT fields
+        try container.encode(hlcTimestamp, forKey: .hlcTimestamp)
+        try container.encode(hlcCounter, forKey: .hlcCounter)
+        try container.encode(hlcNodeId, forKey: .hlcNodeId)
+        try container.encode(tombstone, forKey: .tombstone)
+        try container.encodeIfPresent(lastModifiedBy, forKey: .lastModifiedBy)
     }
 
     // MARK: - Sync Helpers

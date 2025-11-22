@@ -32,7 +32,8 @@ struct PersistenceController {
     init(inMemory: Bool = false) {
         let schema = Schema([
             ListEntity.self,
-            ItemEntity.self
+            ItemEntity.self,
+            SyncOperation.self
         ])
         let configuration = ModelConfiguration(
             "Default",
