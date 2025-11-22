@@ -171,8 +171,12 @@ struct ListRowView: View { // Main row view combining thumbnail, title, and meta
             }
             .background(item.isChecked ? Color.theme.buttonFillColor : Color.clear) // Tint background when checked.
             .cardStyle() // Rounded card styling from DesignSystem.
-            .opacity(item.isChecked ? 0.5 : 1) // Dim checked rows a bit.
+            .springCheckAnimation(isChecked: item.isChecked) // Spring animation for check/uncheck
         }
+        .transition(.asymmetric(
+            insertion: .opacity.combined(with: .move(edge: .trailing)).combined(with: .scale(scale: 0.95)),
+            removal: .opacity.combined(with: .scale(scale: 0.8))
+        )) // Slide-in from trailing when added, fade-out with scale when removed
         // Presents the fullscreen product image modal if a product photo is set
         .sheet(item: $modalPhoto) { modal in // Present when modalPhoto is non-nil.
             ProductImageFullscreenView(
@@ -183,6 +187,8 @@ struct ListRowView: View { // Main row view combining thumbnail, title, and meta
             )
             .presentationDetents([.fraction(0.5), .medium]) // Allow half and medium heights.
             .presentationCornerRadius(15) // Smooth rounded sheet corners
+            .presentationDragIndicator(.visible) // Show drag indicator
+            .transition(.scale.combined(with: .opacity)) // Smooth zoom transition for image
         }
     }
 }

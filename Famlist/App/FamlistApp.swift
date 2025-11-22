@@ -32,6 +32,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     private let sessionViewModel: AppSessionViewModel // Root session/auth coordinator.
     private let modelContainer: ModelContainer // Shared SwiftData container backing local-first storage.
     private let connectivityMonitor: ConnectivityMonitor // Shared connectivity observer injected into view models.
+    private let syncMonitor: SyncMonitor // Shared sync monitor for tracking sync status and metrics.
 
     // MARK: - Init (Dependency Composition)
     /// Initializes repositories and view models for the app.
@@ -45,6 +46,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
         }
         self.modelContainer = persistenceController.container // Store container for scene modifier injection.
         self.connectivityMonitor = ConnectivityMonitor.shared // Store connectivity monitor for later dependency injection.
+        self.syncMonitor = SyncMonitor() // Create sync monitor for tracking sync operations
         
         // Initialize SwiftData stores
         let itemStore = SwiftDataItemStore(context: modelContainer.mainContext)
@@ -120,6 +122,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             RootView() // Root view deciding between AuthView and ShoppingListView.
                 .environmentObject(sessionViewModel) // Inject shared session VM for auth state.
                 .environmentObject(listViewModel) // Inject shared list VM for list screens.
+                .environmentObject(syncMonitor) // Inject sync monitor for status tracking
                 .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
         }
     }

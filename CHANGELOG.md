@@ -5,6 +5,30 @@ All notable changes to Famlist will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.1] - 2025-11-22
+
+### Summary
+- Fix compiler errors in CRDT sync components preventing successful builds
+
+### Details
+- **MainActor Isolation**: Resolve MainActor isolation issue in HybridLogicalClock by removing UIDevice.current dependency and using UUID fallback
+- **Code Quality**: Remove unreachable catch block in RealtimeEventProcessor deletion handler
+- **Compiler Warnings**: Fix unused variable warnings in SyncEngine operation processing
+- **Build Fixes**: Remove reference to non-existent deletedItem variable causing compilation failure
+- **API Improvement**: Change HybridLogicalClockGenerator init to use optional nodeId parameter for better flexibility
+
+## [v0.1.1] - 2025-11-22
+
+### Summary
+- Fix compiler errors in CRDT sync components preventing successful builds
+
+### Details
+- **MainActor Isolation**: Resolve MainActor isolation issue in HybridLogicalClock by removing UIDevice.current dependency and using UUID fallback
+- **Code Quality**: Remove unreachable catch block in RealtimeEventProcessor deletion handler
+- **Compiler Warnings**: Fix unused variable warnings in SyncEngine operation processing
+- **Build Fixes**: Remove reference to non-existent deletedItem variable causing compilation failure
+- **API Improvement**: Change HybridLogicalClockGenerator init to use optional nodeId parameter for better flexibility
+
 ## [v0.1.0] - 2025-11-22
 
 ### Summary

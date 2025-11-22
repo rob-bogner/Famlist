@@ -32,8 +32,15 @@ import SwiftUI // Imports SwiftUI to access views and modifiers used below.
 struct PrimaryButton: View { // Prominent full-width button used across modals
     let title: String // Text shown on the button
     let action: () -> Void // Action executed when tapped
+    @State private var isPressed: Bool = false // Track press state
+    
     var body: some View { // Declares the view's layout content
-        Button(action: action) { // Tappable control
+        Button(action: {
+            // Add haptic feedback
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            action()
+        }) { // Tappable control
             Text(title) // Label text
                 .fontWeight(.semibold) // Slightly bolder text
                 .frame(maxWidth: .infinity) // Stretch to full width
@@ -41,6 +48,13 @@ struct PrimaryButton: View { // Prominent full-width button used across modals
         }
         .buttonStyle(.borderedProminent) // Use platform prominent style
         .frame(maxWidth: .infinity) // Ensure full width in stacks
+        .scaleEffect(isPressed ? 0.97 : 1.0) // Subtle scale on press
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed) // Spring animation
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 }
 
@@ -61,19 +75,40 @@ struct ProgressCard: View { // Compact card showing progress percent with icon a
     let title: String // Small caption
     let progress: Double // 0...1 fraction
     let label: String // Human-readable label, e.g., "3 of 10"
+    @State private var animatedProgress: Double = 0 // Animated progress value
+    
     var body: some View { // Declares the layout
         VStack(alignment: .leading, spacing: 8) { // Stack caption above content row
             Text(title).font(.caption2).fontWeight(.bold).foregroundColor(Color.theme.background) // Upper caption
             HStack { // Content row
                 Image(systemName: "basket") // Icon for shopping context
-                ProgressView(value: progress) // Native progress bar
+                    .foregroundColor(.black) // Black color for icon
+                    .scaleEffect(animatedProgress > 0 ? 1.0 : 0.8) // Subtle scale based on progress
+                    .animation(.spring(response: 0.5, dampingFraction: 0.6), value: animatedProgress) // Spring animation
+                
+                ProgressView(value: animatedProgress) // Animated progress bar
+                    .progressViewStyle(LinearProgressViewStyle(tint: .black)) // Black colored progress
+                    .animation(.easeInOut(duration: 0.5), value: animatedProgress) // Smooth progress animation
+                
                 Text(label) // Label to the right
+                    .font(.caption)
+                    .foregroundColor(.black) // Black color for label
+                    .animation(.easeInOut(duration: 0.3), value: label) // Animate label changes
             }
             .padding(.horizontal, 8) // Inner horizontal padding
             .padding(.vertical, 8) // Inner vertical padding
             .frame(maxWidth: .infinity) // Expand to width
             .background(Color.theme.card) // Card background color
             .cornerRadius(10) // Rounded corners
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1) // Subtle shadow
+        }
+        .onAppear {
+            animatedProgress = progress // Set initial progress
+        }
+        .onChange(of: progress) { _, newValue in
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                animatedProgress = newValue // Animate progress changes
+            }
         }
     }
 }
@@ -229,6 +264,93 @@ struct Thumbnail: View { // Square thumbnail with placeholder
     }
 }
 
+// MARK: - Animation Modifiers
+/// Spring animation for check/uncheck interactions
+struct SpringCheckAnimation: ViewModifier {
+    let isChecked: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isChecked ? 0.95 : 1.0)
+            .opacity(isChecked ? 0.7 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isChecked)
+    }
+}
+
+/// Button press feedback animation
+struct ButtonPressAnimation: ViewModifier {
+    @State private var isPressed: Bool = false
+    
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .opacity(isPressed ? 0.8 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in isPressed = true }
+                    .onEnded { _ in isPressed = false }
+            )
+    }
+}
+
+/// Pulsing animation for sync status indicators
+struct PulseAnimation: ViewModifier {
+    @State private var isPulsing: Bool = false
+    let isActive: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPulsing && isActive ? 1.1 : 1.0)
+            .opacity(isPulsing && isActive ? 0.7 : 1.0)
+            .animation(
+                isActive ? .easeInOut(duration: 1.0).repeatForever(autoreverses: true) : .default,
+                value: isPulsing
+            )
+            .onAppear {
+                if isActive {
+                    isPulsing = true
+                }
+            }
+            .onChange(of: isActive) { _, newValue in
+                isPulsing = newValue
+            }
+    }
+}
+
+/// Slide-in animation for new list items
+struct SlideInAnimation: ViewModifier {
+    let delay: Double
+    @State private var isVisible: Bool = false
+    
+    func body(content: Content) -> some View {
+        content
+            .offset(x: isVisible ? 0 : 20)
+            .opacity(isVisible ? 1 : 0)
+            .onAppear {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7).delay(delay)) {
+                    isVisible = true
+                }
+            }
+    }
+}
+
+/// Smooth fade animation for view transitions
+struct FadeAnimation: ViewModifier {
+    let duration: Double
+    @State private var opacity: Double = 0
+    
+    func body(content: Content) -> some View {
+        content
+            .opacity(opacity)
+            .onAppear {
+                withAnimation(.easeIn(duration: duration)) {
+                    opacity = 1
+                }
+            }
+    }
+}
+
 // MARK: - Style Modifiers
 struct RoundedCornerModifier: ViewModifier { // Adds corner radius to any view
     let radius: CGFloat // Radius value
@@ -264,6 +386,33 @@ struct CapsuleBorderModifier: ViewModifier { // Draws a capsule border around co
 }
 
 extension View { // Convenience wrappers
+    // MARK: - Animation Extensions
+    /// Applies spring animation for check/uncheck interactions
+    func springCheckAnimation(isChecked: Bool) -> some View {
+        modifier(SpringCheckAnimation(isChecked: isChecked))
+    }
+    
+    /// Applies button press feedback animation
+    func buttonPressAnimation() -> some View {
+        modifier(ButtonPressAnimation())
+    }
+    
+    /// Applies pulsing animation for sync indicators
+    func pulseAnimation(isActive: Bool) -> some View {
+        modifier(PulseAnimation(isActive: isActive))
+    }
+    
+    /// Applies slide-in animation for new items
+    func slideInAnimation(delay: Double = 0) -> some View {
+        modifier(SlideInAnimation(delay: delay))
+    }
+    
+    /// Applies fade animation
+    func fadeAnimation(duration: Double = 0.3) -> some View {
+        modifier(FadeAnimation(duration: duration))
+    }
+    
+    // MARK: - Style Extensions
     func roundedCorners(_ radius: CGFloat) -> some View { // Rounded corner helper
         modifier(RoundedCornerModifier(radius: radius)) // Applies RoundedCornerModifier with given radius
     }

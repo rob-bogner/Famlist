@@ -43,6 +43,8 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
                     .environmentObject(listViewModel) // Share the same view model with the editor.
                     .presentationDetents([.fraction(0.75), .large]) // Allow sheet to be medium-ish or full screen.
                     .presentationCornerRadius(15) // Rounded sheet corners for a modern look.
+                    .presentationDragIndicator(.visible) // Show drag indicator
+                    .transition(.move(edge: .bottom).combined(with: .opacity)) // Smooth transition
             }
         }
     }
@@ -65,12 +67,16 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
                     }
                     .tint(.blue) // Blue for edit.
                     Button(String(localized: "swipe.delete"), systemImage: "trash.circle", role: .destructive) { // Delete action.
-                        listViewModel.deleteItem(item)
+                        withAnimation(.easeInOut(duration: 0.3)) { // Animate deletion
+                            listViewModel.deleteItem(item)
+                        }
                     }
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) { // Leading swipe to quickly check the item.
                     Button(String(localized: "swipe.check"), systemImage: "checkmark.circle") { // Check action.
-                        listViewModel.toggleItemChecked(item)
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { // Spring animation for check
+                            listViewModel.toggleItemChecked(item)
+                        }
                     }
                     .tint(.green) // Green for check.
                 }
@@ -91,13 +97,17 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
                             .listRowBackground(Color.theme.background) // Match theme.
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) { // Trailing swipe to uncheck.
                                 Button(String(localized: "swipe.uncheck"), systemImage: "arrow.uturn.backward.circle") { // Uncheck action.
-                                    listViewModel.toggleItemChecked(item)
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { // Spring animation for uncheck
+                                        listViewModel.toggleItemChecked(item)
+                                    }
                                 }
                                 .tint(.yellow) // Yellow indicates undo/uncheck.
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: true) { // Leading swipe to delete.
                                 Button(String(localized: "swipe.delete"), systemImage: "trash.circle") { // Delete action.
-                                    listViewModel.deleteItem(item)
+                                    withAnimation(.easeInOut(duration: 0.3)) { // Animate deletion
+                                        listViewModel.deleteItem(item)
+                                    }
                                 }
                                 .tint(.red) // Red for destructive action.
                             }

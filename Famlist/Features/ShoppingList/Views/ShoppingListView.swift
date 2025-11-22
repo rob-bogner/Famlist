@@ -53,6 +53,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                         .foregroundColor(Color.theme.background) // Contrast text against the accent background.
                         .padding(.top, 30) // Add space from the top edge.
                         .padding(.leading, 18) // Indent from the leading edge.
+                    
                     ShoppingListProgressView(listViewModel: listViewModel) // Small progress card showing checked vs total.
                         .padding(.top, 8) // Space below the title.
                     Spacer().frame(height: 4) // Tiny spacer to balance layout visually.
@@ -89,6 +90,8 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
             AddItemView() // The modal for adding a new item with more fields.
                 .presentationDetents([.fraction(0.45), .large, .medium]) // Allow snap heights for the sheet.
                 .presentationCornerRadius(15) // Rounded top corners for a modern look.
+                .presentationDragIndicator(.visible) // Show drag indicator for better UX
+                .transition(.move(edge: .bottom).combined(with: .opacity)) // Smooth transition
         }
         .onChange(of: scenePhase) { _, newPhase in // React to lifecycle changes so realtime sync stays reliable.
             switch newPhase { // Branch on scene state to decide which action to take.
@@ -137,11 +140,15 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
             if let profile = session.currentProfile {
                 ProfileView(profile: profile)
                     .environmentObject(session)
+                    .presentationDragIndicator(.visible)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .sheet(isPresented: $showImportView) {
             ClipboardImportView()
                 .environmentObject(listViewModel)
+                .presentationDragIndicator(.visible)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
 
@@ -159,21 +166,31 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 .focused($quickAddFocused) // Manage keyboard focus.
                 .opacity(quickAddActive ? 1 : 0) // Only visible when active.
                 .animation(.easeOut(duration: 0.2), value: quickAddActive) // Smoothly animate visibility changes.
-            Button(action: buttonTap) { // Circular add/submit button.
+            Button(action: {
+                // Add haptic feedback on tap
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+                buttonTap()
+            }) { // Circular add/submit button.
                 Image(systemName: quickAddActive ? "paperplane.fill" : "plus") // Swap icon when field is active.
                     .rotationEffect(quickAddActive ? .degrees(45) : .degrees(0)) // Small rotation for fun when active.
-                    .animation(.easeInOut(duration: 0.28), value: quickAddActive) // Animate the rotation.
+                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: quickAddActive) // Spring animation for rotation
                     .font(.system(size: 22, weight: .bold)) // Bold, visible icon size.
                     .frame(width: quickAddActive ? 38 : 48, height: quickAddActive ? 38 : 48) // Shrink slightly when active.
-                    .animation(.easeInOut(duration: 0.26), value: quickAddActive) // Animate size changes.
+                    .animation(.spring(response: 0.35, dampingFraction: 0.65), value: quickAddActive) // Spring animation for size
                     .foregroundColor(.white) // White icon on accent background.
                     .background(Circle().fill(Color.theme.accent)) // Circular accent background.
                     .overlay(Circle().stroke(Color.theme.accent, lineWidth: 2)) // Subtle outline for definition.
                     .offset(x: quickAddActive ? -8 : 0) // Nudge left when the field is visible.
-                    .animation(.easeInOut(duration: 0.24), value: quickAddActive) // Animate the nudge.
+                    .animation(.spring(response: 0.35, dampingFraction: 0.7), value: quickAddActive) // Spring animation for offset
+                    .shadow(color: Color.theme.accent.opacity(0.3), radius: quickAddActive ? 4 : 8, x: 0, y: quickAddActive ? 2 : 4) // Subtle shadow animation
             }
             .buttonStyle(.plain) // Remove iOS default button styling to prevent gray border on iOS 26 devices.
+            .buttonPressAnimation() // Add press feedback animation
             .simultaneousGesture(LongPressGesture(minimumDuration: 0.7).onEnded { _ in // Long-press opens the full add form.
+                // Haptic feedback for long press
+                let impact = UIImpactFeedbackGenerator(style: .medium)
+                impact.impactOccurred()
                 quickAddActive = false // Collapse inline field if open.
                 quickAddText = "" // Clear any partial input.
                 addNewItem = true // Show the AddItemView sheet.

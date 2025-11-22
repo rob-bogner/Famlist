@@ -31,14 +31,29 @@ final class SyncMonitor: ObservableObject {
     
     // MARK: - Published Metrics
     
+    /// Whether sync is currently active
+    @Published var isSyncing: Bool = false
+    
+    /// Last sync error message
+    @Published var lastError: String? = nil
+    
+    /// Last successful sync timestamp
+    @Published var lastSuccessfulSync: Date? = nil
+    
     /// Average sync latency in milliseconds
     @Published var averageSyncLatency: Double = 0
+    
+    /// Average latency for compatibility with indicator
+    var averageLatency: Double { averageSyncLatency }
     
     /// Number of conflicts resolved
     @Published var conflictCount: Int = 0
     
     /// Current operation queue depth
     @Published var queueDepth: Int = 0
+    
+    /// Pending operations count (alias for queueDepth)
+    var pendingOperations: Int { queueDepth }
     
     /// Total operations processed
     @Published var totalOperations: Int = 0
@@ -56,6 +71,7 @@ final class SyncMonitor: ObservableObject {
     /// Records the start of a sync operation
     /// - Returns: Operation ID for tracking
     func startOperation() -> UUID {
+        isSyncing = true
         return UUID()
     }
     
@@ -65,9 +81,14 @@ final class SyncMonitor: ObservableObject {
     ///   - success: Whether operation succeeded
     func endOperation(_ operationId: UUID, success: Bool, latency: TimeInterval) {
         totalOperations += 1
+        isSyncing = false
         
-        if !success {
+        if success {
+            lastSuccessfulSync = Date()
+            lastError = nil
+        } else {
             failedOperations += 1
+            lastError = "Sync operation failed"
         }
         
         // Record latency
@@ -105,6 +126,9 @@ final class SyncMonitor: ObservableObject {
     
     /// Resets all metrics
     func reset() {
+        isSyncing = false
+        lastError = nil
+        lastSuccessfulSync = nil
         averageSyncLatency = 0
         conflictCount = 0
         queueDepth = 0
