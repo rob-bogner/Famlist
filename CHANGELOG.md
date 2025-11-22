@@ -27,3 +27,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 8 new Core/Sync components, 3 test suites, SQL migration
 - Full backward compatibility with legacy sync code path
 - State-of-the-art distributed systems architecture ready for production
+

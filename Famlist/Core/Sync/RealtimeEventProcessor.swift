@@ -174,51 +174,44 @@ final class RealtimeEventProcessor {
     ///   - listId: UUID of the list being observed
     @MainActor
     func processDeletion(_ payload: [String: Any], listId: UUID) async {
-        do {
-            guard let oldRecord = payload["old_record"] as? [String: Any] else {
-                logVoid(params: (
-                    action: "processDeletion.error",
-                    reason: "Missing old_record in payload"
-                ))
-                return
-            }
-            
-            guard let idString = oldRecord["id"] as? String,
-                  let uuid = UUID(uuidString: idString) else {
-                logVoid(params: (
-                    action: "processDeletion.error",
-                    reason: "Invalid id in payload"
-                ))
-                return
-            }
-            
-            // Check if we have a pending local operation for this item
-            if let existingEntity = try? itemStore.fetchItem(id: uuid) {
-                if existingEntity.syncStatus == .pendingCreate ||
-                   existingEntity.syncStatus == .pendingUpdate {
-                    // We have local changes - don't delete yet, let sync engine handle it
-                    logVoid(params: (
-                        action: "processDeletion.skip",
-                        itemId: idString,
-                        reason: "pending_local_changes"
-                    ))
-                    return
-                }
-            }
-            
-            // Safe to delete locally
-            try? itemStore.purge(id: uuid)
-            
-            logVoid(params: (
-                action: "processDeletion.purge",
-                itemId: idString
-            ))
-        } catch {
+        guard let oldRecord = payload["old_record"] as? [String: Any] else {
             logVoid(params: (
                 action: "processDeletion.error",
-                error: error.localizedDescription
+                reason: "Missing old_record in payload"
             ))
+            return
         }
+        
+        guard let idString = oldRecord["id"] as? String,
+              let uuid = UUID(uuidString: idString) else {
+            logVoid(params: (
+                action: "processDeletion.error",
+                reason: "Invalid id in payload"
+            ))
+            return
+        }
+        
+        // Check if we have a pending local operation for this item
+        if let existingEntity = try? itemStore.fetchItem(id: uuid) {
+            if existingEntity.syncStatus == .pendingCreate ||
+               existingEntity.syncStatus == .pendingUpdate {
+                // We have local changes - don't delete yet, let sync engine handle it
+                logVoid(params: (
+                    action: "processDeletion.skip",
+                    itemId: idString,
+                    reason: "pending_local_changes"
+                ))
+                return
+            }
+        }
+        
+        // Safe to delete locally
+        try? itemStore.purge(id: uuid)
+        
+        logVoid(params: (
+            action: "processDeletion.purge",
+            itemId: idString
+        ))
     }
     
     // MARK: - Helpers
@@ -340,4 +333,5 @@ final class RealtimeEventProcessor {
         entity.lastModifiedBy = metadata.lastModifiedBy
     }
 }
+
 

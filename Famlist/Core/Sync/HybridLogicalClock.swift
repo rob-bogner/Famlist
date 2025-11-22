@@ -93,11 +93,13 @@ final class HybridLogicalClockGenerator {
     // MARK: - Initialization
     
     /// Creates a new HLC generator with a unique node identifier
-    /// - Parameter nodeId: Unique device/user identifier (defaults to device UUID)
-    init(nodeId: String = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString) {
-        self.nodeId = nodeId
+    /// - Parameter nodeId: Unique device/user identifier (defaults to random UUID)
+    init(nodeId: String? = nil) {
+        // Use provided nodeId or generate a random UUID
+        // Note: UIDevice.identifierForVendor requires MainActor, so we default to UUID
+        self.nodeId = nodeId ?? UUID().uuidString
         let now = Self.currentTimestamp()
-        self.lastHLC = HybridLogicalClock(timestamp: now, counter: 0, nodeId: nodeId)
+        self.lastHLC = HybridLogicalClock(timestamp: now, counter: 0, nodeId: self.nodeId)
     }
     
     // MARK: - Clock Generation

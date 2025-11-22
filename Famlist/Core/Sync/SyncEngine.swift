@@ -159,11 +159,10 @@ final class SyncEngine: ObservableObject {
         let metadata = CRDTMetadata.deleted(by: hlcGenerator.nodeId, hlc: newHLC)
         
         // Store tombstone locally
-        var deletedItem = item
-        await storeLocally(item: deletedItem, metadata: metadata)
+        await storeLocally(item: item, metadata: metadata)
         
         // Queue operation for remote sync
-        await queueOperation(type: .delete, item: deletedItem, metadata: metadata)
+        await queueOperation(type: .delete, item: item, metadata: metadata)
         
         // Try immediate sync if online
         await processQueue()
@@ -263,7 +262,7 @@ final class SyncEngine: ObservableObject {
     private func processOperation(_ operation: SyncOperation) async {
         do {
             let item = try operation.decodeItemSnapshot()
-            let metadata = try operation.decodeCRDTMetadata()
+            let _ = try operation.decodeCRDTMetadata()
             
             logVoid(params: (
                 action: "processOperation",
