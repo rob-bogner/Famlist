@@ -5,6 +5,25 @@ All notable changes to Famlist will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.1] - 2025-11-23
+
+### Summary
+- Behebe User-Logging-Duplikate und Task-Cancellation-Bug
+
+### Details
+- **User-Logging**: Entferne doppelte User-Log-Einträge durch Konsolidierung in Repository-Schicht statt ViewModels
+- **User-Logging**: Profil-Logs zeigen jetzt Public-ID, Artikel-Updates inkl. Details (Name, Units, Measure)
+- **User-Logging**: Lösch-Events erhalten Artikelnamen für bessere Nachvollziehbarkeit
+- **User-Logging**: Alle User-Logs erscheinen direkt nach technischen Logs für klare Zuordnung
+- **ScrollDetection**: Korrigiere fehlerhafte `try?` + `Task.isCancelled` Pattern in `handleScrollEnd()`
+- **ScrollDetection**: Verwende explizites `do-catch` für `CancellationError`-Behandlung
+- **Code Quality**: Verhindere geschluckte Fehler und undefiniertes Verhalten durch korrekte Error-Behandlung
+
+### Technical Details
+- 19 files changed, 1079 insertions(+), 20 deletions(-)
+- 3 new files (UserLogger.swift, USER_LOGGING.md, LOGGING_BEISPIEL.md)
+- Improved code robustness through proper async/await error handling
+
 ## [v0.3.0] - 2025-11-23
 
 ### Summary
