@@ -75,11 +75,17 @@ struct ScrollDetectionModifier: ViewModifier {
         // Starte Debounce-Task
         debounceTask?.cancel()
         debounceTask = Task {
-            try? await Task.sleep(nanoseconds: UInt64(debounceDelay * 1_000_000_000))
-            if !Task.isCancelled {
+            do {
+                try await Task.sleep(nanoseconds: UInt64(debounceDelay * 1_000_000_000))
                 await MainActor.run {
                     isScrolling = false
                 }
+            } catch is CancellationError {
+                // Task wurde abgebrochen - normaler Fall bei erneutem Scrollen
+                return
+            } catch {
+                // Unerwarteter Fehler - sollte nicht auftreten, aber für Robustheit behandeln
+                logVoid(params: ["error": error.localizedDescription])
             }
         }
     }
