@@ -5,6 +5,23 @@ All notable changes to Famlist will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.2] - 2025-11-23
+
+### Summary
+- Korrigiere SyncEngine Retry-Zählung Off-by-One-Fehler
+
+### Details
+- **SyncEngine**: Fix Off-by-One-Fehler bei Max-Retry-Prüfung (Zeile 328-342)
+- **SyncEngine**: Prüfe `retryCount >= 19` VOR `updateRetrySchedule()` statt danach
+- **State Consistency**: Verhindere inkonsistenten Zustand wo Operation bereits als `failed` markiert ist
+- **Code Quality**: Eliminiere redundante Fehlerbehandlung nach `recordFailure()` Inkrement
+- **Clarity**: Variable `willExceedMaxRetries` macht Intent explizit
+
+### Technical Details
+- 1 file changed, 5 insertions(+), 2 deletions(-)
+- Prevents double failure marking and redundant user logs
+- Ensures sync state transitions are atomic and predictable
+
 ## [v0.3.1] - 2025-11-23
 
 ### Summary
