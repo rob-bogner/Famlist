@@ -325,12 +325,15 @@ final class SyncEngine: ObservableObject {
             UserLog.Sync.operationCompleted(type: operation.type.rawValue)
             
         } catch {
+            // Check if max retries will be exceeded BEFORE incrementing
+            let willExceedMaxRetries = operation.retryCount >= 19
+            
             // Failure - schedule retry with exponential backoff
             let backoff = exponentialBackoff(retryCount: operation.retryCount)
             operationQueue.updateRetrySchedule(operation.id, error: error, backoff: backoff)
             
-            // Update local sync status to failed if exceeded max retries
-            if operation.retryCount >= 19 { // Will be 20 after this failure
+            // Update local sync status to failed if max retries exceeded
+            if willExceedMaxRetries {
                 if let uuid = UUID(uuidString: operation.itemId),
                    let entity = try? itemStore.fetchItem(id: uuid) {
                     entity.setSyncStatus(.failed)
