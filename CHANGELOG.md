@@ -5,6 +5,26 @@ All notable changes to Famlist will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.0] - 2025-11-23
+
+### Summary
+- Optimize bulk update performance with realtime suppression strategy and fix CRDT conflict resolution for tombstones
+
+### Details
+- **Batch Updates**: Implement `batchUpdateItems()` in ItemsRepository for parallel updates using TaskGroup, reducing bulk toggle latency from ~2s to <500ms
+- **Realtime Suppression**: Add `suppressRealtimeFetches` flag to prevent cascading fetches during bulk operations (500ms delay-based solution, with plan for Pessimistic Locking upgrade)
+- **CRDT Fix**: Fix ConflictResolver to correctly compare HLC timestamps when both local and remote versions have tombstones (Last-Write-Wins semantics)
+- **UI Enhancement**: Add FloatingBottomMenuBar component with auto-hide behavior for "Toggle All" and "Uncheck All" actions
+- **Code Organization**: Extract bulk actions to separate `ListViewModel+BulkActions.swift` for better separation of concerns
+- **Utilities**: Add ScrollDetection extension for monitoring scroll position and auto-hiding floating UI elements
+- **Testing**: Add performance test suite for bulk toggle operations
+- **Documentation**: Include implementation plan for future Pessimistic Locking optimization (336h timeout for stale locks)
+
+### Technical Details
+- 16 files changed, 1575 insertions(+), 223 deletions(-)
+- 4 new components (BulkActions extension, FloatingBottomMenuBar, ScrollDetection, Performance tests)
+- Improved bulk operation efficiency by 4-5x through parallelization and suppression
+
 ## [v0.1.1] - 2025-11-22
 
 ### Summary
