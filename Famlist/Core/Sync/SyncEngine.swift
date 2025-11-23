@@ -208,6 +208,12 @@ final class SyncEngine: ObservableObject {
                 hlcTimestamp: metadata.hlc.timestamp,
                 tombstone: metadata.tombstone
             ))
+            
+            if metadata.tombstone {
+                UserLog.Data.itemDeletedLocally()
+            } else {
+                UserLog.Data.itemStoredLocally(name: item.name)
+            }
         } catch {
             logVoid(params: (
                 action: "storeLocally.error",
@@ -231,6 +237,8 @@ final class SyncEngine: ObservableObject {
                 itemId: item.id,
                 operationId: operation.id
             ))
+            
+            UserLog.Sync.operationQueued(type: type.rawValue)
         } catch {
             logVoid(params: (
                 action: "queueOperation.error",
@@ -249,7 +257,15 @@ final class SyncEngine: ObservableObject {
         isProcessingQueue = true
         defer { isProcessingQueue = false }
         
+        // Get initial count before starting
+        let initialPending = operationQueue.count
+        
         syncStatus = .syncing
+        
+        // User-friendly log when sync starts (only if there are operations)
+        if initialPending > 0 {
+            UserLog.Sync.syncing(itemCount: initialPending)
+        }
         
         while let operation = operationQueue.dequeue() {
             await processOperation(operation)
@@ -257,6 +273,11 @@ final class SyncEngine: ObservableObject {
         
         syncStatus = .idle
         updatePendingCount()
+        
+        // User-friendly log when sync completes (only if we processed operations)
+        if initialPending > 0 {
+            UserLog.Sync.completed(itemCount: initialPending)
+        }
     }
     
     private func processOperation(_ operation: SyncOperation) async {
@@ -271,6 +292,8 @@ final class SyncEngine: ObservableObject {
                 itemId: operation.itemId,
                 retryCount: operation.retryCount
             ))
+            
+            UserLog.Sync.processingOperation(type: operation.type.rawValue)
             
             switch operation.type {
             case .create:
@@ -299,6 +322,8 @@ final class SyncEngine: ObservableObject {
                 itemId: operation.itemId
             ))
             
+            UserLog.Sync.operationCompleted(type: operation.type.rawValue)
+            
         } catch {
             // Failure - schedule retry with exponential backoff
             let backoff = exponentialBackoff(retryCount: operation.retryCount)
@@ -311,6 +336,9 @@ final class SyncEngine: ObservableObject {
                     entity.setSyncStatus(.failed)
                     try? itemStore.save()
                 }
+                
+                // User-friendly error log after max retries
+                UserLog.Sync.failed(reason: "Maximale Wiederholungen erreicht")
             }
             
             logVoid(params: (

@@ -32,7 +32,10 @@ final class SupabaseCategoriesRepository: CategoriesRepository {
             .order("name", ascending: true)
             .execute()
             .value
-        return logResult(params: ["profileId": profileId as Any], result: result)
+        let finalResult = logResult(params: ["profileId": profileId as Any], result: result)
+        UserLog.Data.categoriesLoading()
+        UserLog.Data.categoriesLoaded(count: result.count)
+        return finalResult
     }
 
     func create(name: String, emoji: String?, colorHex: String?) async throws -> Category {
@@ -48,7 +51,9 @@ final class SupabaseCategoriesRepository: CategoriesRepository {
             .single()
             .execute()
             .value
-        return logResult(params: (name: name, emoji: emoji as Any, colorHex: colorHex as Any), result: result)
+        let finalResult = logResult(params: (name: name, emoji: emoji as Any, colorHex: colorHex as Any), result: result)
+        UserLog.Data.categoryCreated(name: name)
+        return finalResult
     }
 }
 

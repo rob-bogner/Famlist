@@ -93,17 +93,21 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         )
         // Initialize Supabase client with URL, anon key, and configured options.
         self.client = SupabaseClient(supabaseURL: config.url, supabaseKey: config.anonKey, options: options) // Create configured client.
+        
         // Log a safe initialization line (no keys). Only log host part of URL and option flags.
         _ = logResult(
             params: (supabaseHost: config.url.host ?? "<nil>", persistSession: true, autoRefreshToken: true),
             result: "SupabaseClient initialized"
         )
+        
+        UserLog.Sync.supabaseInitialized(host: config.url.host ?? "unknown")
         // Optionally check/restore session asynchronously and log outcome without throwing.
         let authClient = self.client.auth // Snapshot auth client to avoid capturing self.
         Task.detached {
             do {
                 _ = try await authClient.session // Attempt to read/restore an existing session.
                 _ = logResult(params: ["restored": true], result: "Auth session ready")
+                UserLog.Auth.authSessionReady()
             } catch {
                 _ = logResult(params: ["restored": false, "error": String(describing: error)], result: "Auth session missing")
             }
@@ -112,6 +116,7 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         Task.detached {
             for await ev in authClient.authStateChanges {
                 logVoid(params: ["authEvent": String(describing: ev.event)])
+                UserLog.Auth.authStateChanged(event: String(describing: ev.event))
             }
         }
     }

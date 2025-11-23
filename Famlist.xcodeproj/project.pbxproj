@@ -87,6 +87,7 @@
 		EEC58BE12ED21A5C000D3915 /* FloatingBottomMenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE02ED21A5C000D3915 /* FloatingBottomMenuBar.swift */; };
 		EEC58BE32ED21A6B000D3915 /* ListViewModel+BulkActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */; };
 		EEC58BE52ED21C08000D3915 /* ScrollDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE42ED21C08000D3915 /* ScrollDetection.swift */; };
+		EEC58BE72ED346FF000D3915 /* UserLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE62ED346FF000D3915 /* UserLogger.swift */; };
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
 /* End PBXBuildFile section */
 
@@ -174,6 +175,7 @@
 		EEC58BE02ED21A5C000D3915 /* FloatingBottomMenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBottomMenuBar.swift; sourceTree = "<group>"; };
 		EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+BulkActions.swift"; sourceTree = "<group>"; };
 		EEC58BE42ED21C08000D3915 /* ScrollDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetection.swift; sourceTree = "<group>"; };
+		EEC58BE62ED346FF000D3915 /* UserLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLogger.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,6 +276,7 @@
 		EEB6600C2E7F37A9006CB1EB /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BE62ED346FF000D3915 /* UserLogger.swift */,
 				EE2B2C642EA019F500935BCB /* ConnectivityMonitor.swift */,
 				EEB6600A2E7F37A9006CB1EB /* Logger.swift */,
 				EEB6600B2E7F37A9006CB1EB /* Validation.swift */,
@@ -595,13 +598,13 @@
 			buildRules = (
 			);
 			dependencies = (
-		);
-		name = Famlist;
-		packageProductDependencies = (
-			EE2BAC3F2DB917D50082D950 /* Supabase */,
-		);
-		productName = Famlist;
-		productReference = EE69A4E22B14CB78007C3515 /* Famlist.app */;
+			);
+			name = Famlist;
+			packageProductDependencies = (
+				EE2BAC3F2DB917D50082D950 /* Supabase */,
+			);
+			productName = Famlist;
+			productReference = EE69A4E22B14CB78007C3515 /* Famlist.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -720,6 +723,7 @@
 				EE2B2C6A2EA3DB6E00935BCB /* ItemFormViewModel.swift in Sources */,
 				EEB660592E7F37A9006CB1EB /* Validation.swift in Sources */,
 				EE2B2C652EA019F500935BCB /* ConnectivityMonitor.swift in Sources */,
+				EEC58BE72ED346FF000D3915 /* UserLogger.swift in Sources */,
 				EE2B2C622E9BF9E500935BCB /* SwiftDataListStore.swift in Sources */,
 				EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */,
 				EEC58BC12EC92064000D3915 /* AuthTestHelpers.swift in Sources */,

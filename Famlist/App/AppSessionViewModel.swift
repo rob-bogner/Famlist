@@ -141,9 +141,12 @@ final class AppSessionViewModel: ObservableObject {
             isLoading = true
             defer { isLoading = false }
             
+            UserLog.Auth.loginStarted(email: email)
+            
             do {
                 try await authService.signInWithEmailOTP(email: email)
             } catch {
+                UserLog.Error.general(message: "Anmeldung mit Magic-Link fehlgeschlagen")
                 errorMessage = (error as NSError).localizedDescription
             }
         }
@@ -164,10 +167,14 @@ final class AppSessionViewModel: ObservableObject {
             isLoading = true
             defer { isLoading = false }
             
+            UserLog.Auth.loginStarted(email: email)
+            
             do {
                 try await authService.signInWithEmailPassword(email: email, password: password)
+                UserLog.Auth.loginSuccess()
                 await handleAuthCompletion()
             } catch {
+                UserLog.Auth.loginFailed(reason: "Falsche E-Mail oder Passwort")
                 errorMessage = (error as NSError).localizedDescription
             }
         }
@@ -213,8 +220,11 @@ final class AppSessionViewModel: ObservableObject {
             isRestoringSession = false
         }
         
+        UserLog.Auth.restoringSession()
+        
         do {
             try await authService.restoreSession()
+            UserLog.Auth.sessionRestored()
             isAuthenticated = true
             await handleAuthCompletion()
         } catch {
@@ -233,6 +243,7 @@ final class AppSessionViewModel: ObservableObject {
         
         do {
             await markPhase(.profile)
+            // Note: User-Logs für Profil-Laden erfolgen im Repository (mit mehr Details wie publicId)
             
             // Try to load existing profile, create new one if it doesn't exist
             let me: Profile
@@ -243,6 +254,7 @@ final class AppSessionViewModel: ObservableObject {
                     "status": "existing",
                     "profileId": me.id
                 ])
+                // Note: User-Log erfolgt im Repository
             } catch {
                 // Profile doesn't exist - this is a new user, create profile automatically
                 logVoid(params: [
@@ -263,21 +275,26 @@ final class AppSessionViewModel: ObservableObject {
                     "status": "created",
                     "profileId": me.id
                 ])
+                // Note: User-Log erfolgt im OnboardingService
             }
             
             currentProfile = me
             
             await markPhase(.defaultList)
             let defaultList = try await lists.fetchDefaultList(for: me.id)
+            listViewModel.configure(listsRepository: lists)
+            listViewModel.defaultList = defaultList
+            listViewModel.switchList(to: defaultList.id)
+            
             _ = logResult(
                 params: (profileId: me.id, defaultListId: defaultList.id),
                 result: "bootstrapped"
             )
             
-            listViewModel.configure(listsRepository: lists)
-            listViewModel.defaultList = defaultList
-            listViewModel.switchList(to: defaultList.id)
+            UserLog.Auth.authBootstrapCompleted()
+            
             await markPhase(.itemsSnapshot)
+            UserLog.Data.loadingItems()
             self.isAuthenticated = true
         } catch {
             self.errorMessage = (error as NSError).localizedDescription

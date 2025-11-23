@@ -85,8 +85,13 @@ final class SupabaseListsRepository: ListsRepository {
             .execute()
             .value
         if let row = fetched.first {
-            return logResult(params: (ownerId: ownerId, hit: true), result: map(row))
+            let result = map(row)
+            let finalResult = logResult(params: (ownerId: ownerId, hit: true), result: result)
+            UserLog.Data.listLoaded(name: result.title, itemCount: 0)
+            return finalResult
         }
+        
+        UserLog.Data.loadingList()
         // 2) Not found -> insert default with explicit owner_id to avoid RLS violations.
         struct NewList: Codable {
             let owner_id: String
@@ -101,7 +106,10 @@ final class SupabaseListsRepository: ListsRepository {
             .single()
             .execute()
             .value
-        return logResult(params: (ownerId: ownerId, created: true), result: map(inserted))
+        let result = map(inserted)
+        let finalResult = logResult(params: (ownerId: ownerId, created: true), result: result)
+        UserLog.Data.listLoaded(name: result.title, itemCount: 0)
+        return finalResult
     }
 
     func observeLists(for owner: UUID) -> AsyncStream<[List]> {
@@ -133,7 +141,9 @@ final class SupabaseListsRepository: ListsRepository {
             .single()
             .execute()
             .value
-        return logResult(params: (owner: owner, title: title), result: value)
+        let result = logResult(params: (owner: owner, title: title), result: value)
+        UserLog.Data.listCreated(name: title)
+        return result
     }
 
     func addMember(listId: UUID, profileId: UUID) async throws {

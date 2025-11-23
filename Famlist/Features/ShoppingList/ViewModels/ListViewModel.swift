@@ -191,6 +191,14 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
         
+        // User-friendly log
+        let displayName = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        UserLog.Data.itemAdded(
+            name: displayName.isEmpty ? "Artikel" : displayName,
+            units: normalized.units,
+            measure: normalized.measure
+        )
+        
         // Use SyncEngine if available, otherwise fall back to old approach
         if let syncEngine = syncEngine {
             Task {
@@ -230,6 +238,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
             category: normalized.category ?? "nil",
             description: normalized.productDescription ?? "nil"
         ))
+        // Note: User-Log erfolgt im Repository nach erfolgreichem Server-Update
         
         // Track animation state if requested.
         if trackPendingAnimation {
@@ -282,6 +291,10 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// Deletes an item by id within the current list.
     /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
+        // User-friendly log
+        let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        UserLog.Data.itemDeleted(name: displayName.isEmpty ? "Artikel" : displayName)
+        
         guard let uuid = UUID(uuidString: item.id) else {
             markItemDeleted(item)
             return

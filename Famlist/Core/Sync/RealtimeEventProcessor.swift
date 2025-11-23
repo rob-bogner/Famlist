@@ -141,6 +141,8 @@ final class RealtimeEventProcessor {
                         itemId: item.id,
                         decision: "remote_wins"
                     ))
+                    
+                    UserLog.Sync.realtimeUpdateReceived(name: item.name)
                 } else {
                     logVoid(params: (
                         action: "processUpdate.merge",
@@ -204,7 +206,9 @@ final class RealtimeEventProcessor {
         }
         
         // Check if we have a pending local operation for this item
+        var itemName: String?
         if let existingEntity = try? itemStore.fetchItem(id: uuid) {
+            itemName = existingEntity.name // Speichere Namen für User-Log
             if existingEntity.syncStatus == .pendingCreate ||
                existingEntity.syncStatus == .pendingUpdate {
                 // We have local changes - don't delete yet, let sync engine handle it
@@ -224,6 +228,8 @@ final class RealtimeEventProcessor {
             action: "processDeletion.purge",
             itemId: idString
         ))
+        
+        UserLog.Sync.realtimeDeleteReceived(name: itemName)
     }
     
     // MARK: - Helpers

@@ -255,6 +255,8 @@ final class SupabaseItemsRepository: ItemsRepository {
                 self.yield(listId, mapped)
             }
             logVoid(params: (listId: listId, itemsCount: mapped.count))
+            // Note: User-Log für itemsLoaded wurde entfernt, da fetchAndYield bei jedem Realtime-Event aufgerufen wird.
+            // User-Logs erfolgen spezifisch für die jeweiligen Operationen (add, update, delete, realtime-events).
         } catch {
             logVoid(params: (
                 listId: listId,
@@ -322,7 +324,9 @@ final class SupabaseItemsRepository: ItemsRepository {
             listId: listUUID.uuidString,
             ownerPublicId: item.ownerPublicId
         )
-        return logResult(params: (itemId: model.id, listId: listUUID), result: model)
+        let result = logResult(params: (itemId: model.id, listId: listUUID), result: model)
+        UserLog.Data.itemAdded(name: item.name, units: item.units, measure: item.measure)
+        return result
     }
     
     func updateItem(_ item: ItemModel) async throws {
@@ -387,6 +391,7 @@ final class SupabaseItemsRepository: ItemsRepository {
             .execute()
         await fetchAndYield(listId)
         logVoid(params: (itemId: item.id, listId: listId))
+        UserLog.Data.itemUpdated(name: item.name, units: item.units, measure: item.measure)
     }
     
     /// Batch-update multiple items in parallel using event counter strategy.
@@ -415,6 +420,7 @@ final class SupabaseItemsRepository: ItemsRepository {
             itemCount: items.count,
             listId: listId
         ))
+        UserLog.Data.bulkUpdate(count: items.count)
         
         // Acquire lock: Suppress realtime fetches during batch and set event counter
         await MainActor.run {
@@ -558,5 +564,6 @@ final class SupabaseItemsRepository: ItemsRepository {
             .execute()
         await fetchAndYield(listId)
         logVoid(params: (id: id, listId: listId))
+        UserLog.Data.itemDeleted()
     }
 }

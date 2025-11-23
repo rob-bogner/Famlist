@@ -86,6 +86,7 @@ final class AuthService {
     /// Signs the user out from Supabase and clears local state.
     /// - Throws: Error if sign-out fails.
     func signOut() async throws {
+        UserLog.Auth.loggedOut()
         try await client.auth.signOut(scope: .global)
         logVoid(params: ["action": "signOut", "status": "ok"])
     }

@@ -34,6 +34,8 @@ final class SupabaseProfilesRepository: ProfilesRepository {
     }
 
     func myProfile() async throws -> Profile {
+        UserLog.Auth.loadingProfile() // User-Log einmalig am Anfang
+        
         // Resolve authenticated user id from the in-memory user or by awaiting the active session
         if let currentId = client.auth.currentUser?.id {
             let profile: Profile = try await client
@@ -43,7 +45,9 @@ final class SupabaseProfilesRepository: ProfilesRepository {
                 .single()
                 .execute()
                 .value
-            return logResult(params: ["source": "currentUser"], result: profile)
+            let result = logResult(params: ["source": "currentUser"], result: profile)
+            UserLog.Auth.profileLoaded(publicId: profile.publicId)
+            return result
         }
         // Fallback: try to read/restore session asynchronously and use its user id
         guard let session = try? await client.auth.session else {
@@ -57,7 +61,9 @@ final class SupabaseProfilesRepository: ProfilesRepository {
             .single()
             .execute()
             .value
-        return logResult(params: ["source": "session"], result: profile)
+        let result = logResult(params: ["source": "session"], result: profile)
+        UserLog.Auth.profileLoaded(publicId: profile.publicId)
+        return result
     }
 
     func profileByPublicId(_ publicId: String) async throws -> Profile? {

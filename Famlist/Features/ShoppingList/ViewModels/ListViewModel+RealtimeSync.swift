@@ -69,6 +69,7 @@ extension ListViewModel {
             listId: listId,
             reason: "background"
         ))
+        UserLog.Sync.realtimePaused(listName: defaultList?.title)
         observeTask?.cancel()
         observeTask = nil
     }
@@ -81,6 +82,7 @@ extension ListViewModel {
             listId: listId,
             trigger: trigger.rawValue
         ))
+        UserLog.Sync.realtimeResumed(listName: defaultList?.title)
         startObserving()
     }
 }

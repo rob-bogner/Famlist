@@ -77,6 +77,13 @@ extension ListViewModel {
             itemCount: itemIDsToUpdate.count
         ))
         
+        // User-friendly log
+        if targetState {
+            UserLog.Data.allItemsChecked(count: itemIDsToUpdate.count)
+        } else {
+            UserLog.Data.allItemsUnchecked(count: itemIDsToUpdate.count)
+        }
+        
         // 1. LOKALES ARRAY SOFORT AKTUALISIEREN (nur gefilterte Items)
         for i in items.indices where itemIDsToUpdate.contains(items[i].id) {
             items[i].isChecked = targetState
@@ -125,6 +132,8 @@ extension ListViewModel {
             action: "toggleAllItems.completed",
             itemCount: uuidsToUpdate.count
         ))
+        
+        UserLog.Sync.completed(itemCount: uuidsToUpdate.count)
     }
     
     // MARK: - Sorting

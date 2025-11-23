@@ -292,6 +292,9 @@ struct ClipboardImportView: View {
                 )
             }
         
+        // User-friendly log
+        UserLog.Data.clipboardImport(count: itemsToImport.count)
+        
         // Add items to list
         Task { @MainActor in
             defer {
