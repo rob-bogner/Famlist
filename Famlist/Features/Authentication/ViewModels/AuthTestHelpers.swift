@@ -1,7 +1,7 @@
 /*
  AuthTestHelpers.swift
 
- GroceryGenius
+ Famlist
  Created on: 18.10.2025
  Last updated on: 18.10.2025
 

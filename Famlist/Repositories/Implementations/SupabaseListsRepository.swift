@@ -1,6 +1,6 @@
 /*
  SupabaseListsRepository.swift
- GroceryGenius
+ Famlist
  Created on: 01.07.2025 (est.)
  Last updated on: 12.10.2025
 

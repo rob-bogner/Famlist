@@ -1,7 +1,7 @@
 /*
  ImagePicker.swift
 
- GroceryGenius
+ Famlist
  Created on: 27.04.2025
  Last updated on: 03.09.2025
 

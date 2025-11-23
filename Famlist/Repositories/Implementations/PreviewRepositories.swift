@@ -1,7 +1,7 @@
 /*
  Preview/In-Memory Repositories for SwiftUI Previews
 
- GroceryGenius
+ Famlist
  Created on: 01.07.2025 (est.)
  Last updated on: 04.09.2025
 

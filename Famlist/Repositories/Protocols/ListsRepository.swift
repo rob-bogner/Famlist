@@ -1,7 +1,7 @@
 /*
  ListsRepository.swift
 
- GroceryGenius
+ Famlist
  Created on: 04.09.2025
  Last updated on: 12.10.2025
 

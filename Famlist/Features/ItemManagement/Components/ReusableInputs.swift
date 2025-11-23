@@ -1,7 +1,7 @@
 /*
  ReusableInputs.swift
 
- GroceryGenius
+ Famlist
  Created on: 20.07.2025
  Last updated on: 03.09.2025
 

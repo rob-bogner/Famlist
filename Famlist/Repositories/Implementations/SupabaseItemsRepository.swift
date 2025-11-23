@@ -1,6 +1,6 @@
 /*
  SupabaseItemsRepository.swift
- GroceryGenius
+ Famlist
  Created on: 01.07.2025 (est.)
  Last updated on: 18.10.2025
 
@@ -34,12 +34,77 @@ final class SupabaseItemsRepository: ItemsRepository {
     @MainActor
     private var suppressRealtimeFetches: Bool = false
     
+    /// Tracks when the last bulk operation started for stale lock detection.
+    @MainActor private var lastBulkOperationStartTime: Date?
+    
+    /// Maximum allowed duration for a bulk operation before considering the lock stale (14 days = 336 hours).
+    /// After this duration, the lock will be automatically cleared on the next event processing.
+    private let staleLockThreshold: TimeInterval = 336 * 60 * 60 // 336 hours
+    
+    /// Event counter for batch operations: tracks how many realtime events we're expecting.
+    @MainActor private var expectedRealtimeEvents: Int = 0
+    
+    /// Timeout duration for event counter (fallback if not all events arrive).
+    private let eventCounterTimeout: TimeInterval = 5.0 // 5 seconds
+    
     // MARK: - Lifecycle
     
     init(client: SupabaseClienting, itemStore: SwiftDataItemStore, conflictResolver: ConflictResolver) {
         self.client = client
         self.realtimeManager = SupabaseRealtimeManager(client: client)
         self.eventProcessor = RealtimeEventProcessor(conflictResolver: conflictResolver, itemStore: itemStore)
+    }
+    
+    // MARK: - Stale Lock Protection
+    
+    /// Checks if the suppression lock is stale (older than staleLockThreshold) and clears it if necessary.
+    /// - Returns: True if a stale lock was cleared, false otherwise.
+    @MainActor
+    private func checkAndClearStaleLock() -> Bool {
+        guard suppressRealtimeFetches,
+              let startTime = lastBulkOperationStartTime else {
+            return false
+        }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        if elapsed > staleLockThreshold {
+            suppressRealtimeFetches = false
+            lastBulkOperationStartTime = nil
+            expectedRealtimeEvents = 0
+            logVoid(params: (
+                action: "staleLockCleared",
+                reason: "Lock older than \(staleLockThreshold)s (elapsed: \(elapsed)s)"
+            ))
+            return true
+        }
+        return false
+    }
+    
+    // MARK: - Event Counter Management
+    
+    /// Decrements the expected realtime events counter and releases lock if all events arrived.
+    /// - Parameter listId: The list ID for logging purposes.
+    @MainActor
+    private func decrementEventCounter(for listId: UUID) {
+        guard suppressRealtimeFetches, expectedRealtimeEvents > 0 else { return }
+        
+        expectedRealtimeEvents -= 1
+        logVoid(params: (
+            action: "eventCounter.decrement",
+            remaining: expectedRealtimeEvents,
+            listId: listId
+        ))
+        
+        // Release lock if all events have arrived
+        if expectedRealtimeEvents == 0 {
+            suppressRealtimeFetches = false
+            lastBulkOperationStartTime = nil
+            logVoid(params: (
+                action: "eventCounter.lockReleased",
+                reason: "All realtime events received",
+                listId: listId
+            ))
+        }
     }
     
     // MARK: - Observation
@@ -83,8 +148,32 @@ final class SupabaseItemsRepository: ItemsRepository {
     
     /// Processes a Realtime event using the event processor (granular updates)
     private func processRealtimeEvent(_ event: RealtimeEvent, listId: UUID) async {
-        // Skip fetch during batch operations to avoid cascade of fetches
-        // Check BEFORE processing to avoid unnecessary work
+        // Check for stale locks first (crash recovery)
+        let staleCleared = await MainActor.run { checkAndClearStaleLock() }
+        if staleCleared {
+            logVoid(params: (action: "processRealtimeEvent.staleLockRecovered", listId: listId))
+        }
+        
+        // EVENT COUNTER: Decrement counter for batch-triggered updates
+        let isWaitingForBatchEvents = await MainActor.run { suppressRealtimeFetches && expectedRealtimeEvents > 0 }
+        if isWaitingForBatchEvents {
+            // Only decrement for UPDATE events (our batch operation only does updates)
+            if case .update = event {
+                await MainActor.run { decrementEventCounter(for: listId) }
+            }
+            
+            // Skip processing - we'll do a final fetch once all events arrive or timeout
+            logVoid(params: (
+                action: "processRealtimeEvent.skipped",
+                reason: "waitingForBatchEvents",
+                listId: listId
+            ))
+            return
+        }
+        
+        // PESSIMISTIC LOCKING: Ignore ALL Realtime events during bulk operations (without event counter).
+        // Rationale: Final fetch after bulk operation will sync state correctly.
+        // This prevents cascading fetches and ensures atomicity of bulk updates.
         let shouldSuppress = await MainActor.run { suppressRealtimeFetches }
         if shouldSuppress {
             logVoid(params: (
@@ -300,6 +389,24 @@ final class SupabaseItemsRepository: ItemsRepository {
         logVoid(params: (itemId: item.id, listId: listId))
     }
     
+    /// Batch-update multiple items in parallel using event counter strategy.
+    ///
+    /// **Strategy:**
+    /// 1. Acquire lock (`suppressRealtimeFetches = true`) and set event counter to number of items
+    /// 2. Execute all updates in parallel using TaskGroup
+    /// 3. Wait for all realtime events to arrive (counter reaches 0) OR timeout (5s)
+    /// 4. Release lock and perform final fetch to synchronize with database state
+    ///
+    /// **Rationale:**
+    /// - Event counter ensures we wait for all Realtime events without fixed delay
+    /// - Timeout provides fallback if some events are lost/delayed
+    /// - Final fetch ensures consistency regardless of which path triggered release
+    /// - No arbitrary delays → robust and responsive
+    ///
+    /// - Parameters:
+    ///   - items: Array of ItemModels to update
+    ///   - listId: The list that the items belong to
+    /// - Throws: Database errors if any update fails
     func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {
         guard !items.isEmpty else { return }
         
@@ -309,11 +416,16 @@ final class SupabaseItemsRepository: ItemsRepository {
             listId: listId
         ))
         
-        // Suppress realtime fetches during batch to avoid cascade
-        // Set on MainActor to ensure visibility across all tasks
+        // Acquire lock: Suppress realtime fetches during batch and set event counter
         await MainActor.run {
-            suppressRealtimeFetches = true
-            logVoid(params: (action: "batchUpdateItems.suppressionEnabled", listId: listId))
+            self.suppressRealtimeFetches = true
+            self.expectedRealtimeEvents = items.count
+            self.lastBulkOperationStartTime = Date()
+            logVoid(params: (
+                action: "batchUpdateItems.suppressionEnabled",
+                expectedEvents: items.count,
+                listId: listId
+            ))
         }
         
         do {
@@ -374,24 +486,58 @@ final class SupabaseItemsRepository: ItemsRepository {
                 try await group.waitForAll()
             }
             
-            // Delay to ensure all Realtime events triggered by our updates have arrived.
-            // This prevents race conditions where Realtime events arrive after we re-enable fetches.
-            // 500ms should cover network latency and Supabase Realtime event propagation delays.
-            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
-            
-            // Re-enable realtime fetches before final fetch
-            await MainActor.run {
-                suppressRealtimeFetches = false
-                logVoid(params: (action: "batchUpdateItems.suppressionDisabled", listId: listId))
+            // Start timeout task that will release lock after eventCounterTimeout if events don't arrive
+            let timeoutTask = Task {
+                try? await Task.sleep(nanoseconds: UInt64(eventCounterTimeout * 1_000_000_000))
+                await MainActor.run {
+                    // Only release if still suppressing (event counter might have already released it)
+                    if self.suppressRealtimeFetches {
+                        let remainingEvents = self.expectedRealtimeEvents
+                        self.suppressRealtimeFetches = false
+                        self.expectedRealtimeEvents = 0
+                        self.lastBulkOperationStartTime = nil
+                        logVoid(params: (
+                            action: "batchUpdateItems.suppressionDisabled.timeout",
+                            reason: "Timeout reached with \(remainingEvents) events still pending",
+                            listId: listId
+                        ))
+                    }
+                }
             }
             
-            // Only fetch once after all updates are done
+            // Wait for either all events to arrive OR timeout
+            let startTime = Date()
+            while await MainActor.run(body: { self.suppressRealtimeFetches }) {
+                try? await Task.sleep(nanoseconds: 50_000_000) // Check every 50ms
+                
+                // Safety check: break if timeout already passed
+                if Date().timeIntervalSince(startTime) > eventCounterTimeout + 0.5 {
+                    break
+                }
+            }
+            
+            // Cancel timeout task if events arrived before timeout
+            timeoutTask.cancel()
+            
+            // Ensure lock is released (might already be released by event counter or timeout)
+            await MainActor.run {
+                if self.suppressRealtimeFetches {
+                    self.suppressRealtimeFetches = false
+                    self.expectedRealtimeEvents = 0
+                    self.lastBulkOperationStartTime = nil
+                    logVoid(params: (action: "batchUpdateItems.suppressionDisabled.manual", listId: listId))
+                }
+            }
+            
+            // Final fetch synchronizes state with database (includes any changes from other clients)
             await fetchAndYield(listId)
         } catch {
-            // Re-enable realtime fetches on error
+            // Release lock on error: Re-enable realtime fetches and clear all state
             await MainActor.run {
-                suppressRealtimeFetches = false
-                logVoid(params: (action: "batchUpdateItems.suppressionDisabledOnError", listId: listId))
+                self.suppressRealtimeFetches = false
+                self.expectedRealtimeEvents = 0
+                self.lastBulkOperationStartTime = nil
+                logVoid(params: (action: "batchUpdateItems.suppressionDisabled.error", listId: listId, error: error.localizedDescription))
             }
             throw error
         }

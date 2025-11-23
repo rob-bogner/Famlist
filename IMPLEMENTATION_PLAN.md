@@ -1,8 +1,9 @@
-# Implementierungsplan: Pessimistic Locking für Bulk Updates
+# Implementierungsplan: Event Counter für Bulk Updates
 
 **Erstellt am:** 22. November 2025  
-**Status:** Geplant (nicht implementiert)  
-**Ziel:** Robuste, timeout-freie Synchronisation bei Bulk-Operationen durch Pessimistic Locking
+**Implementiert am:** 23. November 2025  
+**Status:** ✅ Implementiert (Event Counter mit 5s Timeout)  
+**Ziel:** Robuste, delay-freie Synchronisation bei Bulk-Operationen durch Event Counter
 
 ---
 
@@ -349,10 +350,54 @@ Falls die Implementierung Probleme verursacht:
 ## Nächste Schritte
 
 1. ✅ **Dieser Plan wurde erstellt**
-2. ⏳ **Review des Plans durch Entwickler**
-3. ⏳ **Implementierung in separatem Branch**
-4. ⏳ **Manuelles Testing**
-5. ⏳ **Merge in Main bei Erfolg**
+2. ✅ **Review des Plans durch Entwickler**
+3. ✅ **Pessimistic Locking implementiert** (alle Schritte 1-5)
+4. ⚠️ **Problem entdeckt:** Race Condition zwischen HTTP-Responses und Realtime-Events
+5. ✅ **Event Counter-Lösung implementiert** (Option 2)
+6. ⏳ **Manuelles Testing** (siehe Testing-Strategie oben)
+7. ⏳ **Merge in Main bei Erfolg**
+
+### Implementierte Änderungen (Final)
+
+**Event Counter-Strategie:**
+- ✅ **Neue Properties:**
+  - `expectedRealtimeEvents: Int` → Zählt erwartete Realtime-Events
+  - `eventCounterTimeout: TimeInterval = 5.0` → Fallback-Timeout
+  - `lastBulkOperationStartTime`, `staleLockThreshold` (Stale-Lock-Protection)
+
+- ✅ **Neue Funktion:** `decrementEventCounter(for:)`
+  - Dekrementiert Counter bei jedem UPDATE-Event
+  - Hebt Lock auf, wenn Counter = 0
+
+- ✅ **Modifiziert:** `processRealtimeEvent()`
+  - Prüft zuerst auf Stale Locks
+  - Dekrementiert Event Counter bei UPDATE während Batch-Operation
+  - Skipped Events ohne `fetchAndYield` während Counter aktiv ist
+
+- ✅ **Modifiziert:** `batchUpdateItems()`
+  - Setzt `expectedRealtimeEvents = items.count`
+  - Startet Timeout-Task (5s Fallback)
+  - Wartet aktiv auf `suppressRealtimeFetches = false` (50ms Polling)
+  - Cancelled Timeout-Task wenn Events früher ankommen
+  - Finaler `fetchAndYield` nach Lock-Release
+
+- ✅ **Stale-Lock-Protection:** Unverändert (336h Timeout)
+
+### Warum Event Counter statt Pessimistic Locking?
+
+**Problem mit reinem Pessimistic Locking:**
+- HTTP-Responses kommen schnell zurück (TaskGroup wartet darauf)
+- Realtime-Events kommen über separaten WebSocket-Channel (verzögert!)
+- Lock wird aufgehoben, BEVOR alle Realtime-Events ankommen
+- → 31x `fetchAndYield` (sequenziell)
+
+**Event Counter-Lösung:**
+- ✅ Zählt, wie viele Updates wir gemacht haben (z.B. 31)
+- ✅ Zählt, wie viele Realtime UPDATE-Events ankommen
+- ✅ Hebt Lock erst auf, wenn Counter = 0 (alle Events da)
+- ✅ Timeout als Fallback (5s) falls Events verloren gehen
+- ✅ Kein fixer Delay → responsive und robust
+- ✅ Funktioniert unabhängig von Netzwerklatenz
 
 ---
 

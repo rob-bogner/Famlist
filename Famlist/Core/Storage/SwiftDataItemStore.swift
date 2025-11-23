@@ -1,6 +1,6 @@
 /*
  SwiftDataItemStore.swift
- GroceryGenius
+ Famlist
  Created on: 12.10.2025
  Last updated on: 12.10.2025
 

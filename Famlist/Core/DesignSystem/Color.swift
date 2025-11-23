@@ -1,7 +1,7 @@
 /*
  Color.swift
 
- GroceryGenius
+ Famlist
  Created on: 05.01.2024
  Last updated on: 03.09.2025
 

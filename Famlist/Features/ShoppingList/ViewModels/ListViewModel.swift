@@ -3,7 +3,7 @@
 /*
  ListViewModel.swift
 
- GroceryGenius
+ Famlist
  Created on: 27.11.2023
  Last updated on: 18.10.2025
 

@@ -1,7 +1,7 @@
 /*
  ShoppingListView.swift
 
- GroceryGenius
+ Famlist
  Created on: 27.11.2023
  Last updated on: 18.10.2025
 
@@ -31,7 +31,7 @@ import UIKit
 struct ShoppingListView: View { // Declares a SwiftUI view type.
     @EnvironmentObject var listViewModel: ListViewModel // Shared data source and actions across the hierarchy.
     @EnvironmentObject var session: AppSessionViewModel // Session VM used to perform sign-out from the hamburger menu.
-    @Environment(\.modelContext) private var modelContext // SwiftData context injected from GroceryGeniusApp.
+    @Environment(\.modelContext) private var modelContext // SwiftData context injected from FamlistApp.
     @Environment(\.scenePhase) private var scenePhase // Tracks foreground/background transitions for lifecycle-driven sync.
     @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
     @State private var quickAddActive: Bool = false // Tracks whether the inline quick-add text field is expanded.

@@ -1,7 +1,7 @@
 /*
  ImageCache.swift
 
- GroceryGenius
+ Famlist
  Created on: 27.04.2025 (approx.)
  Last updated on: 18.10.2025
 

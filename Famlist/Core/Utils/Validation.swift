@@ -1,7 +1,7 @@
 /*
  Validation.swift
 
- GroceryGenius
+ Famlist
  Created on: 31.05.2025 (est.)
  Last updated on: 03.09.2025
 

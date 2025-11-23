@@ -24,7 +24,6 @@
 */
 
 import Foundation
-import UIKit
 
 /// Hybrid Logical Clock providing causally consistent timestamps across devices.
 /// Based on the algorithm from: "Logical Physical Clocks and Consistent Snapshots in Globally Distributed Databases"

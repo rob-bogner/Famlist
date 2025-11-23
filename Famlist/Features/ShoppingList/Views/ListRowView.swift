@@ -1,7 +1,7 @@
 /*
  ListRowView.swift
 
- GroceryGenius
+ Famlist
  Created on: 27.11.2023
  Last updated on: 03.09.2025
 

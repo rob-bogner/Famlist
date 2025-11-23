@@ -1,7 +1,7 @@
 /*
  Logger.swift
 
- GroceryGenius
+ Famlist
  Created on: 07.09.2025
  Last updated on: 07.09.2025
 

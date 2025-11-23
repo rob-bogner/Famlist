@@ -1,6 +1,6 @@
 /*
  ConnectivityMonitor.swift
- GroceryGenius
+ Famlist
  Created on: 15.10.2025
  Last updated on: 15.10.2025
 

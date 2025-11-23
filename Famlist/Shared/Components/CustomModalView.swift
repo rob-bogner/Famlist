@@ -1,7 +1,7 @@
 /*
  CustomModalView.swift
 
- GroceryGenius
+ Famlist
  Created on: 30.05.2025 (est.)
  Last updated on: 03.09.2025
 

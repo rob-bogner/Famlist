@@ -1,7 +1,7 @@
 /*
  AccentHeaderBackground.swift
 
- GroceryGenius
+ Famlist
  Created on: 30.05.2025
  Last updated on: 03.09.2025
 

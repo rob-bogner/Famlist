@@ -1,7 +1,7 @@
 /*
  FloatingBottomMenuBar.swift
  
- GroceryGenius
+ Famlist
  Created on: 22.11.2025
  
  ------------------------------------------------------------------------

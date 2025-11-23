@@ -595,13 +595,13 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			name = Famlist;
-			packageProductDependencies = (
-				EE2BAC3F2DB917D50082D950 /* Supabase */,
-			);
-			productName = GroceryGenius;
-			productReference = EE69A4E22B14CB78007C3515 /* Famlist.app */;
+		);
+		name = Famlist;
+		packageProductDependencies = (
+			EE2BAC3F2DB917D50082D950 /* Supabase */,
+		);
+		productName = Famlist;
+		productReference = EE69A4E22B14CB78007C3515 /* Famlist.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
