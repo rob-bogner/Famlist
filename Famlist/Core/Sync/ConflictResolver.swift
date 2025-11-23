@@ -47,8 +47,18 @@ final class ConflictResolver {
         
         // RULE 1: Tombstones always win (deletions propagate)
         if localMeta.tombstone || remoteMeta.tombstone {
-            let winningMeta = localMeta.tombstone ? localMeta : remoteMeta
-            let winningItem = localMeta.tombstone ? local : remote
+            // If both are tombstones, compare HLC to pick the more recent deletion
+            // Otherwise, the tombstone always wins over non-tombstone
+            let useLocal: Bool
+            if localMeta.tombstone && remoteMeta.tombstone {
+                // Both deleted: use Last-Write-Wins based on HLC
+                useLocal = remoteMeta.hlc.happenedBefore(localMeta.hlc)
+            } else {
+                // Only one is deleted: tombstone always wins
+                useLocal = localMeta.tombstone
+            }
+            let winningMeta = useLocal ? localMeta : remoteMeta
+            let winningItem = useLocal ? local : remote
             return (winningItem, winningMeta)
         }
         

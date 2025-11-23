@@ -39,6 +39,12 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     /// Update an existing item.
     /// - Parameter item: The full item to persist (identified by its id).
     func updateItem(_ item: ItemModel) async throws // Async update operation.
+    /// Batch update multiple items (optimized for bulk operations).
+    /// - Parameters:
+    ///   - items: Array of items to update.
+    ///   - listId: The list that the items belong to.
+    /// - Note: Only triggers a single fetch after all updates complete.
+    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws // Async batch update operation.
     /// Delete an item by id within list.
     /// - Parameters:
     ///   - id: The item identifier to delete.
@@ -94,6 +100,21 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
         }
         storage[listUUID] = arr // Persist updated array back to storage.
         broadcast(listUUID) // Notify observers so UI refreshes.
+    }
+    
+    /// Batch updates multiple items in storage and notifies observers once.
+    /// - Parameters:
+    ///   - items: Array of items to update.
+    ///   - listId: The list that the items belong to.
+    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws { // Batch update for efficiency.
+        guard var arr = storage[listId] else { return } // If list has no items recorded yet, nothing to update.
+        for item in items { // Update each item in the batch.
+            if let idx = arr.firstIndex(where: { $0.id == item.id }) { // Find the index of the item by id.
+                arr[idx] = item // Replace the existing item with the updated one.
+            }
+        }
+        storage[listId] = arr // Persist updated array back to storage once.
+        broadcast(listId) // Notify observers so UI refreshes (single notification).
     }
 
     /// Deletes an item by id from the specified list and broadcasts the new snapshot.

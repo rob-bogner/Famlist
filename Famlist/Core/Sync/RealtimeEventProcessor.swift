@@ -182,7 +182,19 @@ final class RealtimeEventProcessor {
             return
         }
         
-        guard let idString = oldRecord["id"] as? String,
+        func extractString(_ key: String, from dict: [String: Any]) -> String? {
+            if let value = dict[key] as? String {
+                return value
+            }
+            // Handle AnyJSON case
+            if let anyJSON = dict[key], String(describing: anyJSON) != "<null>" {
+                let str = String(describing: anyJSON)
+                return str.replacingOccurrences(of: "AnyJSON.", with: "")
+            }
+            return nil
+        }
+        
+        guard let idString = extractString("id", from: oldRecord),
               let uuid = UUID(uuidString: idString) else {
             logVoid(params: (
                 action: "processDeletion.error",
@@ -217,48 +229,99 @@ final class RealtimeEventProcessor {
     // MARK: - Helpers
     
     private func parseItemFromPayload(_ record: [String: Any]) throws -> (ItemModel, CRDTMetadata) {
-        // Extract values directly from dictionary instead of JSON serialization
-        // to avoid issues with non-JSON-serializable Swift types
+        // Helper to extract values from Supabase AnyJSON or plain Any
+        func extractString(_ key: String) -> String? {
+            if let value = record[key] as? String {
+                return value
+            }
+            // Handle AnyJSON case
+            if let anyJSON = record[key], String(describing: anyJSON) != "<null>" {
+                let str = String(describing: anyJSON)
+                // Remove potential AnyJSON wrapper prefixes
+                return str.replacingOccurrences(of: "AnyJSON.", with: "")
+            }
+            return nil
+        }
         
-        guard let idString = record["id"] as? String else {
+        func extractInt(_ key: String) -> Int? {
+            if let value = record[key] as? Int {
+                return value
+            }
+            if let value = record[key] as? Double {
+                return Int(value)
+            }
+            return nil
+        }
+        
+        func extractDouble(_ key: String) -> Double? {
+            if let value = record[key] as? Double {
+                return value
+            }
+            if let value = record[key] as? Int {
+                return Double(value)
+            }
+            return nil
+        }
+        
+        func extractBool(_ key: String) -> Bool? {
+            if let value = record[key] as? Bool {
+                return value
+            }
+            return nil
+        }
+        
+        guard let idString = extractString("id") else {
             throw NSError(domain: "RealtimeEventProcessor", code: 1, 
                          userInfo: [NSLocalizedDescriptionKey: "Missing id in record"])
         }
         
-        let name = record["name"] as? String ?? ""
-        let units = record["units"] as? Int ?? 1
-        let measure = record["measure"] as? String ?? ""
-        let price = record["price"] as? Double ?? 0.0
-        let isChecked = record["isChecked"] as? Bool ?? false
-        let category = record["category"] as? String
-        let productDescription = record["productdescription"] as? String
-        let brand = record["brand"] as? String
-        let imageData = record["imagedata"] as? String
+        let name = extractString("name") ?? ""
+        let units = extractInt("units") ?? 1
+        let measure = extractString("measure") ?? ""
+        let price = extractDouble("price") ?? 0.0
+        let isChecked = extractBool("isChecked") ?? false
+        let category = extractString("category")
+        let productDescription = extractString("productdescription")
+        let brand = extractString("brand")
+        let imageData = extractString("imagedata")
         
-        let listIdString = record["list_id"] as? String
-        let ownerPublicId = record["ownerpublicid"] as? String
+        let listIdString = extractString("list_id")
+        let ownerPublicId = extractString("ownerpublicid")
         
         // Parse dates
         let createdAt: Date?
-        if let createdAtString = record["created_at"] as? String {
+        if let createdAtString = extractString("created_at") {
             createdAt = ISO8601DateFormatter().date(from: createdAtString)
         } else {
             createdAt = nil
         }
         
         let updatedAt: Date?
-        if let updatedAtString = record["updated_at"] as? String {
+        if let updatedAtString = extractString("updated_at") {
             updatedAt = ISO8601DateFormatter().date(from: updatedAtString)
         } else {
             updatedAt = nil
         }
         
         // Extract CRDT metadata (with fallbacks for backward compatibility)
-        let hlcTimestamp = record["hlc_timestamp"] as? Int64 ?? Int64(Date().timeIntervalSince1970 * 1000)
-        let hlcCounter = record["hlc_counter"] as? Int ?? 0
-        let hlcNodeId = record["hlc_node_id"] as? String ?? ""
-        let tombstone = record["tombstone"] as? Bool ?? false
-        let lastModifiedBy = record["last_modified_by"] as? String ?? ""
+        func extractInt64(_ key: String) -> Int64? {
+            if let value = record[key] as? Int64 {
+                return value
+            }
+            if let value = record[key] as? Int {
+                return Int64(value)
+            }
+            if let value = record[key] as? Double {
+                return Int64(value)
+            }
+            return nil
+        }
+        
+        let hlcTimestamp = extractInt64("hlc_timestamp") ?? Int64(Date().timeIntervalSince1970 * 1000)
+        let hlcCounter = extractInt("hlc_counter") ?? 0
+        let hlcNodeId = extractString("hlc_node_id") ?? ""
+        let tombstone = extractBool("tombstone") ?? false
+        let lastModifiedBy = extractString("last_modified_by") ?? ""
         
         let hlc = HybridLogicalClock(
             timestamp: hlcTimestamp,

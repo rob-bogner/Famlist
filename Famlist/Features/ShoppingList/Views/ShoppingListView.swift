@@ -37,6 +37,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     @State private var quickAddActive: Bool = false // Tracks whether the inline quick-add text field is expanded.
     @State private var quickAddText: String = "" // Holds the text typed into the quick-add field.
     @FocusState private var quickAddFocused: Bool // Indicates whether the quick-add field currently has keyboard focus.
+    @State private var isScrolling: Bool = false // Tracks whether the user is currently scrolling the list.
     
     private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
 
@@ -60,15 +61,12 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 }
  //               .frame(height: headerHeight, alignment: .top) // Constrain header content to the header area.
                 .zIndex(1) // Float above the background.
-                .overlay(alignment: .topTrailing) { // Overlay a hamburger menu at the top-right corner of the header.
-                    hamburgerMenu // The menu with sign-out action.
-                        .padding(.top, 30) // Align vertically with the title's top padding.
-                        .padding(.trailing, 18) // Align horizontally with the header's trailing edge.
-                }
                 VStack(spacing: 0) { // Main content column with list and floating button.
                     Spacer().frame(height: contentOffsetBelowHeader) // Push list down so it starts under the header.
                     ZStack(alignment: .bottomTrailing) { // Layer the list and the floating add button.
-                        ListView().environmentObject(listViewModel) // The list content reading from shared view model.
+                        ListView()
+                            .environmentObject(listViewModel) // The list content reading from shared view model.
+                            .onScrollChange(isScrolling: $isScrolling) // Track scroll state for bottom bar auto-hide
                         if quickAddActive { // If quick-add is expanded, show a tap-capturing overlay to dismiss it.
                             Color.black.opacity(0.001) // Invisible overlay to intercept taps.
                                 .ignoresSafeArea() // Cover entire screen area.
@@ -76,11 +74,24 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                                 .onTapGesture { withAnimation { quickAddActive = false }; quickAddFocused = false } // Tap outside collapses quick-add and hides keyboard.
                         }
                         addButton // The floating button and inline field.
-                            .padding(.bottom, 16) // Lift above bottom content.
+                            .padding(.bottom, isScrolling ? 16 : 80) // Adjust position based on bottom bar visibility
+                            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isScrolling)
                     }
                     Spacer() // Push content up slightly for breathing room.
                 }
                 .zIndex(2) // Place above header content.
+                
+                // Floating Bottom Menu Bar with glass effect - auto-hides when scrolling
+                VStack {
+                    Spacer()
+                    FloatingBottomMenuBar()
+                        .environmentObject(listViewModel)
+                        .environmentObject(session)
+                        .offset(y: isScrolling ? 120 : 0) // Slide down when scrolling
+                        .opacity(isScrolling ? 0 : 1) // Fade out when scrolling
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isScrolling)
+                }
+                .zIndex(3) // Place above all other content
             }
             .navigationBarHidden(true) // Use our custom header; hide default nav bar.
             .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity.combined(with: .move(edge: .trailing)))) // Animated appear/disappear.
@@ -105,52 +116,6 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
         }
     }
 
-    // MARK: - Hamburger Menu
-    @State private var showProfileView: Bool = false // Controls ProfileView sheet presentation
-    @State private var showImportView: Bool = false // Controls ClipboardImportView sheet presentation
-    
-    /// A top-left hamburger menu with session-related actions.
-    private var hamburgerMenu: some View { // Computed view returning the menu for the header.
-        Menu { // Menu content listing actions.
-            Button {
-                showProfileView = true // Show profile view sheet
-            } label: {
-                Label(String(localized: "menu.profile"), systemImage: "person.circle")
-            }
-            
-            Button {
-                showImportView = true // Show clipboard import view sheet
-            } label: {
-                Label(String(localized: "menu.import"), systemImage: "doc.on.clipboard")
-            }
-            
-            Button(role: .destructive) { // Destructive styling to indicate a session-affecting action.
-                session.signOut() // Trigger sign-out which removes the saved session and resets UI state.
-            } label: { // Label for the sign-out action.
-                Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right") // Accessible label and icon.
-            }
-        } label: { // The tappable hamburger icon shown in the header.
-            Image(systemName: "line.3.horizontal") // Standard hamburger icon.
-                .font(.title2.weight(.bold)) // Visible size and weight.
-                .foregroundColor(Color.theme.background) // Contrast icon against the accent header background.
-                .accessibilityLabel(Text(String(localized: "menu.accessibility.hamburger"))) // VoiceOver label.
-        }
-        .buttonStyle(.plain) // Match add button styling to prevent iOS 26 from adding a bordered capsule look.
-        .sheet(isPresented: $showProfileView) {
-            if let profile = session.currentProfile {
-                ProfileView(profile: profile)
-                    .environmentObject(session)
-                    .presentationDragIndicator(.visible)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .sheet(isPresented: $showImportView) {
-            ClipboardImportView()
-                .environmentObject(listViewModel)
-                .presentationDragIndicator(.visible)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-        }
-    }
 
     // MARK: - Quick Add Button & Field
     /// Floating add button with an inline expanding text field for quick entry.

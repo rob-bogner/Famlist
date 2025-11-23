@@ -84,6 +84,9 @@
 		EEC58BDB2ED1F86D000D3915 /* CRDTMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCE2ED1F86D000D3915 /* CRDTMetadata.swift */; };
 		EEC58BDC2ED1F86D000D3915 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */; };
 		EEC58BDD2ED1F86D000D3915 /* OperationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */; };
+		EEC58BE12ED21A5C000D3915 /* FloatingBottomMenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE02ED21A5C000D3915 /* FloatingBottomMenuBar.swift */; };
+		EEC58BE32ED21A6B000D3915 /* ListViewModel+BulkActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */; };
+		EEC58BE52ED21C08000D3915 /* ScrollDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE42ED21C08000D3915 /* ScrollDetection.swift */; };
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
 /* End PBXBuildFile section */
 
@@ -168,6 +171,9 @@
 		EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		EEC58BD32ED1F86D000D3915 /* SyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMonitor.swift; sourceTree = "<group>"; };
 		EEC58BD42ED1F86D000D3915 /* SyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncOperation.swift; sourceTree = "<group>"; };
+		EEC58BE02ED21A5C000D3915 /* FloatingBottomMenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBottomMenuBar.swift; sourceTree = "<group>"; };
+		EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+BulkActions.swift"; sourceTree = "<group>"; };
+		EEC58BE42ED21C08000D3915 /* ScrollDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -238,6 +244,7 @@
 		EEB660052E7F37A9006CB1EB /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BE42ED21C08000D3915 /* ScrollDetection.swift */,
 				EE2B2C6B2EA3DFD600935BCB /* UIImage+Utils.swift */,
 				EEB660032E7F37A9006CB1EB /* Utils.swift */,
 				EEB660042E7F37A9006CB1EB /* ViewModifiers.swift */,
@@ -398,6 +405,7 @@
 		EEB660242E7F37A9006CB1EB /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */,
 				EEC58BC32EC92077000D3915 /* ListViewModel+InputHelpers.swift */,
 				EEC58BC42EC92077000D3915 /* ListViewModel+Persistence.swift */,
 				EEC58BC52EC92077000D3915 /* ListViewModel+Projections.swift */,
@@ -476,6 +484,7 @@
 		EEB660362E7F37A9006CB1EB /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				EEC58BE02ED21A5C000D3915 /* FloatingBottomMenuBar.swift */,
 				EEB660332E7F37A9006CB1EB /* AccentHeaderBackground.swift */,
 				EEB660342E7F37A9006CB1EB /* CustomModalView.swift */,
 				EEB660352E7F37A9006CB1EB /* Toast.swift */,
@@ -676,6 +685,7 @@
 				EEC58BC82EC92077000D3915 /* ListViewModel+InputHelpers.swift in Sources */,
 				EEC58BC92EC92077000D3915 /* ListViewModel+Projections.swift in Sources */,
 				EEC58BCA2EC92077000D3915 /* ListViewModel+RealtimeSync.swift in Sources */,
+				EEC58BE52ED21C08000D3915 /* ScrollDetection.swift in Sources */,
 				EEB660802E7F37A9006CB1EB /* AuthError.swift in Sources */,
 				EEB660822E7F37A9006CB1EB /* ProfilesRepository.swift in Sources */,
 				EEB660842E7F37A9006CB1EB /* CategoriesRepository.swift in Sources */,
@@ -689,6 +699,7 @@
 				EEC58BDB2ED1F86D000D3915 /* CRDTMetadata.swift in Sources */,
 				EEC58BDC2ED1F86D000D3915 /* SyncEngine.swift in Sources */,
 				EEC58BDD2ED1F86D000D3915 /* OperationQueue.swift in Sources */,
+				EEC58BE32ED21A6B000D3915 /* ListViewModel+BulkActions.swift in Sources */,
 				EEC58BCC2EC92089000D3915 /* SupabaseRealtimeManager.swift in Sources */,
 				EEB6608A2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift in Sources */,
 				EEB6608C2E7F37A9006CB1EB /* SupabaseItemsRepository.swift in Sources */,
@@ -713,6 +724,7 @@
 				EE2B2C632E9BF9E500935BCB /* SwiftDataItemStore.swift in Sources */,
 				EEC58BC12EC92064000D3915 /* AuthTestHelpers.swift in Sources */,
 				EEC58BC22EC92064000D3915 /* AuthViewModel.swift in Sources */,
+				EEC58BE12ED21A5C000D3915 /* FloatingBottomMenuBar.swift in Sources */,
 				EEB6605A2E7F37A9006CB1EB /* AuthView.swift in Sources */,
 				EEB6605B2E7F37A9006CB1EB /* ImagePicker.swift in Sources */,
 				EEB6606E2E7F381A006CB1EB /* AppSessionViewModel.swift in Sources */,

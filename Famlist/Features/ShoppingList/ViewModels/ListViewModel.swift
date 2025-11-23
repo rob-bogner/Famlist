@@ -88,6 +88,9 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
     /// While they remain here, we keep the local ordering authoritative to avoid jitter.
     internal var pendingAnimatedItemIDs: Set<String> = []
     
+    /// Debounce task for bulk toggle operations to prevent rapid repeated calls.
+    internal var toggleAllDebounceTask: Task<Void, Never>?
+    
     /// Enumerates triggers that can resume realtime sync to aid logging and debugging.
     internal enum ResumeTrigger: String {
         case appForeground

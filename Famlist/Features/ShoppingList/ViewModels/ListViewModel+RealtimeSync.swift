@@ -39,6 +39,8 @@ extension ListViewModel {
             guard let self else { return }
             for await snapshot in repository.observeItems(listId: listId) {
                 await MainActor.run {
+                    // Note: Bulk operation suppression is now handled at the repository level
+                    // via suppressRealtimeFetches flag, so snapshots won't arrive during bulk ops.
                     let merged = self.mergeRemoteSnapshot(snapshot)
                     
                     // Prevent unnecessary UI updates if the data hasn't effectively changed.

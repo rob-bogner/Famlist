@@ -79,6 +79,34 @@ final class SwiftDataItemStore {
         return entity
     }
 
+    /// Updates only the checked status of an item for efficient batch operations.
+    /// - Parameters:
+    ///   - id: Item UUID to update.
+    ///   - isChecked: New checked state.
+    func updateCheckedStatus(id: UUID, isChecked: Bool) throws {
+        guard let entity = try fetchItem(id: id) else { return }
+        entity.isChecked = isChecked
+        entity.updatedAt = Date()
+        entity.setSyncStatus(.pendingUpdate)
+        try save()
+    }
+    
+    /// Batch updates checked status for multiple items without intermediate saves (optimized for bulk operations).
+    /// - Parameters:
+    ///   - ids: Array of item UUIDs to update.
+    ///   - isChecked: New checked state for all items.
+    func batchUpdateCheckedStatus(ids: [UUID], isChecked: Bool) throws {
+        let updateDate = Date()
+        for id in ids {
+            guard let entity = try fetchItem(id: id) else { continue }
+            entity.isChecked = isChecked
+            entity.updatedAt = updateDate
+            entity.setSyncStatus(.pendingUpdate)
+        }
+        // Single save at the end for better performance
+        try save()
+    }
+    
     /// Soft deletes an item by marking sync status and removing it from the context.
     /// - Parameter id: Item UUID to remove.
     func delete(id: UUID) throws {

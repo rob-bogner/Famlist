@@ -32,3 +32,17 @@ import UIKit // Provides UIImage used by the helpers
 func imageToBase64(_ image: UIImage?) -> String? {
     return image?.toBase64() // Delegate to centralized extension
 }
+
+// MARK: - Array Extensions
+
+extension Array {
+    /// Splits the array into chunks of the specified size for memory-efficient batch processing.
+    /// - Parameter size: Maximum number of elements per chunk.
+    /// - Returns: Array of array chunks.
+    func chunked(into size: Int) -> [[Element]] {
+        guard size > 0 else { return [self] }
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
+    }
+}

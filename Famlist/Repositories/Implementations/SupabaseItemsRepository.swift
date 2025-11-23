@@ -29,6 +29,11 @@ final class SupabaseItemsRepository: ItemsRepository {
     /// Track continuations with tokens for each list.
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
     
+    /// Suppress realtime-triggered fetches during batch operations to avoid cascade
+    /// Thread-safe durch Nutzung eines Actors wäre ideal, aber für Einfachheit nutzen wir @MainActor
+    @MainActor
+    private var suppressRealtimeFetches: Bool = false
+    
     // MARK: - Lifecycle
     
     init(client: SupabaseClienting, itemStore: SwiftDataItemStore, conflictResolver: ConflictResolver) {
@@ -78,6 +83,18 @@ final class SupabaseItemsRepository: ItemsRepository {
     
     /// Processes a Realtime event using the event processor (granular updates)
     private func processRealtimeEvent(_ event: RealtimeEvent, listId: UUID) async {
+        // Skip fetch during batch operations to avoid cascade of fetches
+        // Check BEFORE processing to avoid unnecessary work
+        let shouldSuppress = await MainActor.run { suppressRealtimeFetches }
+        if shouldSuppress {
+            logVoid(params: (
+                action: "processRealtimeEvent.skipped",
+                reason: "batchOperationInProgress",
+                listId: listId
+            ))
+            return
+        }
+        
         switch event {
         case .insert(let payload):
             await eventProcessor.processInsertion(payload, listId: listId)
@@ -281,6 +298,109 @@ final class SupabaseItemsRepository: ItemsRepository {
             .execute()
         await fetchAndYield(listId)
         logVoid(params: (itemId: item.id, listId: listId))
+    }
+    
+    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {
+        guard !items.isEmpty else { return }
+        
+        logVoid(params: (
+            action: "batchUpdateItems.start",
+            itemCount: items.count,
+            listId: listId
+        ))
+        
+        // Suppress realtime fetches during batch to avoid cascade
+        // Set on MainActor to ensure visibility across all tasks
+        await MainActor.run {
+            suppressRealtimeFetches = true
+            logVoid(params: (action: "batchUpdateItems.suppressionEnabled", listId: listId))
+        }
+        
+        do {
+            // Update all items in parallel using TaskGroup
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for item in items {
+                    group.addTask {
+                        guard let listIdForItem = item.listId,
+                              let listUUID = UUID(uuidString: listIdForItem) else {
+                            throw NSError(domain: "SupabaseItemsRepository",
+                                        code: 2,
+                                        userInfo: [NSLocalizedDescriptionKey: "Missing list_id"])
+                        }
+                        
+                        struct UpdateRow: Encodable {
+                            let imageData: String?
+                            let name: String
+                            let units: Int
+                            let measure: String
+                            let price: Double
+                            let isChecked: Bool
+                            let category: String?
+                            let productDescription: String?
+                            let brand: String?
+                            
+                            enum CodingKeys: String, CodingKey {
+                                case imageData = "imagedata"
+                                case name, units, measure, price
+                                case isChecked = "isChecked"
+                                case category
+                                case productDescription = "productdescription"
+                                case brand
+                            }
+                        }
+                        
+                        let payload = UpdateRow(
+                            imageData: item.imageData,
+                            name: item.name,
+                            units: item.units,
+                            measure: item.measure,
+                            price: item.price,
+                            isChecked: item.isChecked,
+                            category: item.category,
+                            productDescription: item.productDescription,
+                            brand: item.brand
+                        )
+                        
+                        _ = try await self.client
+                            .from("items")
+                            .update(payload)
+                            .eq("id", value: item.id)
+                            .eq("list_id", value: listUUID.uuidString)
+                            .execute()
+                    }
+                }
+                
+                // Wait for all updates to complete
+                try await group.waitForAll()
+            }
+            
+            // Delay to ensure all Realtime events triggered by our updates have arrived.
+            // This prevents race conditions where Realtime events arrive after we re-enable fetches.
+            // 500ms should cover network latency and Supabase Realtime event propagation delays.
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+            
+            // Re-enable realtime fetches before final fetch
+            await MainActor.run {
+                suppressRealtimeFetches = false
+                logVoid(params: (action: "batchUpdateItems.suppressionDisabled", listId: listId))
+            }
+            
+            // Only fetch once after all updates are done
+            await fetchAndYield(listId)
+        } catch {
+            // Re-enable realtime fetches on error
+            await MainActor.run {
+                suppressRealtimeFetches = false
+                logVoid(params: (action: "batchUpdateItems.suppressionDisabledOnError", listId: listId))
+            }
+            throw error
+        }
+        
+        logVoid(params: (
+            action: "batchUpdateItems.completed",
+            itemCount: items.count,
+            listId: listId
+        ))
     }
     
     func deleteItem(id: String, listId: UUID) async throws {
