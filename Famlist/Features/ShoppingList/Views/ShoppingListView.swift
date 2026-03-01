@@ -45,7 +45,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 VStack(alignment: .leading, spacing: 12) { // Header content: title and progress.
                     Text(String(localized: "shoppingList.title")) // Localized title text.
                         .font(.largeTitle.bold()) // Big, bold font for prominence.
-                        .foregroundColor(Color.theme.background) // Contrast text against the accent background.
+                        .foregroundColor(Color.theme.universalWhite) // Kontrastreicher Titeltext auf Accent-Header.
                         .padding(.top, 30) // Add space from the top edge.
                         .padding(.leading, 18) // Indent from the leading edge.
                     

@@ -140,7 +140,7 @@ struct FloatingBottomMenuBar: View {
         .padding(.vertical, 9)
         .background {
             Capsule()
-                .fill(Color(white: 0.12))
+                .fill(Color.theme.card)
                 .overlay(Capsule().strokeBorder(Color.theme.accent, lineWidth: 1))
                 .shadow(color: .black.opacity(0.3), radius: 16, x: 0, y: 8)
         }
@@ -182,7 +182,7 @@ struct FloatingBottomMenuBar: View {
     private func pillIcon(icon: String, label: String) -> some View {
         Image(systemName: icon)
             .font(.system(size: 20, weight: .medium))
-            .foregroundColor(.white.opacity(0.9))
+            .foregroundColor(Color.theme.textColor)
             .frame(width: 44, height: 44)
             .contentShape(Rectangle())
             .accessibilityLabel(label)

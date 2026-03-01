@@ -76,23 +76,28 @@ struct ProgressCard: View { // Compact card showing progress percent with icon a
     let progress: Double // 0...1 fraction
     let label: String // Human-readable label, e.g., "3 of 10"
     @State private var animatedProgress: Double = 0 // Animated progress value
-    
+    @Environment(\.colorScheme) private var colorScheme // Für Dark-Mode-Anpassung der Icon- und Label-Farbe.
+
+    private var contentColor: Color { // Schwarz im Light Mode, Universal White im Dark Mode.
+        colorScheme == .dark ? Color.theme.universalWhite : .black
+    }
+
     var body: some View { // Declares the layout
         VStack(alignment: .leading, spacing: 8) { // Stack caption above content row
-            Text(title).font(.caption2).fontWeight(.bold).foregroundColor(Color.theme.background) // Upper caption
+            Text(title).font(.caption2).fontWeight(.bold).foregroundColor(Color.theme.universalWhite) // Upper caption
             HStack { // Content row
                 Image(systemName: "basket") // Icon for shopping context
-                    .foregroundColor(.black) // Black color for icon
+                    .foregroundColor(contentColor) // Adaptiv: schwarz (Light) / universalWhite (Dark)
                     .scaleEffect(animatedProgress > 0 ? 1.0 : 0.8) // Subtle scale based on progress
                     .animation(.spring(response: 0.5, dampingFraction: 0.6), value: animatedProgress) // Spring animation
                 
                 ProgressView(value: animatedProgress) // Animated progress bar
-                    .progressViewStyle(LinearProgressViewStyle(tint: .black)) // Black colored progress
+                    .progressViewStyle(LinearProgressViewStyle(tint: Color.theme.accent)) // Accent colored progress
                     .animation(.easeInOut(duration: 0.5), value: animatedProgress) // Smooth progress animation
                 
                 Text(label) // Label to the right
                     .font(.caption)
-                    .foregroundColor(.black) // Black color for label
+                    .foregroundColor(contentColor) // Adaptiv: schwarz (Light) / universalWhite (Dark)
                     .animation(.easeInOut(duration: 0.3), value: label) // Animate label changes
             }
             .padding(.horizontal, 8) // Inner horizontal padding
