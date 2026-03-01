@@ -1,136 +1,52 @@
 /*
  FloatingBottomMenuBar.swift
- 
+
  Famlist
- Created on: 22.11.2025
- 
+ Created on: 01.03.2026
+
  ------------------------------------------------------------------------
  📄 File Overview:
- - Schwebende Menüleiste am unteren Bildschirmrand mit Apple Glass-Optik (visionOS-inspiriert).
- 
+ - Schwebende Menüleiste am unteren Bildschirmrand im dunklen Pill-Design.
+ - Zentraler Add-Button hervorgehoben (erhaben, Accent-Farbe).
+
  🛠 Includes:
- - Check/Uncheck all Button
+ - Toggle All Button (alle abhaken / alle zurücksetzen)
  - Sort-Menü mit verschiedenen Sortieroptionen
- - Hamburger-Menü mit App-Aktionen
- 
+ - Erhabener zentraler Add-Button (Accent-Farbe)
+ - Clipboard-Import Button
+ - Hamburger-Menü (Profil, Abmelden)
+
  🔰 Notes for Beginners:
- - Verwendet .ultraThinMaterial mit Capsule-Form für Frosted Glass Look
- - Subtile weiße Kontur und weicher Schatten für Tiefe
- - Buttons mit Touch Targets ≥44pt und visuellem Feedback
- - Horizontal zentriert und gleichmäßig verteilt
- 
+ - Dunkles Pill (Capsule) mit festem Farbwert, funktioniert in Light & Dark Mode.
+ - Zentraler Button überragt das Pill via negativem Y-Offset in einem ZStack.
+ - onAddTap-Closure wird von ShoppingListView übergeben.
+
  📝 Last Change:
- - Komplett überarbeitet nach visionOS Glass Design Guidelines
+ - Komplett neu nach dunklem Pill-Design (Screenshot-Referenz).
  ------------------------------------------------------------------------
  */
 
 import SwiftUI
 
-/// Schwebende Menüleiste am unteren Bildschirmrand mit visionOS-inspiriertem Glas-Look
+/// Schwebende Menüleiste am unteren Bildschirmrand mit dunklem Pill und erhabenem Mitte-Button.
 struct FloatingBottomMenuBar: View {
     @EnvironmentObject var listViewModel: ListViewModel
     @EnvironmentObject var session: AppSessionViewModel
-    
-    @State private var showProfileView: Bool = false
-    @State private var showImportView: Bool = false
-    
-    // Berechne ob alle Items gecheckt sind
-    private var allItemsChecked: Bool {
+
+    /// Wird aufgerufen wenn der zentrale Add-Button getippt wird.
+    var onAddTap: () -> Void
+
+    @State private var showProfileView = false
+    @State private var showImportView = false
+
+    private var allChecked: Bool {
         !listViewModel.items.isEmpty && listViewModel.items.allSatisfy { $0.isChecked }
     }
-    
+
     var body: some View {
-        HStack(spacing: 0) {
-            // Links: Check/Uncheck All Button
-            menuButton(
-                icon: allItemsChecked ? "checkmark.circle.fill" : "circle",
-                accessibilityLabel: allItemsChecked ? "Alle Abhaken" : "Alle Markieren"
-            ) {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    listViewModel.toggleAllItems()
-                }
-            }
-            
-            Spacer()
-            
-            // Optionaler subtiler Divider
-            divider
-            
-            Spacer()
-            
-            // Mitte: Sort Menu
-            Menu {
-                Button {
-                    listViewModel.setSortOrder(.category)
-                } label: {
-                    Label("Nach Kategorie", systemImage: "square.grid.2x2")
-                }
-                
-                Button {
-                    listViewModel.setSortOrder(.alphabetical)
-                } label: {
-                    Label("Alphabetisch", systemImage: "textformat")
-                }
-                
-                Button {
-                    listViewModel.setSortOrder(.dateAdded)
-                } label: {
-                    Label("Nach Datum", systemImage: "calendar")
-                }
-            } label: {
-                menuButtonContent(
-                    icon: "arrow.up.arrow.down",
-                    accessibilityLabel: "Sortieren"
-                )
-            }
-            
-            Spacer()
-            
-            // Optionaler subtiler Divider
-            divider
-            
-            Spacer()
-            
-            // Rechts: Hamburger Menu
-            Menu {
-                Button {
-                    showProfileView = true
-                } label: {
-                    Label(String(localized: "menu.profile"), systemImage: "person.circle")
-                }
-                
-                Button {
-                    showImportView = true
-                } label: {
-                    Label(String(localized: "menu.import"), systemImage: "doc.on.clipboard")
-                }
-                
-                Divider()
-                
-                Button(role: .destructive) {
-                    session.signOut()
-                } label: {
-                    Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right")
-                }
-            } label: {
-                menuButtonContent(
-                    icon: "line.3.horizontal",
-                    accessibilityLabel: "Menü"
-                )
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 14)
-        .background {
-            // Frosted Glass Container mit Capsule-Form
-            Capsule()
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    // Subtile weiße Kontur für Tiefe
-                    Capsule()
-                        .strokeBorder(.white.opacity(0.35), lineWidth: 0.5)
-                )
-                .shadow(color: .black.opacity(0.12), radius: 10, x: 0, y: 5)
+        ZStack {
+            pill
+            centerButton
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 12)
@@ -139,61 +55,158 @@ struct FloatingBottomMenuBar: View {
                 ProfileView(profile: profile)
                     .environmentObject(session)
                     .presentationDragIndicator(.visible)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .sheet(isPresented: $showImportView) {
             ClipboardImportView()
                 .environmentObject(listViewModel)
                 .presentationDragIndicator(.visible)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
-    
-    // MARK: - Button Components
-    
-    /// Erstellt einen interaktiven Button mit visuellem Feedback
-    private func menuButton(
+
+    // MARK: - Pill
+
+    private var pill: some View {
+        HStack(spacing: 0) {
+            // 1. Toggle All
+            pillButton(
+                icon: allChecked ? "checkmark.circle.fill" : "circle",
+                label: allChecked ? "Alle zurücksetzen" : "Alle abhaken"
+            ) {
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    listViewModel.toggleAllItems()
+                }
+            }
+
+            Spacer()
+
+            // 2. Sort Menu
+            Menu {
+                Button {
+                    listViewModel.setSortOrder(.category)
+                } label: {
+                    Label("Nach Kategorie", systemImage: "square.grid.2x2")
+                }
+                Button {
+                    listViewModel.setSortOrder(.alphabetical)
+                } label: {
+                    Label("Alphabetisch", systemImage: "textformat")
+                }
+                Button {
+                    listViewModel.setSortOrder(.dateAdded)
+                } label: {
+                    Label("Nach Datum", systemImage: "calendar")
+                }
+            } label: {
+                pillIcon(icon: "arrow.up.arrow.down", label: "Sortieren")
+            }
+            .buttonStyle(PillButtonStyle())
+
+            Spacer()
+
+            // Platzhalter für erhabenen Mitte-Button
+            Spacer().frame(width: 64)
+
+            Spacer()
+
+            // 4. Clipboard Import
+            pillButton(icon: "doc.on.clipboard", label: "Importieren") {
+                showImportView = true
+            }
+
+            Spacer()
+
+            // 5. Hamburger Menu
+            Menu {
+                Button {
+                    showProfileView = true
+                } label: {
+                    Label(String(localized: "menu.profile"), systemImage: "person.circle")
+                }
+                Divider()
+                Button(role: .destructive) {
+                    session.signOut()
+                } label: {
+                    Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            } label: {
+                pillIcon(icon: "line.3.horizontal", label: "Menü")
+            }
+            .buttonStyle(PillButtonStyle())
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 9)
+        .background {
+            Capsule()
+                .fill(Color(white: 0.12))
+                .overlay(Capsule().strokeBorder(Color.theme.accent, lineWidth: 1))
+                .shadow(color: .black.opacity(0.3), radius: 16, x: 0, y: 8)
+        }
+    }
+
+    // MARK: - Center Button
+
+    private var centerButton: some View {
+        Button(action: {
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            onAddTap()
+        }) {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 78, height: 78)
+                .background(Circle().fill(Color.theme.accent))
+                .shadow(color: Color.theme.accent.opacity(0.45), radius: 10, x: 0, y: 4)
+        }
+        .buttonStyle(CenterButtonStyle())
+    }
+
+    // MARK: - Helpers
+
+    /// Einfacher Tap-Button für das Pill.
+    private func pillButton(
         icon: String,
-        accessibilityLabel: String,
+        label: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            menuButtonContent(icon: icon, accessibilityLabel: accessibilityLabel)
+            pillIcon(icon: icon, label: label)
         }
-        .buttonStyle(GlassButtonStyle())
+        .buttonStyle(PillButtonStyle())
     }
-    
-    /// Erstellt den Button-Inhalt (Icon in Touch Target)
-    private func menuButtonContent(
-        icon: String,
-        accessibilityLabel: String
-    ) -> some View {
+
+    /// Icon-View innerhalb des Pills.
+    private func pillIcon(icon: String, label: String) -> some View {
         Image(systemName: icon)
-            .font(.system(size: 22, weight: .medium))
-            .foregroundStyle(Color.primary.opacity(0.85))
-            .frame(width: 44, height: 44) // Min. Touch Target 44pt
+            .font(.system(size: 20, weight: .medium))
+            .foregroundColor(.white.opacity(0.9))
+            .frame(width: 44, height: 44)
             .contentShape(Rectangle())
-            .accessibilityLabel(accessibilityLabel)
-    }
-    
-    /// Subtiler vertikaler Divider zwischen Buttons
-    private var divider: some View {
-        Rectangle()
-            .fill(Color.primary.opacity(0.15))
-            .frame(width: 1, height: 24)
+            .accessibilityLabel(label)
     }
 }
 
-// MARK: - Glass Button Style
+// MARK: - Button Styles
 
-/// Button Style mit visuellem Feedback (Scale + Opacity)
-struct GlassButtonStyle: ButtonStyle {
+/// Press-Feedback für Pill-Buttons (Scale + Opacity).
+private struct PillButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
+            .opacity(configuration.isPressed ? 0.65 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+/// Press-Feedback für den erhabenen Mitte-Button.
+private struct CenterButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
-            .opacity(configuration.isPressed ? 0.7 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 
@@ -207,22 +220,16 @@ struct GlassButtonStyle: ButtonStyle {
         lists: PreviewListsRepository(),
         listViewModel: listVM
     )
-    
-    return ZStack {
-        // Gradient Background für besseren Glass-Effekt
-        LinearGradient(
-            colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.2)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
-        
+
+    ZStack {
+        Color(UIColor.systemGroupedBackground)
+            .ignoresSafeArea()
+
         VStack {
             Spacer()
-            FloatingBottomMenuBar()
+            FloatingBottomMenuBar(onAddTap: {})
                 .environmentObject(listVM)
                 .environmentObject(sessionVM)
         }
     }
 }
-

@@ -7,24 +7,23 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Main shopping list screen combining decorative accent header, progress indicator, list content and quick-add control.
+ - Main shopping list screen combining decorative accent header, progress indicator and list content.
 
  🛠 Includes:
- - Accent header background + title + progress, list content, quick-add input, and modal for full add form.
- - Hamburger menu with profile view access and sign-out.
+ - Accent header background + title + progress, list content, AddItemView sheet.
+ - FloatingBottomMenuBar mit Toggle-All, Sort, Add, Import und Hamburger-Menu.
 
  🔰 Notes for Beginners:
  - Uses an EnvironmentObject (ListViewModel) so all subviews share the same data.
- - The quick-add expands inline; the full AddItemView is presented as a sheet for more details.
+ - FloatingBottomMenuBar liegt als eigene Komponente in Shared/Components.
 
  📝 Last Change:
- - Added ProfileView integration via hamburger menu.
+ - Quick-Add-Inline-Feld entfernt, FloatingBottomMenuBar (dunkles Pill-Design) integriert.
  ------------------------------------------------------------------------
  */
 
 import SwiftUI // Imports SwiftUI for declarative UI building blocks and property wrappers.
 import SwiftData // Provides ModelContext access for SwiftData-backed persistence.
-import UIKit
 
 
 /// The main screen showing the shopping list with a decorative header and actions.
@@ -34,11 +33,6 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     @Environment(\.modelContext) private var modelContext // SwiftData context injected from FamlistApp.
     @Environment(\.scenePhase) private var scenePhase // Tracks foreground/background transitions for lifecycle-driven sync.
     @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
-    @State private var quickAddActive: Bool = false // Tracks whether the inline quick-add text field is expanded.
-    @State private var quickAddText: String = "" // Holds the text typed into the quick-add field.
-    @FocusState private var quickAddFocused: Bool // Indicates whether the quick-add field currently has keyboard focus.
-    @State private var isScrolling: Bool = false // Tracks whether the user is currently scrolling the list.
-    
     private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
 
     var body: some View { // The view’s content and layout tree.
@@ -61,37 +55,26 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 }
  //               .frame(height: headerHeight, alignment: .top) // Constrain header content to the header area.
                 .zIndex(1) // Float above the background.
-                VStack(spacing: 0) { // Main content column with list and floating button.
+                VStack(spacing: 0) { // Main content column with list.
                     Spacer().frame(height: contentOffsetBelowHeader) // Push list down so it starts under the header.
-                    ZStack(alignment: .bottomTrailing) { // Layer the list and the floating add button.
-                        ListView()
-                            .environmentObject(listViewModel) // The list content reading from shared view model.
-                            .onScrollChange(isScrolling: $isScrolling) // Track scroll state for bottom bar auto-hide
-                        if quickAddActive { // If quick-add is expanded, show a tap-capturing overlay to dismiss it.
-                            Color.black.opacity(0.001) // Invisible overlay to intercept taps.
-                                .ignoresSafeArea() // Cover entire screen area.
-                                .contentShape(Rectangle()) // Make the entire overlay tappable.
-                                .onTapGesture { withAnimation { quickAddActive = false }; quickAddFocused = false } // Tap outside collapses quick-add and hides keyboard.
+                    ListView()
+                        .environmentObject(listViewModel) // The list content reading from shared view model.
+                        .safeAreaInset(edge: .bottom) {
+                            Spacer().frame(height: 90) // Freiraum damit Items nicht hinter der Menüleiste verschwinden.
                         }
-                        addButton // The floating button and inline field.
-                            .padding(.bottom, isScrolling ? 16 : 80) // Adjust position based on bottom bar visibility
-                            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isScrolling)
-                    }
                     Spacer() // Push content up slightly for breathing room.
                 }
                 .zIndex(2) // Place above header content.
-                
-                // Floating Bottom Menu Bar with glass effect - auto-hides when scrolling
+
+                // Schwebende Menüleiste am unteren Bildschirmrand.
                 VStack {
                     Spacer()
-                    FloatingBottomMenuBar()
+                    FloatingBottomMenuBar(onAddTap: { addNewItem = true })
                         .environmentObject(listViewModel)
                         .environmentObject(session)
-                        .offset(y: isScrolling ? 120 : 0) // Slide down when scrolling
-                        .opacity(isScrolling ? 0 : 1) // Fade out when scrolling
-                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isScrolling)
                 }
-                .zIndex(3) // Place above all other content
+                .zIndex(3) // Über allen anderen Ebenen.
+                
             }
             .navigationBarHidden(true) // Use our custom header; hide default nav bar.
             .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity.combined(with: .move(edge: .trailing)))) // Animated appear/disappear.
@@ -114,74 +97,6 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                 break // No action required for the inactive transition.
             }
         }
-    }
-
-
-    // MARK: - Quick Add Button & Field
-    /// Floating add button with an inline expanding text field for quick entry.
-    private var addButton: some View { // Computed view for the quick-add control.
-        ZStack(alignment: .trailing) { // Align text field and button at the trailing edge.
-            TextField(String(localized: "quickadd.placeholder"), text: $quickAddText, onCommit: { addQuickItem() }) // Inline text input; pressing return adds the item.
-                .padding(.horizontal, 14) // Add padding inside the text field.
-                .frame(minWidth: 0, maxWidth: quickAddActive ? .infinity : 0, alignment: .trailing) // Expand to full width only when active.
-                .frame(height: 52) // Fixed height for a comfortable touch target.
-                .background(Color.theme.background) // Match the app background for a pill look.
-                .overlay(Capsule().stroke(Color.theme.accent, lineWidth: 2)) // Accent outline around the pill field.
-                .clipShape(Capsule()) // Round the field into a capsule.
-                .focused($quickAddFocused) // Manage keyboard focus.
-                .opacity(quickAddActive ? 1 : 0) // Only visible when active.
-                .animation(.easeOut(duration: 0.2), value: quickAddActive) // Smoothly animate visibility changes.
-            Button(action: {
-                // Add haptic feedback on tap
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
-                buttonTap()
-            }) { // Circular add/submit button.
-                Image(systemName: quickAddActive ? "paperplane.fill" : "plus") // Swap icon when field is active.
-                    .rotationEffect(quickAddActive ? .degrees(45) : .degrees(0)) // Small rotation for fun when active.
-                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: quickAddActive) // Spring animation for rotation
-                    .font(.system(size: 22, weight: .bold)) // Bold, visible icon size.
-                    .frame(width: quickAddActive ? 38 : 48, height: quickAddActive ? 38 : 48) // Shrink slightly when active.
-                    .animation(.spring(response: 0.35, dampingFraction: 0.65), value: quickAddActive) // Spring animation for size
-                    .foregroundColor(.white) // White icon on accent background.
-                    .background(Circle().fill(Color.theme.accent)) // Circular accent background.
-                    .overlay(Circle().stroke(Color.theme.accent, lineWidth: 2)) // Subtle outline for definition.
-                    .offset(x: quickAddActive ? -8 : 0) // Nudge left when the field is visible.
-                    .animation(.spring(response: 0.35, dampingFraction: 0.7), value: quickAddActive) // Spring animation for offset
-                    .shadow(color: Color.theme.accent.opacity(0.3), radius: quickAddActive ? 4 : 8, x: 0, y: quickAddActive ? 2 : 4) // Subtle shadow animation
-            }
-            .buttonStyle(.plain) // Remove iOS default button styling to prevent gray border on iOS 26 devices.
-            .buttonPressAnimation() // Add press feedback animation
-            .simultaneousGesture(LongPressGesture(minimumDuration: 0.7).onEnded { _ in // Long-press opens the full add form.
-                // Haptic feedback for long press
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-                quickAddActive = false // Collapse inline field if open.
-                quickAddText = "" // Clear any partial input.
-                addNewItem = true // Show the AddItemView sheet.
-            })
-        }
-        .padding(.horizontal, 16) // Keep away from screen edges.
-        .padding(.bottom, 16) // Lift above bottom edge for reachability.
-        .frame(height: DS.Layout.quickAddHeight, alignment: .trailing) // Match design system height and align trailing.
-    }
-
-    /// Handles taps on the floating add button to either submit or expand.
-    private func buttonTap() { // Simple action handler.
-        if quickAddActive { addQuickItem() } else { // If field is open, treat as submit; else open field.
-            quickAddFocused = true // Focus the text field to bring up keyboard.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { withAnimation { quickAddActive = true } } // Slight delay for polished animation.
-        }
-    }
-
-    /// Validates and adds a quick item from the inline field.
-    private func addQuickItem() { // Trims, validates, and delegates to view model.
-        let trimmed = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines) // Remove extra spaces/newlines.
-        guard !trimmed.isEmpty else { return } // Ignore empty input.
-        listViewModel.addQuickItem(trimmed) // Ask the view model to create a basic item.
-        quickAddText = "" // Clear field after submit.
-        withAnimation { quickAddActive = false } // Collapse the field.
-        quickAddFocused = false // Dismiss the keyboard.
     }
 }
 
