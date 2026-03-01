@@ -18,7 +18,7 @@
  - Sortierung wird optimistisch auf dem UI angewendet
  
  📝 Last Change:
- - Initiale Implementierung für FloatingBottomMenuBar Support
+ - Bulk Toggle und Sortier-Aktionen ausgelagert aus ListViewModel
  ------------------------------------------------------------------------
  */
 
