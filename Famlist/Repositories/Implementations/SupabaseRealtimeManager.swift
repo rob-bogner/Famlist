@@ -30,9 +30,12 @@ final class SupabaseRealtimeManager {
     private let client: SupabaseClienting
     
     // MARK: - State
-    
+
     /// Track Realtime channels for each list to enable cleanup on unsubscribe.
     private var channels: [UUID: RealtimeChannelV2] = [:]
+
+    /// Track iterating Tasks per list so they can be cancelled on teardown (prevents Zombie-Tasks).
+    private var channelTasks: [UUID: [Task<Void, Never>]] = [:]
     
     // MARK: - Lifecycle
     
@@ -100,39 +103,42 @@ final class SupabaseRealtimeManager {
         
         // Store channel for later cleanup
         channels[listId] = channel
-        
-        // Process insertions in background task
-        Task {
+
+        // Tasks werden gespeichert, damit sie bei teardown explizit gecancelled werden können.
+        let insertionTask = Task {
             for await insertion in insertions {
                 logVoid(params: (listId: listId, action: "realtimeInsert", record: insertion.record))
                 let payload = ["record": insertion.record]
                 await onEvent(.insert(payload: payload))
             }
         }
-        
-        // Process updates in background task
-        Task {
+
+        let updateTask = Task {
             for await update in updates {
                 logVoid(params: (listId: listId, action: "realtimeUpdate", record: update.record))
                 let payload = ["record": update.record]
                 await onEvent(.update(payload: payload))
             }
         }
-        
-        // Process deletions in background task
-        Task {
+
+        let deletionTask = Task {
             for await deletion in deletions {
                 logVoid(params: (listId: listId, action: "realtimeDelete", oldRecord: deletion.oldRecord))
                 let payload = ["old_record": deletion.oldRecord]
                 await onEvent(.delete(payload: payload))
             }
         }
+
+        channelTasks[listId] = [insertionTask, updateTask, deletionTask]
     }
     
     /// Tears down the Realtime channel for a specific list when no more observers exist.
     /// - Parameter listId: The list UUID whose channel should be closed.
     func teardownRealtimeChannel(for listId: UUID) {
         guard let channel = channels[listId] else { return }
+        // Tasks explizit cancellen, bevor der Channel unsubscribed wird.
+        channelTasks[listId]?.forEach { $0.cancel() }
+        channelTasks.removeValue(forKey: listId)
         Task {
             await channel.unsubscribe()
         }

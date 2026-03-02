@@ -84,6 +84,15 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
     var auth: AuthClient { client.auth } // Forward auth client for sign-in/out operations.
     var realtime: RealtimeClientV2 { client.realtimeV2 } // Forward Realtime V2 client for live subscriptions.
 
+    // Stored handles allow cancellation in deinit – prevents zombie tasks and memory leaks.
+    private var sessionTask: Task<Void, Never>?
+    private var authStateTask: Task<Void, Never>?
+
+    deinit {
+        sessionTask?.cancel()
+        authStateTask?.cancel()
+    }
+
     init?(config: SupabaseConfig) { // Failable initializer; returns nil if misconfigured (kept simple here).
         // Configure auth to auto-refresh tokens; rely on library defaults for secure storage/persistence.
         let options = SupabaseClientOptions(
@@ -103,7 +112,8 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         UserLog.Sync.supabaseInitialized(host: config.url.host ?? "unknown")
         // Optionally check/restore session asynchronously and log outcome without throwing.
         let authClient = self.client.auth // Snapshot auth client to avoid capturing self.
-        Task.detached {
+        // Stored as properties so they can be cancelled in deinit.
+        sessionTask = Task {
             do {
                 _ = try await authClient.session // Attempt to read/restore an existing session.
                 _ = logResult(params: ["restored": true], result: "Auth session ready")
@@ -112,8 +122,8 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
                 _ = logResult(params: ["restored": false, "error": String(describing: error)], result: "Auth session missing")
             }
         }
-        // Optionally observe auth state changes and log lightweight events.
-        Task.detached {
+        // Observe auth state changes and log lightweight events.
+        authStateTask = Task {
             for await ev in authClient.authStateChanges {
                 logVoid(params: ["authEvent": String(describing: ev.event)])
                 UserLog.Auth.authStateChanged(event: String(describing: ev.event))

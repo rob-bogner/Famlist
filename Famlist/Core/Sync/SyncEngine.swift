@@ -82,6 +82,8 @@ final class SyncEngine: ObservableObject {
         updatePendingCount()
     }
     
+    // Mit Swift 5.10+ (SE-0371) läuft deinit einer @MainActor-Klasse garantiert auf dem Main Thread.
+    // Timer-Callbacks laufen ebenfalls auf RunLoop.main → kein Thread-Race beim Invalidieren.
     deinit {
         queueProcessingTimer?.invalidate()
         queueProcessingTimer = nil

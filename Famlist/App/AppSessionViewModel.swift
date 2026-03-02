@@ -72,7 +72,7 @@ final class AppSessionViewModel: ObservableObject {
     internal let onboardingService: OnboardingService?
     private let profiles: ProfilesRepository
     private let lists: ListsRepository
-    private unowned let listViewModel: ListViewModel
+    private let listViewModel: ListViewModel
     
     // MARK: - Lifecycle
     

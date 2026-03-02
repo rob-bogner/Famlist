@@ -126,12 +126,17 @@ final class SupabaseItemsRepository: ItemsRepository {
                 }
             }
             
-            continuation.onTermination = { _ in
-                self.continuations[listId]?.removeValue(forKey: token)
-                // If no more observers for this list, remove the Realtime channel
-                if self.continuations[listId]?.isEmpty == true {
-                    self.realtimeManager.teardownRealtimeChannel(for: listId)
-                    self.continuations.removeValue(forKey: listId)
+            // onTermination wird vom AsyncStream-System ohne garantierten Thread aufgerufen.
+            // Task { @MainActor in ... } stellt sicher, dass continuations nur auf dem Main Actor mutiert wird.
+            continuation.onTermination = { @Sendable [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.continuations[listId]?.removeValue(forKey: token)
+                    // If no more observers for this list, remove the Realtime channel
+                    if self.continuations[listId]?.isEmpty == true {
+                        self.realtimeManager.teardownRealtimeChannel(for: listId)
+                        self.continuations.removeValue(forKey: listId)
+                    }
                 }
             }
             Task {
