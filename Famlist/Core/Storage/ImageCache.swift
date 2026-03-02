@@ -28,16 +28,21 @@ import UIKit // UIKit provides UIImage and Data types used for caching.
 final class ImageCache { // Final so it isn't subclassed; single-purpose utility.
     static let shared = ImageCache() // Singleton instance used across the app.
     private let cache = NSCache<NSString, UIImage>() // NSCache automatically clears entries under memory pressure.
-    private init() { cache.countLimit = 500 } // Private init enforces singleton; cap entries to avoid unbounded growth.
+    private init() {
+        cache.countLimit = 100
+        cache.totalCostLimit = 50 * 1024 * 1024 // 50 MB – präziseres Limit als reine Stückzahl
+    }
 
     /// Returns cached decoded image or decodes and stores it if absent.
     /// - Parameter base64: Optional Base64 source string.
     /// - Returns: UIImage or nil if the string is empty/decoding fails.
-    func image(fromBase64 base64: String?) -> UIImage? { // Main API used by list rows to avoid repeated decoding.
-        guard let base64, !base64.isEmpty else { return nil } // If input is nil/empty, there's nothing to decode or cache.
-        if let cached = cache.object(forKey: base64 as NSString) { return cached } // Return cached image when available.
-        guard let img = UIImage.fromBase64(base64) else { return nil } // Decode using centralized extension.
-        cache.setObject(img, forKey: base64 as NSString) // Store decoded image so subsequent calls are fast.
-        return img // Return the decoded image.
+    func image(fromBase64 base64: String?) -> UIImage? {
+        guard let base64, !base64.isEmpty else { return nil }
+        if let cached = cache.object(forKey: base64 as NSString) { return cached }
+        guard let img = UIImage.fromBase64(base64) else { return nil }
+        // Approximierter Speicherverbrauch in Bytes (Breite × Höhe × Scale² × 4 Bytes/Pixel)
+        let cost = Int(img.size.width * img.size.height * img.scale * img.scale * 4)
+        cache.setObject(img, forKey: base64 as NSString, cost: cost)
+        return img
     }
 }

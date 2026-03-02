@@ -88,93 +88,41 @@ final class ConflictResolver {
         
         var merged = local
         var mergedFields = localFields
-        
-        // Merge each field independently based on its HLC
-        
-        // Name
-        if let remoteHLC = remoteFields.getHLC(for: "name"),
-           let localHLC = localFields.getHLC(for: "name") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.name = remote.name
-                mergedFields.updateField("name", hlc: remoteHLC, modifiedBy: remoteFields.fields["name"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // Units
-        if let remoteHLC = remoteFields.getHLC(for: "units"),
-           let localHLC = localFields.getHLC(for: "units") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.units = remote.units
-                mergedFields.updateField("units", hlc: remoteHLC, modifiedBy: remoteFields.fields["units"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // Measure
-        if let remoteHLC = remoteFields.getHLC(for: "measure"),
-           let localHLC = localFields.getHLC(for: "measure") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.measure = remote.measure
-                mergedFields.updateField("measure", hlc: remoteHLC, modifiedBy: remoteFields.fields["measure"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // Price
-        if let remoteHLC = remoteFields.getHLC(for: "price"),
-           let localHLC = localFields.getHLC(for: "price") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.price = remote.price
-                mergedFields.updateField("price", hlc: remoteHLC, modifiedBy: remoteFields.fields["price"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // IsChecked (often changed independently by different users)
-        if let remoteHLC = remoteFields.getHLC(for: "isChecked"),
-           let localHLC = localFields.getHLC(for: "isChecked") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.isChecked = remote.isChecked
-                mergedFields.updateField("isChecked", hlc: remoteHLC, modifiedBy: remoteFields.fields["isChecked"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // Category
-        if let remoteHLC = remoteFields.getHLC(for: "category"),
-           let localHLC = localFields.getHLC(for: "category") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.category = remote.category
-                mergedFields.updateField("category", hlc: remoteHLC, modifiedBy: remoteFields.fields["category"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // Product Description
-        if let remoteHLC = remoteFields.getHLC(for: "productDescription"),
-           let localHLC = localFields.getHLC(for: "productDescription") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.productDescription = remote.productDescription
-                mergedFields.updateField("productDescription", hlc: remoteHLC, modifiedBy: remoteFields.fields["productDescription"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // Brand
-        if let remoteHLC = remoteFields.getHLC(for: "brand"),
-           let localHLC = localFields.getHLC(for: "brand") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.brand = remote.brand
-                mergedFields.updateField("brand", hlc: remoteHLC, modifiedBy: remoteFields.fields["brand"]?.lastModifiedBy ?? "")
-            }
-        }
-        
-        // ImageData
-        if let remoteHLC = remoteFields.getHLC(for: "imageData"),
-           let localHLC = localFields.getHLC(for: "imageData") {
-            if localHLC.happenedBefore(remoteHLC) {
-                merged.imageData = remote.imageData
-                mergedFields.updateField("imageData", hlc: remoteHLC, modifiedBy: remoteFields.fields["imageData"]?.lastModifiedBy ?? "")
-            }
-        }
-        
+
+        // Merge each field independently based on its HLC using the generic helper below.
+        mergeField("name",              remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.name },               set: { $0.name = $1 })
+        mergeField("units",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.units },              set: { $0.units = $1 })
+        mergeField("measure",           remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.measure },            set: { $0.measure = $1 })
+        mergeField("price",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.price },              set: { $0.price = $1 })
+        mergeField("isChecked",         remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.isChecked },          set: { $0.isChecked = $1 })
+        mergeField("category",          remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.category },           set: { $0.category = $1 })
+        mergeField("productDescription",remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.productDescription }, set: { $0.productDescription = $1 })
+        mergeField("brand",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.brand },              set: { $0.brand = $1 })
+        mergeField("imageData",         remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.imageData },          set: { $0.imageData = $1 })
+
         return (merged, mergedFields)
     }
     
+    // MARK: - Helpers
+
+    /// Wendet einen Remote-Feldwert auf `merged` an, wenn der Remote-HLC neuer ist als der lokale.
+    private func mergeField<T>(
+        _ key: String,
+        remote: ItemModel,
+        localFields: FieldLevelCRDT,
+        remoteFields: FieldLevelCRDT,
+        merged: inout ItemModel,
+        mergedFields: inout FieldLevelCRDT,
+        get: (ItemModel) -> T,
+        set: (inout ItemModel, T) -> Void
+    ) {
+        guard let remoteHLC = remoteFields.getHLC(for: key),
+              let localHLC = localFields.getHLC(for: key),
+              localHLC.happenedBefore(remoteHLC) else { return }
+        set(&merged, get(remote))
+        mergedFields.updateField(key, hlc: remoteHLC, modifiedBy: remoteFields.fields[key]?.lastModifiedBy ?? "")
+    }
+
     /// Determines if a remote update should be applied given local state
     /// - Parameters:
     ///   - localMeta: Local CRDT metadata

@@ -38,37 +38,16 @@ extension ListViewModel {
     ///   - measure: Measurement unit as string (e.g., "kg").
     ///   - image: Optional image to attach.
     func addItemFromInput(name: String, units: String, measure: String, image: UIImage? = nil) {
-        isLoading = true
-        let imageBase64 = image?.toBase64()
-        let canonical = MeasureCanonicalizer.canonicalize(measure)
         let newItem = ItemModel(
-            imageData: imageBase64,
+            imageData: image?.toBase64(),
             name: name,
             units: Int(units) ?? 1,
-            measure: canonical,
+            measure: measure, // addItem() normalisiert via canonicalizeMeasure
             price: 0.0,
             isChecked: false,
             listId: listId.uuidString
         )
-        storePendingChange(for: newItem, status: .pendingCreate)
-        
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                let created = try await self.repository.createItem(newItem)
-                await MainActor.run {
-                    self.updateSyncStatus(for: created.id, status: .synced)
-                }
-            } catch {
-                await MainActor.run {
-                    self.updateSyncStatus(for: newItem.id, status: .failed)
-                    self.setError(error)
-                }
-            }
-            await MainActor.run {
-                self.isLoading = false
-            }
-        }
+        addItem(newItem)
     }
     
     /// Quick add from a single text field; trims and validates minimal input.

@@ -40,12 +40,18 @@ struct PersistenceController {
             isStoredInMemoryOnly: inMemory
         )
         do {
-            container = try ModelContainer(
-                for: schema,
-                configurations: configuration
-            )
+            container = try ModelContainer(for: schema, configurations: configuration)
         } catch {
-            fatalError("Failed to create SwiftData container: \(error.localizedDescription)")
+            // Erster Versuch fehlgeschlagen (z. B. beschädigte Datenbank).
+            // Fallback auf In-Memory-Container, damit die App nicht crasht.
+            // Daten werden nicht über Neustarts persistiert; der Fehler wird geloggt.
+            logVoid(params: (action: "containerFallback", error: error.localizedDescription))
+            let fallback = ModelConfiguration("Fallback", isStoredInMemoryOnly: true)
+            do {
+                container = try ModelContainer(for: schema, configurations: fallback)
+            } catch let fallbackError {
+                fatalError("SwiftData container creation failed even in-memory: \(fallbackError.localizedDescription)")
+            }
         }
     }
 }

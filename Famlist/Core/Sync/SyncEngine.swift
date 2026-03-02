@@ -285,7 +285,6 @@ final class SyncEngine: ObservableObject {
     private func processOperation(_ operation: SyncOperation) async {
         do {
             let item = try operation.decodeItemSnapshot()
-            let _ = try operation.decodeCRDTMetadata()
             
             logVoid(params: (
                 action: "processOperation",

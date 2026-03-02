@@ -115,14 +115,19 @@ final class SupabaseListsRepository: ListsRepository {
     func observeLists(for owner: UUID) -> AsyncStream<[List]> {
         let stream = AsyncStream { continuation in
             Task {
-                let rows: [List] = try await client
-                    .from("lists")
-                    .select()
-                    .eq("owner_id", value: owner.uuidString)
-                    .order("created_at")
-                    .execute()
-                    .value
-                continuation.yield(rows)
+                do {
+                    let rows: [List] = try await client
+                        .from("lists")
+                        .select()
+                        .eq("owner_id", value: owner.uuidString)
+                        .order("created_at")
+                        .execute()
+                        .value
+                    continuation.yield(rows)
+                } catch {
+                    logVoid(params: (action: "observeLists.error", owner: owner, error: error.localizedDescription))
+                }
+                // finish() wird immer aufgerufen – verhindert hängenden Stream bei Fehler.
                 continuation.finish()
             }
         }
