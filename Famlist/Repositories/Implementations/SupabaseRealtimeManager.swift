@@ -23,6 +23,8 @@ enum RealtimeEvent {
 }
 
 /// Manages Realtime channel lifecycle and streams for a specific list.
+/// @MainActor stellt sicher, dass channels und channelTasks ohne Data Races mutiert werden.
+@MainActor
 final class SupabaseRealtimeManager {
     
     // MARK: - Dependencies

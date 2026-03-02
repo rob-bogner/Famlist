@@ -27,6 +27,8 @@ import Foundation // Foundation provides UUID, AsyncStream, and base types used 
 
 /// Contract describing how to load and mutate shopping list items regardless of the backend implementation.
 /// Conforming types can provide network-backed (Supabase) or in-memory (preview) behavior.
+/// @MainActor stellt sicher, dass alle Conformances (inkl. PreviewItemsRepository) ohne Swift-6-Isolation-Fehler kompilieren.
+@MainActor
 protocol ItemsRepository { // Protocol ensures the app can switch data sources without touching UI code.
     /// Observe items for a given list id. Implementation may use Supabase Realtime or polling.
     /// - Parameter listId: The list UUID to scope items to.
@@ -56,6 +58,8 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
 
 /// Simple in-memory repository used for SwiftUI previews and offline demos.
 /// Stores items in a dictionary keyed by list UUID and broadcasts changes through AsyncStream continuations.
+/// @MainActor durch Protokoll-Konformität (ItemsRepository ist @MainActor).
+@MainActor
 final class PreviewItemsRepository: ItemsRepository { // Final prevents subclassing; this is a simple utility type.
     private var storage: [UUID: [ItemModel]] = [:] // In-memory store mapping list IDs to their items.
     // Track continuations by UUID token because Continuation is a struct (no identity)
@@ -69,8 +73,10 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
             let token = UUID() // Unique token to identify this subscriber for cleanup.
             if continuations[listId] == nil { continuations[listId] = [:] } // Ensure an entry exists for this list.
             continuations[listId]?[token] = continuation // Save continuation so we can yield updates later.
-            continuation.onTermination = { _ in // Called when the observer cancels or stream finishes.
-                self.continuations[listId]?.removeValue(forKey: token) // Remove the continuation to avoid memory leaks.
+            continuation.onTermination = { @Sendable [weak self] _ in // Called when the observer cancels or stream finishes.
+                Task { @MainActor [weak self] in
+                    self?.continuations[listId]?.removeValue(forKey: token) // Remove the continuation to avoid memory leaks.
+                }
             }
             continuation.yield(storage[listId] ?? []) // Immediately send current snapshot so UI has initial data.
         }

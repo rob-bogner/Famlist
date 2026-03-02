@@ -16,33 +16,34 @@ import Foundation // Provides UUID.
 import Supabase // Brings in Supabase types for queries and builders.
 
 /// Supabase-backed items repository implementing ItemsRepository.
+/// @MainActor stellt sicher, dass alle mutablen Properties (continuations, suppressRealtimeFetches etc.)
+/// ausschließlich vom Main Thread aus mutiert werden – verhindert Data Races.
+@MainActor
 final class SupabaseItemsRepository: ItemsRepository {
-    
+
     // MARK: - Dependencies
-    
+
     let client: SupabaseClienting
     private let realtimeManager: SupabaseRealtimeManager
     private let eventProcessor: RealtimeEventProcessor
-    
+
     // MARK: - State
-    
+
     /// Track continuations with tokens for each list.
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
-    
-    /// Suppress realtime-triggered fetches during batch operations to avoid cascade
-    /// Thread-safe durch Nutzung eines Actors wäre ideal, aber für Einfachheit nutzen wir @MainActor
-    @MainActor
+
+    /// Suppress realtime-triggered fetches during batch operations to avoid cascade.
     private var suppressRealtimeFetches: Bool = false
-    
+
     /// Tracks when the last bulk operation started for stale lock detection.
-    @MainActor private var lastBulkOperationStartTime: Date?
-    
+    private var lastBulkOperationStartTime: Date?
+
     /// Maximum allowed duration for a bulk operation before considering the lock stale (1 minute).
     /// After this duration, the lock will be automatically cleared on the next event processing.
     private let staleLockThreshold: TimeInterval = 60 // 1 minute
-    
+
     /// Event counter for batch operations: tracks how many realtime events we're expecting.
-    @MainActor private var expectedRealtimeEvents: Int = 0
+    private var expectedRealtimeEvents: Int = 0
     
     /// Timeout duration for event counter (fallback if not all events arrive).
     private let eventCounterTimeout: TimeInterval = 5.0 // 5 seconds
@@ -59,7 +60,6 @@ final class SupabaseItemsRepository: ItemsRepository {
     
     /// Checks if the suppression lock is stale (older than staleLockThreshold) and clears it if necessary.
     /// - Returns: True if a stale lock was cleared, false otherwise.
-    @MainActor
     private func checkAndClearStaleLock() -> Bool {
         guard suppressRealtimeFetches,
               let startTime = lastBulkOperationStartTime else {
@@ -84,7 +84,6 @@ final class SupabaseItemsRepository: ItemsRepository {
     
     /// Decrements the expected realtime events counter and releases lock if all events arrived.
     /// - Parameter listId: The list ID for logging purposes.
-    @MainActor
     private func decrementEventCounter(for listId: UUID) {
         guard suppressRealtimeFetches, expectedRealtimeEvents > 0 else { return }
         
@@ -126,13 +125,12 @@ final class SupabaseItemsRepository: ItemsRepository {
                 }
             }
             
-            // onTermination wird vom AsyncStream-System ohne garantierten Thread aufgerufen.
-            // Task { @MainActor in ... } stellt sicher, dass continuations nur auf dem Main Actor mutiert wird.
+                    // onTermination kann auf beliebigem Thread aufgerufen werden.
+            // Task { @MainActor in ... } dispatcht zurück auf den Main Actor (Klassen-Isolation).
             continuation.onTermination = { @Sendable [weak self] _ in
                 Task { @MainActor [weak self] in
                     guard let self else { return }
                     self.continuations[listId]?.removeValue(forKey: token)
-                    // If no more observers for this list, remove the Realtime channel
                     if self.continuations[listId]?.isEmpty == true {
                         self.realtimeManager.teardownRealtimeChannel(for: listId)
                         self.continuations.removeValue(forKey: listId)
@@ -146,7 +144,6 @@ final class SupabaseItemsRepository: ItemsRepository {
         return logResult(params: ["listId": listId], result: stream)
     }
     
-    @MainActor
     private func yield(_ listId: UUID, _ items: [ItemModel]) {
         continuations[listId]?.values.forEach { $0.yield(items) }
     }

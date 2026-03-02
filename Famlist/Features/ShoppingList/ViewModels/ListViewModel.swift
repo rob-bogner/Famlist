@@ -108,7 +108,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     ///   - startImmediately: Whether to start observing items immediately (set false until auth ready).
     init(
         listId: UUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID(),
-        repository: ItemsRepository = PreviewItemsRepository(),
+        repository: ItemsRepository,
         itemStore: SwiftDataItemStore,
         listStore: SwiftDataListStore,
         startImmediately: Bool = true
