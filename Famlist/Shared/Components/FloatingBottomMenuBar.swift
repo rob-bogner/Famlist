@@ -157,8 +157,11 @@ struct FloatingBottomMenuBar: View {
             Image(systemName: "plus")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
-                .frame(width: 78, height: 78)
-                .background(Circle().fill(Color.theme.accent))
+                .frame(width: 74, height: 74)
+                .background(
+                    Circle().fill(Color.theme.accent)
+                        .overlay(Circle().strokeBorder(Color.theme.card, lineWidth: 2).padding(4))
+                )
                 .shadow(color: Color.theme.accent.opacity(0.45), radius: 10, x: 0, y: 4)
         }
         .buttonStyle(CenterButtonStyle())
