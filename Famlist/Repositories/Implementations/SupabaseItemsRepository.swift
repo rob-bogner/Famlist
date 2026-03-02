@@ -37,9 +37,9 @@ final class SupabaseItemsRepository: ItemsRepository {
     /// Tracks when the last bulk operation started for stale lock detection.
     @MainActor private var lastBulkOperationStartTime: Date?
     
-    /// Maximum allowed duration for a bulk operation before considering the lock stale (14 days = 336 hours).
+    /// Maximum allowed duration for a bulk operation before considering the lock stale (1 minute).
     /// After this duration, the lock will be automatically cleared on the next event processing.
-    private let staleLockThreshold: TimeInterval = 336 * 60 * 60 // 336 hours
+    private let staleLockThreshold: TimeInterval = 60 // 1 minute
     
     /// Event counter for batch operations: tracks how many realtime events we're expecting.
     @MainActor private var expectedRealtimeEvents: Int = 0

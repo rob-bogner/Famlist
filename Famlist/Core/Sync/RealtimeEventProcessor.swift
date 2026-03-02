@@ -28,9 +28,12 @@ import SwiftData
 
 /// Processes Realtime events with CRDT-based conflict resolution
 final class RealtimeEventProcessor {
-    
+
+    // ISO8601DateFormatter ist teuer in der Erstellung – einmal als static property anlegen.
+    private static let isoFormatter = ISO8601DateFormatter()
+
     // MARK: - Dependencies
-    
+
     private let conflictResolver: ConflictResolver
     private let itemStore: SwiftDataItemStore
     
@@ -297,14 +300,14 @@ final class RealtimeEventProcessor {
         // Parse dates
         let createdAt: Date?
         if let createdAtString = extractString("created_at") {
-            createdAt = ISO8601DateFormatter().date(from: createdAtString)
+            createdAt = Self.isoFormatter.date(from:createdAtString)
         } else {
             createdAt = nil
         }
         
         let updatedAt: Date?
         if let updatedAtString = extractString("updated_at") {
-            updatedAt = ISO8601DateFormatter().date(from: updatedAtString)
+            updatedAt = Self.isoFormatter.date(from:updatedAtString)
         } else {
             updatedAt = nil
         }

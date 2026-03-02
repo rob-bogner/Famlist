@@ -43,7 +43,7 @@ extension ListViewModel {
     // MARK: - Published Sort State
     
     /// Aktuelle Sortierreihenfolge (kann später als @Published im Hauptfile hinzugefügt werden)
-    private static var currentSortOrder: SortOrder = .category
+    static var currentSortOrder: SortOrder = .category
     
     // MARK: - Toggle All Items
     

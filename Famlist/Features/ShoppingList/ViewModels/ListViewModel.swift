@@ -36,7 +36,7 @@ import Combine // Combine provides AnyCancellable used for connectivity monitori
 
 /// ViewModel encapsulating shopping list state and repository synchronization.
 @MainActor // Guarantees that all state changes happen on the main thread (UI thread).
-class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe changes to @Published properties.
+final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe changes to @Published properties.
     
     // MARK: - Published State
     
@@ -181,6 +181,7 @@ class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI observe
         listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
         refreshItemsFromStore()
         hasObservedActiveList = false
+        ListViewModel.currentSortOrder = .category
     }
     
     // MARK: - CRUD Operations

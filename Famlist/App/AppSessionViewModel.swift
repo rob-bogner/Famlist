@@ -48,6 +48,7 @@ final class AppSessionViewModel: ObservableObject {
     
     @Published var toastMessage: String? = nil
     private var toastClearTask: Task<Void, Never>? = nil
+    private var restoreTask: Task<Void, Never>? = nil
     
     /// Cold-start phases for user-visible toasts/logs
     enum Phase: String {
@@ -101,9 +102,7 @@ final class AppSessionViewModel: ObservableObject {
             self.onboardingService = nil
         }
         
-        Task {
-            await self.restoreSession()
-        }
+        restoreTask = Task { await self.restoreSession() }
     }
     
     // MARK: - Toast Management

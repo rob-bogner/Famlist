@@ -68,7 +68,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             let listsRepo = SupabaseListsRepository(client: client)
             
             // Create operation queue for sync engine
-            let operationQueue = OperationQueue(context: modelContainer.mainContext)
+            let operationQueue = SyncOperationQueue(context: modelContainer.mainContext)
             
             // Create sync engine
             let syncEngine = SyncEngine(

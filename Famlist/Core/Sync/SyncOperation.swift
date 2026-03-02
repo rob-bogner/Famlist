@@ -146,11 +146,7 @@ final class SyncOperation: Identifiable {
         
         guard let listIdString = item.listId,
               let listUUID = UUID(uuidString: listIdString) else {
-            throw NSError(
-                domain: "SyncOperation",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Item must have valid listId"]
-            )
+            throw SyncOperationError.missingListId
         }
         
         return SyncOperation(
@@ -181,6 +177,19 @@ final class SyncOperation: Identifiable {
     func markSuccess() {
         lastAttemptAt = Date()
         lastErrorMessage = nil
+    }
+}
+
+// MARK: - Error
+
+/// Typisierte Fehler für SyncOperation-Erstellung. Eng verwandt mit SyncOperation, bleibt im selben File.
+enum SyncOperationError: Error, LocalizedError {
+    case missingListId
+
+    var errorDescription: String? {
+        switch self {
+        case .missingListId: return "Item must have valid listId"
+        }
     }
 }
 

@@ -28,7 +28,7 @@ import SwiftData
 
 /// Manages a persistent queue of sync operations backed by SwiftData
 @MainActor
-final class OperationQueue {
+final class SyncOperationQueue {
     
     // MARK: - Dependencies
     

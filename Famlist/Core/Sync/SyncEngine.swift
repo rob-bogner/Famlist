@@ -45,7 +45,7 @@ final class SyncEngine: ObservableObject {
     
     private let repository: ItemsRepository
     private let itemStore: SwiftDataItemStore
-    private let operationQueue: OperationQueue
+    private let operationQueue: SyncOperationQueue
     private let conflictResolver: ConflictResolver
     private let hlcGenerator: HybridLogicalClockGenerator
     
@@ -65,7 +65,7 @@ final class SyncEngine: ObservableObject {
     init(
         repository: ItemsRepository,
         itemStore: SwiftDataItemStore,
-        operationQueue: OperationQueue,
+        operationQueue: SyncOperationQueue,
         conflictResolver: ConflictResolver,
         hlcGenerator: HybridLogicalClockGenerator
     ) {
@@ -408,12 +408,4 @@ final class SyncEngine: ObservableObject {
     }
 }
 
-// MARK: - Sync Status
-
-enum SyncStatus: Equatable {
-    case idle
-    case syncing
-    case paused
-    case error(String)
-}
 
