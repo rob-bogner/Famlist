@@ -354,24 +354,17 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Toggles the checked state of an item and persists the change via updateItem.
     /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
     func toggleItemChecked(_ item: ItemModel) {
-        // Optimistic update:
-        // 1. Remove item from current position
-        // 2. Toggle state
-        // 3. Insert at correct sort position immediately
-        // This prevents the "double jump" effect where item moves to end of section then sorts later.
-        
-        if let index = items.firstIndex(where: { $0.id == item.id }) {
-            var updatedItem = items.remove(at: index)
-            updatedItem.isChecked.toggle()
-            
-            // Find correct insertion index using shared sort logic
-            let insertionIndex = items.firstIndex(where: { ItemModel.compare(updatedItem, $0) }) ?? items.count
-            items.insert(updatedItem, at: insertionIndex)
-            
-            pendingAnimatedItemIDs.insert(updatedItem.id)
-            // Then sync to backend
-            updateItem(updatedItem, trackPendingAnimation: true)
-        }
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+
+        // Optimistic update: toggle in-place, then re-sort according to currentSortOrder.
+        // This prevents "double jump" and keeps the order consistent with any remote snapshots.
+        var updatedItem = items[index]
+        updatedItem.isChecked.toggle()
+        items[index] = updatedItem
+        items = ListViewModel.currentSortOrder.apply(to: items)
+
+        pendingAnimatedItemIDs.insert(updatedItem.id)
+        updateItem(updatedItem, trackPendingAnimation: true)
     }
     
     // MARK: - Error Handling

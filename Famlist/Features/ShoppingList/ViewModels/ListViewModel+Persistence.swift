@@ -73,7 +73,7 @@ extension ListViewModel {
     internal func loadLocalSnapshot() {
         do {
             let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
-            applyItems(localItems)
+            applyItems(ListViewModel.currentSortOrder.apply(to: localItems))
         } catch {
             logVoid(params: (
                 note: "loadLocalSnapshot",
@@ -104,14 +104,15 @@ extension ListViewModel {
     }
     
     /// Merges the latest remote snapshot with unsynced local mutations to provide a consistent view.
-    /// Preserves the current items array order to prevent re-sorting.
+    /// Sortiert das Ergebnis stets nach currentSortOrder, damit Remote-Snapshots die UI-Reihenfolge nicht resetten.
     internal func mergeRemoteSnapshot(_ snapshot: [ItemModel]) -> [ItemModel] {
         let strategy = ItemMergeStrategy(
             currentItems: items,
             localStore: itemStore,
             listId: listId
         )
-        return strategy.merge(snapshot)
+        let merged = strategy.merge(snapshot)
+        return ListViewModel.currentSortOrder.apply(to: merged)
     }
     
     /// Stores a pending change locally and refreshes the published items, keeping offline UI in sync.
@@ -167,7 +168,7 @@ extension ListViewModel {
     internal func refreshItemsFromStore() {
         do {
             let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
-            applyItems(localItems)
+            applyItems(ListViewModel.currentSortOrder.apply(to: localItems))
         } catch {
             logVoid(params: (
                 note: "refreshItemsFromStore",

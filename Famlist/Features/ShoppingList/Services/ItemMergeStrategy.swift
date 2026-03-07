@@ -53,12 +53,8 @@ struct ItemMergeStrategy {
                 }
             }
             
-            // Rebuild the list with stable sort order
-            // 1. If we have current items, try to preserve their relative order
-            // 2. Sort everything by createdAt to ensure consistent positioning for new items
-            
-            let allItems = Array(merged.values)
-            return allItems.sorted(by: ItemModel.compare)
+            // Reihenfolge wird vom Aufrufer (mergeRemoteSnapshot) per currentSortOrder bestimmt.
+            return Array(merged.values)
         } catch {
             logVoid(params: (note: "mergeRemoteSnapshot", error: (error as NSError).localizedDescription))
             return snapshot

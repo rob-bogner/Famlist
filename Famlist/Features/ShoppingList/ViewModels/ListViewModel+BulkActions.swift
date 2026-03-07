@@ -32,8 +32,37 @@ enum SortOrder: String, CaseIterable {
     case category = "Kategorie"
     case alphabetical = "Alphabetisch"
     case dateAdded = "Datum"
-    
+
     var displayName: String { rawValue }
+
+    /// Sortiert ein Item-Array nach dieser SortOrder.
+    /// Gecheckte Items werden immer hinter ungecheckte gestellt.
+    /// - Parameter items: Das zu sortierende Array.
+    /// - Returns: Neues, sortiertes Array.
+    func apply(to items: [ItemModel]) -> [ItemModel] {
+        switch self {
+        case .category:
+            return items.sorted { item1, item2 in
+                if item1.isChecked != item2.isChecked { return !item1.isChecked }
+                let cat1 = item1.category ?? "Sonstiges"
+                let cat2 = item2.category ?? "Sonstiges"
+                if cat1 != cat2 { return cat1 < cat2 }
+                return item1.name < item2.name
+            }
+        case .alphabetical:
+            return items.sorted { item1, item2 in
+                if item1.isChecked != item2.isChecked { return !item1.isChecked }
+                return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
+            }
+        case .dateAdded:
+            return items.sorted { item1, item2 in
+                if item1.isChecked != item2.isChecked { return !item1.isChecked }
+                let date1 = item1.createdAt ?? Date.distantPast
+                let date2 = item2.createdAt ?? Date.distantPast
+                return date1 > date2
+            }
+        }
+    }
 }
 
 // MARK: - Bulk Actions Extension
@@ -152,42 +181,7 @@ extension ListViewModel {
     /// Sortiert die Items nach der angegebenen Reihenfolge
     private func sortItems(by order: SortOrder) {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-            switch order {
-            case .category:
-                // Gruppiere nach gecheckt/ungecheckt, dann nach Kategorie
-                items.sort { item1, item2 in
-                    if item1.isChecked != item2.isChecked {
-                        return !item1.isChecked
-                    }
-                    let cat1 = item1.category ?? "Sonstiges"
-                    let cat2 = item2.category ?? "Sonstiges"
-                    if cat1 != cat2 {
-                        return cat1 < cat2
-                    }
-                    return item1.name < item2.name
-                }
-                
-            case .alphabetical:
-                // Gruppiere nach gecheckt/ungecheckt, dann alphabetisch
-                items.sort { item1, item2 in
-                    if item1.isChecked != item2.isChecked {
-                        return !item1.isChecked
-                    }
-                    return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
-                }
-                
-            case .dateAdded:
-                // Gruppiere nach gecheckt/ungecheckt, dann nach Erstellungsdatum (neueste zuerst)
-                items.sort { item1, item2 in
-                    if item1.isChecked != item2.isChecked {
-                        return !item1.isChecked
-                    }
-                    // Verwende createdAt wenn vorhanden, sonst ID als Fallback
-                    let date1 = item1.createdAt ?? Date.distantPast
-                    let date2 = item2.createdAt ?? Date.distantPast
-                    return date1 > date2
-                }
-            }
+            items = order.apply(to: items)
         }
     }
 }
