@@ -32,9 +32,6 @@ final class MultiDeviceSyncIntegrationTests: XCTestCase {
         // Simulate two devices modifying the same item
         let resolver = ConflictResolver()
         
-        let baseHLC = HybridLogicalClock(timestamp: 1000, counter: 0, nodeId: "device1")
-        let baseItem = ItemModel(id: "item1", name: "Original", units: 1)
-        
         // Device 1 modifies at T+100ms
         let device1HLC = HybridLogicalClock(timestamp: 1100, counter: 0, nodeId: "device1")
         let device1Item = ItemModel(id: "item1", name: "Device1", units: 2)

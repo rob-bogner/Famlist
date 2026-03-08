@@ -73,22 +73,27 @@ struct ClipboardImportParser {
     /// Parses a single item line extracting quantity, measure, brand, and name
     private static func parseItemLine(_ line: String, category: String?) -> ParsedItem? {
         guard !line.isEmpty else { return nil }
-        
+
         var remainingText = line
         var units = 1
         var measure = ""
         var brand: String?
-        
+
         // Extract quantity and measure (e.g., "500 g", "1x", "2 Liter")
         if let quantityMatch = extractQuantityAndMeasure(from: remainingText) {
             units = quantityMatch.units
             measure = quantityMatch.measure
             remainingText = quantityMatch.remainingText
+        } else if let suffixMatch = extractSuffixQuantity(from: remainingText) {
+            // Handles suffix quantities like "Milch 1x" or "Frischkäse 2x"
+            units = suffixMatch.units
+            measure = suffixMatch.measure
+            remainingText = suffixMatch.remainingText
         }
-        
+
         // Extract brand (assuming remaining text after quantity is "Brand ProductName")
         let components = remainingText.components(separatedBy: " ")
-        
+
         // If first word is capitalized and followed by more words, treat as brand
         if components.count > 1 && components[0].first?.isUppercase == true {
             let firstWord = components[0]
@@ -98,11 +103,13 @@ struct ClipboardImportParser {
                 remainingText = components.dropFirst().joined(separator: " ")
             }
         }
-        
+
         // Clean up name
         let name = remainingText.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return nil }
-        
+
+        // Skip items whose name is purely a parenthetical annotation (e.g. "(150 g)")
+        guard !name.isEmpty, !(name.hasPrefix("(") && name.hasSuffix(")")) else { return nil }
+
         return ParsedItem(
             name: name,
             units: units,
@@ -112,6 +119,23 @@ struct ClipboardImportParser {
         )
     }
     
+    /// Extracts a trailing quantity suffix like "Milch 1x" → name="Milch", units=1, measure="x"
+    private static func extractSuffixQuantity(from text: String) -> (units: Int, measure: String, remainingText: String)? {
+        let pattern = #"^(.+?)\s+(\d+)(x)\s*$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []),
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let nameRange = Range(match.range(at: 1), in: text),
+              let unitsRange = Range(match.range(at: 2), in: text),
+              let measureRange = Range(match.range(at: 3), in: text) else {
+            return nil
+        }
+        return (
+            units: Int(text[unitsRange]) ?? 1,
+            measure: String(text[measureRange]),
+            remainingText: String(text[nameRange])
+        )
+    }
+
     /// Extracts quantity and measure from text like "500 g Hähnchenbrust" or "1x Butter"
     private static func extractQuantityAndMeasure(from text: String) -> (units: Int, measure: String, remainingText: String)? {
         let pattern = #"^(\d+)\s*(g|kg|ml|l|Liter|x|Stück|Becher|Packung|Dose|Flasche)?\s*(.*)$"#
