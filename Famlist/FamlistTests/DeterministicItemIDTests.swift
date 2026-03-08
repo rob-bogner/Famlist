@@ -77,17 +77,17 @@ final class DeterministicItemIDTests: XCTestCase {
 
     func testVersionNibbleIsSetToFive() {
         let id = UUID.deterministicItemID(listId: listId, name: "Milch")
-        // Byte 6 high nibble == 0x5 (UUID version 5)
-        let bytes = Mirror(reflecting: id.uuid).children.map { $0.value as! UInt8 }
+        // Extract bytes via withUnsafeBytes; byte 6 high nibble must be 0x5 (UUID version 5).
+        let bytes: [UInt8] = withUnsafeBytes(of: id.uuid) { Array($0) }
         let versionNibble = (bytes[6] & 0xF0) >> 4
         XCTAssertEqual(versionNibble, 5, "UUID version nibble (byte 6, high nibble) must be 0x5 per RFC 4122")
     }
 
     func testVariantBitsAreRFC4122() {
         let id = UUID.deterministicItemID(listId: listId, name: "Milch")
-        let bytes = Mirror(reflecting: id.uuid).children.map { $0.value as! UInt8 }
-        // Byte 8 top two bits must be 10xxxxxx
-        let variantBits = (bytes[8] & 0xC0)
+        // Extract bytes via withUnsafeBytes; byte 8 top two bits must be 10xxxxxx.
+        let bytes: [UInt8] = withUnsafeBytes(of: id.uuid) { Array($0) }
+        let variantBits = bytes[8] & 0xC0
         XCTAssertEqual(variantBits, 0x80, "UUID variant bits (byte 8) must be 10xxxxxx per RFC 4122")
     }
 

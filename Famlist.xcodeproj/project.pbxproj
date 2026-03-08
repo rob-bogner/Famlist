@@ -31,6 +31,7 @@
 		EE7383542F5DCF5300A16B91 /* AuthViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383452F5DCF5300A16B91 /* AuthViewModelTests.swift */; };
 		EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */; };
 		EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */; };
+		EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */; };
 		EE7BC7CC2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */; };
 		EE7BC7CE2F56205300B47D9A /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
@@ -135,6 +136,7 @@
 		EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportParserTests.swift; sourceTree = "<group>"; };
 		EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolverTests.swift; sourceTree = "<group>"; };
 		EE7383482F5DCF5300A16B91 /* FamlistTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamlistTests.swift; sourceTree = "<group>"; };
+		EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeterministicItemIDTests.swift; sourceTree = "<group>"; };
 		EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridLogicalClockTests.swift; sourceTree = "<group>"; };
 		EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelBulkTogglePerformanceTests.swift; sourceTree = "<group>"; };
 		EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDeviceSyncIntegrationTests.swift; sourceTree = "<group>"; };
@@ -282,6 +284,7 @@
 				EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */,
 				EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */,
 				EE7383482F5DCF5300A16B91 /* FamlistTests.swift */,
+				EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */,
 				EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */,
 				EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */,
 				EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */,
@@ -847,6 +850,7 @@
 				EE7383542F5DCF5300A16B91 /* AuthViewModelTests.swift in Sources */,
 				EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */,
 				EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */,
+				EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

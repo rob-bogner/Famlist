@@ -72,8 +72,11 @@ enum SupabaseConfigLoader { // Helper namespace for loading configuration from B
 
 /// Narrow protocol covering only the auth operations used by the app.
 /// Allows test doubles without subclassing the `final class AuthClient`.
-@MainActor
-protocol AuthClienting {
+///
+/// Not annotated `@MainActor` so that `AuthClient` (which has `nonisolated` properties
+/// such as `currentUser` and `authStateChanges`) can conform without isolation conflicts.
+/// Call sites that need main-actor guarantees should use `@MainActor` at the call site.
+protocol AuthClienting: Sendable {
     var currentUser: User? { get }
     var session: Session { get async throws }
     var authStateChanges: AsyncStream<(event: AuthChangeEvent, session: Session?)> { get }
@@ -85,11 +88,21 @@ protocol AuthClienting {
 }
 
 /// Makes the Supabase `AuthClient` conform to `AuthClienting` so production code keeps working.
-extension AuthClient: @retroactive AuthClienting {
+/// Bridges the two-label signatures required by the protocol to the three-label SDK methods
+/// (which carry an optional third argument with a default value).
+extension AuthClient: AuthClienting {
+    /// Bridges `signInWithOTP(email:redirectTo:)` → SDK's 5-parameter variant.
+    func signInWithOTP(email: String, redirectTo: URL?) async throws {
+        try await signInWithOTP(email: email, redirectTo: redirectTo, shouldCreateUser: true)
+    }
+
+    /// Bridges `signUp(email:password:)` → SDK's `signUp(email:password:data:...)` which
+    /// returns `AuthResponse`; the app only needs fire-and-forget semantics.
     func signUp(email: String, password: String) async throws {
         _ = try await signUp(email: email, password: password, data: nil)
     }
 
+    /// Bridges `signIn(email:password:)` → SDK's `signIn(email:password:captchaToken:)`.
     func signIn(email: String, password: String) async throws -> Session {
         try await signIn(email: email, password: password, captchaToken: nil)
     }

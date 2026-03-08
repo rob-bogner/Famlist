@@ -91,8 +91,7 @@ final class AuthServiceTests: XCTestCase {
 
 /// Minimal mock conforming to `AuthClienting`.
 /// Does NOT subclass `AuthClient`, which is a `final class` in Supabase 2.x.
-@MainActor
-final class MockAuthClient: AuthClienting {
+final class MockAuthClient: AuthClienting, @unchecked Sendable {
 
     // MARK: Spy flags
     var signInWithOTPCalled = false

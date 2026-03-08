@@ -92,8 +92,7 @@ final class OnboardingServiceTests: XCTestCase {
 // MARK: - Mock AuthClienting for Onboarding
 
 /// Lightweight `AuthClienting` mock — does NOT subclass `final class AuthClient`.
-@MainActor
-final class MockAuthClientForOnboarding: AuthClienting {
+final class MockAuthClientForOnboarding: AuthClienting, @unchecked Sendable {
 
     /// Set this to provide a `currentUser` to `OnboardingService`.
     var stubbedUserId: UUID?
