@@ -21,6 +21,16 @@
 		EE2B2C6E2EA3E52500935BCB /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6D2EA3E52500935BCB /* ProfileView.swift */; };
 		EE2B2C712EA53AA900935BCB /* ClipboardImportParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */; };
 		EE2B2C732EA53ABA00935BCB /* ClipboardImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C722EA53ABA00935BCB /* ClipboardImportView.swift */; };
+		EE7383232F5DC51B00A16B91 /* UUID+DeterministicItemID.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383222F5DC51B00A16B91 /* UUID+DeterministicItemID.swift */; };
+		EE73834E2F5DCF5300A16B91 /* AuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */; };
+		EE73834F2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */; };
+		EE7383502F5DCF5300A16B91 /* OnboardingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73834C2F5DCF5300A16B91 /* OnboardingServiceTests.swift */; };
+		EE7383512F5DCF5300A16B91 /* ClipboardImportParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */; };
+		EE7383522F5DCF5300A16B91 /* FamlistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383482F5DCF5300A16B91 /* FamlistTests.swift */; };
+		EE7383532F5DCF5300A16B91 /* HybridLogicalClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */; };
+		EE7383542F5DCF5300A16B91 /* AuthViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383452F5DCF5300A16B91 /* AuthViewModelTests.swift */; };
+		EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */; };
+		EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */; };
 		EE7BC7CC2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */; };
 		EE7BC7CE2F56205300B47D9A /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
@@ -91,6 +101,16 @@
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		EE73832F2F5DCEDD00A16B91 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE69A4DA2B14CB78007C3515 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE69A4E12B14CB78007C3515;
+			remoteInfo = Famlist;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		EE2B2C552E9BF77200935BCB /* ItemEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemEntity.swift; sourceTree = "<group>"; };
 		EE2B2C562E9BF77200935BCB /* ListEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListEntity.swift; sourceTree = "<group>"; };
@@ -107,6 +127,18 @@
 		EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportParser.swift; sourceTree = "<group>"; };
 		EE2B2C722EA53ABA00935BCB /* ClipboardImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportView.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* Famlist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Famlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE7383222F5DC51B00A16B91 /* UUID+DeterministicItemID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+DeterministicItemID.swift"; sourceTree = "<group>"; };
+		EE7383262F5DCC3800A16B91 /* FamlistTestsPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = FamlistTestsPlan.xctestplan; sourceTree = SOURCE_ROOT; };
+		EE73832B2F5DCEDC00A16B91 /* FamlistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FamlistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthServiceTests.swift; sourceTree = "<group>"; };
+		EE7383452F5DCF5300A16B91 /* AuthViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModelTests.swift; sourceTree = "<group>"; };
+		EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportParserTests.swift; sourceTree = "<group>"; };
+		EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolverTests.swift; sourceTree = "<group>"; };
+		EE7383482F5DCF5300A16B91 /* FamlistTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamlistTests.swift; sourceTree = "<group>"; };
+		EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridLogicalClockTests.swift; sourceTree = "<group>"; };
+		EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelBulkTogglePerformanceTests.swift; sourceTree = "<group>"; };
+		EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDeviceSyncIntegrationTests.swift; sourceTree = "<group>"; };
+		EE73834C2F5DCF5300A16B91 /* OnboardingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingServiceTests.swift; sourceTree = "<group>"; };
 		EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBottomMenuBar.swift; sourceTree = "<group>"; };
 		EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
@@ -187,6 +219,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EE7383282F5DCEDC00A16B91 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -230,8 +269,25 @@
 			isa = PBXGroup;
 			children = (
 				EE69A4E22B14CB78007C3515 /* Famlist.app */,
+				EE73832B2F5DCEDC00A16B91 /* FamlistTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		EE73834D2F5DCF5300A16B91 /* FamlistTests */ = {
+			isa = PBXGroup;
+			children = (
+				EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */,
+				EE7383452F5DCF5300A16B91 /* AuthViewModelTests.swift */,
+				EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */,
+				EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */,
+				EE7383482F5DCF5300A16B91 /* FamlistTests.swift */,
+				EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */,
+				EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */,
+				EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */,
+				EE73834C2F5DCF5300A16B91 /* OnboardingServiceTests.swift */,
+			);
+			path = FamlistTests;
 			sourceTree = "<group>";
 		};
 		EEB660022E7F37A9006CB1EB /* DesignSystem */ = {
@@ -516,6 +572,7 @@
 		EEB6603E2E7F37A9006CB1EB /* Famlist */ = {
 			isa = PBXGroup;
 			children = (
+				EE73834D2F5DCF5300A16B91 /* FamlistTests */,
 				EEB6606D2E7F381A006CB1EB /* App */,
 				EEB6600D2E7F37A9006CB1EB /* Core */,
 				EEB6602A2E7F37A9006CB1EB /* Features */,
@@ -524,6 +581,7 @@
 				EEB660712E7F39EF006CB1EB /* Preview Content */,
 				EEB660322E7F37A9006CB1EB /* Repositories */,
 				EEB6603B2E7F37A9006CB1EB /* Shared */,
+				EE7383262F5DCC3800A16B91 /* FamlistTestsPlan.xctestplan */,
 			);
 			path = Famlist;
 			sourceTree = "<group>";
@@ -571,6 +629,7 @@
 		EEC58BD52ED1F86D000D3915 /* Sync */ = {
 			isa = PBXGroup;
 			children = (
+				EE7383222F5DC51B00A16B91 /* UUID+DeterministicItemID.swift */,
 				EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */,
 				EEC58BCD2ED1F86D000D3915 /* ConflictResolver.swift */,
 				EEC58BCE2ED1F86D000D3915 /* CRDTMetadata.swift */,
@@ -607,6 +666,26 @@
 			productReference = EE69A4E22B14CB78007C3515 /* Famlist.app */;
 			productType = "com.apple.product-type.application";
 		};
+		EE73832A2F5DCEDC00A16B91 /* FamlistTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EE7383312F5DCEDD00A16B91 /* Build configuration list for PBXNativeTarget "FamlistTests" */;
+			buildPhases = (
+				EE7383272F5DCEDC00A16B91 /* Sources */,
+				EE7383282F5DCEDC00A16B91 /* Frameworks */,
+				EE7383292F5DCEDC00A16B91 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EE7383302F5DCEDD00A16B91 /* PBXTargetDependency */,
+			);
+			name = FamlistTests;
+			packageProductDependencies = (
+			);
+			productName = FamlistTests;
+			productReference = EE73832B2F5DCEDC00A16B91 /* FamlistTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -614,11 +693,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					EE69A4E12B14CB78007C3515 = {
 						CreatedOnToolsVersion = 15.0.1;
+					};
+					EE73832A2F5DCEDC00A16B91 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = EE69A4E12B14CB78007C3515;
 					};
 				};
 			};
@@ -639,6 +722,7 @@
 			projectRoot = "";
 			targets = (
 				EE69A4E12B14CB78007C3515 /* Famlist */,
+				EE73832A2F5DCEDC00A16B91 /* FamlistTests */,
 			);
 		};
 /* End PBXProject section */
@@ -651,6 +735,13 @@
 				EEB660602E7F37A9006CB1EB /* Preview Assets.xcassets in Resources */,
 				EEB660612E7F37A9006CB1EB /* Localizable.xcstrings in Resources */,
 				EEB660622E7F37A9006CB1EB /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EE7383292F5DCEDC00A16B91 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -669,6 +760,7 @@
 				EEB660422E7F37A9006CB1EB /* ShoppingListView.swift in Sources */,
 				EE2B2C672EA3DB2A00935BCB /* ValidatedTextField.swift in Sources */,
 				EEB660432E7F37A9006CB1EB /* SupabaseClient.swift in Sources */,
+				EE7383232F5DC51B00A16B91 /* UUID+DeterministicItemID.swift in Sources */,
 				EEB660442E7F37A9006CB1EB /* Toast.swift in Sources */,
 				EE2B2C5E2E9BF9BE00935BCB /* ItemEntity+Mapping.swift in Sources */,
 				EE2B2C5F2E9BF9BE00935BCB /* ListEntity+Mapping.swift in Sources */,
@@ -742,7 +834,31 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EE7383272F5DCEDC00A16B91 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE73834E2F5DCF5300A16B91 /* AuthServiceTests.swift in Sources */,
+				EE73834F2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift in Sources */,
+				EE7383502F5DCF5300A16B91 /* OnboardingServiceTests.swift in Sources */,
+				EE7383512F5DCF5300A16B91 /* ClipboardImportParserTests.swift in Sources */,
+				EE7383522F5DCF5300A16B91 /* FamlistTests.swift in Sources */,
+				EE7383532F5DCF5300A16B91 /* HybridLogicalClockTests.swift in Sources */,
+				EE7383542F5DCF5300A16B91 /* AuthViewModelTests.swift in Sources */,
+				EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */,
+				EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		EE7383302F5DCEDD00A16B91 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE69A4E12B14CB78007C3515 /* Famlist */;
+			targetProxy = EE73832F2F5DCEDD00A16B91 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		EE69A4EE2B14CB79007C3515 /* Debug */ = {
@@ -934,6 +1050,50 @@
 			};
 			name = Release;
 		};
+		EE7383322F5DCEDD00A16B91 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YHSZ8G8RWJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roxo.FamlistTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Famlist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Famlist";
+			};
+			name = Debug;
+		};
+		EE7383332F5DCEDD00A16B91 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YHSZ8G8RWJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roxo.FamlistTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Famlist.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Famlist";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -951,6 +1111,15 @@
 			buildConfigurations = (
 				EE69A4F12B14CB79007C3515 /* Debug */,
 				EE69A4F22B14CB79007C3515 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EE7383312F5DCEDD00A16B91 /* Build configuration list for PBXNativeTarget "FamlistTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE7383322F5DCEDD00A16B91 /* Debug */,
+				EE7383332F5DCEDD00A16B91 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

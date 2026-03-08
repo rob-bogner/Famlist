@@ -216,6 +216,11 @@ final class SupabaseItemsRepository: ItemsRepository {
             let brand: String?
             let createdAt: String?
             let updatedAt: String?
+            let hlcTimestamp: Int64?
+            let hlcCounter: Int?
+            let hlcNodeId: String?
+            let tombstone: Bool?
+            let lastModifiedBy: String?
             enum CodingKeys: String, CodingKey {
                 case id
                 case listId = "list_id"
@@ -226,6 +231,11 @@ final class SupabaseItemsRepository: ItemsRepository {
                 case brand
                 case createdAt = "created_at"
                 case updatedAt = "updated_at"
+                case hlcTimestamp = "hlc_timestamp"
+                case hlcCounter = "hlc_counter"
+                case hlcNodeId = "hlc_node_id"
+                case tombstone
+                case lastModifiedBy = "last_modified_by"
             }
         }
         do {
@@ -250,7 +260,12 @@ final class SupabaseItemsRepository: ItemsRepository {
                     productDescription: r.productDescription,
                     brand: r.brand,
                     listId: r.listId.uuidString,
-                    ownerPublicId: r.ownerPublicId
+                    ownerPublicId: r.ownerPublicId,
+                    hlcTimestamp: r.hlcTimestamp,
+                    hlcCounter: r.hlcCounter,
+                    hlcNodeId: r.hlcNodeId,
+                    tombstone: r.tombstone,
+                    lastModifiedBy: r.lastModifiedBy
                 )
             }
             await MainActor.run {
@@ -284,6 +299,11 @@ final class SupabaseItemsRepository: ItemsRepository {
             let category: String?
             let productDescription: String?
             let brand: String?
+            let hlcTimestamp: Int64?
+            let hlcCounter: Int?
+            let hlcNodeId: String?
+            let tombstone: Bool?
+            let lastModifiedBy: String?
             enum CodingKeys: String, CodingKey {
                 case id
                 case listId = "list_id"
@@ -292,6 +312,11 @@ final class SupabaseItemsRepository: ItemsRepository {
                 case name, units, measure, price, isChecked, category
                 case productDescription = "productdescription"
                 case brand
+                case hlcTimestamp = "hlc_timestamp"
+                case hlcCounter = "hlc_counter"
+                case hlcNodeId = "hlc_node_id"
+                case tombstone
+                case lastModifiedBy = "last_modified_by"
             }
         }
         let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID()
@@ -307,9 +332,17 @@ final class SupabaseItemsRepository: ItemsRepository {
             isChecked: item.isChecked,
             category: item.category,
             productDescription: item.productDescription,
-            brand: item.brand
+            brand: item.brand,
+            hlcTimestamp: item.hlcTimestamp,
+            hlcCounter: item.hlcCounter,
+            hlcNodeId: item.hlcNodeId,
+            tombstone: item.tombstone,
+            lastModifiedBy: item.lastModifiedBy
         )
-        _ = try await client.from("items").insert(row).execute()
+        // Upsert statt Insert: Falls UUID-X bereits durch ein anderes Gerät in Supabase
+        // existiert (deterministischer UUID-Konflikt), wird der bestehende Eintrag
+        // per Last-Write-Wins (HLC) aktualisiert statt einen 409-Fehler zu werfen.
+        _ = try await client.from("items").upsert(row, onConflict: "id").execute()
         await fetchAndYield(listUUID)
         let model = ItemModel(
             id: row.id.uuidString,
@@ -324,7 +357,12 @@ final class SupabaseItemsRepository: ItemsRepository {
             productDescription: item.productDescription,
             brand: item.brand,
             listId: listUUID.uuidString,
-            ownerPublicId: item.ownerPublicId
+            ownerPublicId: item.ownerPublicId,
+            hlcTimestamp: item.hlcTimestamp,
+            hlcCounter: item.hlcCounter,
+            hlcNodeId: item.hlcNodeId,
+            tombstone: item.tombstone,
+            lastModifiedBy: item.lastModifiedBy
         )
         let result = logResult(params: (itemId: model.id, listId: listUUID), result: model)
         UserLog.Data.itemAdded(name: item.name, units: item.units, measure: item.measure)
@@ -351,14 +389,24 @@ final class SupabaseItemsRepository: ItemsRepository {
             let category: String?
             let productDescription: String?
             let brand: String?
-            
+            let hlcTimestamp: Int64?
+            let hlcCounter: Int?
+            let hlcNodeId: String?
+            let tombstone: Bool?
+            let lastModifiedBy: String?
+
             enum CodingKeys: String, CodingKey {
                 case imageData = "imagedata"
                 case name, units, measure, price, isChecked, category
                 case productDescription = "productdescription"
                 case brand
+                case hlcTimestamp = "hlc_timestamp"
+                case hlcCounter = "hlc_counter"
+                case hlcNodeId = "hlc_node_id"
+                case tombstone
+                case lastModifiedBy = "last_modified_by"
             }
-            
+
             func encode(to encoder: Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 try container.encode(imageData, forKey: .imageData)
@@ -370,9 +418,14 @@ final class SupabaseItemsRepository: ItemsRepository {
                 try container.encode(category, forKey: .category)
                 try container.encode(productDescription, forKey: .productDescription)
                 try container.encode(brand, forKey: .brand)
+                try container.encodeIfPresent(hlcTimestamp, forKey: .hlcTimestamp)
+                try container.encodeIfPresent(hlcCounter, forKey: .hlcCounter)
+                try container.encodeIfPresent(hlcNodeId, forKey: .hlcNodeId)
+                try container.encodeIfPresent(tombstone, forKey: .tombstone)
+                try container.encodeIfPresent(lastModifiedBy, forKey: .lastModifiedBy)
             }
         }
-        
+
         let payload = UpdateRow(
             imageData: item.imageData,
             name: item.name,
@@ -382,7 +435,12 @@ final class SupabaseItemsRepository: ItemsRepository {
             isChecked: item.isChecked,
             category: item.category,
             productDescription: item.productDescription,
-            brand: item.brand
+            brand: item.brand,
+            hlcTimestamp: item.hlcTimestamp,
+            hlcCounter: item.hlcCounter,
+            hlcNodeId: item.hlcNodeId,
+            tombstone: item.tombstone,
+            lastModifiedBy: item.lastModifiedBy
         )
         
         _ = try await client
@@ -458,7 +516,12 @@ final class SupabaseItemsRepository: ItemsRepository {
                             let category: String?
                             let productDescription: String?
                             let brand: String?
-                            
+                            let hlcTimestamp: Int64?
+                            let hlcCounter: Int?
+                            let hlcNodeId: String?
+                            let tombstone: Bool?
+                            let lastModifiedBy: String?
+
                             enum CodingKeys: String, CodingKey {
                                 case imageData = "imagedata"
                                 case name, units, measure, price
@@ -466,9 +529,14 @@ final class SupabaseItemsRepository: ItemsRepository {
                                 case category
                                 case productDescription = "productdescription"
                                 case brand
+                                case hlcTimestamp = "hlc_timestamp"
+                                case hlcCounter = "hlc_counter"
+                                case hlcNodeId = "hlc_node_id"
+                                case tombstone
+                                case lastModifiedBy = "last_modified_by"
                             }
                         }
-                        
+
                         let payload = UpdateRow(
                             imageData: item.imageData,
                             name: item.name,
@@ -478,7 +546,12 @@ final class SupabaseItemsRepository: ItemsRepository {
                             isChecked: item.isChecked,
                             category: item.category,
                             productDescription: item.productDescription,
-                            brand: item.brand
+                            brand: item.brand,
+                            hlcTimestamp: item.hlcTimestamp,
+                            hlcCounter: item.hlcCounter,
+                            hlcNodeId: item.hlcNodeId,
+                            tombstone: item.tombstone,
+                            lastModifiedBy: item.lastModifiedBy
                         )
                         
                         _ = try await self.client

@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "8CA96008-DCDA-4C15-B545-D89FD4766BA6",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Famlist.xcodeproj",
+        "identifier" : "EE73832A2F5DCEDC00A16B91",
+        "name" : "FamlistTests"
+      }
+    }
+  ],
+  "version" : 1
+}

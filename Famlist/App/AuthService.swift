@@ -60,7 +60,7 @@ final class AuthService {
     ///   - password: The user's password.
     /// - Throws: Error if sign-in fails.
     func signInWithEmailPassword(email: String, password: String) async throws {
-        try await client.auth.signIn(email: email, password: password)
+        _ = try await client.auth.signIn(email: email, password: password)
         logVoid(params: ["email": email, "method": "password"])
     }
     

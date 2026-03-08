@@ -68,9 +68,36 @@ enum SupabaseConfigLoader { // Helper namespace for loading configuration from B
     }
 }
 
+// MARK: - Auth Facade Protocol
+
+/// Narrow protocol covering only the auth operations used by the app.
+/// Allows test doubles without subclassing the `final class AuthClient`.
+@MainActor
+protocol AuthClienting {
+    var currentUser: User? { get }
+    var session: Session { get async throws }
+    var authStateChanges: AsyncStream<(event: AuthChangeEvent, session: Session?)> { get }
+    func signInWithOTP(email: String, redirectTo: URL?) async throws
+    func signIn(email: String, password: String) async throws -> Session
+    func signUp(email: String, password: String) async throws
+    func signOut(scope: SignOutScope) async throws
+    func session(from url: URL) async throws -> Session
+}
+
+/// Makes the Supabase `AuthClient` conform to `AuthClienting` so production code keeps working.
+extension AuthClient: @retroactive AuthClienting {
+    func signUp(email: String, password: String) async throws {
+        _ = try await signUp(email: email, password: password, data: nil)
+    }
+
+    func signIn(email: String, password: String) async throws -> Session {
+        try await signIn(email: email, password: password, captchaToken: nil)
+    }
+}
+
 // MARK: - Facade Protocols
 protocol SupabaseClienting { // Protocol to hide concrete Supabase types from the rest of the app.
-    var auth: AuthClient { get } // Exposes auth for login-related tasks if needed.
+    var auth: any AuthClienting { get } // Exposes auth for login-related tasks if needed.
     var realtime: RealtimeClientV2 { get } // Exposes Realtime V2 client for live subscriptions.
     // Query entry point using new API
     func from(_ table: String) -> PostgrestQueryBuilder // Returns a query builder for the given table.
@@ -81,7 +108,7 @@ protocol SupabaseClienting { // Protocol to hide concrete Supabase types from th
 
 final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around SupabaseClient conforming to our facade.
     let client: SupabaseClient // The underlying Supabase client instance.
-    var auth: AuthClient { client.auth } // Forward auth client for sign-in/out operations.
+    var auth: any AuthClienting { client.auth } // Forward auth client for sign-in/out operations.
     var realtime: RealtimeClientV2 { client.realtimeV2 } // Forward Realtime V2 client for live subscriptions.
 
     // Stored handles allow cancellation in deinit – prevents zombie tasks and memory leaks.

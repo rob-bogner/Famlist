@@ -91,18 +91,65 @@ final class SyncEngine: ObservableObject {
     
     // MARK: - Public API
     
-    /// Creates a new item with CRDT metadata
-    /// - Parameter item: The item to create
+    /// Creates a new item with CRDT metadata.
+    ///
+    /// The item's UUID is derived deterministically from `(listId, name)` so that
+    /// two devices creating an item with the same name in the same list produce
+    /// the same UUID. The CRDT LWW-mechanism then resolves the concurrent
+    /// creation as a conflict on the same entity instead of creating a duplicate.
+    ///
+    /// See ADR-005 (Confluence) and FAM-50 for full rationale.
+    ///
+    /// - Parameter item: The item to create. Its `id` will be replaced with a
+    ///   deterministic UUID if `listId` is available.
     func createItem(_ item: ItemModel) async {
+        // Derive deterministic UUID from (listId, name) to prevent duplicates
+        // on concurrent creation across devices (FAM-50 / ADR-005).
+        let canonicalItem: ItemModel
+        if let listIdStr = item.listId, let listUUID = UUID(uuidString: listIdStr) {
+            let deterministicId = UUID.deterministicItemID(listId: listUUID, name: item.name)
+            canonicalItem = ItemModel(
+                id: deterministicId.uuidString,
+                imageUrl: item.imageUrl,
+                imageData: item.imageData,
+                name: item.name,
+                units: item.units,
+                measure: item.measure,
+                price: item.price,
+                isChecked: item.isChecked,
+                category: item.category,
+                productDescription: item.productDescription,
+                brand: item.brand,
+                listId: item.listId,
+                ownerPublicId: item.ownerPublicId,
+                hlcTimestamp: item.hlcTimestamp,
+                hlcCounter: item.hlcCounter,
+                hlcNodeId: item.hlcNodeId,
+                tombstone: item.tombstone,
+                lastModifiedBy: item.lastModifiedBy
+            )
+            logVoid(params: (
+                action: "createItem.deterministicId",
+                originalId: item.id,
+                deterministicId: deterministicId.uuidString,
+                name: item.name,
+                listId: listIdStr
+            ))
+        } else {
+            // Fallback: no listId available, keep random UUID
+            canonicalItem = item
+            logVoid(params: (action: "createItem.fallbackRandomId", itemId: item.id, reason: "listId missing"))
+        }
+
         let hlc = hlcGenerator.tick()
         let metadata = CRDTMetadata.created(by: hlcGenerator.nodeId, hlc: hlc)
-        
+
         // Store locally first with CRDT metadata
-        await storeLocally(item: item, metadata: metadata)
-        
+        await storeLocally(item: canonicalItem, metadata: metadata)
+
         // Queue operation for remote sync
-        await queueOperation(type: .create, item: item, metadata: metadata)
-        
+        await queueOperation(type: .create, item: canonicalItem, metadata: metadata)
+
         // Try immediate sync if online
         await processQueue()
     }
