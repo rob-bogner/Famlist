@@ -68,6 +68,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Optional ListsRepository used to resolve default list (injected post-init to keep compatibility).
     internal var listsRepository: ListsRepository?
+
+    /// Optional personal item catalog repository; injected after init via configure(catalogRepository:).
+    /// When set, new items are automatically saved to the catalog in the background.
+    internal var catalogRepository: (any ItemCatalogRepository)?
     
     /// Local SwiftData store for offline persistence.
     internal let itemStore: SwiftDataItemStore
@@ -158,6 +162,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     func configure(syncEngine: SyncEngine) {
         self.syncEngine = syncEngine
     }
+
+    /// Injects the personal item catalog repository for smart search support.
+    /// - Parameter catalogRepository: Repository that saves/searches the user's item catalog.
+    func configure(catalogRepository: any ItemCatalogRepository) {
+        self.catalogRepository = catalogRepository
+    }
     
     // MARK: - List Switching
     
@@ -199,7 +209,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             units: normalized.units,
             measure: normalized.measure
         )
-        
+
+        // Save to personal item catalog (fire-and-forget; does not block list update)
+        let ownerForCatalog = normalized.ownerPublicId ?? defaultList?.ownerId.uuidString
+        if let catalogRepo = catalogRepository, let ownerPublicId = ownerForCatalog {
+            let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: ownerPublicId)
+            Task {
+                try? await catalogRepo.save(catalogEntry)
+            }
+        }
+
         // Use SyncEngine if available, otherwise fall back to old approach
         if let syncEngine = syncEngine {
             Task {

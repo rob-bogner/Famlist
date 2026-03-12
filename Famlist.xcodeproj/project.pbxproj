@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43C511385CA47D5423404234 /* ItemCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6552BE6F4FFA6B298F110A0 /* ItemCatalogRepository.swift */; };
+		6B39EE77A3A4E0CD3AF5DF6B /* ItemSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C38E32236C53AD07E9CFF64 /* ItemSearchView.swift */; };
+		9542F3616E95F59AA603D81F /* ItemSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6954CBCFE75541BB981ED25D /* ItemSearchViewModel.swift */; };
+		D8344B104C513BD50297A301 /* SupabaseItemCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B951391DB1C9883C6B32320 /* SupabaseItemCatalogRepository.swift */; };
 		EE2B2C582E9BF77200935BCB /* ItemEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C552E9BF77200935BCB /* ItemEntity.swift */; };
 		EE2B2C592E9BF77200935BCB /* ListEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C562E9BF77200935BCB /* ListEntity.swift */; };
 		EE2B2C5B2E9BF8A200935BCB /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C5A2E9BF8A200935BCB /* PersistenceController.swift */; };
@@ -113,6 +117,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0B951391DB1C9883C6B32320 /* SupabaseItemCatalogRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SupabaseItemCatalogRepository.swift; sourceTree = "<group>"; };
+		6954CBCFE75541BB981ED25D /* ItemSearchViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemSearchViewModel.swift; sourceTree = "<group>"; };
+		8C38E32236C53AD07E9CFF64 /* ItemSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemSearchView.swift; sourceTree = "<group>"; };
+		B6552BE6F4FFA6B298F110A0 /* ItemCatalogRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemCatalogRepository.swift; sourceTree = "<group>"; };
 		EE2B2C552E9BF77200935BCB /* ItemEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemEntity.swift; sourceTree = "<group>"; };
 		EE2B2C562E9BF77200935BCB /* ListEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListEntity.swift; sourceTree = "<group>"; };
 		EE2B2C5A2E9BF8A200935BCB /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
@@ -136,11 +144,11 @@
 		EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportParserTests.swift; sourceTree = "<group>"; };
 		EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolverTests.swift; sourceTree = "<group>"; };
 		EE7383482F5DCF5300A16B91 /* FamlistTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamlistTests.swift; sourceTree = "<group>"; };
-		EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeterministicItemIDTests.swift; sourceTree = "<group>"; };
 		EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridLogicalClockTests.swift; sourceTree = "<group>"; };
 		EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelBulkTogglePerformanceTests.swift; sourceTree = "<group>"; };
 		EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDeviceSyncIntegrationTests.swift; sourceTree = "<group>"; };
 		EE73834C2F5DCF5300A16B91 /* OnboardingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingServiceTests.swift; sourceTree = "<group>"; };
+		EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeterministicItemIDTests.swift; sourceTree = "<group>"; };
 		EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBottomMenuBar.swift; sourceTree = "<group>"; };
 		EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
@@ -246,6 +254,7 @@
 			isa = PBXGroup;
 			children = (
 				EE2B2C682EA3DB6E00935BCB /* ItemFormViewModel.swift */,
+				6954CBCFE75541BB981ED25D /* ItemSearchViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -415,6 +424,7 @@
 				EEB660182E7F37A9006CB1EB /* AddItemView.swift */,
 				EEB660192E7F37A9006CB1EB /* EditItemView.swift */,
 				EEB6601A2E7F37A9006CB1EB /* ProductImageFullscreenView.swift */,
+				8C38E32236C53AD07E9CFF64 /* ItemSearchView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -517,6 +527,7 @@
 				EEB660892E7F37A9006CB1EB /* SupabaseListsRepository.swift */,
 				EEB6608B2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift */,
 				EEB6608D2E7F37A9006CB1EB /* SupabaseItemsRepository.swift */,
+				0B951391DB1C9883C6B32320 /* SupabaseItemCatalogRepository.swift */,
 			);
 			path = Implementations;
 			sourceTree = "<group>";
@@ -528,6 +539,7 @@
 				EEB660302E7F37A9006CB1EB /* ListsRepository.swift */,
 				EEB660832E7F37A9006CB1EB /* ProfilesRepository.swift */,
 				EEB660852E7F37A9006CB1EB /* CategoriesRepository.swift */,
+				B6552BE6F4FFA6B298F110A0 /* ItemCatalogRepository.swift */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -683,8 +695,6 @@
 				EE7383302F5DCEDD00A16B91 /* PBXTargetDependency */,
 			);
 			name = FamlistTests;
-			packageProductDependencies = (
-			);
 			productName = FamlistTests;
 			productReference = EE73832B2F5DCEDC00A16B91 /* FamlistTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -834,6 +844,10 @@
 				EEB660702E7F381A006CB1EB /* RootView.swift in Sources */,
 				EEB6605C2E7F37A9006CB1EB /* ShoppingListProgressView.swift in Sources */,
 				EEB6605D2E7F37A9006CB1EB /* DesignSystem.swift in Sources */,
+				43C511385CA47D5423404234 /* ItemCatalogRepository.swift in Sources */,
+				D8344B104C513BD50297A301 /* SupabaseItemCatalogRepository.swift in Sources */,
+				9542F3616E95F59AA603D81F /* ItemSearchViewModel.swift in Sources */,
+				6B39EE77A3A4E0CD3AF5DF6B /* ItemSearchView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

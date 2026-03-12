@@ -60,9 +60,14 @@ final class ItemFormViewModel: ObservableObject {
     }
     
     // MARK: - Initialization
-    
+
     /// Initialize with default values (for Add mode)
     init() {}
+
+    /// Initialize with a pre-filled name (e.g. passed from ItemSearchView for new items)
+    init(initialName: String) {
+        self.name = initialName
+    }
     
     /// Initialize with existing item (for Edit mode)
     init(item: ItemModel) {

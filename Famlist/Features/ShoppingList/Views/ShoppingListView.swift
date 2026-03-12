@@ -80,12 +80,18 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
             .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity.combined(with: .move(edge: .trailing)))) // Animated appear/disappear.
         }
         .navigationViewStyle(StackNavigationViewStyle()) // Stack style for iPhone/iPad consistency.
-        .sheet(isPresented: $addNewItem) { // Present full add form when requested.
-            AddItemView() // The modal for adding a new item with more fields.
-                .presentationDetents([.fraction(0.45), .large, .medium]) // Allow snap heights for the sheet.
-                .presentationCornerRadius(15) // Rounded top corners for a modern look.
-                .presentationDragIndicator(.visible) // Show drag indicator for better UX
-                .transition(.move(edge: .bottom).combined(with: .opacity)) // Smooth transition
+        .sheet(isPresented: $addNewItem) { // Present search sheet or direct add form.
+            if let catalogRepo = listViewModel.catalogRepository {
+                // Smart search: user can find existing catalog items or create new ones.
+                ItemSearchView(catalogRepository: catalogRepo)
+            } else {
+                // Fallback: direct add form (preview mode / no catalog configured).
+                AddItemView()
+                    .presentationDetents([.fraction(0.45), .large, .medium])
+                    .presentationCornerRadius(15)
+                    .presentationDragIndicator(.visible)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in // React to lifecycle changes so realtime sync stays reliable.
             switch newPhase { // Branch on scene state to decide which action to take.
