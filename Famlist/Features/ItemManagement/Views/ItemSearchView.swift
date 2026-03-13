@@ -168,9 +168,13 @@ struct ItemSearchView: View {
     // MARK: - Actions
 
     private func addToList(_ entry: ItemCatalogEntry) {
+        guard let ownerPublicId = listViewModel.defaultList?.ownerId.uuidString else {
+            logVoid(params: (action: "addToList.skipped", reason: "defaultList.ownerId is nil"))
+            return
+        }
         let newItem = entry.toItemModel(
             listId: listViewModel.listId.uuidString,
-            ownerPublicId: listViewModel.defaultList?.ownerId.uuidString
+            ownerPublicId: ownerPublicId
         )
         listViewModel.addItem(newItem)
         toastManager.show(String(localized: "itemSearch.added"))

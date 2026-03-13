@@ -100,8 +100,9 @@ struct AddItemView: View {
 
                     let newItem = formVM.toItemModel()
                     listViewModel.addItem(newItem)
-                    onItemAdded?()
+                    // dismiss() first so AddItemView is gone before the parent sheet dismisses
                     dismiss()
+                    onItemAdded?()
                 }
                 .disabled(!formVM.isValid)
                 .padding(.horizontal)
