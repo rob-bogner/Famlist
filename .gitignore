@@ -69,4 +69,17 @@ TECHNICAL_DOCUMENTATION.md
 # By default, ignore everything in build/
 /build/*
 
+# Veraltetes Root-Test-Duplikat (aktives Target: Famlist/FamlistTests/)
+FamlistTests/
+
+# Migrierte Dokumentation (jetzt in Confluence)
+SETUP.md
+CHANGELOG.md
+USER_LOGGING.md
+LOGGING_BEISPIEL.md
+IMPLEMENTATION_PLAN.md
+
+# Legacy-Skripte
+add_new_files.py
+
 # End of .gitignore
