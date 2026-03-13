@@ -42,9 +42,17 @@ struct AddItemView: View {
 
     // MARK: - Init
 
+    /// Called after a new item is successfully added. Used by callers (e.g. ItemSearchView)
+    /// to dismiss a parent sheet in addition to this view's own dismiss.
+    private let onItemAdded: (() -> Void)?
+
     /// Creates the view, optionally pre-filling the item name (e.g. from ItemSearchView).
-    init(initialName: String = "") {
+    /// - Parameters:
+    ///   - initialName: Pre-filled name from the search field.
+    ///   - onItemAdded: Optional callback fired after successful submission (e.g. to close a parent sheet).
+    init(initialName: String = "", onItemAdded: (() -> Void)? = nil) {
         _formVM = StateObject(wrappedValue: ItemFormViewModel(initialName: initialName))
+        self.onItemAdded = onItemAdded
     }
     
     // MARK: - Body
@@ -89,9 +97,10 @@ struct AddItemView: View {
                 PrimaryButton(title: String(localized: "button.addItem")) {
                     formVM.validateAll()
                     guard formVM.isValid else { return }
-                    
+
                     let newItem = formVM.toItemModel()
                     listViewModel.addItem(newItem)
+                    onItemAdded?()
                     dismiss()
                 }
                 .disabled(!formVM.isValid)

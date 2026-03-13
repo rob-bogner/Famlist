@@ -54,9 +54,17 @@ final class ItemSearchViewModel: ObservableObject {
 
     // MARK: - Search
 
+    // MARK: - Constants
+
+    private static let maxQueryLength = 100
+
     /// Called whenever searchText changes. Cancels any in-flight search and starts a new one
     /// after a 300ms debounce if the query is at least 2 characters long.
     func onSearchTextChanged() {
+        // Security: clamp input length to prevent DoS via extremely long queries
+        if searchText.count > Self.maxQueryLength {
+            searchText = String(searchText.prefix(Self.maxQueryLength))
+        }
         searchTask?.cancel()
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard query.count >= 2 else {
@@ -82,7 +90,8 @@ final class ItemSearchViewModel: ObservableObject {
             results = try await catalogRepository.search(query: query)
         } catch {
             guard !Task.isCancelled else { return }
-            errorMessage = error.localizedDescription
+            // Security: do not expose raw Supabase error details to the user
+            errorMessage = String(localized: "itemSearch.error.generic")
             results = []
         }
         isSearching = false

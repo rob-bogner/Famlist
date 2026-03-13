@@ -210,12 +210,18 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             measure: normalized.measure
         )
 
-        // Save to personal item catalog (fire-and-forget; does not block list update)
-        let ownerForCatalog = normalized.ownerPublicId ?? defaultList?.ownerId.uuidString
-        if let catalogRepo = catalogRepository, let ownerPublicId = ownerForCatalog {
-            let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: ownerPublicId)
+        // Save to personal item catalog (fire-and-forget; does not block list update).
+        // ownerPublicId is resolved by the repository from the active auth session,
+        // so we pass an empty placeholder here to avoid a nil-guard race condition.
+        if let catalogRepo = catalogRepository {
+            let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
             Task {
-                try? await catalogRepo.save(catalogEntry)
+                do {
+                    try await catalogRepo.save(catalogEntry)
+                    logVoid(params: (action: "catalogSave.success", itemName: normalized.name))
+                } catch {
+                    logVoid(params: (action: "catalogSave.failed", itemName: normalized.name, error: (error as NSError).localizedDescription))
+                }
             }
         }
 

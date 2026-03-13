@@ -72,19 +72,24 @@ struct ItemSearchView: View {
                     resultsList
                 }
 
+                Divider()
+
                 newItemButton
                     .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.top, 12)
                     .padding(.bottom, 20)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .onAppear { isSearchFieldFocused = true }
         .sheet(isPresented: $showAddItem) {
-            AddItemView(initialName: searchVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines))
-                .presentationDetents([.fraction(0.45), .large, .medium])
-                .presentationCornerRadius(15)
-                .presentationDragIndicator(.visible)
+            AddItemView(
+                initialName: searchVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines),
+                onItemAdded: { dismiss() }
+            )
+            .presentationDetents([.fraction(0.45), .large, .medium])
+            .presentationCornerRadius(15)
+            .presentationDragIndicator(.visible)
         }
         .toast(using: toastManager)
         .presentationDetents([.large])
@@ -155,19 +160,9 @@ struct ItemSearchView: View {
             label = String(localized: "itemSearch.createNew")
         }
 
-        return Button(action: { showAddItem = true }) {
-            HStack(spacing: 8) {
-                Image(systemName: "plus.circle")
-                Text(label)
-                    .lineLimit(1)
-            }
-            .font(.subheadline.weight(.medium))
-            .foregroundColor(Color.theme.accent)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
+        return PrimaryButton(title: label) {
+            showAddItem = true
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Actions
