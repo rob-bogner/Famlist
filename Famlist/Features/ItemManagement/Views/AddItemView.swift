@@ -29,16 +29,23 @@ import SwiftUI // SwiftUI framework for declarative UI
 
 /// View for adding a new item to the shopping list
 struct AddItemView: View {
-    
+
     // MARK: - Environment & Dependencies
-    
+
     @Environment(\.dismiss) var dismiss // Environment value to dismiss the sheet
     @EnvironmentObject var listViewModel: ListViewModel // Injected list view model for item operations
     @FocusState private var isItemFieldFocused: Bool // Focus state for name field
-    
+
     // MARK: - State
-    
-    @StateObject private var formVM = ItemFormViewModel() // Shared form ViewModel
+
+    @StateObject private var formVM: ItemFormViewModel // Shared form ViewModel
+
+    // MARK: - Init
+
+    /// Creates the view, optionally pre-filling the item name (e.g. from ItemSearchView).
+    init(initialName: String = "") {
+        _formVM = StateObject(wrappedValue: ItemFormViewModel(initialName: initialName))
+    }
     
     // MARK: - Body
     
@@ -105,5 +112,10 @@ struct AddItemView: View {
 
 #Preview {
     AddItemView()
+        .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}
+
+#Preview("With initial name") {
+    AddItemView(initialName: "Milch")
         .environmentObject(PreviewMocks.makeListViewModelWithSamples())
 }
