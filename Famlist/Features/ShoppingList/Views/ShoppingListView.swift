@@ -33,6 +33,7 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     @Environment(\.modelContext) private var modelContext // SwiftData context injected from FamlistApp.
     @Environment(\.scenePhase) private var scenePhase // Tracks foreground/background transitions for lifecycle-driven sync.
     @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
+    @State private var showListsOverview: Bool = false // Controls whether the ListsOverviewView sheet is presented.
     private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
 
     var body: some View { // The view’s content and layout tree.
@@ -43,12 +44,26 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                     .frame(height: DS.Layout.headerFixedHeight) // Give the header a fixed height.
                     .zIndex(0) // Place behind other layers.
                 VStack(alignment: .leading, spacing: 12) { // Header content: title and progress.
-                    Text(String(localized: "shoppingList.title")) // Localized title text.
-                        .font(.largeTitle.bold()) // Big, bold font for prominence.
-                        .foregroundColor(Color.theme.universalWhite) // Kontrastreicher Titeltext auf Accent-Header.
-                        .padding(.top, 30) // Add space from the top edge.
-                        .padding(.leading, 18) // Indent from the leading edge.
-                    
+                    HStack(alignment: .center) {
+                        Text(listViewModel.defaultList?.title ?? String(localized: "shoppingList.title")) // Aktiver Listen-Name oder Fallback.
+                            .font(.largeTitle.bold())
+                            .foregroundColor(Color.theme.universalWhite)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                        Spacer()
+                        Button {
+                            showListsOverview = true
+                        } label: {
+                            Image(systemName: "list.bullet.below.rectangle")
+                                .font(.system(size: 22, weight: .semibold))
+                                .foregroundColor(Color.theme.universalWhite)
+                        }
+                        .padding(.trailing, 18)
+                        .accessibilityLabel("Listen-Übersicht öffnen")
+                    }
+                    .padding(.top, 30)
+                    .padding(.leading, 18)
+
                     ShoppingListProgressView(listViewModel: listViewModel) // Small progress card showing checked vs total.
                         .padding(.top, 8) // Space below the title.
                     Spacer().frame(height: 4) // Tiny spacer to balance layout visually.
@@ -80,6 +95,12 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
             .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity.combined(with: .move(edge: .trailing)))) // Animated appear/disappear.
         }
         .navigationViewStyle(StackNavigationViewStyle()) // Stack style for iPhone/iPad consistency.
+        .sheet(isPresented: $showListsOverview) { // Present lists overview sheet.
+            ListsOverviewView()
+                .environmentObject(listViewModel)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
         .sheet(isPresented: $addNewItem) { // Present search sheet or direct add form.
             if let catalogRepo = listViewModel.catalogRepository {
                 // Smart search: user can find existing catalog items or create new ones.

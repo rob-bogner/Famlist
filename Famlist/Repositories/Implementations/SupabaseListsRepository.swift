@@ -151,6 +151,82 @@ final class SupabaseListsRepository: ListsRepository {
         return result
     }
 
+    func fetchAllLists(for ownerId: UUID) async throws -> [ListModel] {
+        struct ListRow: Codable {
+            let id: UUID
+            let owner_id: UUID
+            let title: String
+            let is_default: Bool
+            let created_at: Date
+            let updated_at: Date?
+        }
+        let rows: [ListRow] = try await client
+            .from("lists")
+            .select("id, owner_id, title, is_default, created_at, updated_at")
+            .eq("owner_id", value: ownerId.uuidString)
+            .order("created_at")
+            .execute()
+            .value
+        let result = rows.map { r in
+            ListModel(
+                id: r.id,
+                ownerId: r.owner_id,
+                title: r.title,
+                isDefault: r.is_default,
+                createdAt: r.created_at,
+                updatedAt: r.updated_at ?? r.created_at
+            )
+        }
+        return logResult(params: (ownerId: ownerId, count: result.count), result: result)
+    }
+
+    func renameList(listId: UUID, title: String) async throws -> ListModel {
+        struct Patch: Codable { let title: String; let updated_at: Date }
+        struct ListRow: Codable {
+            let id: UUID; let owner_id: UUID; let title: String
+            let is_default: Bool; let created_at: Date; let updated_at: Date?
+        }
+        let row: ListRow = try await client
+            .from("lists")
+            .update(Patch(title: title, updated_at: Date()))
+            .eq("id", value: listId.uuidString)
+            .select("id, owner_id, title, is_default, created_at, updated_at")
+            .single()
+            .execute()
+            .value
+        let result = ListModel(
+            id: row.id, ownerId: row.owner_id, title: row.title,
+            isDefault: row.is_default, createdAt: row.created_at,
+            updatedAt: row.updated_at ?? row.created_at
+        )
+        return logResult(params: (listId: listId, title: title), result: result)
+    }
+
+    func deleteList(listId: UUID) async throws {
+        _ = try await client
+            .from("lists")
+            .delete()
+            .eq("id", value: listId.uuidString)
+            .execute()
+        logVoid(params: (action: "deleteList", listId: listId))
+    }
+
+    func setDefaultList(listId: UUID, ownerId: UUID) async throws {
+        struct UnsetPatch: Codable { let is_default: Bool; let updated_at: Date }
+        struct SetPatch: Codable { let is_default: Bool; let updated_at: Date }
+        _ = try await client
+            .from("lists")
+            .update(UnsetPatch(is_default: false, updated_at: Date()))
+            .eq("owner_id", value: ownerId.uuidString)
+            .execute()
+        _ = try await client
+            .from("lists")
+            .update(SetPatch(is_default: true, updated_at: Date()))
+            .eq("id", value: listId.uuidString)
+            .execute()
+        logVoid(params: (listId: listId, ownerId: ownerId))
+    }
+
     func addMember(listId: UUID, profileId: UUID) async throws {
         struct LM: Codable {
             let list_id: UUID

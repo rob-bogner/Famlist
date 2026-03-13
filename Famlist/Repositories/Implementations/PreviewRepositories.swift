@@ -64,6 +64,41 @@ final class PreviewListsRepository: ListsRepository { // Simple data source for 
     }
     func addMember(listId: UUID, profileId: UUID) async throws {} // No-op in previews.
     func removeMember(listId: UUID, profileId: UUID) async throws {} // No-op in previews.
+
+    func fetchAllLists(for ownerId: UUID) async throws -> [ListModel] {
+        lists
+            .filter { $0.owner_id == ownerId }
+            .map { l in
+                ListModel(id: l.id, ownerId: l.owner_id, title: l.title, isDefault: l.is_default,
+                          createdAt: l.created_at ?? Date(), updatedAt: l.updated_at ?? Date())
+            }
+    }
+
+    func renameList(listId: UUID, title: String) async throws -> ListModel {
+        guard let idx = lists.firstIndex(where: { $0.id == listId }) else {
+            throw NSError(domain: "Preview", code: 404, userInfo: [NSLocalizedDescriptionKey: "List not found"])
+        }
+        let old = lists[idx]
+        lists[idx] = List(id: old.id, owner_id: old.owner_id, title: title,
+                          is_default: old.is_default, created_at: old.created_at, updated_at: Date())
+        let updated = lists[idx]
+        return ListModel(id: updated.id, ownerId: updated.owner_id, title: updated.title,
+                         isDefault: updated.is_default,
+                         createdAt: updated.created_at ?? Date(), updatedAt: updated.updated_at ?? Date())
+    }
+
+    func deleteList(listId: UUID) async throws {
+        lists.removeAll { $0.id == listId }
+    }
+
+    func setDefaultList(listId: UUID, ownerId: UUID) async throws {
+        for i in lists.indices where lists[i].owner_id == ownerId {
+            let l = lists[i]
+            lists[i] = List(id: l.id, owner_id: l.owner_id, title: l.title,
+                            is_default: l.id == listId,
+                            created_at: l.created_at, updated_at: Date())
+        }
+    }
 }
 
 /// Preview implementation of CategoriesRepository returning a static list of categories.

@@ -54,6 +54,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// The resolved default list for the current user; nil while loading.
     @Published var defaultList: ListModel? = nil
+
+    /// All lists belonging to the current user; populated by loadAllLists(ownerId:).
+    @Published var allLists: [ListModel] = []
+
+    /// Item counts per list id, sourced from the local SwiftData store.
+    @Published var listItemCounts: [UUID: Int] = [:]
     
     // MARK: - Dependencies & Core State
     
@@ -187,6 +193,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         items = []
         selectedItem = nil
         defaultList = nil
+        allLists = []
+        listItemCounts = [:]
         errorMessage = nil
         listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
         refreshItemsFromStore()

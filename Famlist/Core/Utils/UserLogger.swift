@@ -393,6 +393,26 @@ struct UserLog {
         static func categoryCreated(name: String) {
             log("➕ Kategorie erstellt: \(name)")
         }
+
+        /// Alle Listen geladen
+        static func listsLoaded(count: Int) {
+            log("📋 \(count) Listen geladen")
+        }
+
+        /// Liste umbenannt
+        static func listRenamed(oldName: String, newName: String) {
+            log("✏️ Liste '\(oldName)' umbenannt zu '\(newName)'")
+        }
+
+        /// Liste gelöscht
+        static func listDeleted(name: String) {
+            log("🗑️ Liste '\(name)' gelöscht")
+        }
+
+        /// Standard-Liste gesetzt
+        static func listSetDefault(name: String) {
+            log("⭐ '\(name)' als Standard-Liste gesetzt")
+        }
     }
     
     /// UI-Events

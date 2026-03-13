@@ -59,6 +59,28 @@ protocol ListsRepository {
     /// - Parameter ownerId: The owner/profile UUID.
     /// - Returns: A ListModel representing the default list.
     func fetchDefaultList(for ownerId: UUID) async throws -> ListModel
+
+    /// Fetch all lists for a given owner.
+    /// - Parameter ownerId: The owner/profile UUID.
+    /// - Returns: Array of ListModels sorted by creation date.
+    func fetchAllLists(for ownerId: UUID) async throws -> [ListModel]
+
+    /// Rename an existing list.
+    /// - Parameters:
+    ///   - listId: The UUID of the list to rename.
+    ///   - title: The new title.
+    /// - Returns: The updated ListModel.
+    func renameList(listId: UUID, title: String) async throws -> ListModel
+
+    /// Delete a list permanently (remote cascade handles items).
+    /// - Parameter listId: The UUID of the list to delete.
+    func deleteList(listId: UUID) async throws
+
+    /// Set a list as the default, clearing the previous default.
+    /// - Parameters:
+    ///   - listId: The UUID of the list to make default.
+    ///   - ownerId: The owner UUID (needed to clear previous default).
+    func setDefaultList(listId: UUID, ownerId: UUID) async throws
 }
 
 /// Convenience API to retrieve the default list as a strongly-typed ListModel.
