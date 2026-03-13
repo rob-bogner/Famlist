@@ -36,7 +36,7 @@
 		EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */; };
 		EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */; };
 		EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */; };
-		EE7383582F6410C900A16B91 /* ItemCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383572F6410C900A16B91 /* ItemCatalogTests.swift */; };
+		EE73835B2F641A0800A16B91 /* ItemCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */; };
 		EE7BC7CC2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */; };
 		EE7BC7CE2F56205300B47D9A /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
@@ -149,8 +149,8 @@
 		EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelBulkTogglePerformanceTests.swift; sourceTree = "<group>"; };
 		EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDeviceSyncIntegrationTests.swift; sourceTree = "<group>"; };
 		EE73834C2F5DCF5300A16B91 /* OnboardingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingServiceTests.swift; sourceTree = "<group>"; };
-		EE7383572F6410C900A16B91 /* ItemCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCatalogTests.swift; sourceTree = "<group>"; };
 		EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeterministicItemIDTests.swift; sourceTree = "<group>"; };
+		EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCatalogTests.swift; sourceTree = "<group>"; };
 		EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBottomMenuBar.swift; sourceTree = "<group>"; };
 		EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
@@ -290,7 +290,7 @@
 		EE73834D2F5DCF5300A16B91 /* FamlistTests */ = {
 			isa = PBXGroup;
 			children = (
-				EE7383572F6410C900A16B91 /* ItemCatalogTests.swift */,
+				EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */,
 				EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */,
 				EE7383452F5DCF5300A16B91 /* AuthViewModelTests.swift */,
 				EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */,
@@ -863,11 +863,11 @@
 				EE7383502F5DCF5300A16B91 /* OnboardingServiceTests.swift in Sources */,
 				EE7383512F5DCF5300A16B91 /* ClipboardImportParserTests.swift in Sources */,
 				EE7383522F5DCF5300A16B91 /* FamlistTests.swift in Sources */,
-				EE7383582F6410C900A16B91 /* ItemCatalogTests.swift in Sources */,
 				EE7383532F5DCF5300A16B91 /* HybridLogicalClockTests.swift in Sources */,
 				EE7383542F5DCF5300A16B91 /* AuthViewModelTests.swift in Sources */,
 				EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */,
 				EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */,
+				EE73835B2F641A0800A16B91 /* ItemCatalogTests.swift in Sources */,
 				EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
