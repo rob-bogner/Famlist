@@ -38,6 +38,7 @@
 		EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */; };
 		EE73835B2F641A0800A16B91 /* ItemCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */; };
 		BC3F2A7156160A40F6A39673 /* ListManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC477281985AF4967ACD7CE /* ListManagementTests.swift */; };
+		BC8F1A2356160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC8F1A2256160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift */; };
 		EE7BC7CC2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */; };
 		EE7BC7CE2F56205300B47D9A /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */; };
 		EEB660402E7F37A9006CB1EB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6600A2E7F37A9006CB1EB /* Logger.swift */; };
@@ -155,6 +156,7 @@
 		EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeterministicItemIDTests.swift; sourceTree = "<group>"; };
 		EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCatalogTests.swift; sourceTree = "<group>"; };
 		BBC477281985AF4967ACD7CE /* ListManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListManagementTests.swift; sourceTree = "<group>"; };
+		BC8F1A2256160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelDuplicateDetectionTests.swift; sourceTree = "<group>"; };
 		EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBottomMenuBar.swift; sourceTree = "<group>"; };
 		EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
@@ -298,6 +300,7 @@
 			children = (
 				EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */,
 				BBC477281985AF4967ACD7CE /* ListManagementTests.swift */,
+				BC8F1A2256160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift */,
 				EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */,
 				EE7383452F5DCF5300A16B91 /* AuthViewModelTests.swift */,
 				EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */,
@@ -880,6 +883,7 @@
 				EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */,
 				EE73835B2F641A0800A16B91 /* ItemCatalogTests.swift in Sources */,
 				BC3F2A7156160A40F6A39673 /* ListManagementTests.swift in Sources */,
+				BC8F1A2356160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift in Sources */,
 				EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

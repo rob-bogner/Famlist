@@ -209,7 +209,18 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
-        
+
+        // Duplikat-Check: existiert bereits ein ungehacktes Item mit gleichem Namen?
+        if let existing = items.first(where: {
+            $0.name.lowercased() == normalized.name.lowercased() && !$0.isChecked
+        }) {
+            var incremented = existing
+            incremented.units += 1
+            UserLog.Data.itemCountIncremented(name: incremented.name, units: incremented.units)
+            updateItem(incremented)
+            return
+        }
+
         // User-friendly log
         let displayName = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
         UserLog.Data.itemAdded(

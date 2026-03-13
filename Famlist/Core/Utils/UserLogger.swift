@@ -297,6 +297,11 @@ struct UserLog {
             }
         }
         
+        /// Artikel bereits vorhanden – Anzahl erhöht
+        static func itemCountIncremented(name: String, units: Int) {
+            log("➕ '\(name)' bereits in der Liste – Anzahl auf \(units) erhöht")
+        }
+
         /// Artikel aktualisiert
         static func itemUpdated(name: String, units: Int? = nil, measure: String? = nil) {
             if let units = units, let measure = measure, !measure.isEmpty {

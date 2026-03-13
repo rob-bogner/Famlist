@@ -843,23 +843,6 @@
         }
       }
     },
-    "itemSearch.alreadyInList" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Artikel bereits in der Liste"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Item already in list"
-          }
-        }
-      }
-    },
     "itemSearch.createNew" : {
       "extractionState" : "manual",
       "localizations" : {
