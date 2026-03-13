@@ -265,7 +265,20 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             description: normalized.productDescription ?? "nil"
         ))
         // Note: User-Log erfolgt im Repository nach erfolgreichem Server-Update
-        
+
+        // Update personal item catalog (fire-and-forget; keeps catalog in sync with edits)
+        if let catalogRepo = catalogRepository {
+            let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
+            Task {
+                do {
+                    try await catalogRepo.save(catalogEntry)
+                    logVoid(params: (action: "catalogUpdate.success", itemName: normalized.name))
+                } catch {
+                    logVoid(params: (action: "catalogUpdate.failed", itemName: normalized.name, error: (error as NSError).localizedDescription))
+                }
+            }
+        }
+
         // Track animation state if requested.
         if trackPendingAnimation {
             pendingAnimatedItemIDs.insert(normalized.id)

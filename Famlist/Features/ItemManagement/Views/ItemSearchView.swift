@@ -172,6 +172,14 @@ struct ItemSearchView: View {
             logVoid(params: (action: "addToList.skipped", reason: "defaultList.ownerId is nil"))
             return
         }
+        // Prevent duplicates: skip if an unchecked item with the same name already exists
+        let alreadyInList = listViewModel.items.contains {
+            $0.name.lowercased() == entry.name.lowercased() && !$0.isChecked
+        }
+        guard !alreadyInList else {
+            toastManager.show(String(localized: "itemSearch.alreadyInList"))
+            return
+        }
         let newItem = entry.toItemModel(
             listId: listViewModel.listId.uuidString,
             ownerPublicId: ownerPublicId
