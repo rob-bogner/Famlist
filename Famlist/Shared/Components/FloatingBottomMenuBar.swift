@@ -140,7 +140,7 @@ struct FloatingBottomMenuBar: View {
             Spacer()
 
             // Platzhalter für erhabenen Mitte-Button (74pt Button + 3pt Puffer je Seite)
-            Color.clear.frame(width: 80)
+            Spacer().frame(width: 80)
 
             Spacer()
 
