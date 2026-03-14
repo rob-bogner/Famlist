@@ -91,6 +91,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             lvm.configure(connectivityMonitor: connectivityMonitor)
             lvm.configure(syncEngine: syncEngine)
             lvm.configure(catalogRepository: SupabaseItemCatalogRepository(client: client))
+            lvm.configure(globalCatalogRepository: SupabaseGlobalProductCatalogRepository(client: client))
             self.listViewModel = lvm
 
             // Create the session VM that coordinates auth and default list bootstrap.
@@ -111,6 +112,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             ) // Start observing immediately in preview mode.
             lvm.configure(connectivityMonitor: connectivityMonitor) // Wire connectivity monitoring for preview repos too, keeping API usage consistent.
             lvm.configure(catalogRepository: PreviewItemCatalogRepository()) // Preview catalog for offline demo.
+            lvm.configure(globalCatalogRepository: PreviewGlobalProductCatalogRepository()) // Preview OFF catalog for offline demo.
             self.listViewModel = lvm // Save list VM.
             // Session VM without a client (auth disabled in previews); remains unauthenticated.
             self.sessionViewModel = AppSessionViewModel(client: nil, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm) // Root VM with preview repos.

@@ -78,6 +78,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Optional personal item catalog repository; injected after init via configure(catalogRepository:).
     /// When set, new items are automatically saved to the catalog in the background.
     internal var catalogRepository: (any ItemCatalogRepository)?
+
+    /// Optional global OpenFoodFacts catalog repository; injected after init via configure(globalCatalogRepository:).
+    /// When set, ItemSearchView will show global OFF products alongside personal catalog results.
+    internal var globalCatalogRepository: (any GlobalProductCatalogRepository)?
     
     /// Local SwiftData store for offline persistence.
     internal let itemStore: SwiftDataItemStore
@@ -173,6 +177,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// - Parameter catalogRepository: Repository that saves/searches the user's item catalog.
     func configure(catalogRepository: any ItemCatalogRepository) {
         self.catalogRepository = catalogRepository
+    }
+
+    /// Injects the global OpenFoodFacts catalog repository for extended product search.
+    /// - Parameter globalCatalogRepository: Read-only repository for the global OFF DACH catalog.
+    func configure(globalCatalogRepository: any GlobalProductCatalogRepository) {
+        self.globalCatalogRepository = globalCatalogRepository
     }
     
     // MARK: - List Switching

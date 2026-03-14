@@ -104,7 +104,10 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
         .sheet(isPresented: $addNewItem) { // Present search sheet or direct add form.
             if let catalogRepo = listViewModel.catalogRepository {
                 // Smart search: user can find existing catalog items or create new ones.
-                ItemSearchView(catalogRepository: catalogRepo)
+                ItemSearchView(
+                    catalogRepository: catalogRepo,
+                    globalCatalogRepository: listViewModel.globalCatalogRepository
+                )
             } else {
                 // Fallback: direct add form (preview mode / no catalog configured).
                 AddItemView()

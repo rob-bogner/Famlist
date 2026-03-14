@@ -3,27 +3,26 @@
 
  Famlist
  Created on: 12.03.2026
- Last updated on: 12.03.2026
+ Last updated on: 14.03.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Sheet shown when the user taps the Add button (FAM-60).
- - Lets the user search their personal item catalog and pick an existing item,
-   or fall back to the full AddItemView to create a new one.
+ - Sheet shown when the user taps the Add button (FAM-60 + OpenFoodFacts integration).
+ - Lets the user search personal catalog and global OFF products, or create a new item.
 
  🛠 Includes:
  - Live search field with debounce (fires after 2 chars).
- - Top-5 results list with item thumbnail, name, brand and quantity.
+ - Top-5 merged results list: personal (★) first, then global OFF products with remote images.
  - "Neu anlegen" button that opens AddItemView with the typed name pre-filled.
  - Toast confirmation after adding an item from the catalog.
 
  🔰 Notes for Beginners:
  - ItemSearchViewModel drives the data; this view is purely presentational.
  - Tapping a result calls listViewModel.addItem() and dismisses the sheet.
- - The sheet for AddItemView is presented on top of this sheet (stacked sheets).
+ - Global results show an AsyncImage from the OFF CDN; personal results use base64 thumbnails.
 
  📝 Last Change:
- - Initial creation for FAM-60 smart search feature.
+ - Added globalCatalogRepository parameter and SearchResult support (OpenFoodFacts integration).
  ------------------------------------------------------------------------
  */
 
@@ -31,7 +30,7 @@ import SwiftUI // SwiftUI for declarative UI.
 
 // MARK: - ItemSearchView
 
-/// Sheet allowing the user to search their personal item catalog or create a new item.
+/// Sheet allowing the user to search personal and global product catalogs, or create a new item.
 struct ItemSearchView: View {
 
     // MARK: - Environment & Dependencies
@@ -48,8 +47,14 @@ struct ItemSearchView: View {
 
     // MARK: - Init
 
-    init(catalogRepository: any ItemCatalogRepository) {
-        _searchVM = StateObject(wrappedValue: ItemSearchViewModel(catalogRepository: catalogRepository))
+    init(
+        catalogRepository: any ItemCatalogRepository,
+        globalCatalogRepository: (any GlobalProductCatalogRepository)? = nil
+    ) {
+        _searchVM = StateObject(wrappedValue: ItemSearchViewModel(
+            catalogRepository: catalogRepository,
+            globalCatalogRepository: globalCatalogRepository
+        ))
     }
 
     // MARK: - Body
@@ -127,13 +132,17 @@ struct ItemSearchView: View {
     private var resultsList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(searchVM.results) { entry in
-                    Button(action: { addToList(entry) }) {
-                        ItemCatalogRow(entry: entry)
+                ForEach(searchVM.results) { result in
+                    Button(action: { addToList(result) }) {
+                        ItemCatalogRow(
+                            entry: result.entry,
+                            source: result.source,
+                            imageUrl: result.imageUrl
+                        )
                     }
                     .buttonStyle(.plain)
 
-                    if entry.id != searchVM.results.last?.id {
+                    if result.id != searchVM.results.last?.id {
                         Divider()
                             .padding(.leading, 68)
                     }
@@ -167,12 +176,12 @@ struct ItemSearchView: View {
 
     // MARK: - Actions
 
-    private func addToList(_ entry: ItemCatalogEntry) {
+    private func addToList(_ result: SearchResult) {
         guard let ownerPublicId = listViewModel.defaultList?.ownerId.uuidString else {
             logVoid(params: (action: "addToList.skipped", reason: "defaultList.ownerId is nil"))
             return
         }
-        let newItem = entry.toItemModel(
+        let newItem = result.entry.toItemModel(
             listId: listViewModel.listId.uuidString,
             ownerPublicId: ownerPublicId
         )
@@ -185,8 +194,11 @@ struct ItemSearchView: View {
 // MARK: - ItemCatalogRow
 
 /// A single row in the search results list showing item thumbnail, name, brand and quantity.
+/// Displays a ★ badge for personal catalog entries and an AsyncImage for global OFF products.
 struct ItemCatalogRow: View {
     let entry: ItemCatalogEntry
+    let source: SearchResultSource
+    let imageUrl: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -197,9 +209,17 @@ struct ItemCatalogRow: View {
 
             // Details
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.name)
-                    .font(.body.weight(.medium))
-                    .foregroundColor(.primary)
+                HStack(spacing: 4) {
+                    Text(entry.name)
+                        .font(.body.weight(.medium))
+                        .foregroundColor(.primary)
+
+                    if source == .personal {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                            .foregroundColor(Color.theme.accent)
+                    }
+                }
 
                 if let brand = entry.brand, !brand.isEmpty {
                     Text(brand)
@@ -239,24 +259,47 @@ struct ItemCatalogRow: View {
     private var itemThumbnail: some View {
         if let imageData = entry.imageData,
            let image = ImageCache.shared.image(fromBase64: imageData) {
+            // Personal catalog: base64-encoded image
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
+        } else if let urlString = imageUrl, let url = URL(string: urlString) {
+            // Global OFF catalog: remote image from CDN (online-only)
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().scaledToFill()
+                default:
+                    placeholderThumbnail
+                }
+            }
         } else {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(.systemGray5))
-                .overlay(
-                    Image(systemName: "cart")
-                        .foregroundColor(.secondary)
-                        .font(.body)
-                )
+            placeholderThumbnail
         }
+    }
+
+    private var placeholderThumbnail: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color(.systemGray5))
+            .overlay(
+                Image(systemName: "cart")
+                    .foregroundColor(.secondary)
+                    .font(.body)
+            )
     }
 }
 
 // MARK: - Previews
 
-#Preview {
+#Preview("Persönlicher Katalog") {
     ItemSearchView(catalogRepository: PreviewItemCatalogRepository())
         .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}
+
+#Preview("Mit globalem Katalog") {
+    ItemSearchView(
+        catalogRepository: PreviewItemCatalogRepository(),
+        globalCatalogRepository: PreviewGlobalProductCatalogRepository()
+    )
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
 }

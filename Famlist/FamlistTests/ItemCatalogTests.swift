@@ -427,7 +427,7 @@ final class ItemSearchViewModelTests: XCTestCase {
         try await Task.sleep(nanoseconds: 500_000_000)
 
         XCTAssertEqual(sut.results.count, 1)
-        XCTAssertEqual(sut.results.first?.name, "Butter")
+        XCTAssertEqual(sut.results.first?.entry.name, "Butter")
         XCTAssertFalse(sut.isSearching)
         XCTAssertNil(sut.errorMessage)
     }

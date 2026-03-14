@@ -31,7 +31,7 @@ import Foundation // Foundation provides UUID and Codable support.
 
 /// Represents a single entry in the user's personal item catalog (item_catalog table).
 /// Maps directly to Supabase columns using CodingKeys for snake_case field names.
-struct ItemCatalogEntry: Codable, Identifiable {
+struct ItemCatalogEntry: Codable, Identifiable, Equatable {
 
     // MARK: - Properties
 

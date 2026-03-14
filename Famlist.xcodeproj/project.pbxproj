@@ -109,6 +109,10 @@
 		EEC58BE32ED21A6B000D3915 /* ListViewModel+BulkActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */; };
 		EEC58BE72ED346FF000D3915 /* UserLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE62ED346FF000D3915 /* UserLogger.swift */; };
 		EEE000012E00000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = EE2BAC3F2DB917D50082D950 /* Supabase */; };
+		FA1234002A2B3C4D5E6F7890 /* GlobalProductCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234001A2B3C4D5E6F7890 /* GlobalProductCatalogRepository.swift */; };
+		FA1234004A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234003A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift */; };
+		FA1234006A2B3C4D5E6F7890 /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234005A2B3C4D5E6F7890 /* SearchResult.swift */; };
+		FA1234008A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -228,6 +232,10 @@
 		EEC58BD42ED1F86D000D3915 /* SyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncOperation.swift; sourceTree = "<group>"; };
 		EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+BulkActions.swift"; sourceTree = "<group>"; };
 		EEC58BE62ED346FF000D3915 /* UserLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLogger.swift; sourceTree = "<group>"; };
+		FA1234001A2B3C4D5E6F7890 /* GlobalProductCatalogRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GlobalProductCatalogRepository.swift; sourceTree = "<group>"; };
+		FA1234003A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SupabaseGlobalProductCatalogRepository.swift; sourceTree = "<group>"; };
+		FA1234005A2B3C4D5E6F7890 /* SearchResult.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
+		FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalProductCatalogTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -299,6 +307,7 @@
 			isa = PBXGroup;
 			children = (
 				EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */,
+				FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */,
 				BBC477281985AF4967ACD7CE /* ListManagementTests.swift */,
 				BC8F1A2256160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift */,
 				EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */,
@@ -426,6 +435,7 @@
 			isa = PBXGroup;
 			children = (
 				EEB660162E7F37A9006CB1EB /* ItemModel.swift */,
+				FA1234005A2B3C4D5E6F7890 /* SearchResult.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -543,6 +553,7 @@
 				EEB6608B2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift */,
 				EEB6608D2E7F37A9006CB1EB /* SupabaseItemsRepository.swift */,
 				0B951391DB1C9883C6B32320 /* SupabaseItemCatalogRepository.swift */,
+				FA1234003A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift */,
 			);
 			path = Implementations;
 			sourceTree = "<group>";
@@ -555,6 +566,7 @@
 				EEB660832E7F37A9006CB1EB /* ProfilesRepository.swift */,
 				EEB660852E7F37A9006CB1EB /* CategoriesRepository.swift */,
 				B6552BE6F4FFA6B298F110A0 /* ItemCatalogRepository.swift */,
+				FA1234001A2B3C4D5E6F7890 /* GlobalProductCatalogRepository.swift */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -865,6 +877,9 @@
 				D8344B104C513BD50297A301 /* SupabaseItemCatalogRepository.swift in Sources */,
 				9542F3616E95F59AA603D81F /* ItemSearchViewModel.swift in Sources */,
 				6B39EE77A3A4E0CD3AF5DF6B /* ItemSearchView.swift in Sources */,
+				FA1234002A2B3C4D5E6F7890 /* GlobalProductCatalogRepository.swift in Sources */,
+				FA1234004A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift in Sources */,
+				FA1234006A2B3C4D5E6F7890 /* SearchResult.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -882,6 +897,7 @@
 				EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */,
 				EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */,
 				EE73835B2F641A0800A16B91 /* ItemCatalogTests.swift in Sources */,
+				FA1234008A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift in Sources */,
 				BC3F2A7156160A40F6A39673 /* ListManagementTests.swift in Sources */,
 				BC8F1A2356160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift in Sources */,
 				EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */,
