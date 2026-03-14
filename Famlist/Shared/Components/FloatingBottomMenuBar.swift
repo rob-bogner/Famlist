@@ -139,8 +139,8 @@ struct FloatingBottomMenuBar: View {
 
             Spacer()
 
-            // Platzhalter für erhabenen Mitte-Button
-            Spacer().frame(width: 64)
+            // Platzhalter für erhabenen Mitte-Button (74pt Button + 3pt Puffer je Seite)
+            Color.clear.frame(width: 80)
 
             Spacer()
 
@@ -180,7 +180,7 @@ struct FloatingBottomMenuBar: View {
             }
             .buttonStyle(PillButtonStyle())
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 16)
         .padding(.vertical, 9)
         .background {
             Capsule()
