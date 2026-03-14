@@ -165,6 +165,32 @@ extension ListViewModel {
         UserLog.Sync.completed(itemCount: uuidsToUpdate.count)
     }
     
+    // MARK: - Bulk Delete
+
+    /// Löscht alle Artikel der aktuellen Liste.
+    func deleteAllItems() {
+        let snapshot = items
+        logVoid(params: (action: "deleteAllItems", count: snapshot.count))
+        UserLog.Data.allItemsDeleted(count: snapshot.count)
+        snapshot.forEach { deleteItem($0) }
+    }
+
+    /// Löscht alle abgehakten Artikel der aktuellen Liste.
+    func deleteCheckedItems() {
+        let toDelete = items.filter { $0.isChecked }
+        logVoid(params: (action: "deleteCheckedItems", count: toDelete.count))
+        UserLog.Data.checkedItemsDeleted(count: toDelete.count)
+        toDelete.forEach { deleteItem($0) }
+    }
+
+    /// Löscht alle nicht abgehakten Artikel der aktuellen Liste.
+    func deleteUncheckedItems() {
+        let toDelete = items.filter { !$0.isChecked }
+        logVoid(params: (action: "deleteUncheckedItems", count: toDelete.count))
+        UserLog.Data.uncheckedItemsDeleted(count: toDelete.count)
+        toDelete.forEach { deleteItem($0) }
+    }
+
     // MARK: - Sorting
     
     /// Setzt die Sortierreihenfolge und sortiert die Items entsprechend

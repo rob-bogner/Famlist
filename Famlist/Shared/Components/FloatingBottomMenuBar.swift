@@ -38,10 +38,14 @@ struct FloatingBottomMenuBar: View {
 
     @State private var showProfileView = false
     @State private var showImportView = false
+    @State private var showDeleteDialog = false
 
     private var allChecked: Bool {
         !listViewModel.items.isEmpty && listViewModel.items.allSatisfy { $0.isChecked }
     }
+
+    private var hasChecked: Bool { listViewModel.items.contains { $0.isChecked } }
+    private var hasUnchecked: Bool { listViewModel.items.contains { !$0.isChecked } }
 
     var body: some View {
         ZStack {
@@ -61,6 +65,35 @@ struct FloatingBottomMenuBar: View {
             ClipboardImportView()
                 .environmentObject(listViewModel)
                 .presentationDragIndicator(.visible)
+        }
+        .confirmationDialog(
+            "Artikel löschen",
+            isPresented: $showDeleteDialog,
+            titleVisibility: .visible
+        ) {
+            Button("Alle Artikel löschen", role: .destructive) {
+                withAnimation {
+                    listViewModel.deleteAllItems()
+                }
+            }
+
+            Button("Erledigte löschen", role: .destructive) {
+                withAnimation {
+                    listViewModel.deleteCheckedItems()
+                }
+            }
+            .disabled(!hasChecked)
+
+            Button("Offene löschen", role: .destructive) {
+                withAnimation {
+                    listViewModel.deleteUncheckedItems()
+                }
+            }
+            .disabled(!hasUnchecked)
+
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Diese Aktion kann nicht rückgängig gemacht werden.")
         }
     }
 
@@ -118,7 +151,18 @@ struct FloatingBottomMenuBar: View {
 
             Spacer()
 
-            // 5. Hamburger Menu
+            // 5. Delete Menu
+            pillButton(icon: "trash", label: "Löschen") {
+                let impact = UIImpactFeedbackGenerator(style: .medium)
+                impact.impactOccurred()
+                showDeleteDialog = true
+            }
+            .disabled(listViewModel.items.isEmpty)
+            .opacity(listViewModel.items.isEmpty ? 0.4 : 1.0)
+
+            Spacer()
+
+            // 6. Hamburger Menu
             Menu {
                 Button {
                     showProfileView = true

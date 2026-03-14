@@ -113,6 +113,7 @@
 		FA1234004A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234003A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift */; };
 		FA1234006A2B3C4D5E6F7890 /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234005A2B3C4D5E6F7890 /* SearchResult.swift */; };
 		FA1234008A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */; };
+		FA123400AA2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234009A2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -236,6 +237,7 @@
 		FA1234003A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SupabaseGlobalProductCatalogRepository.swift; sourceTree = "<group>"; };
 		FA1234005A2B3C4D5E6F7890 /* SearchResult.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
 		FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalProductCatalogTests.swift; sourceTree = "<group>"; };
+		FA1234009A2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelBulkDeleteTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -308,6 +310,7 @@
 			children = (
 				EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */,
 				FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */,
+				FA1234009A2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift */,
 				BBC477281985AF4967ACD7CE /* ListManagementTests.swift */,
 				BC8F1A2256160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift */,
 				EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */,
@@ -898,6 +901,7 @@
 				EE7383562F5DCF5300A16B91 /* ConflictResolverTests.swift in Sources */,
 				EE73835B2F641A0800A16B91 /* ItemCatalogTests.swift in Sources */,
 				FA1234008A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift in Sources */,
+				FA123400AA2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift in Sources */,
 				BC3F2A7156160A40F6A39673 /* ListManagementTests.swift in Sources */,
 				BC8F1A2356160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift in Sources */,
 				EE7383572F5DCF5300A16B91 /* DeterministicItemIDTests.swift in Sources */,

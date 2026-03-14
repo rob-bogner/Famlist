@@ -322,6 +322,21 @@ struct UserLog {
             }
         }
         
+        /// Alle Artikel der Liste gelöscht
+        static func allItemsDeleted(count: Int) {
+            log("🗑️ \(count) Artikel gelöscht")
+        }
+
+        /// Nur abgehakte Artikel gelöscht
+        static func checkedItemsDeleted(count: Int) {
+            log("🗑️ \(count) erledigte Artikel gelöscht")
+        }
+
+        /// Nur nicht abgehakte Artikel gelöscht
+        static func uncheckedItemsDeleted(count: Int) {
+            log("🗑️ \(count) offene Artikel gelöscht")
+        }
+
         /// Mehrere Artikel werden aktualisiert
         static func bulkUpdate(count: Int) {
             log("💾 \(count) Artikel werden aktualisiert...")
