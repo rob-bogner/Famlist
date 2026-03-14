@@ -207,9 +207,21 @@ struct ItemCatalogRow: View {
                         .foregroundColor(.secondary)
                 }
 
-                Text("\(entry.units) \(entry.measure)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                if !entry.measure.isEmpty {
+                    Text(entry.measure)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                if let desc = entry.productDescription, !desc.isEmpty {
+                    Text(desc)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                if entry.price > 0 {
+                    Text(entry.price, format: .currency(code: "EUR"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
 
             Spacer()

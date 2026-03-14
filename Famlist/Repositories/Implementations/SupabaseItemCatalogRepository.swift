@@ -49,7 +49,7 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
         // Security: restrict returned columns to only what the UI needs
         let results: [ItemCatalogEntry] = try await client
             .from("item_catalog")
-            .select("id,owner_public_id,name,brand,category,product_description,measure,units,price,image_data")
+            .select("id,owner_public_id,name,brand,category,product_description,measure,price,image_data")
             .ilike("name_lower", pattern: "%\(query.lowercased())%")
             .order("name_lower", ascending: true)
             .limit(5)

@@ -70,7 +70,7 @@ TECHNICAL_DOCUMENTATION.md
 /build/*
 
 # Veraltetes Root-Test-Duplikat (aktives Target: Famlist/FamlistTests/)
-FamlistTests/
+/FamlistTests/
 
 # Migrierte Dokumentation (jetzt in Confluence)
 SETUP.md

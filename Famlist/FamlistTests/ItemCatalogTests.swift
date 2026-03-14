@@ -86,7 +86,6 @@ final class ItemCatalogEntryTests: XCTestCase {
         XCTAssertEqual(entry.category, "Molkerei")
         XCTAssertEqual(entry.productDescription, "Vollmilch 3,5%")
         XCTAssertEqual(entry.measure, "l")
-        XCTAssertEqual(entry.units, 2)
         XCTAssertEqual(entry.price, 1.49, accuracy: 0.001)
         XCTAssertEqual(entry.imageData, "base64data")
         XCTAssertEqual(entry.ownerPublicId, "owner-1")
@@ -122,7 +121,6 @@ final class ItemCatalogEntryTests: XCTestCase {
             category: "Molkerei",
             productDescription: nil,
             measure: "Packung",
-            units: 1,
             price: 1.89,
             imageData: nil
         )
@@ -149,7 +147,6 @@ final class ItemCatalogEntryTests: XCTestCase {
             category: nil,
             productDescription: nil,
             measure: "Stück",
-            units: 1,
             price: 0.0,
             imageData: nil
         )
@@ -172,7 +169,6 @@ final class ItemCatalogEntryTests: XCTestCase {
             category: "Molkerei",
             productDescription: "Naturjoghurt 3,5%",
             measure: "Becher",
-            units: 2,
             price: 0.79,
             imageData: "base64=="
         )
@@ -187,7 +183,6 @@ final class ItemCatalogEntryTests: XCTestCase {
         XCTAssertEqual(decoded.category, entry.category)
         XCTAssertEqual(decoded.productDescription, entry.productDescription)
         XCTAssertEqual(decoded.measure, entry.measure)
-        XCTAssertEqual(decoded.units, entry.units)
         XCTAssertEqual(decoded.price, entry.price, accuracy: 0.001)
         XCTAssertEqual(decoded.imageData, entry.imageData)
     }
@@ -229,7 +224,7 @@ final class PreviewItemCatalogRepositoryTests: XCTestCase {
                 ownerPublicId: "preview",
                 name: "TestArtikel\(i)",
                 brand: nil, category: nil, productDescription: nil,
-                measure: "Stück", units: 1, price: 0.0, imageData: nil
+                measure: "Stück", price: 0.0, imageData: nil
             )
             try await repo.save(entry)
         }
@@ -253,7 +248,7 @@ final class PreviewItemCatalogRepositoryTests: XCTestCase {
             ownerPublicId: "preview",
             name: "Tomate",
             brand: nil, category: nil, productDescription: nil,
-            measure: "Stück", units: 3, price: 0.49, imageData: nil
+            measure: "Stück", price: 0.49, imageData: nil
         )
         try await repo.save(entry)
 
@@ -270,20 +265,18 @@ final class PreviewItemCatalogRepositoryTests: XCTestCase {
             name: "Milch",
             brand: "Weihenstephan",
             category: "Molkerei", productDescription: nil,
-            measure: "l", units: 1, price: 1.49, imageData: nil
+            measure: "l", price: 1.49, imageData: nil
         )
         try await repo.save(entry)
 
-        // Update with changed units and price
+        // Update with changed price
         var updated = entry
-        updated.units = 3
         updated.price = 2.99
         try await repo.save(updated)
 
         let results = try await repo.search(query: "Milch")
         let milch = results.first { $0.name == "Milch" }
         XCTAssertNotNil(milch)
-        XCTAssertEqual(milch?.units, 3)
         XCTAssertEqual(milch?.price ?? 0, 2.99, accuracy: 0.001)
     }
 
@@ -291,13 +284,12 @@ final class PreviewItemCatalogRepositoryTests: XCTestCase {
         let entry1 = ItemCatalogEntry(
             id: UUID().uuidString, ownerPublicId: "preview",
             name: "Zucker", brand: nil, category: nil, productDescription: nil,
-            measure: "kg", units: 1, price: 0.99, imageData: nil
+            measure: "kg", price: 0.99, imageData: nil
         )
         try await repo.save(entry1)
 
         // Save same item with different case – should update, not append
         var entry2 = entry1
-        entry2.units = 5
         entry2.name = "ZUCKER"
         try await repo.save(entry2)
 
@@ -402,7 +394,7 @@ final class ItemSearchViewModelTests: XCTestCase {
             ItemCatalogEntry(
                 id: "1", ownerPublicId: "u", name: "Milch",
                 brand: nil, category: nil, productDescription: nil,
-                measure: "l", units: 1, price: 0, imageData: nil
+                measure: "l", price: 0, imageData: nil
             )
         ]
         sut.searchText = "Milch"
@@ -426,7 +418,7 @@ final class ItemSearchViewModelTests: XCTestCase {
                 id: "entry-1", ownerPublicId: "owner",
                 name: "Butter", brand: "Kerrygold",
                 category: "Molkerei", productDescription: nil,
-                measure: "Packung", units: 1, price: 1.89, imageData: nil
+                measure: "Packung", price: 1.89, imageData: nil
             )
         ]
 
@@ -527,7 +519,6 @@ final class ListViewModelCatalogTests: XCTestCase {
 
         let saved = spy.savedEntries.first
         XCTAssertNotNil(saved)
-        XCTAssertEqual(saved?.units, 3)
         XCTAssertEqual(saved?.measure, "kg")
         XCTAssertEqual(saved?.category, "Grundnahrung")
         XCTAssertEqual(saved?.brand, "Kölln")
@@ -570,15 +561,15 @@ final class ListViewModelCatalogTests: XCTestCase {
         sut.updateItem(item)
         try await Task.sleep(nanoseconds: 100_000_000)
 
-        // Simulate attribute change: increase units
+        // Simulate attribute change: update price
         var updated = item
-        updated.units = 3
+        updated.price = 2.49
         sut.updateItem(updated)
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Both calls should have triggered a save (upsert handles deduplication)
         XCTAssertEqual(spy.savedEntries.count, 2)
-        XCTAssertEqual(spy.savedEntries.last?.units, 3)
+        XCTAssertEqual(spy.savedEntries.last?.price ?? 0, 2.49, accuracy: 0.001)
     }
 }
 

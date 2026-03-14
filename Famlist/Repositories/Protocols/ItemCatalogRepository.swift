@@ -42,7 +42,6 @@ struct ItemCatalogEntry: Codable, Identifiable {
     var category: String?
     var productDescription: String?
     var measure: String
-    var units: Int
     var price: Double
     var imageData: String?
 
@@ -56,7 +55,6 @@ struct ItemCatalogEntry: Codable, Identifiable {
         case category
         case productDescription = "product_description"
         case measure
-        case units
         case price
         case imageData = "image_data"
     }
@@ -73,7 +71,6 @@ struct ItemCatalogEntry: Codable, Identifiable {
             category: item.category,
             productDescription: item.productDescription,
             measure: item.measure,
-            units: item.units,
             price: item.price,
             imageData: item.imageData
         )
@@ -90,7 +87,7 @@ struct ItemCatalogEntry: Codable, Identifiable {
             id: UUID().uuidString,
             imageData: imageData,
             name: name,
-            units: units,
+            units: 1,
             measure: measure,
             price: price,
             isChecked: false,
@@ -122,11 +119,11 @@ protocol ItemCatalogRepository {
 @MainActor
 final class PreviewItemCatalogRepository: ItemCatalogRepository {
     private var entries: [ItemCatalogEntry] = [
-        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Milch", brand: "Weihenstephan", category: "Molkerei", productDescription: "Vollmilch 3,5%", measure: "l", units: 1, price: 1.49, imageData: nil),
-        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Brot", brand: nil, category: "Backwaren", productDescription: nil, measure: "Stück", units: 1, price: 2.99, imageData: nil),
-        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Butter", brand: "Kerrygold", category: "Molkerei", productDescription: nil, measure: "Packung", units: 1, price: 1.89, imageData: nil),
-        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Eier", brand: nil, category: "Molkerei", productDescription: "Freilandeier Gr. M", measure: "Stück", units: 10, price: 3.29, imageData: nil),
-        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Mehl", brand: nil, category: "Grundnahrung", productDescription: "Weizenmehl Typ 405", measure: "kg", units: 1, price: 0.89, imageData: nil)
+        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Milch", brand: "Weihenstephan", category: "Molkerei", productDescription: "Vollmilch 3,5%", measure: "l", price: 1.49, imageData: nil),
+        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Brot", brand: nil, category: "Backwaren", productDescription: nil, measure: "Stück", price: 2.99, imageData: nil),
+        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Butter", brand: "Kerrygold", category: "Molkerei", productDescription: nil, measure: "Packung", price: 1.89, imageData: nil),
+        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Eier", brand: nil, category: "Molkerei", productDescription: "Freilandeier Gr. M", measure: "Stück", price: 3.29, imageData: nil),
+        ItemCatalogEntry(id: UUID().uuidString, ownerPublicId: "preview", name: "Mehl", brand: nil, category: "Grundnahrung", productDescription: "Weizenmehl Typ 405", measure: "kg", price: 0.89, imageData: nil)
     ]
 
     func search(query: String) async throws -> [ItemCatalogEntry] {
