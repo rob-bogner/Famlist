@@ -101,87 +101,85 @@ struct FloatingBottomMenuBar: View {
 
     private var pill: some View {
         HStack(spacing: 0) {
-            // 1. Toggle All
-            pillButton(
-                icon: allChecked ? "checkmark.circle.fill" : "circle",
-                label: allChecked ? "Alle zurücksetzen" : "Alle abhaken"
-            ) {
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    listViewModel.toggleAllItems()
+            // Linke Gruppe: Toggle All + Sort (gleichmäßig auf halber Breite)
+            HStack(spacing: 0) {
+                // 1. Toggle All
+                pillButton(
+                    icon: allChecked ? "checkmark.circle.fill" : "circle",
+                    label: allChecked ? "Alle zurücksetzen" : "Alle abhaken"
+                ) {
+                    let impact = UIImpactFeedbackGenerator(style: .light)
+                    impact.impactOccurred()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        listViewModel.toggleAllItems()
+                    }
                 }
-            }
-
-            Spacer()
-
-            // 2. Sort Menu
-            Menu {
-                Button {
-                    listViewModel.setSortOrder(.category)
+                Spacer()
+                // 2. Sort Menu
+                Menu {
+                    Button {
+                        listViewModel.setSortOrder(.category)
+                    } label: {
+                        Label("Nach Kategorie", systemImage: "square.grid.2x2")
+                    }
+                    Button {
+                        listViewModel.setSortOrder(.alphabetical)
+                    } label: {
+                        Label("Alphabetisch", systemImage: "textformat")
+                    }
+                    Button {
+                        listViewModel.setSortOrder(.dateAdded)
+                    } label: {
+                        Label("Nach Datum", systemImage: "calendar")
+                    }
                 } label: {
-                    Label("Nach Kategorie", systemImage: "square.grid.2x2")
+                    pillIcon(icon: "arrow.up.arrow.down", label: "Sortieren")
                 }
-                Button {
-                    listViewModel.setSortOrder(.alphabetical)
-                } label: {
-                    Label("Alphabetisch", systemImage: "textformat")
-                }
-                Button {
-                    listViewModel.setSortOrder(.dateAdded)
-                } label: {
-                    Label("Nach Datum", systemImage: "calendar")
-                }
-            } label: {
-                pillIcon(icon: "arrow.up.arrow.down", label: "Sortieren")
+                .buttonStyle(PillButtonStyle())
             }
-            .buttonStyle(PillButtonStyle())
+            .frame(maxWidth: .infinity)
 
-            Spacer()
+            // Fixer Platzhalter für den erhabenen Center-Button (74pt + 8pt Puffer je Seite)
+            Spacer().frame(width: 90)
 
-            // Platzhalter für erhabenen Mitte-Button (74pt Button + 3pt Puffer je Seite)
-            Spacer().frame(width: 80)
-
-            Spacer()
-
-            // 4. Clipboard Import
-            pillButton(icon: "doc.on.clipboard", label: "Importieren") {
-                showImportView = true
-            }
-
-            Spacer()
-
-            // 5. Delete Menu
-            pillButton(icon: "trash", label: "Löschen") {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-                showDeleteDialog = true
-            }
-            .disabled(listViewModel.items.isEmpty)
-            .opacity(listViewModel.items.isEmpty ? 0.4 : 1.0)
-
-            Spacer()
-
-            // 6. Hamburger Menu
-            Menu {
-                Button {
-                    showProfileView = true
-                } label: {
-                    Label(String(localized: "menu.profile"), systemImage: "person.circle")
+            // Rechte Gruppe: Clipboard + Trash + Hamburger (gleichmäßig auf halber Breite)
+            HStack(spacing: 0) {
+                // 3. Clipboard Import
+                pillButton(icon: "doc.on.clipboard", label: "Importieren") {
+                    showImportView = true
                 }
-                Divider()
-                Button(role: .destructive) {
-                    session.signOut()
-                } label: {
-                    Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right")
+                Spacer()
+                // 4. Delete Menu
+                pillButton(icon: "trash", label: "Löschen") {
+                    let impact = UIImpactFeedbackGenerator(style: .medium)
+                    impact.impactOccurred()
+                    showDeleteDialog = true
                 }
-            } label: {
-                pillIcon(icon: "line.3.horizontal", label: "Menü")
+                .disabled(listViewModel.items.isEmpty)
+                .opacity(listViewModel.items.isEmpty ? 0.4 : 1.0)
+                Spacer()
+                // 5. Hamburger Menu
+                Menu {
+                    Button {
+                        showProfileView = true
+                    } label: {
+                        Label(String(localized: "menu.profile"), systemImage: "person.circle")
+                    }
+                    Divider()
+                    Button(role: .destructive) {
+                        session.signOut()
+                    } label: {
+                        Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                } label: {
+                    pillIcon(icon: "line.3.horizontal", label: "Menü")
+                }
+                .buttonStyle(PillButtonStyle())
             }
-            .buttonStyle(PillButtonStyle())
+            .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 9)
+        .padding(.vertical, 10)
         .background {
             Capsule()
                 .fill(Color.theme.card)
