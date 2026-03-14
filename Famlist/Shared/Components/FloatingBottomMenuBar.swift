@@ -180,7 +180,7 @@ struct FloatingBottomMenuBar: View {
             }
             .buttonStyle(PillButtonStyle())
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 10)
         .padding(.vertical, 9)
         .background {
             Capsule()
