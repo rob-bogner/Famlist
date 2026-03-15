@@ -101,6 +101,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Item identifiers that currently have an optimistic reorder animation in flight.
     /// While they remain here, we keep the local ordering authoritative to avoid jitter.
     internal var pendingAnimatedItemIDs: Set<String> = []
+
+    /// Suppresses `refreshItemsFromStore()` during the synchronous forEach phase of bulk-delete.
+    /// Prevents per-item SwiftData refreshes from re-rendering the list one item at a time.
+    internal var isBulkDeleting = false
+
+    /// IDs of items currently undergoing a bulk delete operation.
+    /// Populated before deletion starts; cleared lazily as items are confirmed removed from SwiftData.
+    /// Guards against Realtime snapshots or async SyncEngine callbacks reinstating items
+    /// that have been deleted from the UI but are not yet purged from the remote.
+    internal var pendingBulkDeleteIDs: Set<String> = []
     
     /// Debounce task for bulk toggle operations to prevent rapid repeated calls.
     internal var toggleAllDebounceTask: Task<Void, Never>?

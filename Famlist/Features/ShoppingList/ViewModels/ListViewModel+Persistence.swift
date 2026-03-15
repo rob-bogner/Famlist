@@ -165,9 +165,17 @@ extension ListViewModel {
     }
     
     /// Re-reads the current list from SwiftData and publishes it.
+    /// No-op while `isBulkDeleting` is true to avoid per-item re-renders during bulk operations.
+    /// Also lazily clears `pendingBulkDeleteIDs` for items that are no longer active in SwiftData,
+    /// so the guard dissolves naturally as async SyncEngine tasks confirm each deletion.
     internal func refreshItemsFromStore() {
+        guard !isBulkDeleting else { return }
         do {
             let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
+            if !pendingBulkDeleteIDs.isEmpty {
+                let activeIDs = Set(localItems.map { $0.id })
+                pendingBulkDeleteIDs = pendingBulkDeleteIDs.intersection(activeIDs)
+            }
             applyItems(ListViewModel.currentSortOrder.apply(to: localItems))
         } catch {
             logVoid(params: (
@@ -205,9 +213,14 @@ extension ListViewModel {
     }
     
     /// Applies a new array of items to the published state, avoiding redundant UI updates.
+    /// Filters out `pendingBulkDeleteIDs` to prevent Realtime snapshots or async callbacks
+    /// from reinstating items that have been removed from the UI but are still in-flight.
     /// - Parameter newItems: Items we want to present.
     internal func applyItems(_ newItems: [ItemModel]) {
-        var resolvedItems = newItems
+        let safeItems = pendingBulkDeleteIDs.isEmpty
+            ? newItems
+            : newItems.filter { !pendingBulkDeleteIDs.contains($0.id) }
+        var resolvedItems = safeItems
         
         if !pendingAnimatedItemIDs.isEmpty {
             // Preserve the local ordering for items that currently have an optimistic animation in flight.

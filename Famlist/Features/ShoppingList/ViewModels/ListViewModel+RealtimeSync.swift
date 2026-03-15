@@ -42,14 +42,21 @@ extension ListViewModel {
                     // Note: Bulk operation suppression is now handled at the repository level
                     // via suppressRealtimeFetches flag, so snapshots won't arrive during bulk ops.
                     let merged = self.mergeRemoteSnapshot(snapshot)
-                    
+
                     // Prevent unnecessary UI updates if the data hasn't effectively changed.
                     // This is crucial for avoiding "double jumps" or jitters when the server
                     // confirms an optimistic update that is already displayed correctly.
+                    // applyItems internally filters pendingBulkDeleteIDs so deleted items
+                    // are never reinstated from Realtime snapshots.
                     if self.items != merged {
                         self.applyItems(merged)
                     }
-                    
+
+                    // Skip persistence while a bulk delete is in flight.
+                    // Persisting a partial Realtime snapshot would reset `deletedAt` via
+                    // setSyncStatus(.synced) and corrupt the pendingDelete state of items
+                    // that are being asynchronously removed from the remote.
+                    guard self.pendingBulkDeleteIDs.isEmpty else { return }
                     self.persistRemoteSnapshot(snapshot)
                 }
             }

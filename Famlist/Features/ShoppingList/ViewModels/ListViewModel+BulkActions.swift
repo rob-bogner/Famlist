@@ -168,11 +168,22 @@ extension ListViewModel {
     // MARK: - Bulk Delete
 
     /// Löscht alle Artikel der aktuellen Liste.
+    ///
+    /// UI-Strategie:
+    /// 1. IDs als `pendingBulkDeleteIDs` registrieren (schützt gegen Realtime/Async-Reinjection)
+    /// 2. `items` sofort leeren (einmaliger atomarer SwiftUI-Re-Render)
+    /// 3. `isBulkDeleting` supprimiert per-Item-Refreshes während der forEach-Schleife
+    /// 4. Finales `refreshItemsFromStore()` bereinigt `pendingBulkDeleteIDs` für bereits entfernte Items
     func deleteAllItems() {
         let snapshot = items
         logVoid(params: (action: "deleteAllItems", count: snapshot.count))
         UserLog.Data.allItemsDeleted(count: snapshot.count)
+        pendingBulkDeleteIDs.formUnion(snapshot.map { $0.id })
+        items = []
+        isBulkDeleting = true
         snapshot.forEach { deleteItem($0) }
+        isBulkDeleting = false
+        refreshItemsFromStore()
     }
 
     /// Löscht alle abgehakten Artikel der aktuellen Liste.
@@ -180,7 +191,12 @@ extension ListViewModel {
         let toDelete = items.filter { $0.isChecked }
         logVoid(params: (action: "deleteCheckedItems", count: toDelete.count))
         UserLog.Data.checkedItemsDeleted(count: toDelete.count)
+        pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
+        items = items.filter { !$0.isChecked }
+        isBulkDeleting = true
         toDelete.forEach { deleteItem($0) }
+        isBulkDeleting = false
+        refreshItemsFromStore()
     }
 
     /// Löscht alle nicht abgehakten Artikel der aktuellen Liste.
@@ -188,7 +204,12 @@ extension ListViewModel {
         let toDelete = items.filter { !$0.isChecked }
         logVoid(params: (action: "deleteUncheckedItems", count: toDelete.count))
         UserLog.Data.uncheckedItemsDeleted(count: toDelete.count)
+        pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
+        items = items.filter { $0.isChecked }
+        isBulkDeleting = true
         toDelete.forEach { deleteItem($0) }
+        isBulkDeleting = false
+        refreshItemsFromStore()
     }
 
     // MARK: - Sorting
