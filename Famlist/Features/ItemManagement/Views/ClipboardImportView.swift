@@ -288,6 +288,7 @@ struct ClipboardImportView: View {
                     units: parsed.units,
                     measure: parsed.measure,
                     category: parsed.category,
+                    productDescription: parsed.productDescription,
                     brand: parsed.brand
                 )
             }
