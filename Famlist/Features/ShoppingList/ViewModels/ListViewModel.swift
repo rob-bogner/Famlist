@@ -284,7 +284,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             category: normalized.category ?? "nil",
             description: normalized.productDescription ?? "nil"
         ))
-        // Note: User-Log erfolgt im Repository nach erfolgreichem Server-Update
+        let displayNameForLog = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        UserLog.Data.itemUpdated(
+            name: displayNameForLog.isEmpty ? "Artikel" : displayNameForLog,
+            units: normalized.units > 1 ? normalized.units : nil,
+            measure: normalized.measure.isEmpty ? nil : normalized.measure
+        )
 
         // Update personal item catalog (fire-and-forget; keeps catalog in sync with edits)
         if let catalogRepo = catalogRepository {
