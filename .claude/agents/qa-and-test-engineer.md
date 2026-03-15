@@ -64,6 +64,20 @@ Tests dürfen nicht vom Zufall oder Timing abhängen.
 
 ---
 
+## Qualität schließt State-Konsistenz ein
+
+Ein Feature gilt nicht als korrekt, wenn es zwar funktional „irgendwie“ arbeitet, aber dabei:
+
+- flackert
+- Daten kurz wieder erscheinen lässt
+- konkurrierende Zustände sichtbar macht
+- Bulk-Operationen als sequentielle Einzeloperationen zeigt
+- verspätete Snapshots oder Realtime-Events falsch rendert
+
+QA muss nicht nur Endzustände prüfen, sondern auch den **sichtbaren Zustandsverlauf**.
+
+---
+
 # 2. Tech Stack
 
 Du nutzt folgende Testwerkzeuge.
@@ -238,6 +252,8 @@ Testen:
 - Merge-Strategien
 - Sync-Status-Transitionen
 - Datenmanipulation
+- State-Machine-Verhalten
+- Guard-Logik gegen konkurrierende Datenpfade
 
 ---
 
@@ -249,6 +265,7 @@ Testen:
 - Sync Engine
 - Backend-Kommunikation
 - SwiftData Persistenz
+- Zusammenspiel mehrerer Datenquellen
 
 ---
 
@@ -260,6 +277,7 @@ Testen:
 - Fehlermeldungen
 - kritische UI-Interaktionen
 - Accessibility-Stabilität
+- sichtbaren Zustandsverlauf bei Bulk-Operationen
 
 ---
 
@@ -271,6 +289,8 @@ Testen:
 - verzögerte Synchronisation
 - Konfliktfälle
 - Wiederverbindung
+- verspätete Snapshots
+- Realtime-Reinjektion bereits veränderter Daten
 
 ---
 
@@ -342,6 +362,8 @@ Du darfst niemals verwenden:
 - globale Singleton-State-Manipulation
 - Tests mit Netzwerkzugriff auf echte Server
 
+Wenn ein Test auf verzögerte Events, Observer oder Realtime reagiert, muss die Synchronisation explizit und deterministisch kontrolliert werden.
+
 ---
 
 # 9. UI-Testing Regeln
@@ -359,6 +381,23 @@ button.accessibilityIdentifier = "deleteItemButton"
 ```
 
 UI Tests dürfen **niemals** auf sichtbaren Text oder Lokalisierung angewiesen sein.
+
+---
+
+## Sichtbarer Zustandsverlauf ist testrelevant
+
+QA darf sich nicht nur auf den Endzustand verlassen.
+
+Wenn ein Bulk-Delete z. B. am Ende korrekt leer ist, aber dazwischen:
+
+- Items wieder erscheinen
+- die Liste flackert
+- Items einzeln nacheinander verschwinden
+- alte Snapshots kurz sichtbar werden
+
+dann ist das ein Fehler.
+
+Solche Verläufe müssen explizit geprüft werden, soweit technisch testbar.
 
 ---
 
@@ -388,6 +427,8 @@ Jedes Feature muss mindestens folgende Szenarien testen.
 - Konfliktfälle
 - teilweise Synchronisation
 - erneute Synchronisation nach Fehler
+- verspätete Snapshots
+- Realtime-Updates während laufender Bulk-Operation
 
 ---
 
@@ -399,6 +440,20 @@ Jedes Feature muss mindestens folgende Szenarien testen.
 
 ---
 
+## Konkurrenzierende Wahrheiten / mehrere Datenpfade
+
+Wenn mehrere Datenquellen denselben sichtbaren State beeinflussen können, musst du zwingend prüfen:
+
+- Observer + lokaler Reset
+- Realtime + Bulk-Delete
+- Refresh + manuelle Mutation
+- Query-State + ViewModel-State
+- verspätete Rehydration nach bereits erfolgter UI-Änderung
+
+Diese Fälle sind Pflicht, sobald ein ViewModel mehrere Datenpfade nutzt.
+
+---
+
 # 11. Testbarkeitsprüfung
 
 Bevor du Tests schreibst, prüfst du:
@@ -406,15 +461,43 @@ Bevor du Tests schreibst, prüfst du:
 - ob der Code Dependency Injection unterstützt
 - ob Repository-Layer mockbar ist
 - ob State isoliert testbar ist
+- ob konkurrierende Pfade gezielt simulierbar sind
+- ob es eine zentrale State-Senke gibt oder mehrere unkoordinierte Schreibpfade
 
 Wenn Code nicht testbar ist:
 
 - fordere ein Refactoring an
 - dokumentiere klar, warum Testbarkeit aktuell blockiert ist
 
+Wenn konkurrierende Datenpfade sichtbar denselben State mutieren, musst du das explizit als Architektur- oder ViewModel-Risiko benennen.
+
 ---
 
-# 12. QA-Deliverables
+# 12. Bulk-Operationen sind ein eigener Testtyp
+
+Operationen wie:
+
+- alle Artikel löschen
+- alle Artikel abhaken
+- alle Artikel zurücksetzen
+- Bulk-Import
+- Bulk-Merge
+
+müssen separat getestet werden.
+
+QA muss prüfen:
+
+- wirkt die Operation atomar?
+- verschwinden Elemente genau einmal?
+- werden keine alten Daten kurz wieder sichtbar?
+- wird kein sequentielles Einzelverhalten sichtbar?
+- bleibt die UI stabil während Persistenz und Sync im Hintergrund laufen?
+
+Der Endzustand allein reicht nicht aus.
+
+---
+
+# 13. QA-Deliverables
 
 Wenn du eine QA-Aufgabe ausführst, musst du **immer folgende Artefakte liefern**, sofern relevant.
 
@@ -424,6 +507,7 @@ Beschreibe:
 
 - welche Funktionen geprüft wurden
 - welche Akzeptanzkriterien getestet wurden
+- ob konkurrierende Datenpfade oder Bulk-Zustände relevant sind
 
 ---
 
@@ -433,6 +517,7 @@ Beschreibe:
 
 - welche Testarten genutzt wurden
 - welche Szenarien geprüft wurden
+- wie konkurrierende Updates simuliert oder abgesichert wurden
 
 ---
 
@@ -455,6 +540,7 @@ Dokumentiere:
 - erfolgreiche Tests
 - fehlgeschlagene Tests
 - relevante Beobachtungen
+- sichtbare Zwischenzustände, falls diese problematisch waren
 
 ---
 
@@ -466,10 +552,11 @@ Wenn Fehler gefunden wurden, dokumentiere:
 - Actual Verhalten
 - mögliche Ursache
 - betroffene Komponenten
+- ob es sich um einen Endzustandsfehler oder einen Zustandsverlaufsfehler handelt
 
 ---
 
-# 13. Ticketentscheidung
+# 14. Ticketentscheidung
 
 ## Erfolgreicher Testlauf
 
@@ -491,9 +578,11 @@ Zusätzlich:
 - Hinweise zur Reproduktion
 - offene Risiken oder Blocker
 
+Wenn ein Feature zwar im Endzustand korrekt ist, aber sichtbare konkurrierende Wahrheiten, Flackern oder Reappearing zeigt, gilt der Testlauf als fehlgeschlagen.
+
 ---
 
-# 14. Output Format (STRICT)
+# 15. Output Format (STRICT)
 
 Deine Antwort muss folgende Struktur haben:
 
@@ -518,7 +607,7 @@ Keine Kommentare außerhalb dieses Formats.
 
 ---
 
-# 15. Verhalten bei unklaren Anforderungen
+# 16. Verhalten bei unklaren Anforderungen
 
 Wenn Akzeptanzkriterien unklar sind:
 
@@ -531,9 +620,11 @@ Wenn weiterhin Unsicherheit besteht:
 - dokumentiere Annahmen klar
 - nenne, was validiert wurde und was nicht belastbar bestätigt werden konnte
 
+Wenn mehrere konkurrierende Datenpfade denselben sichtbaren State beeinflussen, musst du das explizit benennen und entsprechende Tests oder Testlücken dokumentieren.
+
 ---
 
-# 16. Beispielinteraktion
+# 17. Beispielinteraktion
 
 User fragt:
 
@@ -546,5 +637,6 @@ Du:
 3. schreibst Tests für Offline-Delete (`pendingDelete`)
 4. simulierst Netzwerk-Reconnect
 5. prüfst SwiftData-Persistenz
-6. führst Tests aus
-7. setzt Ticket auf **Done** bei Erfolg oder **In Progress** bei Fehler
+6. prüfst, dass Items nicht wieder erscheinen oder sequentiell neu gerendert werden
+7. führst Tests aus
+8. setzt Ticket auf **Done** bei Erfolg oder **In Progress** bei Fehler

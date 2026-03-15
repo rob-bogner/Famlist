@@ -223,6 +223,7 @@ ViewModels sind verantwortlich für:
 - SwiftData-Operationen
 - Fehlerbehandlung
 - Logging
+- Zustandskoordination zwischen lokaler Persistenz, Beobachtern und Sync-Ereignissen
 
 Views enthalten nur Darstellung und Interaktion.
 
@@ -240,7 +241,145 @@ Das ermöglicht:
 
 ---
 
-# 6. SwiftUI Best Practices
+## Single Writer Principle für sichtbaren UI-State
+
+Sichtbarer Collection-State wie `items`, `lists`, `sections` oder vergleichbare UI-relevante Sammlungen darf **nicht** aus mehreren unkoordinierten Pfaden direkt mutiert werden.
+
+Es muss genau einen autorisierten Schreibpfad geben für den präsentierten UI-State.
+
+Das bedeutet:
+
+- kein direktes `items = ...` an mehreren Stellen
+- kein paralleles Setzen aus `refresh`, `observeTask`, `Realtime`, `applyItems`, `mergeSnapshot` oder ähnlichen Pfaden
+- keine konkurrierenden Wahrheiten zwischen Query-State, ViewModel-State und temporärem UI-State
+
+Erlaubt ist nur:
+
+- mehrere Datenquellen liefern Input
+- aber genau eine zentrale Senke entscheidet, was im UI sichtbar wird
+
+Beispiele für gute zentrale Senken:
+
+- `applyAuthoritativeItemsSnapshot(...)`
+- `transitionItemsState(...)`
+- `setVisibleItems(...)`
+
+Wenn eine Collection aus mehreren Quellen beeinflusst wird, musst du den Schreibpfad zentralisieren.
+
+---
+
+## Konkurrenzierende Wahrheiten sind verboten
+
+Wenn zwei oder mehr Pfade denselben sichtbaren State beeinflussen können, musst du das als Architekturproblem behandeln.
+
+Typische problematische Konstellationen:
+
+- `refreshItemsFromStore()` setzt `items`
+- `observeTask` setzt `items`
+- Realtime-Handler setzt `items`
+- Bulk-Operation setzt `items = []`
+- ein später Snapshot rehydriert gelöschte Items
+
+Solche Muster sind zu vermeiden.
+
+Stattdessen musst du:
+
+- eine zentrale State-Senke definieren
+- Eingangsereignisse vereinheitlichen
+- Guards oder Zustandsregeln an der zentralen Senke platzieren
+- verhindern, dass einzelne Call-Sites Schutzlogik umgehen
+
+---
+
+# 6. Zustands- und Bulk-Operations-Guardrails
+
+## Bool-Flags nur als Ausnahme
+
+Einfache Flags wie `isLoading`, `isSaving`, `isBulkDeleting` sind nur zulässig, wenn der Zustand wirklich trivial ist.
+
+Sobald ein Feature mit mehreren konkurrierenden Datenflüssen arbeitet, reichen Bool-Flags oft nicht aus.
+
+Dann musst du stattdessen eine explizite Zustandsmaschine oder einen klaren Modus verwenden.
+
+Beispiele:
+
+```swift
+enum ItemsViewState {
+    case idle
+    case loading
+    case syncing
+    case bulkDeleting(pendingIDs: Set<UUID>)
+}
+```
+
+oder
+
+```swift
+enum ItemsMutationMode {
+    case normal
+    case bulkDeleteInProgress
+}
+```
+
+---
+
+## Bulk-Operationen müssen atomar wirken
+
+Operationen wie:
+
+- alle Artikel löschen
+- alle Artikel abhaken
+- alle Artikel zurücksetzen
+- Bulk-Import
+- Bulk-Merge
+
+müssen für den Nutzer als **atomarer Zustandswechsel** erscheinen.
+
+Das bedeutet:
+
+- kein sichtbares sequentielles Flackern
+- kein Reappearing gelöschter Items
+- keine konkurrierenden Zwischenzustände aus mehreren Observer-Pfaden
+- kein mehrfaches Rendern derselben Mutation aus verschiedenen Quellen
+
+Wenn Hintergrundpersistenz oder Sync länger dauert, darf dies die UI nicht in einen inkonsistenten Zwischenzustand zurückwerfen.
+
+---
+
+## Suppression / Pending Sets für Bulk-Operationen
+
+Wenn eine Bulk-Operation mit asynchroner Persistenz oder Realtime kombiniert wird, musst du prüfen, ob ein `suppressedIDs`-, `pendingDeletionIDs`- oder vergleichbarer Mechanismus erforderlich ist.
+
+Beispiel bei Bulk Delete:
+
+- betroffene IDs sammeln
+- IDs während der laufenden Operation unterdrücken
+- eingehende Snapshots oder Realtime-Events dagegen filtern
+- erst nach konsistentem Abschluss wieder freigeben
+
+So verhinderst du Reappearing-Items oder doppelte visuelle Mutationen.
+
+---
+
+## Autoritative Snapshot-Regeln
+
+Wenn ein ViewModel Daten aus mehreren Quellen erhält, musst du explizit definieren:
+
+- welche Quelle in welchem Zustand autoritativ ist
+- wann eingehende Snapshots ignoriert, gefiltert oder gemerged werden
+- wie Bulk-Zustände, Tombstones oder Pending-Operationen berücksichtigt werden
+
+Beispiele:
+
+- Normalbetrieb → lokaler SwiftData-Snapshot autoritativ
+- Bulk Delete aktiv → UI-Suppression + Pending-Deletion-Filter autoritativ
+- verspätete Realtime-Events dürfen gelöschte Items nicht erneut sichtbar machen
+
+Diese Regeln dürfen nicht implizit bleiben.
+
+---
+
+# 7. SwiftUI Best Practices
 
 ## Performance
 
@@ -270,6 +409,8 @@ sein.
 
 Vermeide unnötige `@State` oder globale Zustände.
 
+Wenn ein State aus einer Source of Truth ableitbar ist, speichere ihn nicht redundant.
+
 ---
 
 ## Animationen
@@ -286,9 +427,13 @@ Nutze:
 - SwiftUI Transitions
 - moderne Scroll-Effekte
 
+Animationen dürfen niemals Architekturprobleme verdecken.
+
+Wenn ein Flackern, Reappearing oder sequentielles Einzel-Rendern sichtbar ist, musst du zuerst das State-Problem lösen und nicht nur Animationen abschalten.
+
 ---
 
-# 7. UI / UX Standards
+# 8. UI / UX Standards
 
 ## Apple Human Interface Guidelines
 
@@ -337,7 +482,7 @@ statt festen Pixelgrößen.
 
 ---
 
-# 8. Previews
+# 9. Previews
 
 Jede View muss ein Preview besitzen.
 
@@ -366,7 +511,7 @@ Nutze immer:
 
 ---
 
-# 9. Logging und Fehlerbehandlung
+# 10. Logging und Fehlerbehandlung
 
 Famlist verwendet **Dual Logging**.
 
@@ -410,7 +555,7 @@ wenn dadurch Fehler verschwinden.
 
 ---
 
-# 10. UI-Fehlertoleranz
+# 11. UI-Fehlertoleranz
 
 Die UI muss robust reagieren auf:
 
@@ -425,9 +570,11 @@ Beispiele:
 - Fehlermeldungen
 - Offline-Hinweise
 
+Wenn konkurrierende Updates denselben UI-State beeinflussen, musst du die Ursache im State-Management beheben und nicht nur Symptome kaschieren.
+
 ---
 
-# 11. Lokalisierung
+# 12. Lokalisierung
 
 Strings müssen vorbereitbar für Lokalisierung sein.
 
@@ -441,7 +588,7 @@ Keine Hardcoded UI-Strings.
 
 ---
 
-# 12. Frontend Deliverables
+# 13. Frontend Deliverables
 
 Wenn du eine UI-Aufgabe bearbeitest, musst du **immer folgende Artefakte liefern**, sofern relevant.
 
@@ -449,9 +596,11 @@ Wenn du eine UI-Aufgabe bearbeitest, musst du **immer folgende Artefakte liefern
 
 Erkläre kurz:
 
-- welche View erstellt wird
+- welche View erstellt oder geändert wird
 - welche ViewModels existieren
 - wie SwiftData genutzt wird
+- welche State-Senke autoritativ ist
+- ob mehrere Datenquellen koordiniert werden müssen
 
 ---
 
@@ -462,6 +611,9 @@ Beschreibe:
 - State
 - Dependencies
 - Aktionen
+- zentrale Mutationspfade
+- Guards gegen konkurrierende Wahrheiten
+- Bulk-Operation-Modi oder Suppression-Logik, falls relevant
 
 ---
 
@@ -492,10 +644,12 @@ Beschreibe kurz:
 - Benutzerinteraktionen
 - Validierung
 - Fehlermeldungen
+- Verhalten während Bulk-Operationen
+- Verhalten bei verspäteten Snapshots oder Realtime-Updates, falls relevant
 
 ---
 
-# 13. Jira Workflow Regeln
+# 14. Jira Workflow Regeln
 
 Um die Prozessintegrität zu wahren, gelten folgende Regeln.
 
@@ -522,11 +676,12 @@ Informiere den User oder Orchestrator über:
 - umgesetzte UI-Änderungen
 - relevante Architekturannahmen
 - offene Risiken oder UX-Offenpunkte
+- State-Management-Risiken bei konkurrierenden Datenquellen
 - Ticket im Review-Status
 
 ---
 
-# 14. Output Format (STRICT)
+# 15. Output Format (STRICT)
 
 Deine Antwort muss folgende Struktur haben:
 
@@ -551,7 +706,7 @@ Keine Kommentare außerhalb dieses Formats.
 
 ---
 
-# 15. Verhalten bei unklaren Anforderungen
+# 16. Verhalten bei unklaren Anforderungen
 
 Wenn Informationen fehlen:
 
@@ -563,9 +718,11 @@ Dokumentiere diese Annahme kurz.
 
 Wenn echte Implementierungsarbeit erforderlich ist, aber kein sauberer Workflow-Kontext oder kein Ticket vorliegt, weise auf den Orchestrator hin.
 
+Wenn mehrere konkurrierende Datenpfade denselben sichtbaren State beeinflussen, musst du das explizit benennen und als Architektur- bzw. ViewModel-Problem behandeln.
+
 ---
 
-# 16. Beispielinteraktion
+# 17. Beispielinteraktion
 
 User fragt:
 
