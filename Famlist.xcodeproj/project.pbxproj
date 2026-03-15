@@ -90,6 +90,8 @@
 		EEB660882E7F37A9006CB1EB /* SupabaseListsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB660892E7F37A9006CB1EB /* SupabaseListsRepository.swift */; };
 		EEB6608A2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6608B2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift */; };
 		EEB6608C2E7F37A9006CB1EB /* SupabaseItemsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6608D2E7F37A9006CB1EB /* SupabaseItemsRepository.swift */; };
+		BA153D51B6414833B6EBC0EDE6AC0AB7 /* RealtimeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF710BF31EA44859828AEB898AFA3B4D /* RealtimeGate.swift */; };
+		7ABA746BB1564B329526D8A42A0345BB /* SupabaseItemsRepository+CRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93F2688239340989D6E62A531DB4085 /* SupabaseItemsRepository+CRUD.swift */; };
 		EEB6608E2E7F37A9006CB1EB /* MeasureCanonicalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6608F2E7F37A9006CB1EB /* MeasureCanonicalizer.swift */; };
 		EEB660902E7F37A9006CB1EB /* ItemMergeStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB660912E7F37A9006CB1EB /* ItemMergeStrategy.swift */; };
 		EEC58BBD2EC92049000D3915 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BBB2EC92049000D3915 /* AuthService.swift */; };
@@ -223,6 +225,8 @@
 		EEB660892E7F37A9006CB1EB /* SupabaseListsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseListsRepository.swift; sourceTree = "<group>"; };
 		EEB6608B2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseCategoriesRepository.swift; sourceTree = "<group>"; };
 		EEB6608D2E7F37A9006CB1EB /* SupabaseItemsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseItemsRepository.swift; sourceTree = "<group>"; };
+		BF710BF31EA44859828AEB898AFA3B4D /* RealtimeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeGate.swift; sourceTree = "<group>"; };
+		D93F2688239340989D6E62A531DB4085 /* SupabaseItemsRepository+CRUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SupabaseItemsRepository+CRUD.swift"; sourceTree = "<group>"; };
 		EEB6608F2E7F37A9006CB1EB /* MeasureCanonicalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureCanonicalizer.swift; sourceTree = "<group>"; };
 		EEB660912E7F37A9006CB1EB /* ItemMergeStrategy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemMergeStrategy.swift; sourceTree = "<group>"; };
 		EEC58BBB2EC92049000D3915 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -576,6 +580,8 @@
 				EEB660892E7F37A9006CB1EB /* SupabaseListsRepository.swift */,
 				EEB6608B2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift */,
 				EEB6608D2E7F37A9006CB1EB /* SupabaseItemsRepository.swift */,
+				BF710BF31EA44859828AEB898AFA3B4D /* RealtimeGate.swift */,
+				D93F2688239340989D6E62A531DB4085 /* SupabaseItemsRepository+CRUD.swift */,
 				0B951391DB1C9883C6B32320 /* SupabaseItemCatalogRepository.swift */,
 				FA1234003A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift */,
 			);
@@ -872,6 +878,8 @@
 				EEC58BCC2EC92089000D3915 /* SupabaseRealtimeManager.swift in Sources */,
 				EEB6608A2E7F37A9006CB1EB /* SupabaseCategoriesRepository.swift in Sources */,
 				EEB6608C2E7F37A9006CB1EB /* SupabaseItemsRepository.swift in Sources */,
+				BA153D51B6414833B6EBC0EDE6AC0AB7 /* RealtimeGate.swift in Sources */,
+				7ABA746BB1564B329526D8A42A0345BB /* SupabaseItemsRepository+CRUD.swift in Sources */,
 				EEB6608E2E7F37A9006CB1EB /* MeasureCanonicalizer.swift in Sources */,
 				EEB660902E7F37A9006CB1EB /* ItemMergeStrategy.swift in Sources */,
 				EEB6604F2E7F37A9006CB1EB /* ProductImageFullscreenView.swift in Sources */,
