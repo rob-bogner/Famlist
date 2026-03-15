@@ -111,6 +111,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 startImmediately: true
             ) // Start observing immediately in preview mode.
             lvm.configure(connectivityMonitor: connectivityMonitor) // Wire connectivity monitoring for preview repos too, keeping API usage consistent.
+            lvm.configure(syncEngine: PreviewSyncEngine(repository: itemsRepo)) // Preview sync engine: delegates to in-memory repo, no CRDT needed.
             lvm.configure(catalogRepository: PreviewItemCatalogRepository()) // Preview catalog for offline demo.
             lvm.configure(globalCatalogRepository: PreviewGlobalProductCatalogRepository()) // Preview OFF catalog for offline demo.
             self.listViewModel = lvm // Save list VM.

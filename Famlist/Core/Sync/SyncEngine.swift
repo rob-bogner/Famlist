@@ -31,7 +31,7 @@ import Combine
 
 /// Central sync engine coordinating local and remote operations with CRDT conflict resolution
 @MainActor
-final class SyncEngine: ObservableObject {
+final class SyncEngine: ObservableObject, SyncEngineProtocol {
     
     // MARK: - Published State
     

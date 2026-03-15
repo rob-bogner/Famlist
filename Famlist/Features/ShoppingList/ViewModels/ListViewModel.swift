@@ -66,8 +66,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Abstraction over the data source (Supabase or in-memory preview).
     internal let repository: ItemsRepository
     
-    /// Central sync engine for CRDT-based operations (optional, nil in preview mode).
-    internal var syncEngine: SyncEngine?
+    /// Central sync engine for CRDT-based operations.
+    /// Always non-nil at runtime: production uses `SyncEngine`, previews use `PreviewSyncEngine`.
+    internal var syncEngine: (any SyncEngineProtocol)?
     
     /// Current list context; switching replaces the observed stream of items.
     private(set) var listId: UUID
@@ -177,9 +178,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             }
     }
     
-    /// Injects the sync engine for CRDT-based operations
-    /// - Parameter syncEngine: Configured sync engine instance
-    func configure(syncEngine: SyncEngine) {
+    /// Injects the sync engine for CRDT-based operations.
+    /// Pass `SyncEngine` in production, `PreviewSyncEngine` in previews.
+    func configure(syncEngine: any SyncEngineProtocol) {
         self.syncEngine = syncEngine
     }
 
@@ -264,29 +265,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             }
         }
 
-        // Use SyncEngine if available, otherwise fall back to old approach
-        if let syncEngine = syncEngine {
-            Task {
-                await syncEngine.createItem(normalized)
-            }
-        } else {
-            // Legacy path for preview mode without SyncEngine
-            storePendingChange(for: normalized, status: .pendingCreate)
-            
-            Task { [weak self] in
-                guard let self else { return }
-                do {
-                    let created = try await self.repository.createItem(normalized)
-                    await MainActor.run {
-                        self.updateSyncStatus(for: created.id, status: .synced)
-                    }
-                } catch {
-                    await MainActor.run {
-                        self.updateSyncStatus(for: normalized.id, status: .failed)
-                        self.setError(error)
-                    }
-                }
-            }
+        guard let syncEngine else { return }
+        Task {
+            await syncEngine.createItem(normalized)
         }
     }
     
@@ -323,44 +304,15 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             pendingAnimatedItemIDs.insert(normalized.id)
         }
         
-        // Use SyncEngine if available, otherwise fall back to old approach
-        if let syncEngine = syncEngine {
-            Task {
-                await syncEngine.updateItem(normalized)
-                await MainActor.run {
-                    if trackPendingAnimation {
-                        self.pendingAnimatedItemIDs.remove(normalized.id)
-                    }
-                }
-            }
-        } else {
-            // Legacy path for preview mode without SyncEngine
-            storePendingChange(for: normalized, status: .pendingUpdate)
-            
-            Task { [weak self] in
-                guard let self else { return }
-                do {
-                    try await self.repository.updateItem(normalized)
-                    await MainActor.run {
-                        self.updateSyncStatus(for: normalized.id, status: .synced)
-                        if trackPendingAnimation {
-                            self.pendingAnimatedItemIDs.remove(normalized.id)
-                        }
-                        logVoid(params: (action: "updateItem.success", itemId: normalized.id))
-                    }
-                } catch {
-                    await MainActor.run {
-                        self.updateSyncStatus(for: normalized.id, status: .failed)
-                        if trackPendingAnimation {
-                            self.pendingAnimatedItemIDs.remove(normalized.id)
-                        }
-                        self.setError(error)
-                        logVoid(params: (
-                            action: "updateItem.error",
-                            itemId: normalized.id,
-                            error: (error as NSError).localizedDescription
-                        ))
-                    }
+        guard let syncEngine else {
+            if trackPendingAnimation { pendingAnimatedItemIDs.remove(normalized.id) }
+            return
+        }
+        Task {
+            await syncEngine.updateItem(normalized)
+            await MainActor.run {
+                if trackPendingAnimation {
+                    self.pendingAnimatedItemIDs.remove(normalized.id)
                 }
             }
         }
@@ -399,32 +351,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             }
         }
         
-        // Use SyncEngine if available, otherwise fall back to old approach
-        if let syncEngine = syncEngine {
-            Task {
-                await syncEngine.deleteItem(item)
-            }
-        } else {
-            // Legacy path for preview mode without SyncEngine
-            markItemDeleted(item)
-            
-            Task { [weak self] in
-                guard let self else { return }
-                do {
-                    try await self.repository.deleteItem(id: item.id, listId: self.listId)
-                    await MainActor.run {
-                        if let uuid = UUID(uuidString: item.id) {
-                            try? self.itemStore.purge(id: uuid)
-                            self.refreshItemsFromStore()
-                        }
-                    }
-                } catch {
-                    await MainActor.run {
-                        self.updateSyncStatus(for: item.id, status: .failed)
-                        self.setError(error)
-                    }
-                }
-            }
+        guard let syncEngine else { return }
+        Task {
+            await syncEngine.deleteItem(item)
         }
     }
     

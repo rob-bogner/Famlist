@@ -108,6 +108,8 @@
 		EEC58BDA2ED1F86D000D3915 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCD2ED1F86D000D3915 /* ConflictResolver.swift */; };
 		EEC58BDB2ED1F86D000D3915 /* CRDTMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCE2ED1F86D000D3915 /* CRDTMetadata.swift */; };
 		EEC58BDC2ED1F86D000D3915 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */; };
+		EAD401F4F71D41CB8D8D8E6F /* SyncEngineProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAB5986EE2C4B488F5B896F /* SyncEngineProtocol.swift */; };
+		7614C35F1799431499AC13F5 /* PreviewSyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671B14B3EA794FC782A30AE2 /* PreviewSyncEngine.swift */; };
 		EEC58BDD2ED1F86D000D3915 /* OperationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */; };
 		EEC58BE32ED21A6B000D3915 /* ListViewModel+BulkActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */; };
 		EEC58BE72ED346FF000D3915 /* UserLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BE62ED346FF000D3915 /* UserLogger.swift */; };
@@ -237,6 +239,8 @@
 		EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationQueue.swift; sourceTree = "<group>"; };
 		EEC58BD12ED1F86D000D3915 /* RealtimeEventProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeEventProcessor.swift; sourceTree = "<group>"; };
 		EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		5BAB5986EE2C4B488F5B896F /* SyncEngineProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineProtocol.swift; sourceTree = "<group>"; };
+		671B14B3EA794FC782A30AE2 /* PreviewSyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSyncEngine.swift; sourceTree = "<group>"; };
 		EEC58BD32ED1F86D000D3915 /* SyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncMonitor.swift; sourceTree = "<group>"; };
 		EEC58BD42ED1F86D000D3915 /* SyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncOperation.swift; sourceTree = "<group>"; };
 		EEC58BE22ED21A6B000D3915 /* ListViewModel+BulkActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+BulkActions.swift"; sourceTree = "<group>"; };
@@ -697,6 +701,8 @@
 				EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */,
 				EEC58BD12ED1F86D000D3915 /* RealtimeEventProcessor.swift */,
 				EEC58BD22ED1F86D000D3915 /* SyncEngine.swift */,
+				5BAB5986EE2C4B488F5B896F /* SyncEngineProtocol.swift */,
+				671B14B3EA794FC782A30AE2 /* PreviewSyncEngine.swift */,
 				EEC58BD32ED1F86D000D3915 /* SyncMonitor.swift */,
 				EEC58BD42ED1F86D000D3915 /* SyncOperation.swift */,
 			);
@@ -856,6 +862,8 @@
 				EEC58BDA2ED1F86D000D3915 /* ConflictResolver.swift in Sources */,
 				EEC58BDB2ED1F86D000D3915 /* CRDTMetadata.swift in Sources */,
 				EEC58BDC2ED1F86D000D3915 /* SyncEngine.swift in Sources */,
+				EAD401F4F71D41CB8D8D8E6F /* SyncEngineProtocol.swift in Sources */,
+				7614C35F1799431499AC13F5 /* PreviewSyncEngine.swift in Sources */,
 				EEC58BDD2ED1F86D000D3915 /* OperationQueue.swift in Sources */,
 				EEC58BE32ED21A6B000D3915 /* ListViewModel+BulkActions.swift in Sources */,
 				EEC58BCC2EC92089000D3915 /* SupabaseRealtimeManager.swift in Sources */,
