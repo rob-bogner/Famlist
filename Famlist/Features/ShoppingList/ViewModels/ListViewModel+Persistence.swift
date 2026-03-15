@@ -83,12 +83,12 @@ extension ListViewModel {
     }
     
     /// Persists a remote snapshot into SwiftData so offline mode mirrors the latest server state.
+    /// Items in `pendingDelete` state are intentionally left untouched (see `ItemEntity.apply(model:)`).
     internal func persistRemoteSnapshot(_ snapshot: [ItemModel]) {
         do {
             let remoteIds = Set(snapshot.map { $0.id })
             for model in snapshot {
-                let entity = try itemStore.upsert(model: model)
-                entity.setSyncStatus(.synced)
+                try itemStore.upsert(model: model)
             }
             let existing = try itemStore.fetchItems(listId: listId, includeDeleted: true)
             for entity in existing where entity.syncStatus == .synced && !remoteIds.contains(entity.id.uuidString) {

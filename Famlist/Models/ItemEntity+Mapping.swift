@@ -39,8 +39,16 @@ extension ItemEntity {
     }
 
     /// Applies fields from an ItemModel onto the existing SwiftData entity and marks as synced.
+    ///
+    /// **Tombstone guard (FAM-69):** Items in `pendingDelete` state are intentionally skipped.
+    /// A Realtime snapshot may arrive before the remote deletion is confirmed by the server.
+    /// Updating such an entity would resurrect it in the UI and violate Offline-First delete semantics.
+    /// The SyncEngine's queued `.delete` operation will call `purge(id:)` once the server confirms.
+    ///
     /// - Parameter model: Source ItemModel typically fetched from Supabase.
     func apply(model: ItemModel) {
+        guard syncStatus != .pendingDelete else { return }
+
         self.ownerPublicId = model.ownerPublicId
         self.imageData = model.imageData
         self.name = model.name
