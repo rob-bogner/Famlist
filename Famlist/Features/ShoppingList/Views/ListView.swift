@@ -31,7 +31,7 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
 
     var body: some View { // Builds the UI for the list.
         SwiftUI.List { // Uses SwiftUI's List to render rows efficiently.
-            uncheckedItemsSection // First show items that are not checked yet.
+            categoryItemsSections // Show unchecked items grouped by category.
             checkedItemsSection // Then optionally show items that are already checked.
         }
         .listStyle(PlainListStyle()) // Use plain style for a clean, minimal look.
@@ -49,38 +49,48 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
         }
     }
 
-    // MARK: - Unchecked Items
-    /// Section containing all unchecked items with swipe to edit/delete and leading swipe to check.
-    private var uncheckedItemsSection: some View { // Computed view for unchecked items.
-        ForEach(listViewModel.uncheckedItems) { item in // Iterate each unchecked item and make a row.
-            ListRowView(item: item) // Render a row UI for the item.
-                .id("unchecked-\(item.id)") // Section-specific ID prevents view reuse between sections
-                .listRowInsets(DS.List.rowInsets) // Explicit insets for consistent appearance across iOS versions.
-                .listRowSeparator(.hidden) // Hide the default list separators for a card look.
-                .listRowBackground(Color.theme.background) // Match row background to our theme.
-                .swipeActions(allowsFullSwipe: false) { // Trailing swipe actions (no full swipe commit).
-                    Button(String(localized: "swipe.notAvailable"), systemImage: "minus.circle") {} // Placeholder action.
-                        .tint(.orange) // Orange color to indicate not available.
-                    Button(String(localized: "swipe.edit"), systemImage: "pencil.circle") { // Edit action.
-                        listViewModel.selectedItem = item // Set the selected item for editing.
-                        showEditItemView = true // Show the edit sheet.
-                    }
-                    .tint(.blue) // Blue for edit.
-                    Button(String(localized: "swipe.delete"), systemImage: "trash.circle", role: .destructive) { // Delete action.
-                        withAnimation(.easeInOut(duration: 0.3)) { // Animate deletion
-                            listViewModel.deleteItem(item)
-                        }
-                    }
+    // MARK: - Category Sections
+    /// Unerleidigte Items in Kategorieabschnitte aufgeteilt (Supermarkt-Reihenfolge).
+    @ViewBuilder
+    private var categoryItemsSections: some View {
+        ForEach(listViewModel.uncheckedItemsByCategory, id: \.category) { group in
+            Section(header: CategorySectionHeader(category: group.category, itemCount: group.items.count)) {
+                ForEach(group.items) { item in
+                    uncheckedRow(for: item)
                 }
-                .swipeActions(edge: .leading, allowsFullSwipe: true) { // Leading swipe to quickly check the item.
-                    Button(String(localized: "swipe.check"), systemImage: "checkmark.circle") { // Check action.
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { // Spring animation for check
-                            listViewModel.toggleItemChecked(item)
-                        }
-                    }
-                    .tint(.green) // Green for check.
-                }
+            }
         }
+    }
+
+    /// Einzelne Zeile für einen unerledigten Artikel mit Swipe-Aktionen.
+    private func uncheckedRow(for item: ItemModel) -> some View {
+        ListRowView(item: item)
+            .id("unchecked-\(item.id)") // Section-specific ID prevents view reuse between sections
+            .listRowInsets(DS.List.rowInsets)
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.theme.background)
+            .swipeActions(allowsFullSwipe: false) {
+                Button(String(localized: "swipe.notAvailable"), systemImage: "minus.circle") {}
+                    .tint(.orange)
+                Button(String(localized: "swipe.edit"), systemImage: "pencil.circle") {
+                    listViewModel.selectedItem = item
+                    showEditItemView = true
+                }
+                .tint(.blue)
+                Button(String(localized: "swipe.delete"), systemImage: "trash.circle", role: .destructive) {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        listViewModel.deleteItem(item)
+                    }
+                }
+            }
+            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                Button(String(localized: "swipe.check"), systemImage: "checkmark.circle") {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                        listViewModel.toggleItemChecked(item)
+                    }
+                }
+                .tint(.green)
+            }
     }
 
     // MARK: - Checked Items

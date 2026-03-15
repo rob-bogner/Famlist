@@ -85,7 +85,10 @@ struct AddItemView: View {
                             }
                         }
                         .onChange(of: formVM.units) { _, _ in formVM.validateField(.units) }
-                        
+
+                        // Kategorie-Chip-Picker
+                        CategoryPickerRow(selectedCategory: $formVM.category)
+
                         Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

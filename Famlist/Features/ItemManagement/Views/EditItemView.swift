@@ -70,9 +70,8 @@ struct EditItemView: View { // Declares the SwiftUI view for editing items.
                         TextField(String(localized: "field.description.placeholder"), text: $formVM.productDescription) // Description field.
                             .textFieldStyle(.roundedBorder) // Rounded look.
                             .lineLimit(1) // Single-line.
-                        TextField(String(localized: "field.category.placeholder"), text: $formVM.category) // Category field.
-                            .textFieldStyle(.roundedBorder) // Rounded look.
-                            .lineLimit(1) // Single-line.
+                        // Kategorie-Chip-Picker ersetzt das freie Textfeld
+                        CategoryPickerRow(selectedCategory: $formVM.category)
                         VStack(alignment: .leading, spacing: 4) { // Units + measure row with validation.
                             QuantityMeasureRow(units: $formVM.units, measure: $formVM.measure) // Reusable units/measure control.
                             if let unitsError = formVM.unitsError { Text(unitsError).font(.caption2).foregroundColor(.red) } // Show units validation.
