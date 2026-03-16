@@ -12,7 +12,7 @@
 
  🛠 Includes:
  - Live search field with debounce (fires after 2 chars).
- - Top-5 merged results list: personal (★) first, then global OFF products with remote images.
+ - Two-section results list: "Deine Artikel" (personal, ★) and "OpenFood" (global OFF products).
  - "Neu anlegen" button that opens AddItemView with the typed name pre-filled.
  - Toast confirmation after adding an item from the catalog.
 
@@ -132,19 +132,29 @@ struct ItemSearchView: View {
     private var resultsList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(searchVM.results) { result in
-                    Button(action: { addToList(result) }) {
-                        ItemCatalogRow(
-                            entry: result.entry,
-                            source: result.source,
-                            imageUrl: result.imageUrl
-                        )
+                if !searchVM.personalResults.isEmpty {
+                    sectionHeader(String(localized: "itemSearch.section.personal"))
+                    ForEach(searchVM.personalResults) { result in
+                        Button(action: { addToList(result) }) {
+                            ItemCatalogRow(entry: result.entry, source: result.source, imageUrl: result.imageUrl)
+                        }
+                        .buttonStyle(.plain)
+                        if result.id != searchVM.personalResults.last?.id {
+                            Divider().padding(.leading, 68)
+                        }
                     }
-                    .buttonStyle(.plain)
+                }
 
-                    if result.id != searchVM.results.last?.id {
-                        Divider()
-                            .padding(.leading, 68)
+                if !searchVM.globalResults.isEmpty {
+                    sectionHeader(String(localized: "itemSearch.section.global"))
+                    ForEach(searchVM.globalResults) { result in
+                        Button(action: { addToList(result) }) {
+                            ItemCatalogRow(entry: result.entry, source: result.source, imageUrl: result.imageUrl)
+                        }
+                        .buttonStyle(.plain)
+                        if result.id != searchVM.globalResults.last?.id {
+                            Divider().padding(.leading, 68)
+                        }
                     }
                 }
 
@@ -156,6 +166,16 @@ struct ItemSearchView: View {
                 }
             }
         }
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundColor(.secondary)
+            .padding(.horizontal)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - "Neu anlegen" Button

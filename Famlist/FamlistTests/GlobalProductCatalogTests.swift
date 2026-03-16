@@ -13,7 +13,7 @@
  🛠 Includes:
  - GlobalProductEntryTests: Codable roundtrip, toItemCatalogEntry() mapping.
  - PreviewGlobalProductCatalogRepositoryTests: search, case insensitivity, max results, empty search.
- - ItemSearchViewModelMergeTests: personal-first, dedup by name_lower, nil global repo, error fallback.
+ - ItemSearchViewModelMergeTests: separate personalResults / globalResults, nil global repo, error fallback.
  - SearchResultTests: Identifiable, source flag, imageUrl behaviour.
 
  🔰 Notes for Beginners:
@@ -191,7 +191,7 @@ final class PreviewGlobalProductCatalogRepositoryTests: XCTestCase {
     }
 }
 
-// MARK: - ItemSearchViewModel Merge Tests
+// MARK: - ItemSearchViewModel Search Tests
 
 @MainActor
 final class ItemSearchViewModelMergeTests: XCTestCase {
@@ -209,73 +209,85 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
         )
     }
 
-    // MARK: - Personal First
+    // MARK: - Separate Collections
 
-    func test_merge_personalResultsAppearFirst() {
-        let personal = [makePersonalEntry(name: "Milch"), makePersonalEntry(name: "Butter")]
-        let global = [makeGlobalEntry(name: "Brot"), makeGlobalEntry(name: "Käse")]
+    func test_performSearch_populatesPersonalResults() async throws {
+        personalSpy.stubbedResults = [makePersonalEntry(name: "Milch"), makePersonalEntry(name: "Butter")]
+        globalStub.stubbedResults = []
 
-        let merged = sut.merge(personal: personal, global: global)
+        sut.searchText = "Mi"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
 
-        XCTAssertEqual(merged[0].source, .personal)
-        XCTAssertEqual(merged[1].source, .personal)
-        XCTAssertEqual(merged[2].source, .global)
+        XCTAssertEqual(sut.personalResults.count, 2)
+        XCTAssertTrue(sut.personalResults.allSatisfy { $0.source == .personal })
+        XCTAssertTrue(sut.globalResults.isEmpty)
     }
 
-    // MARK: - Dedup by name_lower
+    func test_performSearch_populatesGlobalResults() async throws {
+        personalSpy.stubbedResults = []
+        globalStub.stubbedResults = [makeGlobalEntry(name: "Brot"), makeGlobalEntry(name: "Käse")]
 
-    func test_merge_deduplicatesByNameCaseInsensitive() {
-        let personal = [makePersonalEntry(name: "Milch")]
-        let global = [makeGlobalEntry(name: "milch"), makeGlobalEntry(name: "Butter")]
+        sut.searchText = "Br"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
 
-        let merged = sut.merge(personal: personal, global: global)
-
-        // "milch" from global must be excluded (same lowercased name as personal "Milch")
-        XCTAssertFalse(merged.contains { $0.source == .global && $0.entry.name.lowercased() == "milch" })
-        XCTAssertEqual(merged.count, 2) // personal "Milch" + global "Butter"
+        XCTAssertTrue(sut.personalResults.isEmpty)
+        XCTAssertEqual(sut.globalResults.count, 2)
+        XCTAssertTrue(sut.globalResults.allSatisfy { $0.source == .global })
     }
 
-    // MARK: - Max 5 Total
+    func test_performSearch_bothCollectionsPopulatedIndependently() async throws {
+        personalSpy.stubbedResults = [makePersonalEntry(name: "Milch")]
+        globalStub.stubbedResults = [makeGlobalEntry(name: "Milch"), makeGlobalEntry(name: "Butter")]
 
-    func test_merge_maxFiveResultsTotal() {
-        let personal = (1...4).map { makePersonalEntry(name: "Personal\($0)") }
-        let global = (1...5).map { makeGlobalEntry(name: "Global\($0)") }
+        sut.searchText = "Mi"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
 
-        let merged = sut.merge(personal: personal, global: global)
-
-        XCTAssertLessThanOrEqual(merged.count, 5)
+        // No dedup across collections — both show all results independently
+        XCTAssertEqual(sut.personalResults.count, 1)
+        XCTAssertEqual(sut.globalResults.count, 2)
     }
 
-    func test_merge_exactlyFiveWhenEnoughFromBothSources() {
-        let personal = (1...3).map { makePersonalEntry(name: "P\($0)") }
-        let global = (1...3).map { makeGlobalEntry(name: "G\($0)") }
+    // MARK: - Personal cap (max 5)
 
-        let merged = sut.merge(personal: personal, global: global)
+    func test_performSearch_personalCappedAtFive() async throws {
+        personalSpy.stubbedResults = (1...8).map { makePersonalEntry(name: "P\($0)") }
+        globalStub.stubbedResults = []
 
-        XCTAssertEqual(merged.count, 5)
+        sut.searchText = "PP"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertLessThanOrEqual(sut.personalResults.count, 5)
     }
 
-    func test_merge_fivePersonalFillsAllSlots() {
-        let personal = (1...5).map { makePersonalEntry(name: "P\($0)") }
-        let global = (1...5).map { makeGlobalEntry(name: "G\($0)") }
+    func test_performSearch_globalNotCappedByPersonalSlots() async throws {
+        personalSpy.stubbedResults = (1...5).map { makePersonalEntry(name: "P\($0)") }
+        globalStub.stubbedResults = (1...6).map { makeGlobalEntry(name: "G\($0)") }
 
-        let merged = sut.merge(personal: personal, global: global)
+        sut.searchText = "PP"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
 
-        XCTAssertEqual(merged.count, 5)
-        XCTAssertTrue(merged.allSatisfy { $0.source == .personal })
+        // Global results are independent — full 6 should appear
+        XCTAssertEqual(sut.globalResults.count, 6)
+        XCTAssertLessThanOrEqual(sut.personalResults.count, 5)
     }
 
     // MARK: - Nil global repository
 
-    func test_merge_nilGlobalRepoReturnsOnlyPersonal() {
-        // Create VM without global repo
+    func test_performSearch_nilGlobalRepoLeavesGlobalEmpty() async throws {
         let vmNoGlobal = ItemSearchViewModel(catalogRepository: personalSpy)
-        let personal = [makePersonalEntry(name: "Brot")]
+        personalSpy.stubbedResults = [makePersonalEntry(name: "Brot")]
 
-        let merged = vmNoGlobal.merge(personal: personal, global: [])
+        vmNoGlobal.searchText = "Br"
+        vmNoGlobal.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
 
-        XCTAssertEqual(merged.count, 1)
-        XCTAssertEqual(merged.first?.source, .personal)
+        XCTAssertEqual(vmNoGlobal.personalResults.count, 1)
+        XCTAssertTrue(vmNoGlobal.globalResults.isEmpty)
     }
 
     // MARK: - Error fallback (offline-first)
@@ -286,11 +298,11 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Milch"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000) // wait for debounce + search
+        try await Task.sleep(nanoseconds: 500_000_000)
 
         // Personal results should still appear despite global error
-        XCTAssertFalse(sut.results.isEmpty)
-        XCTAssertTrue(sut.results.allSatisfy { $0.source == .personal })
+        XCTAssertFalse(sut.personalResults.isEmpty)
+        XCTAssertTrue(sut.personalResults.allSatisfy { $0.source == .personal })
         XCTAssertNil(sut.errorMessage) // no error shown to user for global failure
     }
 
@@ -302,32 +314,45 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
         sut.onSearchTextChanged()
         try await Task.sleep(nanoseconds: 500_000_000)
 
-        XCTAssertTrue(sut.results.isEmpty)
+        XCTAssertTrue(sut.personalResults.isEmpty)
+        XCTAssertTrue(sut.globalResults.isEmpty)
         XCTAssertNotNil(sut.errorMessage)
     }
 
     // MARK: - imageUrl behaviour
 
-    func test_merge_personalResultsHaveNilImageUrl() {
-        let personal = [makePersonalEntry(name: "Milch")]
-        let merged = sut.merge(personal: personal, global: [])
+    func test_performSearch_personalResultsHaveNilImageUrl() async throws {
+        personalSpy.stubbedResults = [makePersonalEntry(name: "Milch")]
+        globalStub.stubbedResults = []
 
-        XCTAssertNil(merged.first?.imageUrl)
+        sut.searchText = "Mi"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertNil(sut.personalResults.first?.imageUrl)
     }
 
-    func test_merge_globalResultsCarryImageUrl() {
-        let global = [makeGlobalEntry(name: "Nutella", imageUrl: "https://example.com/img.jpg")]
-        let merged = sut.merge(personal: [], global: global)
+    func test_performSearch_globalResultsCarryImageUrl() async throws {
+        personalSpy.stubbedResults = []
+        globalStub.stubbedResults = [makeGlobalEntry(name: "Nutella", imageUrl: "https://example.com/img.jpg")]
 
-        XCTAssertEqual(merged.first?.imageUrl, "https://example.com/img.jpg")
+        sut.searchText = "Nu"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertEqual(sut.globalResults.first?.imageUrl, "https://example.com/img.jpg")
     }
 
-    func test_merge_globalResultsWithNilImageUrlAreAllowed() {
-        let global = [makeGlobalEntry(name: "Apfel", imageUrl: nil)]
-        let merged = sut.merge(personal: [], global: global)
+    func test_performSearch_globalResultsWithNilImageUrlAreAllowed() async throws {
+        personalSpy.stubbedResults = []
+        globalStub.stubbedResults = [makeGlobalEntry(name: "Apfel", imageUrl: nil)]
 
-        XCTAssertEqual(merged.count, 1)
-        XCTAssertNil(merged.first?.imageUrl)
+        sut.searchText = "Ap"
+        sut.onSearchTextChanged()
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertEqual(sut.globalResults.count, 1)
+        XCTAssertNil(sut.globalResults.first?.imageUrl)
     }
 }
 

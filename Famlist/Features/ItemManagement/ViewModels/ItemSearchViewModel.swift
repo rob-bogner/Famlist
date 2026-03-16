@@ -8,13 +8,13 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - ViewModel for the item search sheet (FAM-60 + OpenFoodFacts integration).
- - Manages the search text, result list, loading state, and merged results.
+ - Manages the search text, result lists, loading state, and error state.
  - Debounces search to avoid spamming Supabase on every keystroke.
 
  🛠 Includes:
- - @Published searchText, results, isSearching, errorMessage.
+ - @Published searchText, personalResults, globalResults, isSearching, errorMessage.
  - Parallel search: personal catalog + optional global OFF catalog.
- - Merge strategy: personal first (max 5 total), fill with global (dedup by name_lower).
+ - Two separate result collections – no merging, no shared slot budget.
  - fetchGlobal(): non-throwing – returns [] on error for offline-first behaviour.
 
  🔰 Notes for Beginners:
@@ -23,7 +23,7 @@
  - globalCatalogRepository is optional; passing nil disables OFF search gracefully.
 
  📝 Last Change:
- - Added global OFF catalog search + SearchResult merge (OpenFoodFacts integration).
+ - Split merged results into personalResults + globalResults (separate sections).
  ------------------------------------------------------------------------
  */
 
@@ -36,7 +36,8 @@ final class ItemSearchViewModel: ObservableObject {
     // MARK: - Published State
 
     @Published var searchText: String = ""
-    @Published var results: [SearchResult] = []
+    @Published var personalResults: [SearchResult] = []
+    @Published var globalResults: [SearchResult] = []
     @Published var isSearching: Bool = false
     @Published var errorMessage: String?
 
@@ -52,7 +53,7 @@ final class ItemSearchViewModel: ObservableObject {
     // MARK: - Constants
 
     private static let maxQueryLength = 100
-    private static let maxTotalResults = 5
+    private static let maxPersonalResults = 5
 
     // MARK: - Init
 
@@ -76,7 +77,8 @@ final class ItemSearchViewModel: ObservableObject {
         searchTask?.cancel()
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard query.count >= 2 else {
-            results = []
+            personalResults = []
+            globalResults = []
             isSearching = false
             errorMessage = nil
             return
@@ -105,11 +107,20 @@ final class ItemSearchViewModel: ObservableObject {
         guard !Task.isCancelled else { return }
 
         if let personal {
-            results = merge(personal: personal, global: global)
+            personalResults = personal
+                .prefix(Self.maxPersonalResults)
+                .map { SearchResult(entry: $0, source: .personal, imageUrl: nil) }
+            globalResults = global
+                .map { globalEntry in
+                    // ownerPublicId "" is a placeholder; addItem() fills it from the auth session.
+                    let entry = globalEntry.toItemCatalogEntry(ownerPublicId: "")
+                    return SearchResult(entry: entry, source: .global, imageUrl: globalEntry.imageUrl)
+                }
         } else {
             // Personal search failed
             errorMessage = String(localized: "itemSearch.error.generic")
-            results = []
+            personalResults = []
+            globalResults = []
         }
         isSearching = false
     }
@@ -136,27 +147,4 @@ final class ItemSearchViewModel: ObservableObject {
         }
     }
 
-    /// Merges personal and global results: personal first, fill up to maxTotalResults with global.
-    /// Deduplicates by lowercased name (personal entries take precedence).
-    func merge(personal: [ItemCatalogEntry], global: [GlobalProductEntry]) -> [SearchResult] {
-        let personalResults = personal
-            .prefix(Self.maxTotalResults)
-            .map { entry in
-                SearchResult(entry: entry, source: .personal, imageUrl: nil)
-            }
-
-        let usedNames = Set(personalResults.map { $0.entry.name.lowercased() })
-        let slotsLeft = Self.maxTotalResults - personalResults.count
-
-        let globalResults = global
-            .filter { !usedNames.contains($0.name.lowercased()) }
-            .prefix(slotsLeft)
-            .map { globalEntry in
-                // ownerPublicId "" is a placeholder; addItem() fills it from the auth session.
-                let entry = globalEntry.toItemCatalogEntry(ownerPublicId: "")
-                return SearchResult(entry: entry, source: .global, imageUrl: globalEntry.imageUrl)
-            }
-
-        return Array(personalResults) + Array(globalResults)
-    }
 }

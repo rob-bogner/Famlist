@@ -343,7 +343,8 @@ final class ItemSearchViewModelTests: XCTestCase {
         sut.searchText = ""
         sut.onSearchTextChanged()
 
-        XCTAssertTrue(sut.results.isEmpty)
+        XCTAssertTrue(sut.personalResults.isEmpty)
+        XCTAssertTrue(sut.globalResults.isEmpty)
         XCTAssertFalse(sut.isSearching)
         XCTAssertNil(sut.errorMessage)
     }
@@ -352,7 +353,8 @@ final class ItemSearchViewModelTests: XCTestCase {
         sut.searchText = "a"
         sut.onSearchTextChanged()
 
-        XCTAssertTrue(sut.results.isEmpty)
+        XCTAssertTrue(sut.personalResults.isEmpty)
+        XCTAssertTrue(sut.globalResults.isEmpty)
         XCTAssertFalse(sut.isSearching)
     }
 
@@ -360,7 +362,8 @@ final class ItemSearchViewModelTests: XCTestCase {
         sut.searchText = "  "
         sut.onSearchTextChanged()
 
-        XCTAssertTrue(sut.results.isEmpty)
+        XCTAssertTrue(sut.personalResults.isEmpty)
+        XCTAssertTrue(sut.globalResults.isEmpty)
         XCTAssertFalse(sut.isSearching)
     }
 
@@ -407,7 +410,8 @@ final class ItemSearchViewModelTests: XCTestCase {
         sut.onSearchTextChanged()
         try await Task.sleep(nanoseconds: 500_000_000)
 
-        XCTAssertTrue(sut.results.isEmpty)
+        XCTAssertTrue(sut.personalResults.isEmpty)
+        XCTAssertTrue(sut.globalResults.isEmpty)
     }
 
     // MARK: - Successful Search
@@ -426,8 +430,8 @@ final class ItemSearchViewModelTests: XCTestCase {
         sut.onSearchTextChanged()
         try await Task.sleep(nanoseconds: 500_000_000)
 
-        XCTAssertEqual(sut.results.count, 1)
-        XCTAssertEqual(sut.results.first?.entry.name, "Butter")
+        XCTAssertEqual(sut.personalResults.count, 1)
+        XCTAssertEqual(sut.personalResults.first?.entry.name, "Butter")
         XCTAssertFalse(sut.isSearching)
         XCTAssertNil(sut.errorMessage)
     }

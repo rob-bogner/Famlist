@@ -854,6 +854,40 @@
         }
       }
     },
+    "itemSearch.section.global" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenFood"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenFood"
+          }
+        }
+      }
+    },
+    "itemSearch.section.personal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Artikel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Items"
+          }
+        }
+      }
+    },
     "itemSearch.added" : {
       "extractionState" : "manual",
       "localizations" : {
