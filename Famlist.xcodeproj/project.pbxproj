@@ -186,7 +186,6 @@
 		EE7383662F67EEB400A16B91 /* MeasureCanonicalizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureCanonicalizerTests.swift; sourceTree = "<group>"; };
 		EE7BC7CB2F54ECCD00B47D9A /* FloatingBottomMenuBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingBottomMenuBar.swift; sourceTree = "<group>"; };
 		EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
-		EEA1455B2E7B106B00A043A5 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
 		EEB660002E7F37A9006CB1EB /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
 		EEB660012E7F37A9006CB1EB /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		EEB660032E7F37A9006CB1EB /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
@@ -313,7 +312,6 @@
 			isa = PBXGroup;
 			children = (
 				EEB6603E2E7F37A9006CB1EB /* Famlist */,
-				EEA1455B2E7B106B00A043A5 /* Secrets.plist */,
 				EE69A4E32B14CB78007C3515 /* Products */,
 			);
 			sourceTree = "<group>";
