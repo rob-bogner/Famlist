@@ -1,6 +1,6 @@
 /*
  ClipboardImportParserTests.swift
- Created: 19.10.2025 | Updated: 14.03.2026
+ Created: 19.10.2025 | Updated: 16.03.2026
 
  Purpose: Unit-Tests für ClipboardImportParser
 
@@ -9,6 +9,7 @@
  - 14.03.2026: FAM-60 – Ranges, Brüche, Komma-/Klammer-Notizen
  - 14.03.2026: FAM-60 cont. – Pipeline-Refactor: führende Klammern, Dezimalzahlen,
                kanonisches Measure-Mapping, nicht unterstützte Einheiten verworfen
+ - 16.03.2026: FAM-71 – Tests für ParsedItem.stableId(forList:)
 */
 
 import XCTest
@@ -372,6 +373,51 @@ final class ClipboardImportParserTests: XCTestCase {
         XCTAssertEqual(item.units, 1)
         XCTAssertEqual(item.measure, "")
         XCTAssertEqual(item.name, "Milch oder Sahne")
+    }
+
+    // MARK: - FAM-71: Deterministische Item-IDs (stableId)
+
+    private let fixedListId = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+
+    /// Gleicher Name + gleiche Liste → immer dieselbe ID.
+    func test_stableId_deterministicForSameInput() {
+        let result = parse("[G]\nMilch")
+        let item = result.items[0]
+        let id1 = item.stableId(forList: fixedListId)
+        let id2 = item.stableId(forList: fixedListId)
+        XCTAssertEqual(id1, id2)
+    }
+
+    /// Stabiles ID ist ein gültiger UUID-String.
+    func test_stableId_isValidUUIDString() {
+        let result = parse("[G]\nButter")
+        let id = result.items[0].stableId(forList: fixedListId)
+        XCTAssertNotNil(UUID(uuidString: id))
+    }
+
+    /// Unterschiedliche Namen → unterschiedliche IDs.
+    func test_stableId_differentNamesDifferentIds() {
+        let result = parse("[G]\nMilch\nButter")
+        let idMilch  = result.items[0].stableId(forList: fixedListId)
+        let idButter = result.items[1].stableId(forList: fixedListId)
+        XCTAssertNotEqual(idMilch, idButter)
+    }
+
+    /// Unterschiedliche Listen → unterschiedliche IDs.
+    func test_stableId_differentListsDifferentIds() {
+        let result = parse("[G]\nMilch")
+        let item  = result.items[0]
+        let listA = UUID(uuidString: "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")!
+        let listB = UUID(uuidString: "BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB")!
+        XCTAssertNotEqual(item.stableId(forList: listA), item.stableId(forList: listB))
+    }
+
+    /// ID stimmt mit UUID.deterministicItemID überein – konsistent mit SyncEngine.
+    func test_stableId_matchesDeterministicItemID() {
+        let result = parse("[G]\nHähnchenbrust")
+        let item = result.items[0]
+        let expected = UUID.deterministicItemID(listId: fixedListId, name: item.name).uuidString
+        XCTAssertEqual(item.stableId(forList: fixedListId), expected)
     }
 
     // MARK: - Hilfsmethode

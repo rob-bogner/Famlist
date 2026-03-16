@@ -6,6 +6,10 @@
  📄 CRUD extension for SupabaseItemsRepository (extracted FAM-67).
  📝 Shared row structs (ItemRow, ItemUpdatePayload) replace the four
     duplicated local structs from the original monolith.
+
+ CHANGELOG:
+ - 16.03.2026: FAM-72 – MeasureCanonicalizer.canonicalize() in createItem,
+               updateItem, batchUpdateItems (Defense in depth).
 */
 
 import Foundation
@@ -104,6 +108,8 @@ extension SupabaseItemsRepository {
 
     func createItem(_ item: ItemModel) async throws -> ItemModel {
         let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID()
+        // FAM-72: Defense in depth – normalize measure regardless of caller
+        let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
         let row = ItemRow(
             id: UUID(uuidString: item.id) ?? UUID(),
             listId: listUUID,
@@ -111,7 +117,7 @@ extension SupabaseItemsRepository {
             imageData: item.imageData,
             name: item.name,
             units: item.units,
-            measure: item.measure,
+            measure: canonicalMeasure,
             price: item.price,
             isChecked: item.isChecked,
             category: item.category,
@@ -133,7 +139,7 @@ extension SupabaseItemsRepository {
             imageData: item.imageData,
             name: item.name,
             units: item.units,
-            measure: item.measure,
+            measure: canonicalMeasure,
             price: item.price,
             isChecked: item.isChecked,
             category: item.category,
@@ -161,11 +167,13 @@ extension SupabaseItemsRepository {
             )
         }
         let listId = UUID(uuidString: listIdString) ?? UUID()
+        // FAM-72: Defense in depth – normalize measure regardless of caller
+        let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
         let payload = ItemUpdatePayload(
             imageData: item.imageData,
             name: item.name,
             units: item.units,
-            measure: item.measure,
+            measure: canonicalMeasure,
             price: item.price,
             isChecked: item.isChecked,
             category: item.category,
@@ -212,11 +220,12 @@ extension SupabaseItemsRepository {
                                 userInfo: [NSLocalizedDescriptionKey: "Missing list_id"]
                             )
                         }
+                        // FAM-72: Defense in depth – normalize measure regardless of caller
                         let payload = ItemUpdatePayload(
                             imageData: item.imageData,
                             name: item.name,
                             units: item.units,
-                            measure: item.measure,
+                            measure: MeasureCanonicalizer.canonicalize(item.measure),
                             price: item.price,
                             isChecked: item.isChecked,
                             category: item.category,

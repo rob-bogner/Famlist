@@ -1,6 +1,6 @@
 /*
  ClipboardImportParser.swift
- Created: 19.10.2025 | Updated: 14.03.2026
+ Created: 19.10.2025 | Updated: 16.03.2026
 
  Purpose: Mehrstufige Pipeline zum Parsen von Einkaufslisten aus der Zwischenablage.
 
@@ -10,6 +10,7 @@
  - 14.03.2026: FAM-60 cont. – Robuste Pipeline-Architektur:
                führende Klammer-Mengen (2), Dezimalzahlen, kanonisches Measure-Mapping,
                nicht unterstützte Einheiten werden verworfen (nicht in Name übernommen)
+ - 16.03.2026: FAM-71 – ParsedItem.stableId(forList:) via UUID.deterministicItemID
 */
 
 import Foundation
@@ -36,6 +37,15 @@ struct ClipboardImportParser {
         let category: String?
         let brand: String?          // Immer nil; API-Kompatibilität
         let productDescription: String?
+
+        /// Gibt eine deterministische Item-ID zurück, die für gleichen Listenkontext
+        /// und gleichen Artikelnamen stets identisch ist.
+        ///
+        /// Delegiert an `UUID.deterministicItemID(listId:name:)` – dieselbe Funktion,
+        /// die der SyncEngine nutzt – damit IDs über alle Erstellungspfade konsistent sind.
+        func stableId(forList listId: UUID) -> String {
+            UUID.deterministicItemID(listId: listId, name: name).uuidString
+        }
     }
 
     struct ParseResult {

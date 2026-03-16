@@ -274,16 +274,24 @@ struct ClipboardImportView: View {
     private func importSelectedItems() {
         guard let result = parseResult else { return }
         guard !isLoading else { return }
-        
+
         isLoading = true
-        
+
+        let currentListId = listViewModel.listId
+        let existingIds = Set(listViewModel.items.map(\.id))
+
         let itemsToImport = selectedItems
             .sorted()
             .compactMap { index -> ItemModel? in
                 guard index < result.items.count else { return nil }
                 let parsed = result.items[index]
-                
+                let stableId = parsed.stableId(forList: currentListId)
+
+                // FAM-71: Bereits vorhandene Items per deterministischer ID überspringen
+                guard !existingIds.contains(stableId) else { return nil }
+
                 return ItemModel(
+                    id: stableId,
                     name: parsed.name,
                     units: parsed.units,
                     measure: parsed.measure,
@@ -292,20 +300,20 @@ struct ClipboardImportView: View {
                     brand: parsed.brand
                 )
             }
-        
+
         // User-friendly log
         UserLog.Data.clipboardImport(count: itemsToImport.count)
-        
+
         // Add items to list
         Task { @MainActor in
             defer {
                 isLoading = false
             }
-            
+
             for item in itemsToImport {
                 listViewModel.addItem(item)
             }
-            
+
             dismiss()
         }
     }
