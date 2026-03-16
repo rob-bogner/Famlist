@@ -4,12 +4,14 @@
  Created on: 15.03.2026
 
  📄 CRUD extension for SupabaseItemsRepository (extracted FAM-67).
- 📝 Shared row structs (ItemRow, ItemUpdatePayload) replace the four
-    duplicated local structs from the original monolith.
+ 📝 Single ItemRow struct used for both upsert and update – eliminates
+    payload duplication (FAM-73).
 
  CHANGELOG:
  - 16.03.2026: FAM-72 – MeasureCanonicalizer.canonicalize() in createItem,
                updateItem, batchUpdateItems (Defense in depth).
+ - 16.03.2026: FAM-73 – ItemUpdatePayload entfernt; ItemRow für alle Writes
+               genutzt. Custom encode(to:) schützt CRDT-Felder via encodeIfPresent.
 */
 
 import Foundation
@@ -17,8 +19,15 @@ import Supabase
 
 // MARK: - Private Row Types
 
-/// Codable payload for upsert (createItem).
-private struct ItemRow: Codable {
+/// Single Codable payload used for both upsert (createItem) and update operations.
+///
+/// **Encoding rules (FAM-73):**
+/// - Regular mutable fields (imageData, category, etc.) use `encode` so that an explicit nil
+///   clears the column — intentional user action (e.g. removing a photo).
+/// - CRDT fields use `encodeIfPresent` to never accidentally overwrite existing metadata with null.
+/// - Identity fields (id, listId) are always encoded; including them in UPDATE payloads is safe
+///   in PostgREST because the WHERE filter matches the same values.
+private struct ItemRow: Encodable {
     let id: UUID
     let listId: UUID
     let ownerPublicId: String?
@@ -51,40 +60,12 @@ private struct ItemRow: Codable {
         case tombstone
         case lastModifiedBy = "last_modified_by"
     }
-}
-
-/// Encodable payload for update operations.
-/// Shared by both `updateItem` and `batchUpdateItems` to avoid duplication.
-private struct ItemUpdatePayload: Encodable {
-    let imageData: String?
-    let name: String
-    let units: Int
-    let measure: String
-    let price: Double
-    let isChecked: Bool
-    let category: String?
-    let productDescription: String?
-    let brand: String?
-    let hlcTimestamp: Int64?
-    let hlcCounter: Int?
-    let hlcNodeId: String?
-    let tombstone: Bool?
-    let lastModifiedBy: String?
-
-    enum CodingKeys: String, CodingKey {
-        case imageData = "imagedata"
-        case name, units, measure, price, isChecked, category
-        case productDescription = "productdescription"
-        case brand
-        case hlcTimestamp = "hlc_timestamp"
-        case hlcCounter = "hlc_counter"
-        case hlcNodeId = "hlc_node_id"
-        case tombstone
-        case lastModifiedBy = "last_modified_by"
-    }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(listId, forKey: .listId)
+        try container.encodeIfPresent(ownerPublicId, forKey: .ownerPublicId)
         try container.encode(imageData, forKey: .imageData)
         try container.encode(name, forKey: .name)
         try container.encode(units, forKey: .units)
@@ -171,7 +152,10 @@ extension SupabaseItemsRepository {
         let listId = UUID(uuidString: listIdString) ?? UUID()
         // FAM-72: Defense in depth – normalize measure regardless of caller
         let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
-        let payload = ItemUpdatePayload(
+        let payload = ItemRow(
+            id: UUID(uuidString: item.id) ?? UUID(),
+            listId: listId,
+            ownerPublicId: item.ownerPublicId,
             imageData: item.imageData,
             name: item.name,
             units: item.units,
@@ -223,7 +207,10 @@ extension SupabaseItemsRepository {
                             )
                         }
                         // FAM-72: Defense in depth – normalize measure regardless of caller
-                        let payload = ItemUpdatePayload(
+                        let payload = ItemRow(
+                            id: UUID(uuidString: item.id) ?? UUID(),
+                            listId: listUUID,
+                            ownerPublicId: item.ownerPublicId,
                             imageData: item.imageData,
                             name: item.name,
                             units: item.units,
