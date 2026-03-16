@@ -10,7 +10,7 @@
    and `setSyncStatus(.synced)` never clears `deletedAt`.
 
  📝 Last Change:
- - Initial creation for FAM-69 regression coverage.
+ - FAM-68: Added test_toItemModel_includesCRDTFields (mapping gap fix).
  ------------------------------------------------------------------------
 */
 
@@ -166,5 +166,47 @@ final class ItemEntityTombstoneTests: XCTestCase {
 
         XCTAssertNil(entity.deletedAt, "pendingRecovery must clear deletedAt (explicit restore path)")
         XCTAssertEqual(entity.syncStatus, .pendingRecovery)
+    }
+
+    // MARK: - FAM-68: toItemModel() must include CRDT fields
+
+    func test_toItemModel_includesCRDTFields() {
+        // Given: entity with all CRDT fields populated
+        let entity = makeEntity()
+        entity.hlcTimestamp = 999_000
+        entity.hlcCounter = 3
+        entity.hlcNodeId = "device-abc"
+        entity.tombstone = true
+        entity.lastModifiedBy = "user-xyz"
+
+        // When
+        let model = entity.toItemModel()
+
+        // Then: all CRDT fields must round-trip through toItemModel()
+        XCTAssertEqual(model.hlcTimestamp, 999_000, "hlcTimestamp must be included in toItemModel()")
+        XCTAssertEqual(model.hlcCounter, 3, "hlcCounter must be included in toItemModel()")
+        XCTAssertEqual(model.hlcNodeId, "device-abc", "hlcNodeId must be included in toItemModel()")
+        XCTAssertEqual(model.tombstone, true, "tombstone must be included in toItemModel()")
+        XCTAssertEqual(model.lastModifiedBy, "user-xyz", "lastModifiedBy must be included in toItemModel()")
+    }
+
+    func test_toItemModel_nilCRDTFields_propagateAsNil() {
+        // Given: entity without CRDT fields (backward-compat scenario)
+        let entity = makeEntity()
+        entity.hlcTimestamp = nil
+        entity.hlcCounter = nil
+        entity.hlcNodeId = nil
+        entity.tombstone = nil
+        entity.lastModifiedBy = nil
+
+        // When
+        let model = entity.toItemModel()
+
+        // Then: nil fields must not be fabricated
+        XCTAssertNil(model.hlcTimestamp)
+        XCTAssertNil(model.hlcCounter)
+        XCTAssertNil(model.hlcNodeId)
+        XCTAssertNil(model.tombstone)
+        XCTAssertNil(model.lastModifiedBy)
     }
 }

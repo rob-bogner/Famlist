@@ -16,7 +16,7 @@ import Foundation // Needed for UUID conversion between String and UUID represen
 
 /// Mapping helpers from ItemEntity (SwiftData) to ItemModel (shared model for UI/network).
 extension ItemEntity {
-    /// Builds an ItemModel snapshot from the SwiftData entity.
+    /// Builds an ItemModel snapshot from the SwiftData entity, including CRDT metadata.
     /// - Returns: A fully populated ItemModel instance.
     func toItemModel() -> ItemModel {
         ItemModel(
@@ -34,7 +34,12 @@ extension ItemEntity {
             listId: listId.uuidString,
             ownerPublicId: ownerPublicId,
             createdAt: createdAt,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            hlcTimestamp: hlcTimestamp,
+            hlcCounter: hlcCounter,
+            hlcNodeId: hlcNodeId,
+            tombstone: tombstone,
+            lastModifiedBy: lastModifiedBy
         )
     }
 

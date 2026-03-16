@@ -2,24 +2,28 @@
  ConflictResolver.swift
  Famlist
  Created on: 22.11.2025
- Last updated on: 22.11.2025
+ Last updated on: 16.03.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
  - CRDT-based conflict resolution using Last-Write-Wins semantics with HLC.
- 
+ - Single merge decision point: private winner(localMeta:remoteMeta:)
+ - Both resolve() and shouldApplyRemote() delegate to winner().
+
  🛠 Includes:
- - resolve() method merging local and remote ItemModels
- - Field-level conflict resolution
- - Tombstone handling for deletions
- 
+ - winner(): private core — tombstone + HLC rules
+ - resolve(): public full-result API (item + metadata)
+ - shouldApplyRemote(): public boolean convenience, delegates to winner()
+ - resolveFieldLevel(): optional field-level merge (advanced, not used in main path)
+
  🔰 Notes for Beginners:
- - Uses HLC to determine which version of each field is newer
  - Tombstones (deletions) always win to ensure eventual consistency
+ - Local tombstones are protected: a newer non-tombstoned remote can never un-delete
  - Deterministic resolution ensures all devices converge to same state
- 
+
  📝 Last Change:
- - Initial implementation for CRDT-based sync architecture
+ - FAM-68: Extracted winner() as single merge core; fixed tombstone-protection bug
+   in shouldApplyRemote(); resolve() now delegates instead of reimplementing
  ------------------------------------------------------------------------
 */
 
@@ -28,48 +32,41 @@ import Foundation
 /// Resolves conflicts between local and remote item versions using CRDT semantics
 @MainActor
 final class ConflictResolver {
-    
-    // MARK: - Resolution Strategy
-    
-    /// Merges two ItemModels using Last-Write-Wins Element-Set CRDT semantics
-    /// - Parameters:
-    ///   - local: Local version of the item
-    ///   - remote: Remote version of the item
-    ///   - localMeta: CRDT metadata for local version
-    ///   - remoteMeta: CRDT metadata for remote version
-    /// - Returns: Merged item with the most recent values for each field
+
+    // MARK: - Single Merge Core
+
+    /// The single merge decision point. All conflict resolution delegates here.
+    ///
+    /// Rules (in priority order):
+    /// 1. If either side is a tombstone, the tombstone wins.
+    ///    If both are tombstones, the causally later one wins.
+    /// 2. Last-Write-Wins via HLC.
+    ///
+    /// - Returns: The winning `CRDTMetadata` (local or remote).
+    private func winner(localMeta: CRDTMetadata, remoteMeta: CRDTMetadata) -> CRDTMetadata {
+        if localMeta.tombstone || remoteMeta.tombstone {
+            if localMeta.tombstone && remoteMeta.tombstone {
+                return remoteMeta.hlc.happenedBefore(localMeta.hlc) ? localMeta : remoteMeta
+            }
+            return localMeta.tombstone ? localMeta : remoteMeta
+        }
+        return remoteMeta.hlc.happenedBefore(localMeta.hlc) ? localMeta : remoteMeta
+    }
+
+    // MARK: - Public API
+
+    /// Merges two ItemModels using Last-Write-Wins Element-Set CRDT semantics.
+    /// Delegates the winner decision to `winner(localMeta:remoteMeta:)`.
+    ///
+    /// - Returns: The winning `(item, metadata)` pair.
     func resolve(
         local: ItemModel,
         remote: ItemModel,
         localMeta: CRDTMetadata,
         remoteMeta: CRDTMetadata
     ) -> (item: ItemModel, metadata: CRDTMetadata) {
-        
-        // RULE 1: Tombstones always win (deletions propagate)
-        if localMeta.tombstone || remoteMeta.tombstone {
-            // If both are tombstones, compare HLC to pick the more recent deletion
-            // Otherwise, the tombstone always wins over non-tombstone
-            let useLocal: Bool
-            if localMeta.tombstone && remoteMeta.tombstone {
-                // Both deleted: use Last-Write-Wins based on HLC
-                useLocal = remoteMeta.hlc.happenedBefore(localMeta.hlc)
-            } else {
-                // Only one is deleted: tombstone always wins
-                useLocal = localMeta.tombstone
-            }
-            let winningMeta = useLocal ? localMeta : remoteMeta
-            let winningItem = useLocal ? local : remote
-            return (winningItem, winningMeta)
-        }
-        
-        // RULE 2: Use HLC to determine which version is newer
-        let useLocal = remoteMeta.hlc.happenedBefore(localMeta.hlc)
-        
-        if useLocal {
-            return (local, localMeta)
-        } else {
-            return (remote, remoteMeta)
-        }
+        let winningMeta = winner(localMeta: localMeta, remoteMeta: remoteMeta)
+        return winningMeta == localMeta ? (local, localMeta) : (remote, remoteMeta)
     }
     
     /// Performs field-level merge for more granular conflict resolution (optional advanced feature)
@@ -123,19 +120,13 @@ final class ConflictResolver {
         mergedFields.updateField(key, hlc: remoteHLC, modifiedBy: remoteFields.fields[key]?.lastModifiedBy ?? "")
     }
 
-    /// Determines if a remote update should be applied given local state
-    /// - Parameters:
-    ///   - localMeta: Local CRDT metadata
-    ///   - remoteMeta: Remote CRDT metadata
-    /// - Returns: True if remote should be applied, false if local is newer
+    /// Returns whether the remote version should replace the local version.
+    /// Delegates to `winner(localMeta:remoteMeta:)` — the single merge decision point.
+    ///
+    /// This also protects local tombstones: a non-tombstoned remote can never
+    /// overwrite a locally-tombstoned item, regardless of HLC ordering.
     func shouldApplyRemote(localMeta: CRDTMetadata, remoteMeta: CRDTMetadata) -> Bool {
-        // Tombstones always apply
-        if remoteMeta.tombstone {
-            return true
-        }
-        
-        // Don't overwrite with older data
-        return localMeta.hlc.happenedBefore(remoteMeta.hlc)
+        return winner(localMeta: localMeta, remoteMeta: remoteMeta) == remoteMeta
     }
 }
 

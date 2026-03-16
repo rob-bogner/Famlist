@@ -129,8 +129,10 @@ extension SupabaseItemsRepository {
             tombstone: item.tombstone,
             lastModifiedBy: item.lastModifiedBy
         )
-        // Upsert instead of insert: if the deterministic UUID already exists on the server
-        // (from a concurrent creation on another device), LWW-HLC resolves the conflict.
+        // Upsert instead of insert: if the UUID already exists on the server (concurrent
+        // creation on another device), the DB accepts the last writer's payload at the
+        // storage layer. The HLC embedded in the row ensures that the subsequent Realtime
+        // event is correctly arbitrated by ConflictResolver on every observing device.
         _ = try await client.from("items").upsert(row, onConflict: "id").execute()
         await fetchAndYield(listUUID)
         let model = ItemModel(
