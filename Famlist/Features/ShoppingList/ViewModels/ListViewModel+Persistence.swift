@@ -160,6 +160,17 @@ extension ListViewModel {
         }
     }
     
+    /// Returns ALL items for the current list from SwiftData, including soft-deleted ones.
+    /// Used by `ImportMergeService` to make correct merge decisions (create / reactivate / update).
+    internal func fetchAllLocalItems() -> [ItemModel] {
+        do {
+            return try itemStore.fetchItems(listId: listId, includeDeleted: true).map { $0.toItemModel() }
+        } catch {
+            logVoid(params: (note: "fetchAllLocalItems.error", error: (error as NSError).localizedDescription))
+            return []
+        }
+    }
+
     /// Re-reads the current list from SwiftData and publishes it.
     /// No-op while `isBulkDeleting` is true to avoid per-item re-renders during bulk operations.
     /// Also lazily clears `pendingBulkDeleteIDs` for items that are no longer active in SwiftData,

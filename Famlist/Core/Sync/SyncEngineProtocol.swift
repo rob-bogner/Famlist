@@ -44,4 +44,8 @@ protocol SyncEngineProtocol: AnyObject {
 
     /// Resets a permanently-failed item and re-queues it for sync.
     func retryItem(_ item: ItemModel) async
+
+    /// Applies a batch of merged import targets atomically:
+    /// one local write + one queue operation per target, single save(), no per-item processQueue().
+    func applyBulkItems(_ targets: [ImportTarget]) async
 }

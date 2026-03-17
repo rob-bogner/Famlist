@@ -67,4 +67,7 @@ final class PreviewSyncEngine: SyncEngineProtocol {
 
     /// No-op: preview mode has no failed operations to retry.
     func retryItem(_ item: ItemModel) async {}
+
+    /// No-op: preview mode has no operation queue for bulk imports.
+    func applyBulkItems(_ targets: [ImportTarget]) async {}
 }

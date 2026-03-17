@@ -274,54 +274,33 @@ struct ClipboardImportView: View {
     private func importSelectedItems() {
         guard let result = parseResult else { return }
         guard !isLoading else { return }
-
         isLoading = true
 
-        let currentListId = listViewModel.listId
-        let existingIds = Set(listViewModel.items.map(\.id))
-
-        let itemsToImport = selectedItems
-            .sorted()
-            .compactMap { index -> ItemModel? in
-                guard index < result.items.count else { return nil }
-                let parsed = result.items[index]
-                let stableId = parsed.stableId(forList: currentListId)
-
-                // FAM-71: Bereits vorhandene Items per deterministischer ID überspringen
-                guard !existingIds.contains(stableId) else { return nil }
-
-                return ItemModel(
-                    id: stableId,
-                    name: parsed.name,
-                    units: parsed.units,
-                    measure: parsed.measure,
-                    category: parsed.category,
-                    productDescription: parsed.productDescription,
-                    brand: parsed.brand
-                )
-            }
-
-        // User-friendly log
-        UserLog.Data.clipboardImport(count: itemsToImport.count)
-
-        // Add items to list — bulk-gate prevents stream/Realtime/pagination from
-        // showing intermediate states during the N addItem calls.
-        let lvm = listViewModel
-        lvm.isBulkMutationActive = true
-
-        for item in itemsToImport {
-            lvm.addItem(item)
+        let selectedParsed = selectedItems.sorted().compactMap { index -> ClipboardImportParser.ParsedItem? in
+            guard index < result.items.count else { return nil }
+            return result.items[index]
         }
 
-        // Deferred: storeLocally() Tasks run after this synchronous block yields.
-        // When they complete, refreshItemsFromStore() shows all items atomically.
+        let currentListId = listViewModel.listId
+        // Full store state incl. soft-deleted/pendingDelete — not just the UI snapshot.
+        let allLocalItems = listViewModel.fetchAllLocalItems()
+
+        let mergeResult = ImportMergeService.merge(
+            selected: selectedParsed,
+            allLocalItems: allLocalItems,
+            listId: currentListId
+        )
+
+        guard !mergeResult.targets.isEmpty else {
+            isLoading = false
+            dismiss()
+            return
+        }
+
+        listViewModel.applyBulkImport(mergeResult)
+
         Task { @MainActor in
-            defer {
-                lvm.isBulkMutationActive = false
-                isLoading = false
-            }
-            // Single consolidated refresh — all items are now in SwiftData.
-            lvm.refreshItemsFromStore()
+            isLoading = false
             dismiss()
         }
     }

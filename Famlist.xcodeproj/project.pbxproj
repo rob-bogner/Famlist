@@ -39,6 +39,8 @@
 		EE2B2C6C2EA3DFD600935BCB /* UIImage+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6B2EA3DFD600935BCB /* UIImage+Utils.swift */; };
 		EE2B2C6E2EA3E52500935BCB /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6D2EA3E52500935BCB /* ProfileView.swift */; };
 		EE2B2C712EA53AA900935BCB /* ClipboardImportParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */; };
+		FA123400CA2B3C4D5E6F7890 /* ImportMergeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA123400BA2B3C4D5E6F7890 /* ImportMergeService.swift */; };
+		FA123400EA2B3C4D5E6F7890 /* ImportMergeServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA123400DA2B3C4D5E6F7890 /* ImportMergeServiceTests.swift */; };
 		EE2B2C732EA53ABA00935BCB /* ClipboardImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C722EA53ABA00935BCB /* ClipboardImportView.swift */; };
 		EE7383232F5DC51B00A16B91 /* UUID+DeterministicItemID.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383222F5DC51B00A16B91 /* UUID+DeterministicItemID.swift */; };
 		EE73834E2F5DCF5300A16B91 /* AuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383442F5DCF5300A16B91 /* AuthServiceTests.swift */; };
@@ -178,6 +180,8 @@
 		EE2B2C6B2EA3DFD600935BCB /* UIImage+Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Utils.swift"; sourceTree = "<group>"; };
 		EE2B2C6D2EA3E52500935BCB /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportParser.swift; sourceTree = "<group>"; };
+		FA123400BA2B3C4D5E6F7890 /* ImportMergeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportMergeService.swift; sourceTree = "<group>"; };
+		FA123400DA2B3C4D5E6F7890 /* ImportMergeServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportMergeServiceTests.swift; sourceTree = "<group>"; };
 		EE2B2C722EA53ABA00935BCB /* ClipboardImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportView.swift; sourceTree = "<group>"; };
 		EE69A4E22B14CB78007C3515 /* Famlist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Famlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE7383222F5DC51B00A16B91 /* UUID+DeterministicItemID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+DeterministicItemID.swift"; sourceTree = "<group>"; };
@@ -320,6 +324,7 @@
 			isa = PBXGroup;
 			children = (
 				EE2B2C6F2EA53AA900935BCB /* ClipboardImportParser.swift */,
+				FA123400BA2B3C4D5E6F7890 /* ImportMergeService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -352,6 +357,7 @@
 				EE7383642F67383E00A16B91 /* ItemCategoryTests.swift */,
 				FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */,
 				FA1234009A2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift */,
+				FA123400DA2B3C4D5E6F7890 /* ImportMergeServiceTests.swift */,
 				E2DBA0D3C38B41E7BA4DF9130256D0E4 /* ItemEntityTombstoneTests.swift */,
 				BBC477281985AF4967ACD7CE /* ListManagementTests.swift */,
 				BC8F1A2256160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift */,
@@ -873,6 +879,7 @@
 				EEB6604A2E7F37A9006CB1EB /* ItemModel.swift in Sources */,
 				EEB6604B2E7F37A9006CB1EB /* ListView.swift in Sources */,
 				EE2B2C712EA53AA900935BCB /* ClipboardImportParser.swift in Sources */,
+				FA123400CA2B3C4D5E6F7890 /* ImportMergeService.swift in Sources */,
 				EEB6604C2E7F37A9006CB1EB /* Utils.swift in Sources */,
 				EEB6604E2E7F37A9006CB1EB /* EditItemView.swift in Sources */,
 				EEB6607A2E7F37A9006CB1EB /* Profile.swift in Sources */,
@@ -974,6 +981,7 @@
 				EE73835B2F641A0800A16B91 /* ItemCatalogTests.swift in Sources */,
 				FA1234008A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift in Sources */,
 				FA123400AA2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift in Sources */,
+				FA123400EA2B3C4D5E6F7890 /* ImportMergeServiceTests.swift in Sources */,
 				D4A9EC15A03749E4B152231E1E70C351 /* ItemEntityTombstoneTests.swift in Sources */,
 				BC3F2A7156160A40F6A39673 /* ListManagementTests.swift in Sources */,
 				BC8F1A2356160B50F7A40D84 /* ListViewModelDuplicateDetectionTests.swift in Sources */,

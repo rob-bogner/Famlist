@@ -35,6 +35,7 @@ extension ItemEntity {
             ownerPublicId: ownerPublicId,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            deletedAt: deletedAt,
             hlcTimestamp: hlcTimestamp,
             hlcCounter: hlcCounter,
             hlcNodeId: hlcNodeId,

@@ -84,7 +84,11 @@ struct ItemModel: Identifiable, Hashable, Codable {
 
     /// Last update timestamp of the item.
     var updatedAt: Date?
-    
+
+    /// Soft-delete timestamp. Non-nil when the item is locally deleted (pendingDelete / tombstoned).
+    /// Not persisted in the database — derived from `ItemEntity.deletedAt` at mapping time.
+    var deletedAt: Date? = nil
+
     // MARK: - CRDT Metadata (Optional for backward compatibility)
     
     /// HLC timestamp in milliseconds for causal ordering
@@ -182,6 +186,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         ownerPublicId: String? = nil,
         createdAt: Date? = nil,
         updatedAt: Date? = nil,
+        deletedAt: Date? = nil,
         hlcTimestamp: Int64? = nil,
         hlcCounter: Int? = nil,
         hlcNodeId: String? = nil,
@@ -204,6 +209,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.ownerPublicId = ownerPublicId
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
         self.hlcTimestamp = hlcTimestamp
         self.hlcCounter = hlcCounter
         self.hlcNodeId = hlcNodeId
