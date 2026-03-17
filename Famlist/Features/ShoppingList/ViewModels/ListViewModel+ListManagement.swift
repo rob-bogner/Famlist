@@ -113,10 +113,13 @@ extension ListViewModel {
                 let updated = try await repo.renameList(listId: list.id, title: trimmed)
                 await MainActor.run {
                     _ = try? self.listStore.upsert(model: updated)
-                    self.refreshAllListsFromStore(ownerId: list.ownerId)
-                    if self.defaultList?.id == list.id {
-                        self.defaultList = updated
+                    // In-place update — funktioniert für owned + member lists.
+                    // refreshAllListsFromStore(ownerId:) würde Member-Listen herausfiltern
+                    // da SwiftData nur nach owner_id sucht (FAM-21, bekannte Einschränkung).
+                    if let idx = self.allLists.firstIndex(where: { $0.id == list.id }) {
+                        self.allLists[idx] = updated
                     }
+                    if self.defaultList?.id == list.id { self.defaultList = updated }
                     logVoid(params: (action: "renameList.success", listId: list.id))
                 }
             } catch {

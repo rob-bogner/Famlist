@@ -375,6 +375,14 @@ struct UserLog {
         static func listSetDefault(name: String) {
             log("⭐ '\(name)' als Standard-Liste gesetzt")
         }
+
+        static func listJoined() {
+            log("🤝 Geteilter Liste beigetreten")
+        }
+
+        static func accessRevoked() {
+            log("🚫 Zugriff auf geteilte Liste wurde entzogen")
+        }
     }
 
     /// UI-Events

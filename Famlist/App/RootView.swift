@@ -43,6 +43,12 @@ struct RootView: View { // SwiftUI View declaration.
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
         }
+        .sheet(item: $session.pendingInvite) { invite in
+            InviteAcceptView(invite: invite)
+                .environmentObject(session)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
     }
 }
 

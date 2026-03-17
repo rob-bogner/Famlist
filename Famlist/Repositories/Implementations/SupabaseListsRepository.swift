@@ -163,8 +163,7 @@ final class SupabaseListsRepository: ListsRepository {
         let rows: [ListRow] = try await client
             .from("lists")
             .select("id, owner_id, title, is_default, created_at, updated_at")
-            .eq("owner_id", value: ownerId.uuidString)
-            .order("created_at")
+            .order("created_at")   // RLS filtert automatisch: owned + member lists
             .execute()
             .value
         let result = rows.map { r in
@@ -247,6 +246,94 @@ final class SupabaseListsRepository: ListsRepository {
             .eq("profile_id", value: profileId.uuidString)
             .execute()
         logVoid(params: (listId: listId, profileId: profileId))
+    }
+
+    func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> {
+        AsyncStream { [weak self] continuation in
+            guard let self else { continuation.finish(); return }
+
+            let channelId = "private:list_members:\(userId.uuidString)"
+            let channel = client.realtime.channel(channelId)
+
+            let deletions = channel.postgresChange(
+                DeleteAction.self,
+                schema: "public",
+                table: "list_members",
+                filter: .eq("profile_id", value: userId.uuidString)
+            )
+
+            let task = Task {
+                do {
+                    try await channel.subscribeWithError()
+                    for await deletion in deletions {
+                        // PK (list_id, profile_id) ist immer im oldRecord enthalten
+                        if let raw = deletion.oldRecord["list_id"],
+                           let listIdString: String = raw as? String ?? {
+                               let s = String(describing: raw)
+                               return s == "<null>" ? nil : s.replacingOccurrences(of: "AnyJSON.", with: "")
+                           }(),
+                           let listId = UUID(uuidString: listIdString) {
+                            continuation.yield(listId)
+                        }
+                    }
+                } catch {
+                    logVoid(params: (action: "observeMemberRemovals.subscribeError",
+                                     error: (error as NSError).localizedDescription))
+                }
+                continuation.finish()
+            }
+
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+                Task { await channel.unsubscribe() }
+            }
+        }
+    }
+
+    func fetchMembers(listId: UUID) async throws -> [ListMember] {
+        // 1. Hole profile_ids + added_at aus list_members
+        struct MemberRow: Codable {
+            let profile_id: UUID
+            let added_at: Date
+        }
+        let memberRows: [MemberRow] = try await client
+            .from("list_members")
+            .select("profile_id, added_at")
+            .eq("list_id", value: listId.uuidString)
+            .execute()
+            .value
+
+        guard !memberRows.isEmpty else { return [] }
+
+        // 2. Hole Profil-Daten für alle profile_ids
+        // Kein PostgREST-Join möglich (kein FK profile_id → profiles.id) → zwei Queries
+        struct ProfileRow: Codable {
+            let id: UUID
+            let public_id: String?
+            let username: String?
+            let full_name: String?
+        }
+        let profileIds = memberRows.map { $0.profile_id.uuidString }
+        let profileRows: [ProfileRow] = try await client
+            .from("profiles")
+            .select("id, public_id, username, full_name")
+            .in("id", values: profileIds)
+            .execute()
+            .value
+
+        // 3. Join in Memory
+        let profileMap = Dictionary(uniqueKeysWithValues: profileRows.map { ($0.id, $0) })
+        let result = memberRows.compactMap { member -> ListMember? in
+            guard let profile = profileMap[member.profile_id] else { return nil }
+            return ListMember(
+                id: member.profile_id,
+                publicId: profile.public_id ?? "",
+                username: profile.username,
+                fullName: profile.full_name,
+                addedAt: member.added_at
+            )
+        }
+        return logResult(params: (listId: listId, count: result.count), result: result)
     }
 }
 

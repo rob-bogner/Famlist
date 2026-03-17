@@ -153,4 +153,44 @@ extension ListViewModel {
         UserLog.Sync.realtimeResumed(listName: defaultList?.title)
         startObserving()
     }
+
+    // MARK: - Membership Observation (FAM-21 Bug Fix)
+
+    /// Startet eine Realtime-Beobachtung auf list_members DELETE-Events für den angegebenen User.
+    /// Wird beim Login gestartet und bei Sign-Out via clearForSignOut() gestoppt.
+    func startObservingMemberships(userId: UUID) {
+        guard let repo = listsRepository else { return }
+        membershipTask?.cancel()
+        membershipTask = Task { [weak self] in
+            guard let self else { return }
+            for await removedListId in repo.observeMemberRemovals(userId: userId) {
+                await MainActor.run {
+                    self.handleMembershipRemoval(listId: removedListId)
+                }
+            }
+        }
+        logVoid(params: (action: "startObservingMemberships", userId: userId))
+    }
+
+    /// Verarbeitet den Verlust einer Listenmitgliedschaft.
+    /// Entfernt die Liste aus allLists; wechselt auf Standardliste falls aktiv.
+    internal func handleMembershipRemoval(listId removedListId: UUID) {
+        logVoid(params: (action: "handleMembershipRemoval", listId: removedListId))
+        allLists.removeAll { $0.id == removedListId }
+
+        guard listId == removedListId else { return } // Nicht aktive Liste → kein Wechsel nötig
+
+        UserLog.Data.accessRevoked()
+
+        let fallback = allLists.first(where: { $0.isDefault }) ?? allLists.first
+        if let fallback {
+            switchToList(fallback)  // Teardown items-Channel + Switch in einem Aufruf
+        } else {
+            // Edge Case: keine verbleibende Liste
+            observeTask?.cancel()
+            observeTask = nil
+            items = []
+            defaultList = nil
+        }
+    }
 }

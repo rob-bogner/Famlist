@@ -309,12 +309,29 @@ final class RealtimeEventProcessor {
             if let value = record[key] as? Int {
                 return Double(value)
             }
+            // Handle AnyJSON wrapper: analogous to extractString / extractBool
+            if let anyValue = record[key], String(describing: anyValue) != "<null>" {
+                let str = String(describing: anyValue).replacingOccurrences(of: "AnyJSON.", with: "")
+                if let doubleVal = Double(str) { return doubleVal }
+                if let intVal = Int(str) { return Double(intVal) }
+            }
             return nil
         }
         
         func extractBool(_ key: String) -> Bool? {
             if let value = record[key] as? Bool {
                 return value
+            }
+            // Handle AnyJSON wrapper: AnyJSON.bool(true) describes as "bool(true)"
+            if let anyValue = record[key] {
+                let description = String(describing: anyValue)
+                    .replacingOccurrences(of: "AnyJSON.", with: "")
+                    .lowercased()
+                switch description {
+                case "true", "bool(true)": return true
+                case "false", "bool(false)": return false
+                default: return nil
+                }
             }
             return nil
         }

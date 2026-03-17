@@ -64,6 +64,8 @@ final class PreviewListsRepository: ListsRepository { // Simple data source for 
     }
     func addMember(listId: UUID, profileId: UUID) async throws {} // No-op in previews.
     func removeMember(listId: UUID, profileId: UUID) async throws {} // No-op in previews.
+    func fetchMembers(listId: UUID) async throws -> [ListMember] { [] } // No-op in previews.
+    func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> { AsyncStream { $0.finish() } } // No-op in previews.
 
     func fetchAllLists(for ownerId: UUID) async throws -> [ListModel] {
         lists

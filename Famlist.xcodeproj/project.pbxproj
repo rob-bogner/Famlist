@@ -48,6 +48,7 @@
 		EE7383502F5DCF5300A16B91 /* OnboardingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73834C2F5DCF5300A16B91 /* OnboardingServiceTests.swift */; };
 		EE7383512F5DCF5300A16B91 /* ClipboardImportParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */; };
 		EE7383522F5DCF5300A16B91 /* FamlistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383482F5DCF5300A16B91 /* FamlistTests.swift */; };
+		FFB98D02A9A459F961CA8327 /* ListViewModelMembershipEvictionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5014E027E0B1DE09AC185DA /* ListViewModelMembershipEvictionTests.swift */; };
 		EE7383532F5DCF5300A16B91 /* HybridLogicalClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */; };
 		EE7383542F5DCF5300A16B91 /* AuthViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7383452F5DCF5300A16B91 /* AuthViewModelTests.swift */; };
 		EE7383552F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */; };
@@ -135,6 +136,10 @@
 		FA1234006A2B3C4D5E6F7890 /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234005A2B3C4D5E6F7890 /* SearchResult.swift */; };
 		FA1234008A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */; };
 		FA123400AA2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1234009A2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift */; };
+		EEF21A022F1300AA000D3915 /* ListMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF21A012F1300AA000D3915 /* ListMember.swift */; };
+		EEF21A042F1300AA000D3915 /* ShareListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF21A032F1300AA000D3915 /* ShareListView.swift */; };
+		EEF21A062F1300AA000D3915 /* InviteAcceptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF21A052F1300AA000D3915 /* InviteAcceptView.swift */; };
+		EEF21A082F1300AA000D3915 /* MembersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF21A072F1300AA000D3915 /* MembersView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -192,6 +197,7 @@
 		EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardImportParserTests.swift; sourceTree = "<group>"; };
 		EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolverTests.swift; sourceTree = "<group>"; };
 		EE7383482F5DCF5300A16B91 /* FamlistTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamlistTests.swift; sourceTree = "<group>"; };
+		D5014E027E0B1DE09AC185DA /* ListViewModelMembershipEvictionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelMembershipEvictionTests.swift; sourceTree = "<group>"; };
 		EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridLogicalClockTests.swift; sourceTree = "<group>"; };
 		EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelBulkTogglePerformanceTests.swift; sourceTree = "<group>"; };
 		EE73834B2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDeviceSyncIntegrationTests.swift; sourceTree = "<group>"; };
@@ -279,6 +285,10 @@
 		FA1234005A2B3C4D5E6F7890 /* SearchResult.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
 		FA1234007A2B3C4D5E6F7890 /* GlobalProductCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalProductCatalogTests.swift; sourceTree = "<group>"; };
 		FA1234009A2B3C4D5E6F7890 /* ListViewModelBulkDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewModelBulkDeleteTests.swift; sourceTree = "<group>"; };
+		EEF21A012F1300AA000D3915 /* ListMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListMember.swift; sourceTree = "<group>"; };
+		EEF21A032F1300AA000D3915 /* ShareListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareListView.swift; sourceTree = "<group>"; };
+		EEF21A052F1300AA000D3915 /* InviteAcceptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteAcceptView.swift; sourceTree = "<group>"; };
+		EEF21A072F1300AA000D3915 /* MembersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -366,6 +376,7 @@
 				EE7383462F5DCF5300A16B91 /* ClipboardImportParserTests.swift */,
 				EE7383472F5DCF5300A16B91 /* ConflictResolverTests.swift */,
 				EE7383482F5DCF5300A16B91 /* FamlistTests.swift */,
+				D5014E027E0B1DE09AC185DA /* ListViewModelMembershipEvictionTests.swift */,
 				EE7383582F5DCF5300A16B91 /* DeterministicItemIDTests.swift */,
 				EE7383492F5DCF5300A16B91 /* HybridLogicalClockTests.swift */,
 				EE73834A2F5DCF5300A16B91 /* ListViewModelBulkTogglePerformanceTests.swift */,
@@ -594,8 +605,27 @@
 				EEB660122E7F37A9006CB1EB /* Authentication */,
 				EEB6601C2E7F37A9006CB1EB /* ItemManagement */,
 				EEB660292E7F37A9006CB1EB /* ShoppingList */,
+				EEF21A092F1300AA000D3915 /* Sharing */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		EEF21A092F1300AA000D3915 /* Sharing */ = {
+			isa = PBXGroup;
+			children = (
+				EEF21A0A2F1300AA000D3915 /* Views */,
+			);
+			path = Sharing;
+			sourceTree = "<group>";
+		};
+		EEF21A0A2F1300AA000D3915 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				EEF21A032F1300AA000D3915 /* ShareListView.swift */,
+				EEF21A052F1300AA000D3915 /* InviteAcceptView.swift */,
+				EEF21A072F1300AA000D3915 /* MembersView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		EEB6602E2E7F37A9006CB1EB /* Implementations */ = {
@@ -713,6 +743,7 @@
 				EEB6607D2E7F37A9006CB1EB /* List.swift */,
 				EEB6607F2E7F37A9006CB1EB /* Category.swift */,
 				EEB660812E7F37A9006CB1EB /* AuthError.swift */,
+				EEF21A012F1300AA000D3915 /* ListMember.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -958,6 +989,10 @@
 				FA1234002A2B3C4D5E6F7890 /* GlobalProductCatalogRepository.swift in Sources */,
 				FA1234004A2B3C4D5E6F7890 /* SupabaseGlobalProductCatalogRepository.swift in Sources */,
 				FA1234006A2B3C4D5E6F7890 /* SearchResult.swift in Sources */,
+				EEF21A022F1300AA000D3915 /* ListMember.swift in Sources */,
+				EEF21A042F1300AA000D3915 /* ShareListView.swift in Sources */,
+				EEF21A062F1300AA000D3915 /* InviteAcceptView.swift in Sources */,
+				EEF21A082F1300AA000D3915 /* MembersView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -972,6 +1007,7 @@
 				EE7383502F5DCF5300A16B91 /* OnboardingServiceTests.swift in Sources */,
 				EE7383512F5DCF5300A16B91 /* ClipboardImportParserTests.swift in Sources */,
 				EE7383522F5DCF5300A16B91 /* FamlistTests.swift in Sources */,
+				FFB98D02A9A459F961CA8327 /* ListViewModelMembershipEvictionTests.swift in Sources */,
 				8BC6074C2F694F12001B261B /* RetryItemTests.swift in Sources */,
 				8BC6074D2F694F12001B261B /* SyncMonitorIntegrationTests.swift in Sources */,
 				EE7383532F5DCF5300A16B91 /* HybridLogicalClockTests.swift in Sources */,

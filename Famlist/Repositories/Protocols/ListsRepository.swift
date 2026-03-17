@@ -54,6 +54,15 @@ protocol ListsRepository {
     ///   - listId: The list UUID.
     ///   - profileId: The profile UUID to remove.
     func removeMember(listId: UUID, profileId: UUID) async throws
+
+    /// Returns all collaborators (non-owner members) of a list.
+    /// - Parameter listId: The list UUID.
+    /// - Returns: Array of ListMember objects.
+    func fetchMembers(listId: UUID) async throws -> [ListMember]
+
+    /// Beobachtet DELETE-Events auf list_members für den angegebenen User.
+    /// Liefert die list_id jedes Mal, wenn der User aus einer Liste entfernt wird.
+    func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID>
     
     /// Fetch default list or create it if missing.
     /// - Parameter ownerId: The owner/profile UUID.

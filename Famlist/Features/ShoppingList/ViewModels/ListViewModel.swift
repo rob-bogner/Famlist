@@ -109,6 +109,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Holds the background task that observes live item changes.
     internal var observeTask: Task<Void, Never>?
+
+    /// Beobachtet list_members DELETE-Events für den eingeloggten User.
+    internal var membershipTask: Task<Void, Never>?
     
     /// Retains connectivity subscription so it lives with the view model.
     private var connectivityCancellable: AnyCancellable?
@@ -254,6 +257,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     func clearForSignOut() {
         observeTask?.cancel()
         observeTask = nil
+        membershipTask?.cancel()
+        membershipTask = nil
         items = []
         selectedItem = nil
         defaultList = nil
@@ -383,6 +388,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         Task {
             await syncEngine.updateItem(normalized)
             await MainActor.run {
+                // Refresh UI from SwiftData so the edit (e.g. price change) is immediately visible
+                // without waiting for a Realtime echo. storeLocally() already wrote the correct
+                // value; this call propagates it to self.items.
+                self.refreshItemsFromStore()
                 if trackPendingAnimation {
                     self.pendingAnimatedItemIDs.remove(normalized.id)
                 }

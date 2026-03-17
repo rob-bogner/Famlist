@@ -34,6 +34,8 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
     @Environment(\.scenePhase) private var scenePhase // Tracks foreground/background transitions for lifecycle-driven sync.
     @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
     @State private var showListsOverview: Bool = false // Controls whether the ListsOverviewView sheet is presented.
+    @State private var showShareSheet: Bool = false // Controls the Share-Sheet für den Owner.
+    @State private var showMembersSheet: Bool = false // Controls die Members-Übersicht.
     private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
 
     var body: some View { // The view’s content and layout tree.
@@ -51,6 +53,28 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                         Spacer()
+
+                        // Members-Button: immer sichtbar wenn eine Liste geladen ist
+                        if listViewModel.defaultList != nil {
+                            Button { showMembersSheet = true } label: {
+                                Image(systemName: "person.2")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(Color.theme.universalWhite)
+                            }
+                            .accessibilityLabel("Mitglieder anzeigen")
+                        }
+
+                        // Share-Button: nur für den Owner
+                        if let list = listViewModel.defaultList,
+                           list.ownerId == session.currentProfile?.id {
+                            Button { showShareSheet = true } label: {
+                                Image(systemName: "person.badge.plus")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(Color.theme.universalWhite)
+                            }
+                            .accessibilityLabel("Liste teilen")
+                        }
+
                         Button {
                             showListsOverview = true
                         } label: {
@@ -98,7 +122,20 @@ struct ShoppingListView: View { // Declares a SwiftUI view type.
         .sheet(isPresented: $showListsOverview) { // Present lists overview sheet.
             ListsOverviewView()
                 .environmentObject(listViewModel)
+                .environmentObject(session)
                 .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareListView(list: listViewModel.defaultList,
+                          currentPublicId: session.currentProfile?.publicId ?? "")
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showMembersSheet) {
+            MembersView(list: listViewModel.defaultList)
+                .environmentObject(session)
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $addNewItem) { // Present search sheet or direct add form.

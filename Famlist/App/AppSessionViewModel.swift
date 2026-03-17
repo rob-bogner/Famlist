@@ -44,8 +44,23 @@ final class AppSessionViewModel: ObservableObject {
         authService?.client.auth.currentUser?.email
     }
     
+    // MARK: - Invite Handling
+
+    /// Payload aus einem Einladungs-Deep-Link.
+    struct InvitePayload: Identifiable {
+        var id: UUID { listId }
+        let listId: UUID
+        let listTitle: String       // Aus URL-Parameter (nur zur Anzeige)
+        let inviterPublicId: String
+    }
+
+    /// Wird gesetzt, wenn ein Invite-Link geöffnet wird und der Nutzer eingeloggt ist.
+    @Published var pendingInvite: InvitePayload? = nil
+    /// Zwischenspeicher für Invites, die vor dem Login ankommen.
+    private var pendingInviteStorage: InvitePayload? = nil
+
     // MARK: - Lightweight Toasts
-    
+
     @Published var toastMessage: String? = nil
     private var toastClearTask: Task<Void, Never>? = nil
     private var restoreTask: Task<Void, Never>? = nil
@@ -71,8 +86,8 @@ final class AppSessionViewModel: ObservableObject {
     
     internal let authService: AuthService?
     internal let onboardingService: OnboardingService?
-    private let profiles: ProfilesRepository
-    private let lists: ListsRepository
+    internal let profiles: ProfilesRepository
+    internal let lists: ListsRepository
     private let listViewModel: ListViewModel
     
     // MARK: - Lifecycle
@@ -278,10 +293,19 @@ final class AppSessionViewModel: ObservableObject {
             }
             
             currentProfile = me
-            
+
+            // Gespeicherten Invite aus dem Pre-Auth-Zustand übernehmen
+            if let stored = pendingInviteStorage {
+                pendingInviteStorage = nil
+                pendingInvite = stored
+            }
+
             await markPhase(.defaultList)
             let defaultList = try await lists.fetchDefaultList(for: me.id)
             listViewModel.configure(listsRepository: lists)
+            // Membership-Observation starten — muss nach configure(listsRepository:) aufgerufen
+            // werden, damit listsRepository gesetzt ist, sonst startet die Observation nicht (RC-5).
+            listViewModel.startObservingMemberships(userId: me.id)
             listViewModel.defaultList = defaultList
             listViewModel.switchList(to: defaultList.id)
             
@@ -302,18 +326,84 @@ final class AppSessionViewModel: ObservableObject {
     }
     
     // MARK: - Deep Link Handler
-    
-    /// Handles an incoming deep link URL from Supabase (magic-link flow).
-    /// - Parameter url: The URL opened by the system containing the session details.
+
+    /// Handles an incoming deep link URL (invite or Supabase magic-link).
+    /// - Parameter url: The URL opened by the system.
     func handleOpenURL(_ url: URL) {
+        // Invite: famlist://invite?listId=X&inviterPublicId=Y&listTitle=Z
+        if url.scheme == "famlist", url.host == "invite" {
+            let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+            guard
+                let listIdStr = q?.first(where: { $0.name == "listId" })?.value,
+                let listId = UUID(uuidString: listIdStr),
+                let inviterPublicId = q?.first(where: { $0.name == "inviterPublicId" })?.value
+            else {
+                logVoid(params: ["action": "handleOpenURL.invite.invalidParams"])
+                return
+            }
+            let listTitle = q?.first(where: { $0.name == "listTitle" })?.value ?? ""
+            let invite = InvitePayload(listId: listId, listTitle: listTitle,
+                                       inviterPublicId: inviterPublicId)
+            if isAuthenticated { pendingInvite = invite }
+            else { pendingInviteStorage = invite }
+            return
+        }
+
+        // Auth magic link (existing path)
         guard let authService else { return }
-        
         Task {
             do {
                 try await authService.handleOpenURL(url)
                 await self.handleAuthCompletion()
             } catch {
                 self.errorMessage = (error as NSError).localizedDescription
+            }
+        }
+    }
+
+    // MARK: - Accept Invite
+
+    /// Trägt den aktuellen Nutzer als Mitglied der eingeladenen Liste ein.
+    func acceptInvite(_ invite: InvitePayload) {
+        guard let profile = currentProfile else { return }
+
+        // Guard: Nutzer ist bereits Owner dieser Liste
+        guard !listViewModel.allLists.contains(where: {
+            $0.id == invite.listId && $0.ownerId == profile.id
+        }) else {
+            logVoid(params: (action: "acceptInvite.alreadyOwner", listId: invite.listId))
+            pendingInvite = nil
+            return
+        }
+
+        // Guard: Nutzer ist bereits Mitglied (Liste ist schon in allLists)
+        guard !listViewModel.allLists.contains(where: { $0.id == invite.listId }) else {
+            logVoid(params: (action: "acceptInvite.alreadyMember", listId: invite.listId))
+            pendingInvite = nil
+            listViewModel.loadAllLists(ownerId: profile.id)
+            return
+        }
+
+        Task {
+            do {
+                try await lists.addMember(listId: invite.listId, profileId: profile.id)
+                await MainActor.run {
+                    pendingInvite = nil
+                    listViewModel.loadAllLists(ownerId: profile.id)
+                    UserLog.Data.listJoined()
+                }
+            } catch {
+                await MainActor.run {
+                    pendingInvite = nil
+                    // Unique-Constraint-Verletzung (bereits Mitglied) ist kein Fehler
+                    if (error as NSError).code == 23505 {
+                        listViewModel.loadAllLists(ownerId: profile.id)
+                    } else {
+                        errorMessage = error.localizedDescription
+                        logVoid(params: (action: "acceptInvite.error",
+                                         error: (error as NSError).localizedDescription))
+                    }
+                }
             }
         }
     }
