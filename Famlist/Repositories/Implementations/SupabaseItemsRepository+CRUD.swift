@@ -154,7 +154,6 @@ extension SupabaseItemsRepository {
             lastModifiedBy: item.lastModifiedBy
         )
         let result = logResult(params: (itemId: model.id, listId: listUUID), result: model)
-        UserLog.Data.itemAdded(name: item.name, units: item.units, measure: item.measure)
         return result
     }
 
@@ -197,7 +196,6 @@ extension SupabaseItemsRepository {
         // FAM-24: No fetchAndYield() here. Local state was already written via storeLocally().
         // Realtime UPDATE event will trigger granular processing via RealtimeEventProcessor.
         logVoid(params: (itemId: item.id, listId: listId))
-        UserLog.Data.itemUpdated(name: item.name, units: item.units, measure: item.measure)
     }
 
     /// Batch-updates items in parallel using the event-counter strategy.
@@ -206,7 +204,6 @@ extension SupabaseItemsRepository {
         guard !items.isEmpty else { return }
 
         logVoid(params: (action: "batchUpdateItems.start", itemCount: items.count, listId: listId))
-        UserLog.Data.bulkUpdate(count: items.count)
 
         // Acquire lock: suppress Realtime fetches during batch and set event counter.
         gate.acquireLock(expecting: items.count)
@@ -315,6 +312,5 @@ extension SupabaseItemsRepository {
         // FAM-24: No fetchAndYield() here. Realtime UPDATE(tombstone=true) event
         // will trigger applyRemoteTombstone() via RealtimeEventProcessor.
         logVoid(params: (id: id, listId: listId))
-        UserLog.Data.itemDeleted()
     }
 }

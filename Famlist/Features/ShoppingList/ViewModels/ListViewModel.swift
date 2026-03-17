@@ -287,8 +287,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }) {
             var incremented = existing
             incremented.units += 1
-            UserLog.Data.itemCountIncremented(name: incremented.name, units: incremented.units)
-            updateItem(incremented)
+            UserLog.Data.itemCountIncremented(
+                name: existing.name,
+                from: existing.units,
+                to: existing.units + 1,
+                measure: existing.measure
+            )
+            updateItem(incremented, suppressUserLog: true)
             return
         }
 
@@ -322,11 +327,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     }
     
     /// Updates an existing item after normalizing fields.
-    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false) {
+    /// - Parameter suppressUserLog: Pass `true` when the caller has already logged the action
+    ///   (e.g. `toggleItemChecked`, increment path in `addItem`) to avoid duplicate logs.
+    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false, suppressUserLog: Bool = false) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
-        
+
         logVoid(params: (
             action: "updateItem",
             itemId: normalized.id,
@@ -334,12 +341,22 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             category: normalized.category ?? "nil",
             description: normalized.productDescription ?? "nil"
         ))
-        let displayNameForLog = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        UserLog.Data.itemUpdated(
-            name: displayNameForLog.isEmpty ? "Artikel" : displayNameForLog,
-            units: normalized.units > 1 ? normalized.units : nil,
-            measure: normalized.measure.isEmpty ? nil : normalized.measure
-        )
+
+        if !suppressUserLog {
+            let displayName = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+            let resolvedName = displayName.isEmpty ? "Artikel" : displayName
+            // Detect quantity change by comparing with current items snapshot (still holds old state at call time).
+            if let oldItem = items.first(where: { $0.id == normalized.id }), oldItem.units != normalized.units {
+                UserLog.Data.itemQuantityChanged(
+                    name: resolvedName,
+                    from: oldItem.units,
+                    to: normalized.units,
+                    measure: normalized.measure
+                )
+            } else {
+                UserLog.Data.itemUpdated(name: resolvedName)
+            }
+        }
 
         // Update personal item catalog (fire-and-forget; keeps catalog in sync with edits)
         if let catalogRepo = catalogRepository {
@@ -376,9 +393,15 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Deletes an item by id within the current list.
     /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
-        // User-friendly log
-        let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        UserLog.Data.itemDeleted(name: displayName.isEmpty ? "Artikel" : displayName)
+        // User-friendly log — nur außerhalb Bulk-Delete, um N Einzellogs beim Bulk zu vermeiden
+        if !isBulkDeleting {
+            let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+            UserLog.Data.itemDeleted(
+                name: displayName.isEmpty ? "Artikel" : displayName,
+                units: item.units,
+                measure: item.measure
+            )
+        }
         
         guard let uuid = UUID(uuidString: item.id) else {
             markItemDeleted(item)
@@ -429,8 +452,17 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         items[index] = updatedItem
         items = ListViewModel.currentSortOrder.apply(to: items)
 
+        // Specific check/uncheck log — suppresses generic "bearbeitet" in updateItem.
+        let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        let resolvedName = displayName.isEmpty ? "Artikel" : displayName
+        if updatedItem.isChecked {
+            UserLog.Data.itemChecked(name: resolvedName, units: updatedItem.units, measure: updatedItem.measure)
+        } else {
+            UserLog.Data.itemUnchecked(name: resolvedName, units: updatedItem.units, measure: updatedItem.measure)
+        }
+
         pendingAnimatedItemIDs.insert(updatedItem.id)
-        updateItem(updatedItem, trackPendingAnimation: true)
+        updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true)
     }
     
     // MARK: - Error Handling

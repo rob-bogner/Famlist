@@ -54,7 +54,6 @@ final class SyncOperationQueue {
                 type: operation.type.rawValue,
                 itemId: operation.itemId
             ))
-            UserLog.Sync.operationEnqueued()
         } catch {
             logVoid(params: (
                 action: "enqueueOperation.error",
@@ -145,8 +144,6 @@ final class SyncOperationQueue {
                 action: "removeOperation",
                 operationId: operationId
             ))
-            
-            UserLog.Sync.operationRemoved()
         } catch {
             logVoid(params: (
                 action: "removeOperation.error",

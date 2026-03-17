@@ -154,7 +154,6 @@ final class RealtimeEventProcessor {
                         decision: "remote_wins"
                     ))
 
-                    UserLog.Sync.realtimeUpdateReceived(name: item.name)
                 } else {
                     logVoid(params: (
                         action: "processUpdate.merge",
@@ -274,7 +273,6 @@ final class RealtimeEventProcessor {
             itemId: idString
         ))
         
-        UserLog.Sync.realtimeDeleteReceived(name: itemName)
     }
     
     // MARK: - Helpers

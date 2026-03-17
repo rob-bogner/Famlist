@@ -58,7 +58,6 @@ final class SupabaseRealtimeManager {
     ) async {
         let channelId = "public:items:\(listId)"
         logVoid(params: (listId: listId, action: "setupChannel", channelId: channelId))
-        UserLog.Sync.realtimeStarted()
         
         let channel = client.realtime.channel(channelId)
         
@@ -91,7 +90,6 @@ final class SupabaseRealtimeManager {
                 channelId: channelId,
                 status: "success"
             ))
-            UserLog.Sync.realtimeChannelConnected()
         } catch {
             logVoid(params: (
                 listId: listId,

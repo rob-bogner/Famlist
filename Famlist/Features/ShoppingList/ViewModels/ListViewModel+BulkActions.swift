@@ -211,7 +211,7 @@ extension ListViewModel {
         let toDelete = items.filter { $0.isChecked }
         guard !toDelete.isEmpty else { return }
         logVoid(params: (action: "deleteCheckedItems", count: toDelete.count))
-        UserLog.Data.checkedItemsDeleted(count: toDelete.count)
+        UserLog.Data.checkedItemsDeleted(items: toDelete.map { ($0.name, $0.units, $0.measure) })
 
         isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
@@ -228,7 +228,7 @@ extension ListViewModel {
         let toDelete = items.filter { !$0.isChecked }
         guard !toDelete.isEmpty else { return }
         logVoid(params: (action: "deleteUncheckedItems", count: toDelete.count))
-        UserLog.Data.uncheckedItemsDeleted(count: toDelete.count)
+        UserLog.Data.uncheckedItemsDeleted(items: toDelete.map { ($0.name, $0.units, $0.measure) })
 
         isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
@@ -238,6 +238,45 @@ extension ListViewModel {
         isBulkDeleting = false
         refreshItemsFromStore()
         isBulkMutationActive = false
+    }
+
+    // MARK: - Bulk Import
+
+    /// Applies a batch of merged import targets from the clipboard import flow.
+    ///
+    /// Writes are handled by SyncEngine.applyBulkItems() which issues a single save()
+    /// and enqueues one operation per target — no per-item processQueue().
+    /// UI is refreshed once after all writes complete.
+    func applyBulkImport(_ result: ImportMergeService.MergeResult) {
+        guard let syncEngine else { return }
+        guard !result.targets.isEmpty else { return }
+
+        isBulkMutationActive = true
+
+        // Count targets for summary — no individual logs during import.
+        var added = 0, reactivated = 0, incremented = 0
+        for target in result.targets {
+            switch target {
+            case .createNew: added += 1
+            case .reactivate: reactivated += 1
+            case .update: incremented += 1
+            }
+        }
+
+        let lvm = self
+
+        Task {
+            await syncEngine.applyBulkItems(result.targets)
+
+            await MainActor.run {
+                lvm.refreshItemsFromStore()
+                lvm.isBulkMutationActive = false
+                // Summary log after UI is updated — kein Einzel-Spam während des Imports.
+                UserLog.Data.bulkImportCompleted(added: added, reactivated: reactivated, incremented: incremented)
+            }
+
+            await syncEngine.resumeSync()
+        }
     }
 
     // MARK: - Sorting

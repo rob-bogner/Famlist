@@ -223,6 +223,67 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         await processQueue()
     }
     
+    /// Applies a batch of merged import targets atomically.
+    ///
+    /// For each target: one local upsert, one queue operation.
+    /// A single `save()` is issued after all writes — no per-item `save()` or `processQueue()`.
+    /// The caller is responsible for calling `resumeSync()` afterwards.
+    func applyBulkItems(_ targets: [ImportTarget]) async {
+        guard !targets.isEmpty else { return }
+
+        // Queue-invariant guard: max 1 op per canonical item ID in this batch
+        var seenIds = Set<String>()
+
+        for target in targets {
+            let item = target.item
+            guard !seenIds.contains(item.id) else { continue }
+            seenIds.insert(item.id)
+
+            let hlc = hlcGenerator.tick()
+
+            switch target {
+            case .createNew(let model), .reactivate(let model):
+                // For reactivate: apply() on the existing entity is guarded (syncStatus == .pendingDelete),
+                // so we set all payload fields manually after upsert.
+                let metadata = CRDTMetadata.created(by: hlcGenerator.nodeId, hlc: hlc)
+                if let entity = try? itemStore.upsert(model: model) {
+                    entity.name               = model.name
+                    entity.units              = model.units
+                    entity.measure            = model.measure
+                    entity.category           = model.category
+                    entity.productDescription = model.productDescription
+                    entity.brand              = model.brand
+                    entity.isChecked          = false
+                    entity.hlcTimestamp       = hlc.timestamp
+                    entity.hlcCounter         = hlc.counter
+                    entity.hlcNodeId          = hlc.nodeId
+                    entity.tombstone          = false
+                    entity.lastModifiedBy     = hlcGenerator.nodeId
+                    entity.setSyncStatus(.pendingCreate)  // clears deletedAt for reactivate
+                }
+                await queueOperation(type: .create, item: model, metadata: metadata)
+
+            case .update(let model):
+                let metadata = CRDTMetadata(hlc: hlc, tombstone: false, lastModifiedBy: hlcGenerator.nodeId)
+                if let entity = try? itemStore.upsert(model: model) {
+                    entity.hlcTimestamp   = hlc.timestamp
+                    entity.hlcCounter     = hlc.counter
+                    entity.hlcNodeId      = hlc.nodeId
+                    entity.tombstone      = false
+                    entity.lastModifiedBy = hlcGenerator.nodeId
+                    entity.setSyncStatus(.pendingUpdate)
+                }
+                await queueOperation(type: .update, item: model, metadata: metadata)
+            }
+        }
+
+        // Single save for all writes — no per-item save
+        try? itemStore.save()
+        updatePendingCount()
+        // processQueue() / resumeSync() is intentionally NOT called here.
+        // The caller (ListViewModel.applyBulkImport) calls resumeSync() after UI refresh.
+    }
+
     /// Manually triggers queue processing (called on connectivity restore)
     func resumeSync() async {
         await processQueue()
@@ -275,11 +336,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 tombstone: metadata.tombstone
             ))
             
-            if metadata.tombstone {
-                UserLog.Data.itemDeletedLocally()
-            } else {
-                UserLog.Data.itemStoredLocally(name: item.name)
-            }
         } catch {
             logVoid(params: (
                 action: "storeLocally.error",
@@ -303,8 +359,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 itemId: item.id,
                 operationId: operation.id
             ))
-            
-            UserLog.Sync.operationQueued(type: type.rawValue)
         } catch {
             logVoid(params: (
                 action: "queueOperation.error",
@@ -360,8 +414,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 retryCount: operation.retryCount
             ))
 
-            UserLog.Sync.processingOperation(type: operation.type.rawValue)
-
             switch operation.type {
             case .create:
                 _ = try await repository.createItem(item)
@@ -393,8 +445,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 itemId: operation.itemId
             ))
 
-            UserLog.Sync.operationCompleted(type: operation.type.rawValue)
-
         } catch {
             if let monitorId {
                 syncMonitor?.endOperation(monitorId, success: false, latency: Date().timeIntervalSince(start))
@@ -420,7 +470,15 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                     entity.setSyncStatus(.failed)
                     try? itemStore.save()
                 }
-                UserLog.Sync.failed(reason: "Maximale Wiederholungen erreicht")
+                if let failedItem = try? operation.decodeItemSnapshot() {
+                    UserLog.Sync.itemSyncFailed(
+                        name: failedItem.name,
+                        units: failedItem.units,
+                        measure: failedItem.measure
+                    )
+                } else {
+                    UserLog.Sync.failed(reason: "Synchronisierung endgültig fehlgeschlagen")
+                }
             }
 
             logVoid(params: (
