@@ -83,16 +83,12 @@ extension ListViewModel {
     }
     
     /// Persists a remote snapshot into SwiftData so offline mode mirrors the latest server state.
-    /// Items in `pendingDelete` state are intentionally left untouched (see `ItemEntity.apply(model:)`).
+    /// FAM-79: Purge logic removed. Only upserts are performed.
+    /// Items are deleted exclusively via applyRemoteTombstone() / applyRemoteTombstoneModel().
     internal func persistRemoteSnapshot(_ snapshot: [ItemModel]) {
         do {
-            let remoteIds = Set(snapshot.map { $0.id })
             for model in snapshot {
                 try itemStore.upsert(model: model)
-            }
-            let existing = try itemStore.fetchItems(listId: listId, includeDeleted: true)
-            for entity in existing where entity.syncStatus == .synced && !remoteIds.contains(entity.id.uuidString) {
-                try itemStore.purge(id: entity.id)
             }
             try itemStore.save()
         } catch {
@@ -185,7 +181,72 @@ extension ListViewModel {
         }
     }
     
-    /// Reads the cached default list for the given owner when available.
+    // MARK: - Tombstone (FAM-41)
+
+    /// Applies a remote tombstone for `item` directly in SwiftData (used by IncrementalSync delta).
+    /// Uses HLC-aware conflict resolution: remote tombstone wins unless local HLC is strictly higher.
+    internal func applyRemoteTombstoneModel(_ item: ItemModel) {
+        guard let uuid = UUID(uuidString: item.id),
+              let entity = try? itemStore.fetchItem(id: uuid) else { return }
+
+        switch entity.syncStatus {
+        case .synced, .pendingDelete, .failed, .pendingRecovery:
+            try? itemStore.purge(id: uuid)
+            logVoid(params: (action: "applyRemoteTombstoneModel.purge", itemId: item.id))
+
+        case .pendingCreate, .pendingUpdate:
+            let remoteHlcTimestamp = item.hlcTimestamp ?? 0
+            let remoteHlcCounter = item.hlcCounter ?? 0
+            let remoteHLC = HybridLogicalClock(
+                timestamp: remoteHlcTimestamp,
+                counter: remoteHlcCounter,
+                nodeId: item.hlcNodeId ?? ""
+            )
+            let localHLC = HybridLogicalClock(
+                timestamp: entity.hlcTimestamp ?? 0,
+                counter: entity.hlcCounter ?? 0,
+                nodeId: entity.hlcNodeId ?? ""
+            )
+            // Remote tombstone wins if remote >= local (tie → delete wins).
+            if !(localHLC > remoteHLC) {
+                try? itemStore.purge(id: uuid)
+                logVoid(params: (action: "applyRemoteTombstoneModel.purge", itemId: item.id, reason: "remoteHlcWins"))
+            } else {
+                logVoid(params: (action: "applyRemoteTombstoneModel.localWins", itemId: item.id))
+            }
+        }
+    }
+
+    // MARK: - lastSyncTimestamp (FAM-41)
+
+    /// Loads the high-water mark timestamp for the current list from UserDefaults.
+    /// Returns Date.distantPast when no timestamp is stored (triggers a full delta-fetch on first run).
+    internal func loadLastSyncTimestamp() -> Date {
+        let key = lastSyncTimestampKey
+        guard let iso = UserDefaults.standard.string(forKey: key),
+              let date = ISO8601DateFormatter().date(from: iso) else {
+            return Date.distantPast
+        }
+        return date
+    }
+
+    /// Persists the high-water mark timestamp for the current list to UserDefaults.
+    internal func saveLastSyncTimestamp(_ date: Date) {
+        let iso = ISO8601DateFormatter().string(from: date)
+        UserDefaults.standard.set(iso, forKey: lastSyncTimestampKey)
+    }
+
+    /// Clears the persisted last-sync timestamp for the current list.
+    internal func clearLastSyncTimestamp() {
+        UserDefaults.standard.removeObject(forKey: lastSyncTimestampKey)
+    }
+
+    private var lastSyncTimestampKey: String {
+        "fam24_last_sync_ts_\(listId.uuidString)"
+    }
+
+    // MARK: - Default List Caching
+
     private func loadCachedDefaultList(ownerId: UUID) -> ListModel? {
         do {
             let lists = try listStore.fetchLists(ownerId: ownerId)

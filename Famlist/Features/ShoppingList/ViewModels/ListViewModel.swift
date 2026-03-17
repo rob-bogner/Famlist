@@ -42,16 +42,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// The items currently displayed in the UI. Changes re-render views.
     @Published var items: [ItemModel] = []
-    
+
     /// The item currently selected for editing (opens EditItemView sheet).
     @Published var selectedItem: ItemModel?
-    
+
     /// Optional error message surfaced to the UI on operation failures.
     @Published var errorMessage: String?
-    
+
     /// Indicates when the view is performing a long-running action.
     @Published var isLoading: Bool = false
-    
+
     /// The resolved default list for the current user; nil while loading.
     @Published var defaultList: ListModel? = nil
 
@@ -60,6 +60,23 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
     /// Item counts per list id, sourced from the local SwiftData store.
     @Published var listItemCounts: [UUID: Int] = [:]
+
+    // MARK: - Pagination State (FAM-40)
+
+    /// True when more remote pages might be available for the current list.
+    /// Reset to true on Pull-to-Refresh and Sign-Out.
+    @Published var hasMoreItems: Bool = true
+
+    /// True while a remote page fetch is in progress (drives loading indicator).
+    @Published var isLoadingNextPage: Bool = false
+
+    /// Composite cursor pointing to the last loaded remote item.
+    /// Nil triggers loading from the first page. Cleared on Pull-to-Refresh and Sign-Out.
+    var currentCursor: PaginationCursor? = nil
+
+    /// Consecutive empty-page counter for the T3 termination rule:
+    /// after 1 empty page following a full page, hasMoreItems is set to false.
+    var consecutiveEmptyPages: Int = 0
     
     // MARK: - Dependencies & Core State
     
@@ -95,9 +112,15 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Retains connectivity subscription so it lives with the view model.
     private var connectivityCancellable: AnyCancellable?
-    
+
     /// Tracks whether realtime observation has started at least once.
     internal var hasObservedActiveList: Bool = false
+
+    /// Sync orchestrator used by loadNextPage() to serialise page fetches with Realtime events.
+    internal var syncOrchestrator: SyncOrchestrator?
+
+    /// Page loader responsible for remote cursor-based pagination.
+    internal var pageLoader: PageLoader?
     
     /// Item identifiers that currently have an optimistic reorder animation in flight.
     /// While they remain here, we keep the local ordering authoritative to avoid jitter.
@@ -106,6 +129,11 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Suppresses `refreshItemsFromStore()` during the synchronous forEach phase of bulk-delete.
     /// Prevents per-item SwiftData refreshes from re-rendering the list one item at a time.
     internal var isBulkDeleting = false
+
+    /// True while a bulk operation (import or delete-all) is mutating SwiftData.
+    /// While active, the stream handler, Realtime refreshes, and pagination are suppressed
+    /// so the UI only sees the final stable state (before-bulk or after-bulk), never an intermediate.
+    internal var isBulkMutationActive = false
 
     /// IDs of items currently undergoing a bulk delete operation.
     /// Populated before deletion starts; cleared lazily as items are confirmed removed from SwiftData.
@@ -195,6 +223,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     func configure(globalCatalogRepository: any GlobalProductCatalogRepository) {
         self.globalCatalogRepository = globalCatalogRepository
     }
+
+    /// Injects the SyncOrchestrator and PageLoader for cursor-based pagination (FAM-79/FAM-40).
+    func configure(syncOrchestrator: SyncOrchestrator, pageLoader: PageLoader) {
+        self.syncOrchestrator = syncOrchestrator
+        self.pageLoader = pageLoader
+        syncOrchestrator.onBudgetExceeded = { [weak self] in
+            guard let self else { return }
+            Task { await self.runIncrementalSync() }
+        }
+    }
     
     // MARK: - List Switching
     
@@ -204,6 +242,11 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         observeTask?.cancel()
         self.listId = newId
         self.items = []
+        // Reset pagination state for the new list (cursor is loaded from UserDefaults per listId in startObserving).
+        currentCursor = PaginationCursor.load(listId: newId)
+        hasMoreItems = true
+        isLoadingNextPage = false
+        consecutiveEmptyPages = 0
         startObserving()
     }
     
@@ -217,6 +260,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         allLists = []
         listItemCounts = [:]
         errorMessage = nil
+        // Reset pagination state and clear persisted cursor/timestamp.
+        PaginationCursor.clear(listId: listId)
+        clearLastSyncTimestamp()
+        currentCursor = nil
+        hasMoreItems = true
+        isLoadingNextPage = false
+        consecutiveEmptyPages = 0
         listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
         refreshItemsFromStore()
         hasObservedActiveList = false

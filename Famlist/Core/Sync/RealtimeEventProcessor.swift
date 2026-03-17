@@ -106,7 +106,9 @@ final class RealtimeEventProcessor {
         }
     }
     
-    /// Processes an UPDATE event from Realtime
+    /// Processes an UPDATE event from Realtime.
+    /// If the remote payload carries tombstone=true, delegates to applyRemoteTombstone()
+    /// which applies HLC-aware conflict resolution and purges the item from SwiftData.
     /// - Parameters:
     ///   - payload: Raw payload from Supabase Realtime
     ///   - listId: UUID of the list being observed
@@ -120,31 +122,38 @@ final class RealtimeEventProcessor {
                 ))
                 return
             }
-            
+
             let (item, metadata) = try parseItemFromPayload(record)
-            
+
             guard let uuid = UUID(uuidString: item.id) else { return }
-            
+
+            // FAM-41: Remote tombstone → route to canonical delete path.
+            if metadata.tombstone {
+                applyRemoteTombstone(item, remoteMeta: metadata)
+                logVoid(params: (action: "processUpdate.tombstone", itemId: item.id))
+                return
+            }
+
             if let existingEntity = try? itemStore.fetchItem(id: uuid) {
                 let existingMetadata = extractMetadataFromEntity(existingEntity)
-                
+
                 // Use CRDT conflict resolution
                 if conflictResolver.shouldApplyRemote(localMeta: existingMetadata, remoteMeta: metadata) {
                     applyToEntity(existingEntity, item: item, metadata: metadata)
-                    
+
                     // Only mark as synced if we don't have pending local changes
                     if existingEntity.syncStatus == .synced {
                         existingEntity.setSyncStatus(.synced)
                     }
-                    
+
                     try itemStore.save()
-                    
+
                     logVoid(params: (
                         action: "processUpdate.merge",
                         itemId: item.id,
                         decision: "remote_wins"
                     ))
-                    
+
                     UserLog.Sync.realtimeUpdateReceived(name: item.name)
                 } else {
                     logVoid(params: (
@@ -159,7 +168,7 @@ final class RealtimeEventProcessor {
                 applyMetadataToEntity(entity, metadata: metadata)
                 entity.setSyncStatus(.synced)
                 try itemStore.save()
-                
+
                 logVoid(params: (
                     action: "processUpdate.insertMissing",
                     itemId: item.id
@@ -170,6 +179,39 @@ final class RealtimeEventProcessor {
                 action: "processUpdate.error",
                 error: error.localizedDescription
             ))
+        }
+    }
+
+    // MARK: - Tombstone (FAM-41)
+
+    /// Canonical delete path for remote tombstone events (Realtime UPDATE with tombstone=true
+    /// or IncrementalSync delta with tombstone=true).
+    ///
+    /// Conflict resolution per the plan's conflict matrix:
+    /// - `.synced`, `.pendingDelete`, `.failed`, `.pendingRecovery` → always purge.
+    /// - `.pendingCreate`, `.pendingUpdate` → HLC comparison:
+    ///     remote HLC ≥ local HLC → purge; local HLC > remote → keep local pending op.
+    ///
+    /// Tombstone wins on HLC tie (tiebreaker: delete is preferred for eventual consistency).
+    @MainActor
+    func applyRemoteTombstone(_ item: ItemModel, remoteMeta: CRDTMetadata) {
+        guard let uuid = UUID(uuidString: item.id) else { return }
+        guard let entity = try? itemStore.fetchItem(id: uuid) else { return }
+
+        switch entity.syncStatus {
+        case .synced, .pendingDelete, .failed, .pendingRecovery:
+            try? itemStore.purge(id: uuid)
+            logVoid(params: (action: "applyRemoteTombstone.purge", itemId: item.id, status: entity.syncStatus.rawValue))
+
+        case .pendingCreate, .pendingUpdate:
+            let localMeta = extractMetadataFromEntity(entity)
+            // Remote tombstone wins if it happened after local (or at the same time — tie → delete wins).
+            if !(localMeta.hlc > remoteMeta.hlc) {
+                try? itemStore.purge(id: uuid)
+                logVoid(params: (action: "applyRemoteTombstone.purge", itemId: item.id, reason: "remoteHlcWins"))
+            } else {
+                logVoid(params: (action: "applyRemoteTombstone.localWins", itemId: item.id, reason: "localHlcHigher"))
+            }
         }
     }
     

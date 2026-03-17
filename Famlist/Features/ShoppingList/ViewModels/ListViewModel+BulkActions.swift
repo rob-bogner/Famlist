@@ -176,40 +176,68 @@ extension ListViewModel {
     /// 4. Finales `refreshItemsFromStore()` bereinigt `pendingBulkDeleteIDs` für bereits entfernte Items
     func deleteAllItems() {
         let snapshot = items
+        guard !snapshot.isEmpty else { return }
         logVoid(params: (action: "deleteAllItems", count: snapshot.count))
         UserLog.Data.allItemsDeleted(count: snapshot.count)
+
+        // --- Atomic UI transition: before-bulk → after-bulk, no intermediate states ---
+        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(snapshot.map { $0.id })
         items = []
+        // Reset pagination — all items gone, cursor is stale.
+        currentCursor = nil
+        PaginationCursor.clear(listId: listId)
+        hasMoreItems = true
+        isLoadingNextPage = false
+        consecutiveEmptyPages = 0
+
+        // Tombstone all items locally in a single batch commit, then queue remote ops.
+        // isBulkDeleting suppresses per-item refreshItemsFromStore() inside the loop.
         isBulkDeleting = true
         snapshot.forEach { deleteItem($0) }
         isBulkDeleting = false
+
+        // Single consolidated UI refresh from SwiftData. Items are now soft-deleted
+        // (deletedAt set by setSyncStatus(.pendingDelete)), so fetchItems(includeDeleted:false)
+        // excludes them. This also clears pendingBulkDeleteIDs via intersection.
         refreshItemsFromStore()
+
+        // Gate off — stream handler and pagination can resume.
+        isBulkMutationActive = false
     }
 
     /// Löscht alle abgehakten Artikel der aktuellen Liste.
     func deleteCheckedItems() {
         let toDelete = items.filter { $0.isChecked }
+        guard !toDelete.isEmpty else { return }
         logVoid(params: (action: "deleteCheckedItems", count: toDelete.count))
         UserLog.Data.checkedItemsDeleted(count: toDelete.count)
+
+        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { !$0.isChecked }
         isBulkDeleting = true
         toDelete.forEach { deleteItem($0) }
         isBulkDeleting = false
         refreshItemsFromStore()
+        isBulkMutationActive = false
     }
 
     /// Löscht alle nicht abgehakten Artikel der aktuellen Liste.
     func deleteUncheckedItems() {
         let toDelete = items.filter { !$0.isChecked }
+        guard !toDelete.isEmpty else { return }
         logVoid(params: (action: "deleteUncheckedItems", count: toDelete.count))
         UserLog.Data.uncheckedItemsDeleted(count: toDelete.count)
+
+        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { $0.isChecked }
         isBulkDeleting = true
         toDelete.forEach { deleteItem($0) }
         isBulkDeleting = false
         refreshItemsFromStore()
+        isBulkMutationActive = false
     }
 
     // MARK: - Sorting

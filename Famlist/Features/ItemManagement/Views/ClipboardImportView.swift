@@ -304,16 +304,24 @@ struct ClipboardImportView: View {
         // User-friendly log
         UserLog.Data.clipboardImport(count: itemsToImport.count)
 
-        // Add items to list
+        // Add items to list — bulk-gate prevents stream/Realtime/pagination from
+        // showing intermediate states during the N addItem calls.
+        let lvm = listViewModel
+        lvm.isBulkMutationActive = true
+
+        for item in itemsToImport {
+            lvm.addItem(item)
+        }
+
+        // Deferred: storeLocally() Tasks run after this synchronous block yields.
+        // When they complete, refreshItemsFromStore() shows all items atomically.
         Task { @MainActor in
             defer {
+                lvm.isBulkMutationActive = false
                 isLoading = false
             }
-
-            for item in itemsToImport {
-                listViewModel.addItem(item)
-            }
-
+            // Single consolidated refresh — all items are now in SwiftData.
+            lvm.refreshItemsFromStore()
             dismiss()
         }
     }
