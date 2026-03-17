@@ -11,6 +11,8 @@
 		6B39EE77A3A4E0CD3AF5DF6B /* ItemSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C38E32236C53AD07E9CFF64 /* ItemSearchView.swift */; };
 		7614C35F1799431499AC13F5 /* PreviewSyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671B14B3EA794FC782A30AE2 /* PreviewSyncEngine.swift */; };
 		7ABA746BB1564B329526D8A42A0345BB /* SupabaseItemsRepository+CRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93F2688239340989D6E62A531DB4085 /* SupabaseItemsRepository+CRUD.swift */; };
+		8BC607472F6841C8001B261B /* BackoffCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC607462F6841C8001B261B /* BackoffCalculatorTests.swift */; };
+		8BC607492F6841E9001B261B /* BackoffCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC607482F6841E9001B261B /* BackoffCalculator.swift */; };
 		9542F3616E95F59AA603D81F /* ItemSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6954CBCFE75541BB981ED25D /* ItemSearchViewModel.swift */; };
 		BA153D51B6414833B6EBC0EDE6AC0AB7 /* RealtimeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF710BF31EA44859828AEB898AFA3B4D /* RealtimeGate.swift */; };
 		BC3F2A7156160A40F6A39673 /* ListManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC477281985AF4967ACD7CE /* ListManagementTests.swift */; };
@@ -142,6 +144,8 @@
 		5BAB5986EE2C4B488F5B896F /* SyncEngineProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngineProtocol.swift; sourceTree = "<group>"; };
 		671B14B3EA794FC782A30AE2 /* PreviewSyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSyncEngine.swift; sourceTree = "<group>"; };
 		6954CBCFE75541BB981ED25D /* ItemSearchViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemSearchViewModel.swift; sourceTree = "<group>"; };
+		8BC607462F6841C8001B261B /* BackoffCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackoffCalculatorTests.swift; sourceTree = "<group>"; };
+		8BC607482F6841E9001B261B /* BackoffCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackoffCalculator.swift; sourceTree = "<group>"; };
 		8C38E32236C53AD07E9CFF64 /* ItemSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemSearchView.swift; sourceTree = "<group>"; };
 		B6552BE6F4FFA6B298F110A0 /* ItemCatalogRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemCatalogRepository.swift; sourceTree = "<group>"; };
 		BBC477281985AF4967ACD7CE /* ListManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListManagementTests.swift; sourceTree = "<group>"; };
@@ -328,6 +332,7 @@
 		EE73834D2F5DCF5300A16B91 /* FamlistTests */ = {
 			isa = PBXGroup;
 			children = (
+				8BC607462F6841C8001B261B /* BackoffCalculatorTests.swift */,
 				EE7383662F67EEB400A16B91 /* MeasureCanonicalizerTests.swift */,
 				EE73835A2F641A0800A16B91 /* ItemCatalogTests.swift */,
 				EE7383642F67383E00A16B91 /* ItemCategoryTests.swift */,
@@ -703,6 +708,7 @@
 		EEC58BD52ED1F86D000D3915 /* Sync */ = {
 			isa = PBXGroup;
 			children = (
+				8BC607482F6841E9001B261B /* BackoffCalculator.swift */,
 				EE7383222F5DC51B00A16B91 /* UUID+DeterministicItemID.swift */,
 				EE7BC7CD2F56205300B47D9A /* SyncStatus.swift */,
 				EEC58BCD2ED1F86D000D3915 /* ConflictResolver.swift */,
@@ -857,6 +863,7 @@
 				EEC58BC72EC92077000D3915 /* ListViewModel+Persistence.swift in Sources */,
 				EEC58BC82EC92077000D3915 /* ListViewModel+InputHelpers.swift in Sources */,
 				EEC58BC92EC92077000D3915 /* ListViewModel+Projections.swift in Sources */,
+				8BC607492F6841E9001B261B /* BackoffCalculator.swift in Sources */,
 				EEC58BCA2EC92077000D3915 /* ListViewModel+RealtimeSync.swift in Sources */,
 				EEB660802E7F37A9006CB1EB /* AuthError.swift in Sources */,
 				EEB660822E7F37A9006CB1EB /* ProfilesRepository.swift in Sources */,
@@ -932,6 +939,7 @@
 				EE73834E2F5DCF5300A16B91 /* AuthServiceTests.swift in Sources */,
 				EE73834F2F5DCF5300A16B91 /* MultiDeviceSyncIntegrationTests.swift in Sources */,
 				EE7383652F67383E00A16B91 /* ItemCategoryTests.swift in Sources */,
+				8BC607472F6841C8001B261B /* BackoffCalculatorTests.swift in Sources */,
 				EE7383502F5DCF5300A16B91 /* OnboardingServiceTests.swift in Sources */,
 				EE7383512F5DCF5300A16B91 /* ClipboardImportParserTests.swift in Sources */,
 				EE7383522F5DCF5300A16B91 /* FamlistTests.swift in Sources */,

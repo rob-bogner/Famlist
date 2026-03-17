@@ -42,12 +42,13 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     @Published var pendingOperations: Int = 0
     
     // MARK: - Dependencies
-    
+
     private let repository: ItemsRepository
     private let itemStore: SwiftDataItemStore
     private let operationQueue: SyncOperationQueue
     private let conflictResolver: ConflictResolver
     private let hlcGenerator: HybridLogicalClockGenerator
+    private let backoffCalculator: BackoffCalculator
     
     // MARK: - State
     
@@ -67,13 +68,15 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         itemStore: SwiftDataItemStore,
         operationQueue: SyncOperationQueue,
         conflictResolver: ConflictResolver,
-        hlcGenerator: HybridLogicalClockGenerator
+        hlcGenerator: HybridLogicalClockGenerator,
+        backoffCalculator: BackoffCalculator = .default
     ) {
         self.repository = repository
         self.itemStore = itemStore
         self.operationQueue = operationQueue
         self.conflictResolver = conflictResolver
         self.hlcGenerator = hlcGenerator
+        self.backoffCalculator = backoffCalculator
         
         // Start background queue processing
         startQueueProcessing()
@@ -373,46 +376,38 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             UserLog.Sync.operationCompleted(type: operation.type.rawValue)
             
         } catch {
-            // Check if max retries will be exceeded BEFORE incrementing
-            let willExceedMaxRetries = operation.retryCount >= 19
-            
-            // Failure - schedule retry with exponential backoff
-            let backoff = exponentialBackoff(retryCount: operation.retryCount)
-            operationQueue.updateRetrySchedule(operation.id, error: error, backoff: backoff)
-            
-            // Update local sync status to failed if max retries exceeded
+            // retryCount after this failure = operation.retryCount + 1
+            let newRetryCount = operation.retryCount + 1
+            let willExceedMaxRetries = backoffCalculator.hasExceededMaxRetries(newRetryCount)
+
+            // Failure – schedule retry with exponential backoff + jitter.
+            let backoff = backoffCalculator.delay(for: operation.retryCount)
+            operationQueue.updateRetrySchedule(
+                operation.id,
+                error: error,
+                backoff: backoff,
+                maxRetries: backoffCalculator.maxRetries
+            )
+
+            // Mark local entity as failed once all retries are exhausted.
             if willExceedMaxRetries {
                 if let uuid = UUID(uuidString: operation.itemId),
                    let entity = try? itemStore.fetchItem(id: uuid) {
                     entity.setSyncStatus(.failed)
                     try? itemStore.save()
                 }
-                
-                // User-friendly error log after max retries
                 UserLog.Sync.failed(reason: "Maximale Wiederholungen erreicht")
             }
-            
+
             logVoid(params: (
                 action: "processOperation.error",
                 operationId: operation.id,
                 itemId: operation.itemId,
-                retryCount: operation.retryCount + 1,
+                retryCount: newRetryCount,
                 backoff: backoff,
                 error: error.localizedDescription
             ))
         }
-    }
-    
-    /// Calculates exponential backoff delay
-    /// - Parameter retryCount: Number of retries so far
-    /// - Returns: Delay in seconds before next retry
-    private func exponentialBackoff(retryCount: Int) -> TimeInterval {
-        // Base: 2 seconds, doubles each time, capped at 5 minutes
-        let base: TimeInterval = 2.0
-        let maxDelay: TimeInterval = 300.0 // 5 minutes
-        
-        let delay = base * pow(2.0, Double(retryCount))
-        return min(delay, maxDelay)
     }
     
     // MARK: - Background Processing

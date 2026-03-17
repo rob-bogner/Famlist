@@ -158,14 +158,17 @@ final class SyncOperation: Identifiable {
         )
     }
     
-    /// Records a failed attempt and calculates next retry time
-    func recordFailure(error: Error, backoff: TimeInterval) {
+    /// Records a failed attempt and schedules the next retry.
+    /// - Parameters:
+    ///   - error: The error that caused the failure.
+    ///   - backoff: Delay in seconds before the next retry attempt.
+    ///   - maxRetries: Maximum allowed retries; defaults to `BackoffCalculator.default.maxRetries`.
+    func recordFailure(error: Error, backoff: TimeInterval, maxRetries: Int = BackoffCalculator.default.maxRetries) {
         retryCount += 1
         lastAttemptAt = Date()
         lastErrorMessage = error.localizedDescription
-        
-        // Mark as permanently failed if max retries exceeded
-        if retryCount >= 20 {
+
+        if retryCount >= maxRetries {
             hasFailed = true
             nextRetryAt = nil
         } else {

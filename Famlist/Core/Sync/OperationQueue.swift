@@ -161,16 +161,17 @@ final class SyncOperationQueue {
     ///   - operationId: UUID of the operation
     ///   - error: The error that occurred
     ///   - backoff: Time interval to wait before next retry
-    func updateRetrySchedule(_ operationId: UUID, error: Error, backoff: TimeInterval) {
+    ///   - maxRetries: Maximum allowed retries before marking as permanently failed.
+    func updateRetrySchedule(_ operationId: UUID, error: Error, backoff: TimeInterval, maxRetries: Int = BackoffCalculator.default.maxRetries) {
         let descriptor = FetchDescriptor<SyncOperation>(
             predicate: #Predicate { $0.id == operationId }
         )
-        
+
         do {
             let operations = try context.fetch(descriptor)
             guard let operation = operations.first else { return }
-            
-            operation.recordFailure(error: error, backoff: backoff)
+
+            operation.recordFailure(error: error, backoff: backoff, maxRetries: maxRetries)
             try context.save()
             
             logVoid(params: (
