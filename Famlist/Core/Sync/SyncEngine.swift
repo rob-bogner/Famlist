@@ -49,6 +49,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     private let conflictResolver: ConflictResolver
     private let hlcGenerator: HybridLogicalClockGenerator
     private let backoffCalculator: BackoffCalculator
+    private let syncMonitor: SyncMonitor?
     
     // MARK: - State
     
@@ -69,7 +70,8 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         operationQueue: SyncOperationQueue,
         conflictResolver: ConflictResolver,
         hlcGenerator: HybridLogicalClockGenerator,
-        backoffCalculator: BackoffCalculator = .default
+        backoffCalculator: BackoffCalculator = .default,
+        syncMonitor: SyncMonitor? = nil
     ) {
         self.repository = repository
         self.itemStore = itemStore
@@ -77,6 +79,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         self.conflictResolver = conflictResolver
         self.hlcGenerator = hlcGenerator
         self.backoffCalculator = backoffCalculator
+        self.syncMonitor = syncMonitor
         
         // Start background queue processing
         startQueueProcessing()
@@ -224,6 +227,17 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     func resumeSync() async {
         await processQueue()
     }
+
+    /// Resets a permanently-failed item back to pending and re-processes the queue.
+    func retryItem(_ item: ItemModel) async {
+        guard let uuid = UUID(uuidString: item.id) else { return }
+        if let entity = try? itemStore.fetchItem(id: uuid) {
+            entity.setSyncStatus(.pendingUpdate)
+            try? itemStore.save()
+        }
+        operationQueue.resetFailedOperation(itemId: item.id)
+        await processQueue()
+    }
     
     // MARK: - Local Storage
     
@@ -333,9 +347,11 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     }
     
     private func processOperation(_ operation: SyncOperation) async {
+        let monitorId = syncMonitor?.startOperation()
+        let start = Date()
         do {
             let item = try operation.decodeItemSnapshot()
-            
+
             logVoid(params: (
                 action: "processOperation",
                 operationId: operation.id,
@@ -343,9 +359,9 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 itemId: operation.itemId,
                 retryCount: operation.retryCount
             ))
-            
+
             UserLog.Sync.processingOperation(type: operation.type.rawValue)
-            
+
             switch operation.type {
             case .create:
                 _ = try await repository.createItem(item)
@@ -354,10 +370,10 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             case .delete:
                 try await repository.deleteItem(id: item.id, listId: operation.listId)
             }
-            
+
             // Success - remove from queue and update local sync status
             operationQueue.markSuccess(operation.id)
-            
+
             if let uuid = UUID(uuidString: operation.itemId) {
                 if operation.type == .delete {
                     try? itemStore.purge(id: uuid)
@@ -366,16 +382,24 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                     try? itemStore.save()
                 }
             }
-            
+
+            if let monitorId {
+                syncMonitor?.endOperation(monitorId, success: true, latency: Date().timeIntervalSince(start))
+            }
+
             logVoid(params: (
                 action: "processOperation.success",
                 operationId: operation.id,
                 itemId: operation.itemId
             ))
-            
+
             UserLog.Sync.operationCompleted(type: operation.type.rawValue)
-            
+
         } catch {
+            if let monitorId {
+                syncMonitor?.endOperation(monitorId, success: false, latency: Date().timeIntervalSince(start))
+            }
+
             // retryCount after this failure = operation.retryCount + 1
             let newRetryCount = operation.retryCount + 1
             let willExceedMaxRetries = backoffCalculator.hasExceededMaxRetries(newRetryCount)
@@ -429,6 +453,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     
     private func updatePendingCount() {
         pendingOperations = operationQueue.count
+        syncMonitor?.updateQueueDepth(operationQueue.count)
     }
     
     // MARK: - Lifecycle Management

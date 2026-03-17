@@ -127,13 +127,17 @@ struct ItemMeta: View { // Secondary information about the item.
 
 /// Represents a single row in the list view, displaying details of an item.
 struct ListRowView: View { // Main row view combining thumbnail, title, and meta.
-    
+
     // MARK: - Properties
-    
+
     /// The item model that this row represents.
     let item: ItemModel // Data to render.
-    
+
+    /// Called when the user confirms a manual retry for a failed sync.
+    var onRetry: (() -> Void)?
+
     @State private var modalPhoto: ModalPhoto? // Triggers .sheet presentation when set.
+    @State private var showRetryConfirmation = false // Controls the retry confirmation dialog.
     
     // MARK: - Body
     
@@ -151,7 +155,7 @@ struct ListRowView: View { // Main row view combining thumbnail, title, and meta
                 VStack(alignment: .leading, spacing: 0) { // Text column with custom spacing between elements.
                     VStack(alignment: .leading, spacing: DS.Spacing.xs) { // Title and brand grouped together with tight spacing (4pt).
                         ItemTitle(text: item.name, checked: item.isChecked) // Title with strike-through when checked.
-                        
+
                         if let brand = item.brand, !brand.isEmpty { // Only show brand if present.
                             ItemBrand(brand: brand) // Brand line below title.
                         } else {
@@ -160,18 +164,36 @@ struct ListRowView: View { // Main row view combining thumbnail, title, and meta
                                 .frame(maxWidth: .infinity, alignment: .leading) // Match ItemBrand frame.
                         }
                     }
-                    
+
                     Spacer() // Push meta to bottom, creating larger gap between brand and meta.
-                    
+
                     ItemMeta(units: item.units, measure: item.measure, price: item.price) // Units/measure/price line at bottom.
                 }
                 .padding(.vertical, 8) // Small padding at top and bottom for breathing room from card edges.
                 .frame(minHeight: 70) // Minimum height ensures consistent rows, padding adds to this.
                 .padding(.trailing, 10) // Space from right edge to avoid clipping.
+
+                if item.isSyncFailed { // Warn icon when sync permanently failed.
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                        .padding(.trailing, 12)
+                        .onTapGesture { showRetryConfirmation = true }
+                        .accessibilityLabel("Sync fehlgeschlagen. Tippen zum erneuten Synchronisieren.")
+                }
             }
             .background(item.isChecked ? Color.theme.buttonFillColor : Color.clear) // Tint background when checked.
             .cardStyle() // Rounded card styling from DesignSystem.
             .springCheckAnimation(isChecked: item.isChecked) // Spring animation for check/uncheck
+            .confirmationDialog(
+                "Sync fehlgeschlagen",
+                isPresented: $showRetryConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Erneut synchronisieren") { onRetry?() }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text("Der Artikel konnte nicht synchronisiert werden. Soll ein neuer Versuch gestartet werden?")
+            }
         }
         .transition(.asymmetric(
             insertion: .opacity.combined(with: .move(edge: .trailing)).combined(with: .scale(scale: 0.95)),

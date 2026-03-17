@@ -39,7 +39,8 @@ extension ItemEntity {
             hlcCounter: hlcCounter,
             hlcNodeId: hlcNodeId,
             tombstone: tombstone,
-            lastModifiedBy: lastModifiedBy
+            lastModifiedBy: lastModifiedBy,
+            isSyncFailed: syncStatus == .failed
         )
     }
 

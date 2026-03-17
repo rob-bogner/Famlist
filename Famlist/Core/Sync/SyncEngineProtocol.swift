@@ -41,4 +41,7 @@ protocol SyncEngineProtocol: AnyObject {
 
     /// Processes any pending queue entries (called on connectivity restore).
     func resumeSync() async
+
+    /// Resets a permanently-failed item and re-queues it for sync.
+    func retryItem(_ item: ItemModel) async
 }

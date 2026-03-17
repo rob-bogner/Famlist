@@ -245,6 +245,37 @@ final class SyncOperationQueue {
         }
     }
     
+    /// Resets a permanently-failed operation so it is eligible for retry.
+    /// - Parameter itemId: The item ID string whose failed operation should be reset.
+    func resetFailedOperation(itemId: String) {
+        let descriptor = FetchDescriptor<SyncOperation>(
+            predicate: #Predicate { $0.itemId == itemId && $0.hasFailed }
+        )
+
+        do {
+            let operations = try context.fetch(descriptor)
+            for operation in operations {
+                operation.hasFailed = false
+                operation.retryCount = 0
+                operation.nextRetryAt = nil
+                operation.lastErrorMessage = nil
+            }
+            try context.save()
+
+            logVoid(params: (
+                action: "resetFailedOperation",
+                itemId: itemId,
+                count: operations.count
+            ))
+        } catch {
+            logVoid(params: (
+                action: "resetFailedOperation.error",
+                itemId: itemId,
+                error: error.localizedDescription
+            ))
+        }
+    }
+
     /// Clears all failed operations (for manual cleanup)
     func clearFailed() {
         let descriptor = FetchDescriptor<SyncOperation>(

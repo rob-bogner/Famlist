@@ -362,6 +362,11 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }
     }
     
+    /// Re-queues a permanently-failed item for sync.
+    func retryItem(_ item: ItemModel) {
+        Task { await syncEngine?.retryItem(item) }
+    }
+
     /// Toggles the checked state of an item and persists the change via updateItem.
     /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
     func toggleItemChecked(_ item: ItemModel) {

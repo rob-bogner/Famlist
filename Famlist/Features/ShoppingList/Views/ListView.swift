@@ -64,7 +64,7 @@ struct ListView: View { // Declares a SwiftUI view for the list content.
 
     /// Einzelne Zeile für einen unerledigten Artikel mit Swipe-Aktionen.
     private func uncheckedRow(for item: ItemModel) -> some View {
-        ListRowView(item: item)
+        ListRowView(item: item, onRetry: { listViewModel.retryItem(item) })
             .id("unchecked-\(item.id)") // Section-specific ID prevents view reuse between sections
             .listRowInsets(DS.List.rowInsets)
             .listRowSeparator(.hidden)

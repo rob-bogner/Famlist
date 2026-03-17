@@ -101,7 +101,11 @@ struct ItemModel: Identifiable, Hashable, Codable {
     
     /// Identifier of last modifier (for conflict tracking)
     var lastModifiedBy: String?
-    
+
+    /// Whether the last sync attempt for this item permanently failed (all retries exhausted).
+    /// Not persisted in the database — derived from `ItemEntity.syncStatus` at mapping time.
+    var isSyncFailed: Bool = false
+
     // MARK: - Sorting Logic
     
     /// Determines the sort order between two items based on creation date and ID.
@@ -182,7 +186,8 @@ struct ItemModel: Identifiable, Hashable, Codable {
         hlcCounter: Int? = nil,
         hlcNodeId: String? = nil,
         tombstone: Bool? = nil,
-        lastModifiedBy: String? = nil
+        lastModifiedBy: String? = nil,
+        isSyncFailed: Bool = false
     ) {
         self.id = id // Assigns the unique identifier
         self.imageUrl = imageUrl
@@ -204,5 +209,6 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.hlcNodeId = hlcNodeId
         self.tombstone = tombstone
         self.lastModifiedBy = lastModifiedBy
+        self.isSyncFailed = isSyncFailed
     }
 }

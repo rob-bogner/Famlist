@@ -76,7 +76,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 itemStore: itemStore,
                 operationQueue: operationQueue,
                 conflictResolver: conflictResolver,
-                hlcGenerator: hlcGenerator
+                hlcGenerator: hlcGenerator,
+                syncMonitor: syncMonitor
             )
             
             // Create list VM without starting observation; it will start after auth completes.
