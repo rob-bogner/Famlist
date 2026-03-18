@@ -52,7 +52,7 @@ extension ListViewModel {
 
             // Upsert fetched items into SwiftData (no purge per FAM-79).
             for item in items {
-                try? itemStore.upsert(model: item)
+                _ = try? itemStore.upsert(model: item)
             }
             try? itemStore.save()
 

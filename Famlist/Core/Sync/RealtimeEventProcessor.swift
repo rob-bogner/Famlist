@@ -135,17 +135,27 @@ final class RealtimeEventProcessor {
             }
 
             if let existingEntity = try? itemStore.fetchItem(id: uuid) {
+                // Guard: never overwrite an in-flight local mutation.
+                // A .pendingUpdate / .pendingCreate entity carries changes the SyncEngine has not
+                // yet confirmed with Supabase.  Applying a stale Realtime echo here would reset the
+                // field values (e.g. units=3 → units=1) before the outbound write completes.
+                // This mirrors the identical guard added to runIncrementalSync() (FAM-41).
+                guard existingEntity.syncStatus != .pendingUpdate,
+                      existingEntity.syncStatus != .pendingCreate else {
+                    logVoid(params: (
+                        action: "processUpdate.skip",
+                        itemId: item.id,
+                        reason: "pendingLocalChange",
+                        status: existingEntity.syncStatus.rawValue
+                    ))
+                    return
+                }
+
                 let existingMetadata = extractMetadataFromEntity(existingEntity)
 
                 // Use CRDT conflict resolution
                 if conflictResolver.shouldApplyRemote(localMeta: existingMetadata, remoteMeta: metadata) {
                     applyToEntity(existingEntity, item: item, metadata: metadata)
-
-                    // Only mark as synced if we don't have pending local changes
-                    if existingEntity.syncStatus == .synced {
-                        existingEntity.setSyncStatus(.synced)
-                    }
-
                     try itemStore.save()
 
                     logVoid(params: (
@@ -250,9 +260,7 @@ final class RealtimeEventProcessor {
         }
         
         // Check if we have a pending local operation for this item
-        var itemName: String?
         if let existingEntity = try? itemStore.fetchItem(id: uuid) {
-            itemName = existingEntity.name // Speichere Namen für User-Log
             if existingEntity.syncStatus == .pendingCreate ||
                existingEntity.syncStatus == .pendingUpdate {
                 // We have local changes - don't delete yet, let sync engine handle it
@@ -383,7 +391,12 @@ final class RealtimeEventProcessor {
             return nil
         }
         
-        let hlcTimestamp = extractInt64("hlc_timestamp") ?? Int64(Date().timeIntervalSince1970 * 1000)
+        // Fallback of 0 (epoch) ensures a row with null hlc_timestamp always loses to any valid
+        // local HLC in CRDT conflict resolution (happenedBefore → remote epoch < local ms ≫ 0).
+        // The previous fallback of Int64(Date().timeIntervalSince1970 * 1000) could TIE with or
+        // beat the freshly-generated local HLC, causing stale Realtime echoes to overwrite
+        // in-flight local changes (e.g. units=3 overwritten back to units=1).
+        let hlcTimestamp = extractInt64("hlc_timestamp") ?? 0
         let hlcCounter = extractInt("hlc_counter") ?? 0
         let hlcNodeId = extractString("hlc_node_id") ?? ""
         let tombstone = extractBool("tombstone") ?? false

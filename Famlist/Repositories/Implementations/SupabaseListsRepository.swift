@@ -268,7 +268,7 @@ final class SupabaseListsRepository: ListsRepository {
                     for await deletion in deletions {
                         // PK (list_id, profile_id) ist immer im oldRecord enthalten
                         if let raw = deletion.oldRecord["list_id"],
-                           let listIdString: String = raw as? String ?? {
+                           let listIdString: String = {
                                let s = String(describing: raw)
                                return s == "<null>" ? nil : s.replacingOccurrences(of: "AnyJSON.", with: "")
                            }(),

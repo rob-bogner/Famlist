@@ -52,9 +52,16 @@ extension ItemEntity {
     /// Updating such an entity would resurrect it in the UI and violate Offline-First delete semantics.
     /// The SyncEngine's queued `.delete` operation will call `purge(id:)` once the server confirms.
     ///
+    /// **Synced-tombstone guard (FAM-XX):** Items whose remote deletion has already been confirmed
+    /// (`tombstone == true && syncStatus == .synced`) must not be reactivated by a subsequent
+    /// local `upsert()` call — e.g. when re-adding an item whose deterministic UUID collides with
+    /// the still-persisted tombstone entity. Only an explicit `pendingRecovery` transition may
+    /// restore such an item.
+    ///
     /// - Parameter model: Source ItemModel typically fetched from Supabase.
     func apply(model: ItemModel) {
         guard syncStatus != .pendingDelete else { return }
+        guard !(tombstone == true && syncStatus == .synced) else { return }
 
         self.ownerPublicId = model.ownerPublicId
         self.imageData = model.imageData

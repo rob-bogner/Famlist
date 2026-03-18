@@ -90,7 +90,19 @@ extension ListViewModel {
                 if item.tombstone == true {
                     applyRemoteTombstoneModel(item)
                 } else {
-                    try? itemStore.upsert(model: item)
+                    // Skip upsert for items that have a pending local mutation (.pendingUpdate /
+                    // .pendingCreate).  The remote delta may carry stale field values (e.g. units=1
+                    // while the user just incremented to units=2) and must not overwrite the
+                    // in-flight local change before the SyncEngine has a chance to confirm it.
+                    let itemUUID = UUID(uuidString: item.id)
+                    let hasPendingLocalChange: Bool = {
+                        guard let uuid = itemUUID,
+                              let entity = try? itemStore.fetchItem(id: uuid) else { return false }
+                        return entity.syncStatus == .pendingUpdate || entity.syncStatus == .pendingCreate
+                    }()
+                    if !hasPendingLocalChange {
+                        _ = try? itemStore.upsert(model: item)
+                    }
                     if let updatedAt = item.updatedAt {
                         maxUpdatedAt = maxUpdatedAt.map { max($0, updatedAt) } ?? updatedAt
                     }
@@ -111,7 +123,11 @@ extension ListViewModel {
                 newTimestamp: maxUpdatedAt as Any
             ))
         } catch {
-            // On failure: do not advance lastSyncTimestamp; keep cached data visible.
+            // On failure: do not advance lastSyncTimestamp.
+            // Still refresh from the local SwiftData cache so that any items written
+            // by storeLocally() (e.g. a just-added item) become visible even when
+            // the network is unavailable or fetchItemsSince() throws.
+            refreshItemsFromStore()
             logVoid(params: (
                 action: "runIncrementalSync.error",
                 listId: listId,

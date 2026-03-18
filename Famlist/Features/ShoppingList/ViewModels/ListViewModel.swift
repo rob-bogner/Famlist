@@ -287,17 +287,22 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         normalized.listId = normalized.listId ?? listId.uuidString
 
         // Duplikat-Check: existiert bereits ein ungehacktes Item mit gleichem Namen?
-        if let existing = items.first(where: {
+        if let existingIndex = items.firstIndex(where: {
             $0.name.lowercased() == normalized.name.lowercased() && !$0.isChecked
         }) {
-            var incremented = existing
-            incremented.units += 1
+            var incremented = items[existingIndex]
+            let oldUnits = incremented.units
+            incremented.units = oldUnits + 1
             UserLog.Data.itemCountIncremented(
-                name: existing.name,
-                from: existing.units,
-                to: existing.units + 1,
-                measure: existing.measure
+                name: incremented.name,
+                from: oldUnits,
+                to: incremented.units,
+                measure: incremented.measure
             )
+            // Optimistic update: immediately reflect the incremented count in the UI
+            // without waiting for the async SwiftData round-trip. The subsequent
+            // refreshItemsFromStore() (inside updateItem's Task) will confirm the value.
+            items[existingIndex] = incremented
             updateItem(incremented, suppressUserLog: true)
             return
         }
@@ -325,9 +330,17 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             }
         }
 
+        // Optimistic UI add: show the item immediately without waiting for the
+        // Realtime echo or the async refreshItemsFromStore() round-trip.
+        // The subsequent refreshItemsFromStore() (inside the Task below) will replace
+        // this entry with the authoritative SwiftData entity (deterministic UUID).
+        items.append(normalized)
+
         guard let syncEngine else { return }
         Task {
             await syncEngine.createItem(normalized)
+            // Refresh replaces the optimistic item with the canonical SwiftData entity.
+            await MainActor.run { self.refreshItemsFromStore() }
         }
     }
     

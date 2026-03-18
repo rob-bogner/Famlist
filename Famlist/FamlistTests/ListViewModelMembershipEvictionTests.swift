@@ -113,8 +113,17 @@ final class ListViewModelMembershipEvictionTests: XCTestCase {
     // MARK: - RC-5 Regression: startObservingMemberships startet nur nach configure(listsRepository:)
 
     func test_startObservingMemberships_withoutConfigure_doesNotStartTask() {
-        // listsRepository is nil before configure() → guard exits → membershipTask stays nil
-        let vm = makeViewModel(activeListId: UUID())
+        // listsRepository is nil before configure() → guard exits → membershipTask stays nil.
+        // Do NOT use makeViewModel() here because that helper always calls configure(listsRepository:).
+        let container = PersistenceController.preview.container
+        let vm = ListViewModel(
+            listId: UUID(),
+            repository: PreviewItemsRepository(),
+            itemStore: SwiftDataItemStore(context: container.mainContext),
+            listStore: SwiftDataListStore(context: container.mainContext),
+            startImmediately: false
+        )
+        // No configure(listsRepository:) call → vm.listsRepository is nil
         vm.startObservingMemberships(userId: ownerId)
         XCTAssertNil(vm.membershipTask, "membershipTask must remain nil when listsRepository is nil")
     }

@@ -316,15 +316,15 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             // Set sync status based on operation
             if metadata.tombstone {
                 entity.setSyncStatus(.pendingDelete)
+            } else if entity.isSoftDeleted {
+                // FAM-XX: Reactivation path — re-add of a previously deleted item whose
+                // deletedAt is still set from the confirmed deletion. setSyncStatus(.pendingCreate)
+                // clears deletedAt so the item becomes visible in the UI immediately.
+                entity.setSyncStatus(.pendingCreate)
+            } else if entity.syncStatus == .pendingCreate {
+                // In-flight new item: keep as pending create.
             } else {
-                // Check if this is new or existing
-                if entity.syncStatus == .synced {
-                    entity.setSyncStatus(.pendingUpdate)
-                } else if entity.syncStatus == .pendingCreate {
-                    // Keep as pending create
-                } else {
-                    entity.setSyncStatus(.pendingUpdate)
-                }
+                entity.setSyncStatus(.pendingUpdate)
             }
             
             try itemStore.save()
@@ -416,9 +416,32 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
 
             switch operation.type {
             case .create:
-                _ = try await repository.createItem(item)
+                // FAM-XX: The item snapshot was captured before HLC.tick(), so it carries
+                // nil CRDT fields (tombstone=nil, hlcTimestamp=nil). Apply the stored
+                // CRDTMetadata here so the Supabase upsert sends tombstone=false and the
+                // new HLC explicitly — otherwise encodeIfPresent omits them and the DB
+                // preserves any existing tombstone=true on the row.
+                var itemToCreate = item
+                if let metadata = try? operation.decodeCRDTMetadata() {
+                    itemToCreate.tombstone      = metadata.tombstone
+                    itemToCreate.hlcTimestamp   = metadata.hlc.timestamp
+                    itemToCreate.hlcCounter     = metadata.hlc.counter
+                    itemToCreate.hlcNodeId      = metadata.hlc.nodeId
+                    itemToCreate.lastModifiedBy = metadata.lastModifiedBy
+                }
+                _ = try await repository.createItem(itemToCreate)
             case .update:
-                try await repository.updateItem(item)
+                // Enrich with the CRDT metadata stored at queue time so that Supabase
+                // receives the new HLC — not the old HLC that was baked into the item
+                // snapshot when the operation was queued.  Mirrors the existing .create fix.
+                var itemToUpdate = item
+                if let metadata = try? operation.decodeCRDTMetadata() {
+                    itemToUpdate.hlcTimestamp   = metadata.hlc.timestamp
+                    itemToUpdate.hlcCounter     = metadata.hlc.counter
+                    itemToUpdate.hlcNodeId      = metadata.hlc.nodeId
+                    itemToUpdate.lastModifiedBy = metadata.lastModifiedBy
+                }
+                try await repository.updateItem(itemToUpdate)
             case .delete:
                 try await repository.deleteItem(id: item.id, listId: operation.listId)
             }

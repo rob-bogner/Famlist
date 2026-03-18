@@ -296,16 +296,23 @@ extension ListViewModel {
         
         if !pendingAnimatedItemIDs.isEmpty {
             // Preserve the local ordering for items that currently have an optimistic animation in flight.
+            // Position is stabilised by re-inserting at the index the item held in self.items.
+            // Field values are NOT frozen: the incoming snapshot's version is always used so that
+            // concurrent field updates (e.g. units increment after duplicate-add) are immediately visible.
             for pendingId in pendingAnimatedItemIDs {
                 guard let currentIndex = items.firstIndex(where: { $0.id == pendingId }) else { continue }
-                let currentItem = items[currentIndex]
-                
+
                 if let remoteIndex = resolvedItems.firstIndex(where: { $0.id == pendingId }) {
-                    resolvedItems.remove(at: remoteIndex)
+                    // Item present in new snapshot: keep its updated field values, stabilise position only.
+                    let updatedItem = resolvedItems.remove(at: remoteIndex)
+                    let insertionIndex = min(currentIndex, resolvedItems.count)
+                    resolvedItems.insert(updatedItem, at: insertionIndex)
+                } else {
+                    // Item absent from snapshot (removed while animation was in flight):
+                    // fall back to previous behaviour and re-insert the local copy at stable position.
+                    let insertionIndex = min(currentIndex, resolvedItems.count)
+                    resolvedItems.insert(items[currentIndex], at: insertionIndex)
                 }
-                
-                let insertionIndex = min(currentIndex, resolvedItems.count)
-                resolvedItems.insert(currentItem, at: insertionIndex)
             }
         }
         
