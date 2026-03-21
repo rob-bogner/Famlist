@@ -270,6 +270,63 @@ struct Thumbnail: View { // Square thumbnail with placeholder
 }
 
 // MARK: - Animation Modifiers
+/// Transient gradient-glow overlay that plays once when an item arrives from a remote sync.
+///
+/// The glow runs from top-leading to bottom-trailing in the accent colour.
+/// It fades to zero within ~1 second and never replays until the `isActive` flag cycles
+/// false → true again (controlled by ListViewModel.recentlySyncedItemIDs).
+struct RemoteSyncHighlightModifier: ViewModifier {
+    let isActive: Bool
+    @State private var glowOpacity: Double = 0
+
+    func body(content: Content) -> some View {
+        content
+            // Subtle gradient fill
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.accentColor.opacity(0.25),
+                                Color.accentColor.opacity(0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .opacity(glowOpacity)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            )
+            // Gradient border stroke
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.accentColor.opacity(0.65),
+                                Color.accentColor.opacity(0.12)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+                    .opacity(glowOpacity)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            )
+            .task(id: isActive) {
+                guard isActive else { return }
+                glowOpacity = 1.0
+                try? await Task.sleep(nanoseconds: 150_000_000) // 0.15s pre-glow hold
+                withAnimation(.easeOut(duration: 2.0)) {
+                    glowOpacity = 0
+                }
+            }
+    }
+}
+
 /// Spring animation for check/uncheck interactions
 struct SpringCheckAnimation: ViewModifier {
     let isChecked: Bool
@@ -392,6 +449,13 @@ struct CapsuleBorderModifier: ViewModifier { // Draws a capsule border around co
 
 extension View { // Convenience wrappers
     // MARK: - Animation Extensions
+
+    /// Applies a one-shot gradient-glow overlay when `isActive` transitions to true.
+    /// Used to signal that an item was just freshly applied from a remote sync source.
+    func remoteSyncHighlight(isActive: Bool) -> some View {
+        modifier(RemoteSyncHighlightModifier(isActive: isActive))
+    }
+
     /// Applies spring animation for check/uncheck interactions
     func springCheckAnimation(isChecked: Bool) -> some View {
         modifier(SpringCheckAnimation(isChecked: isChecked))

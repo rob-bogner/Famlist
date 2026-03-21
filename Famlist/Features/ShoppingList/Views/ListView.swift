@@ -76,7 +76,11 @@ struct ListView: View {
     }
 
     private func uncheckedRow(for item: ItemModel, isLast: Bool) -> some View {
-        ListRowView(item: item, onRetry: { listViewModel.retryItem(item) })
+        ListRowView(
+            item: item,
+            isRecentlySynced: listViewModel.recentlySyncedItemIDs.contains(item.id),
+            onRetry: { listViewModel.retryItem(item) }
+        )
             .id("unchecked-\(item.id)")
             .listRowInsets(DS.List.rowInsets)
             .listRowSeparator(.hidden)
@@ -118,7 +122,10 @@ struct ListView: View {
             if listViewModel.checkedItemCount > 0 {
                 Section(header: SectionHeader(title: String(localized: "section.checkedItems.title"))) {
                     ForEach(listViewModel.checkedItems) { item in
-                        ListRowView(item: item)
+                        ListRowView(
+                            item: item,
+                            isRecentlySynced: listViewModel.recentlySyncedItemIDs.contains(item.id)
+                        )
                             .id("checked-\(item.id)")
                             .listRowInsets(DS.List.rowInsets)
                             .listRowSeparator(.hidden)

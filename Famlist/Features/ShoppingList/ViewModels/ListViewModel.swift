@@ -129,6 +129,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// While they remain here, we keep the local ordering authoritative to avoid jitter.
     internal var pendingAnimatedItemIDs: Set<String> = []
 
+    /// IDs of items freshly applied from a remote source (Realtime event or IncrementalSync delta).
+    /// Drives the one-shot sync-highlight animation in ListRowView.
+    /// Entries are removed automatically after 2 seconds via markRecentlySynced(ids:).
+    /// Never populated by local mutations — only by the Realtime stream handler and runIncrementalSync().
+    @Published var recentlySyncedItemIDs: Set<String> = []
+
     /// Suppresses `refreshItemsFromStore()` during the synchronous forEach phase of bulk-delete.
     /// Prevents per-item SwiftData refreshes from re-rendering the list one item at a time.
     internal var isBulkDeleting = false
@@ -245,6 +251,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         observeTask?.cancel()
         self.listId = newId
         self.items = []
+        recentlySyncedItemIDs = []
         // Reset pagination state for the new list (cursor is loaded from UserDefaults per listId in startObserving).
         currentCursor = PaginationCursor.load(listId: newId)
         hasMoreItems = true
@@ -260,6 +267,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         membershipTask?.cancel()
         membershipTask = nil
         items = []
+        recentlySyncedItemIDs = []
         selectedItem = nil
         defaultList = nil
         allLists = []
@@ -487,8 +495,24 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true)
     }
     
+    // MARK: - Remote Sync Highlight
+
+    /// Marks items as recently synced from a remote source and schedules their removal after 2 seconds.
+    /// Safe to call with an overlapping set — `formUnion` is idempotent.
+    /// The removal subtracts only the IDs passed in this call, so a concurrent markRecentlySynced()
+    /// for different items is not affected.
+    internal func markRecentlySynced(ids: Set<String>) {
+        guard !ids.isEmpty else { return }
+        recentlySyncedItemIDs.formUnion(ids)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard let self else { return }
+            self.recentlySyncedItemIDs.subtract(ids)
+        }
+    }
+
     // MARK: - Error Handling
-    
+
     /// Stores a user-presentable error string on the main actor.
     @MainActor
     internal func setError(_ error: Error) {

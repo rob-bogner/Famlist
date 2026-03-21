@@ -111,7 +111,9 @@ extension ListViewModel {
         consecutiveEmptyPages = 0
 
         // Step 3: IncrementalSync — fetches all changes since lastSyncTimestamp.
-        await runIncrementalSync()
+        // suppressHighlight: true because pull-to-refresh is a user-triggered full refresh;
+        // highlighting all returned items would be noisy and misleading.
+        await runIncrementalSync(suppressHighlight: true)
 
         // Step 4: refreshItemsFromStore() is called inside runIncrementalSync().
         logVoid(params: (action: "pullToRefresh.complete", listId: listId))

@@ -133,6 +133,11 @@ struct ListRowView: View { // Main row view combining thumbnail, title, and meta
     /// The item model that this row represents.
     let item: ItemModel // Data to render.
 
+    /// When true, plays a one-shot gradient-glow overlay to indicate the item was just
+    /// applied from a remote sync source (Realtime event or IncrementalSync delta).
+    /// Driven by ListViewModel.recentlySyncedItemIDs — never set for local mutations.
+    var isRecentlySynced: Bool = false
+
     /// Called when the user confirms a manual retry for a failed sync.
     var onRetry: (() -> Void)?
 
@@ -183,6 +188,7 @@ struct ListRowView: View { // Main row view combining thumbnail, title, and meta
             }
             .background(item.isChecked ? Color.theme.buttonFillColor : Color.clear) // Tint background when checked.
             .cardStyle() // Rounded card styling from DesignSystem.
+            .remoteSyncHighlight(isActive: isRecentlySynced) // One-shot glow clipped to card bounds
             .springCheckAnimation(isChecked: item.isChecked) // Spring animation for check/uncheck
             .confirmationDialog(
                 "Sync fehlgeschlagen",

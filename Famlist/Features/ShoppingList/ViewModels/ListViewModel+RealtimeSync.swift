@@ -57,6 +57,32 @@ extension ListViewModel {
                     // so the UI only sees stable before/after states.
                     guard !self.isBulkMutationActive else { return }
                     let sorted = ListViewModel.currentSortOrder.apply(to: snapshot)
+
+                    // Detect items freshly applied from a remote Realtime event.
+                    // Compare HLC timestamps between the incoming snapshot and the current UI state.
+                    // Items whose HLC changed or that are entirely new were written by a remote device.
+                    // Items with in-flight local animations are excluded (they are local mutations).
+                    let currentItems = self.items
+                    let oldIDs = Set(currentItems.map { $0.id })
+                    let oldTimestamps = Dictionary(
+                        uniqueKeysWithValues: currentItems.compactMap { item -> (String, Int64)? in
+                            guard let ts = item.hlcTimestamp else { return nil }
+                            return (item.id, ts)
+                        }
+                    )
+                    let remoteChangedIDs: Set<String> = Set(sorted.compactMap { item -> String? in
+                        guard !self.pendingAnimatedItemIDs.contains(item.id) else { return nil }
+                        guard !self.pendingBulkDeleteIDs.contains(item.id) else { return nil }
+                        if !oldIDs.contains(item.id) { return item.id } // New item from remote
+                        let oldTs = oldTimestamps[item.id]
+                        let newTs = item.hlcTimestamp
+                        if oldTs != newTs { return item.id } // HLC changed → remote update
+                        return nil
+                    })
+                    if !remoteChangedIDs.isEmpty {
+                        self.markRecentlySynced(ids: remoteChangedIDs)
+                    }
+
                     // applyItems filters pendingBulkDeleteIDs and guards against redundant UI updates.
                     self.applyItems(sorted)
                 }
@@ -77,8 +103,11 @@ extension ListViewModel {
     /// - Tombstones (tombstone=true) → applyRemoteTombstoneModel() → purge from SwiftData.
     /// - On success: lastSyncTimestamp = max(updated_at) of returned items.
     /// - On failure: lastSyncTimestamp NOT updated; cached data remains visible.
+    /// - Parameter suppressHighlight: Pass `true` from pullToRefresh() to avoid highlighting
+    ///   all delta items during a user-triggered full refresh (only genuine background
+    ///   or foreground syncs should trigger the remote-highlight animation).
     @MainActor
-    func runIncrementalSync() async {
+    func runIncrementalSync(suppressHighlight: Bool = false) async {
         let since = loadLastSyncTimestamp()
         logVoid(params: (action: "runIncrementalSync.start", listId: listId, since: since))
 
@@ -86,6 +115,7 @@ extension ListViewModel {
             let deltaItems = try await repository.fetchItemsSince(listId: listId, since: since)
 
             var maxUpdatedAt: Date? = nil
+            var highlightIDs: Set<String> = []
             for item in deltaItems {
                 if item.tombstone == true {
                     applyRemoteTombstoneModel(item)
@@ -102,6 +132,9 @@ extension ListViewModel {
                     }()
                     if !hasPendingLocalChange {
                         _ = try? itemStore.upsert(model: item)
+                        if !suppressHighlight {
+                            highlightIDs.insert(item.id)
+                        }
                     }
                     if let updatedAt = item.updatedAt {
                         maxUpdatedAt = maxUpdatedAt.map { max($0, updatedAt) } ?? updatedAt
@@ -109,6 +142,10 @@ extension ListViewModel {
                 }
             }
             try? itemStore.save()
+
+            if !suppressHighlight {
+                markRecentlySynced(ids: highlightIDs)
+            }
 
             // Update high-water mark only when at least one non-tombstone item was received.
             if let newTs = maxUpdatedAt {
