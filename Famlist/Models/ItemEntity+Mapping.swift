@@ -130,7 +130,10 @@ extension ItemEntity {
             deletedAt: nil,
             list: listReference,
             syncStatus: .synced,
-            hlcTimestamp: model.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000),
+            // Fallback epoch=0 is consistent with extractMetadataFromEntity's remote fallback.
+            // Using current time here would make a newly-inserted entity (hlcTimestamp==nil)
+            // appear causally newer than any remote HLC → CRDT always rejects remote updates (Bug 1).
+            hlcTimestamp: model.hlcTimestamp ?? 0,
             hlcCounter: model.hlcCounter ?? 0,
             hlcNodeId: model.hlcNodeId ?? "",
             tombstone: model.tombstone ?? false,

@@ -170,13 +170,15 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             return
         }
         
-        // Initialize HLC if missing (for old data)
+        // Initialize HLC if missing (for old data).
+        // Epoch=0 fallback: hlcGenerator.receive() uses max(wallClock, remoteHLC+1),
+        // so epoch loses every comparison and the new HLC is always causally after now.
         let existingHLC = HybridLogicalClock(
-            timestamp: existingEntity.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000),
+            timestamp: existingEntity.hlcTimestamp ?? 0,
             counter: existingEntity.hlcCounter ?? 0,
             nodeId: existingEntity.hlcNodeId ?? hlcGenerator.nodeId
         )
-        
+
         let newHLC = hlcGenerator.receive(existingHLC)
         let metadata = CRDTMetadata(
             hlc: newHLC,
@@ -203,13 +205,14 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             return
         }
         
-        // Initialize HLC if missing (for old data)
+        // Initialize HLC if missing (for old data). Epoch=0 fallback is safe here
+        // because hlcGenerator.receive() always produces max(wallClock, remoteHLC+1).
         let existingHLC = HybridLogicalClock(
-            timestamp: existingEntity.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000),
+            timestamp: existingEntity.hlcTimestamp ?? 0,
             counter: existingEntity.hlcCounter ?? 0,
             nodeId: existingEntity.hlcNodeId ?? hlcGenerator.nodeId
         )
-        
+
         let newHLC = hlcGenerator.receive(existingHLC)
         let metadata = CRDTMetadata.deleted(by: hlcGenerator.nodeId, hlc: newHLC)
         

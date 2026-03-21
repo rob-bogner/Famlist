@@ -166,8 +166,10 @@ final class ItemEntity: Identifiable, Codable {
         let updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         let deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
         
-        // CRDT fields with defaults for backward compatibility
-        let hlcTimestamp = try container.decodeIfPresent(Int64.self, forKey: .hlcTimestamp) ?? Int64(Date().timeIntervalSince1970 * 1000)
+        // CRDT fields with defaults for backward compatibility.
+        // Fallback epoch=0: a record decoded without hlc_timestamp loses every CRDT comparison
+        // → remote wins, which is the correct safe-default for items that predate the HLC system.
+        let hlcTimestamp = try container.decodeIfPresent(Int64.self, forKey: .hlcTimestamp) ?? 0
         let hlcCounter = try container.decodeIfPresent(Int.self, forKey: .hlcCounter) ?? 0
         let hlcNodeId = try container.decodeIfPresent(String.self, forKey: .hlcNodeId) ?? ""
         let tombstone = try container.decodeIfPresent(Bool.self, forKey: .tombstone) ?? false

@@ -108,7 +108,7 @@ final class SupabaseRealtimeManager {
         let insertionTask = Task {
             for await insertion in insertions {
                 logVoid(params: (listId: listId, action: "realtimeInsert", record: insertion.record))
-                let payload = ["record": insertion.record]
+                let payload = ["record": Self.bridge(insertion.record)]
                 await onEvent(.insert(payload: payload))
             }
         }
@@ -116,7 +116,7 @@ final class SupabaseRealtimeManager {
         let updateTask = Task {
             for await update in updates {
                 logVoid(params: (listId: listId, action: "realtimeUpdate", record: update.record))
-                let payload = ["record": update.record]
+                let payload = ["record": Self.bridge(update.record)]
                 await onEvent(.update(payload: payload))
             }
         }
@@ -124,7 +124,7 @@ final class SupabaseRealtimeManager {
         let deletionTask = Task {
             for await deletion in deletions {
                 logVoid(params: (listId: listId, action: "realtimeDelete", oldRecord: deletion.oldRecord))
-                let payload = ["old_record": deletion.oldRecord]
+                let payload = ["old_record": Self.bridge(deletion.oldRecord)]
                 await onEvent(.delete(payload: payload))
             }
         }
@@ -132,6 +132,27 @@ final class SupabaseRealtimeManager {
         channelTasks[listId] = [insertionTask, updateTask, deletionTask]
     }
     
+    // MARK: - AnyJSON Bridge
+
+    /// Converts a [String: AnyJSON] Supabase record into a [String: Any] dictionary
+    /// with native Swift value types (String, Int, Double, Bool, nil).
+    ///
+    /// Background: The Supabase Realtime SDK delivers records as [String: AnyJSON] where
+    /// each value is an AnyJSON enum case. Passing this dict as [String: Any] makes every
+    /// conditional cast (as? Int, as? Int64, as? Double …) fail at runtime because the
+    /// runtime type is AnyJSON, not the target scalar type.
+    /// Encoding to JSON and round-tripping through JSONSerialization converts AnyJSON
+    /// back to native Foundation scalars so that all downstream extract functions work.
+    private static func bridge(_ record: [String: AnyJSON]) -> [String: Any] {
+        guard
+            let data = try? JSONEncoder().encode(record),
+            let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return record.mapValues { $0 as Any }
+        }
+        return dict
+    }
+
     /// Tears down the Realtime channel for a specific list when no more observers exist.
     /// - Parameter listId: The list UUID whose channel should be closed.
     func teardownRealtimeChannel(for listId: UUID) {

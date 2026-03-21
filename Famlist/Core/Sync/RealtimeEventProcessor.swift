@@ -168,7 +168,10 @@ final class RealtimeEventProcessor {
                     logVoid(params: (
                         action: "processUpdate.merge",
                         itemId: item.id,
-                        decision: "local_wins"
+                        decision: "local_wins",
+                        localHlcTimestamp: existingEntity.hlcTimestamp as Any,
+                        remoteHlcTimestamp: metadata.hlc.timestamp,
+                        localSyncStatus: existingEntity.syncStatus.rawValue
                     ))
                 }
             } else {
@@ -441,8 +444,12 @@ final class RealtimeEventProcessor {
     }
     
     private func extractMetadataFromEntity(_ entity: ItemEntity) -> CRDTMetadata {
-        // Initialize CRDT fields if they're missing (for old data)
-        let timestamp = entity.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000)
+        // Initialize CRDT fields if they're missing (for old data).
+        // Fallback epoch=0 is consistent with parseItemFromPayload's remote fallback.
+        // Using current time here would make legacy items (hlcTimestamp==nil) appear
+        // causally newer than any remote HLC → CRDT always rejects the remote update →
+        // Realtime events silently dropped for items that predate the HLC system (Bug 1).
+        let timestamp = entity.hlcTimestamp ?? 0
         let counter = entity.hlcCounter ?? 0
         let nodeId = entity.hlcNodeId ?? ""
         
