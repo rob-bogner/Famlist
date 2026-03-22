@@ -115,6 +115,36 @@ final class SwiftDataItemStore {
         try save()
     }
 
+    /// Batch soft-deletes multiple items without intermediate saves.
+    /// Items with `.pendingCreate` are purged immediately (never synced to server).
+    /// - Parameter ids: Item UUIDs to delete.
+    /// - Returns: UUIDs that were soft-deleted (not purged), for remote tombstone upsert.
+    func batchDelete(ids: [UUID]) throws -> [UUID] {
+        var softDeletedIds: [UUID] = []
+        for id in ids {
+            guard let entity = try fetchItem(id: id) else { continue }
+            if entity.syncStatus == .pendingCreate {
+                context.delete(entity)
+            } else {
+                entity.setSyncStatus(.pendingDelete)
+                softDeletedIds.append(id)
+            }
+        }
+        try save()
+        return softDeletedIds
+    }
+
+    /// Marks multiple items as `.synced` in a single batch operation.
+    /// Used after a successful bulk HTTP request to clear the `.pendingUpdate` status
+    /// so that Realtime echo events are no longer suppressed by `hasPendingLocalChange`.
+    func batchMarkSynced(ids: [UUID]) throws {
+        for id in ids {
+            guard let entity = try fetchItem(id: id) else { continue }
+            entity.setSyncStatus(.synced)
+        }
+        try save()
+    }
+
     /// Removes an item from the context once the remote delete has been confirmed.
     func purge(id: UUID) throws {
         guard let entity = try fetchItem(id: id) else { return }

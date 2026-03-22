@@ -141,6 +141,33 @@ private struct BulkTogglePayload: Encodable {
     }
 }
 
+// MARK: - Bulk Tombstone Payload
+
+/// Minimal upsert payload for bulkDeleteItems(). Sets tombstone=true and writes
+/// only the fields needed for CRDT conflict resolution; all other columns remain
+/// untouched on the server (PostgreSQL UPDATE-column semantics).
+private struct BulkTombstonePayload: Encodable {
+    let id: UUID
+    let listId: UUID
+    let tombstone = true
+    let hlcTimestamp: Int64
+    let hlcCounter: Int
+    let hlcNodeId: String
+    let lastModifiedBy: String
+    let updatedAt: String   // ISO8601 — set by client; no BEFORE UPDATE trigger on items table.
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case listId         = "list_id"
+        case tombstone
+        case hlcTimestamp   = "hlc_timestamp"
+        case hlcCounter     = "hlc_counter"
+        case hlcNodeId      = "hlc_node_id"
+        case lastModifiedBy = "last_modified_by"
+        case updatedAt      = "updated_at"
+    }
+}
+
 // MARK: - CRUD Extension
 
 extension SupabaseItemsRepository {
@@ -248,19 +275,17 @@ extension SupabaseItemsRepository {
 
     /// Upserts toggle-state for N items with a single PostgREST call.
     ///
-    /// One HTTP request replaces the N parallel `.update()` calls used by `batchUpdateItems()`.
     /// Only the 8 toggle-relevant columns are written; name, units, measure, image, tombstone, etc.
     /// remain untouched on the server (PostgreSQL UPDATE-column semantics).
     ///
-    /// All items must carry valid HLC values before this call — enforced by
-    /// `performToggleAll()` via `hlcForUpdate()` (P6 Schnitt A).
+    /// Echo protection: callers must ensure items are `.pendingUpdate` in SwiftData before calling.
+    /// Realtime echos are rejected by `RealtimeEventProcessor.processUpdate()` via
+    /// `entity.hasPendingLocalChange`. No RealtimeGate needed.
     func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws {
         guard !items.isEmpty else { return }
 
         logVoid(params: (action: "bulkToggleItems.start", itemCount: items.count, listId: listId))
 
-        // Build minimal payloads. Items missing HLC or listId are logged and skipped;
-        // in production this cannot occur after Schnitt-A HLC enrichment.
         let now = PaginationCursor.postgrestFormatter.string(from: Date())
         let payloads: [BulkTogglePayload] = items.compactMap { item in
             guard let listUUID = UUID(uuidString: item.listId ?? ""),
@@ -293,57 +318,66 @@ extension SupabaseItemsRepository {
             return
         }
 
-        // Gate: suppresses Realtime echo-events arriving back on the Sender during the batch.
-        // Configured conservatively (expecting N events) — verified correct by live A3 test.
-        gate.acquireLock(expecting: payloads.count)
-        logVoid(params: (action: "bulkToggleItems.gateLocked", expecting: payloads.count, listId: listId))
-
-        do {
-            // Single atomic PostgREST upsert — all N rows or none (PostgreSQL transaction).
-            _ = try await client
-                .from("items")
-                .upsert(payloads, onConflict: "id")
-                .execute()
-        } catch {
-            gate.releaseLock()
-            logVoid(params: (
-                action: "bulkToggleItems.upsertFailed",
-                itemCount: payloads.count,
-                error: error.localizedDescription,
-                listId: listId
-            ))
-            throw error
-        }
-
-        // Timeout task: releases gate if expected Realtime events don't arrive in time.
-        let timeoutTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            try? await Task.sleep(nanoseconds: UInt64(gate.eventCounterTimeout * 1_000_000_000))
-            if gate.isSuppressing {
-                let remaining = gate.expectedEvents
-                gate.releaseLock()
-                logVoid(params: (
-                    action: "bulkToggleItems.gateReleased.timeout",
-                    remainingExpected: remaining,
-                    listId: listId
-                ))
-            }
-        }
-
-        // Poll until gate releases (by event counter) or timeout fires.
-        let pollStart = Date()
-        while gate.isSuppressing {
-            try? await Task.sleep(nanoseconds: 50_000_000) // 50 ms
-            if Date().timeIntervalSince(pollStart) > gate.eventCounterTimeout + 0.5 { break }
-        }
-        timeoutTask.cancel()
-
-        if gate.isSuppressing {
-            gate.releaseLock()
-            logVoid(params: (action: "bulkToggleItems.gateReleased.manual", listId: listId))
-        }
+        _ = try await client
+            .from("items")
+            .upsert(payloads, onConflict: "id")
+            .execute()
 
         logVoid(params: (action: "bulkToggleItems.completed", itemCount: payloads.count, listId: listId))
+    }
+
+    // MARK: - Bulk Delete
+
+    /// Upserts tombstone=true for N items with a single PostgREST call.
+    ///
+    /// Analogous to `bulkToggleItems()`: one HTTP request, minimal payload (7 columns),
+    /// all other columns untouched. Each item must carry valid HLC values.
+    ///
+    /// Echo protection: callers must ensure items are `.pendingDelete` in SwiftData.
+    /// Realtime echos with tombstone=true route through `applyRemoteTombstone()` which
+    /// purges `.pendingDelete` items unconditionally — correct behavior.
+    func bulkDeleteItems(_ items: [ItemModel], listId: UUID) async throws {
+        guard !items.isEmpty else { return }
+
+        logVoid(params: (action: "bulkDeleteItems.start", itemCount: items.count, listId: listId))
+
+        let now = PaginationCursor.postgrestFormatter.string(from: Date())
+        let payloads: [BulkTombstonePayload] = items.compactMap { item in
+            guard let listUUID = UUID(uuidString: item.listId ?? ""),
+                  let ts       = item.hlcTimestamp,
+                  let counter  = item.hlcCounter,
+                  let nodeId   = item.hlcNodeId,
+                  let modifier = item.lastModifiedBy
+            else {
+                logVoid(params: (
+                    action: "bulkDeleteItems.payloadSkipped",
+                    itemId: item.id,
+                    reason: "missingHLCOrListId"
+                ))
+                return nil
+            }
+            return BulkTombstonePayload(
+                id: UUID(uuidString: item.id) ?? UUID(),
+                listId: listUUID,
+                hlcTimestamp: ts,
+                hlcCounter: counter,
+                hlcNodeId: nodeId,
+                lastModifiedBy: modifier,
+                updatedAt: now
+            )
+        }
+
+        guard !payloads.isEmpty else {
+            logVoid(params: (action: "bulkDeleteItems.aborted", reason: "allPayloadsSkipped"))
+            return
+        }
+
+        _ = try await client
+            .from("items")
+            .upsert(payloads, onConflict: "id")
+            .execute()
+
+        logVoid(params: (action: "bulkDeleteItems.completed", itemCount: payloads.count, listId: listId))
     }
 
     /// Deletes an item by setting tombstone=true (soft delete per FAM-24 architecture).

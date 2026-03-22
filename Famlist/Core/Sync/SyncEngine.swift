@@ -339,6 +339,32 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         await processQueue()
     }
 
+    /// Enqueues individual delete operations for items whose SwiftData state is already
+    /// correct (.pendingDelete + HLC). Called when bulkDeleteItems() HTTP request fails.
+    func enqueueBulkDeleteFallback(_ items: [ItemModel]) async {
+        guard !items.isEmpty else { return }
+
+        for item in items {
+            let hlc = HybridLogicalClock(
+                timestamp: item.hlcTimestamp ?? 0,
+                counter: item.hlcCounter ?? 0,
+                nodeId: item.hlcNodeId ?? hlcGenerator.nodeId
+            )
+            let metadata = CRDTMetadata.deleted(
+                by: item.lastModifiedBy ?? hlcGenerator.nodeId,
+                hlc: hlc
+            )
+            await queueOperation(type: .delete, item: item, metadata: metadata)
+        }
+
+        logVoid(params: (
+            action: "enqueueBulkDeleteFallback",
+            itemCount: items.count
+        ))
+
+        await processQueue()
+    }
+
     /// Resets a permanently-failed item back to pending and re-processes the queue.
     func retryItem(_ item: ItemModel) async {
         guard let uuid = UUID(uuidString: item.id) else { return }

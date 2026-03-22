@@ -169,6 +169,8 @@ extension ListViewModel {
 
         do {
             try await repository.bulkToggleItems(itemModels, listId: currentListId)
+            // Success: mark items as .synced so Realtime echo guard stops suppressing.
+            try? itemStore.batchMarkSynced(ids: uuidsToUpdate)
         } catch {
             logVoid(params: (
                 action: "toggleAllItems.bulkUpsert.error",
@@ -186,9 +188,9 @@ extension ListViewModel {
                 ))
             }
         }
-        
+
         logVoid(params: (action: "toggleAllItems.completed", itemCount: uuidsToUpdate.count))
-        
+
         UserLog.Sync.completed(itemCount: uuidsToUpdate.count)
     }
     
@@ -196,41 +198,27 @@ extension ListViewModel {
 
     /// Löscht alle Artikel der aktuellen Liste.
     ///
-    /// UI-Strategie:
-    /// 1. IDs als `pendingBulkDeleteIDs` registrieren (schützt gegen Realtime/Async-Reinjection)
-    /// 2. `items` sofort leeren (einmaliger atomarer SwiftUI-Re-Render)
-    /// 3. `isBulkDeleting` supprimiert per-Item-Refreshes während der forEach-Schleife
-    /// 4. Finales `refreshItemsFromStore()` bereinigt `pendingBulkDeleteIDs` für bereits entfernte Items
+    /// Optimierter Batch-Pfad (analog zu toggleAllItems):
+    /// 1. UI sofort leeren + `pendingBulkDeleteIDs` registrieren
+    /// 2. SwiftData batch-tombstone (single save)
+    /// 3. HLC-Enrichment für CRDT
+    /// 4. Single HTTP bulk-tombstone-upsert
+    /// 5. Fallback auf SyncEngine-Queue bei Fehler
     func deleteAllItems() {
         let snapshot = items
         guard !snapshot.isEmpty else { return }
         logVoid(params: (action: "deleteAllItems", count: snapshot.count))
         UserLog.Data.allItemsDeleted(count: snapshot.count)
 
-        // --- Atomic UI transition: before-bulk → after-bulk, no intermediate states ---
-        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(snapshot.map { $0.id })
         items = []
-        // Reset pagination — all items gone, cursor is stale.
         currentCursor = nil
         PaginationCursor.clear(listId: listId)
         hasMoreItems = true
         isLoadingNextPage = false
         consecutiveEmptyPages = 0
 
-        // Tombstone all items locally in a single batch commit, then queue remote ops.
-        // isBulkDeleting suppresses per-item refreshItemsFromStore() inside the loop.
-        isBulkDeleting = true
-        snapshot.forEach { deleteItem($0) }
-        isBulkDeleting = false
-
-        // Single consolidated UI refresh from SwiftData. Items are now soft-deleted
-        // (deletedAt set by setSyncStatus(.pendingDelete)), so fetchItems(includeDeleted:false)
-        // excludes them. This also clears pendingBulkDeleteIDs via intersection.
-        refreshItemsFromStore()
-
-        // Gate off — stream handler and pagination can resume.
-        isBulkMutationActive = false
+        performBulkDelete(snapshot)
     }
 
     /// Löscht alle abgehakten Artikel der aktuellen Liste.
@@ -240,14 +228,10 @@ extension ListViewModel {
         logVoid(params: (action: "deleteCheckedItems", count: toDelete.count))
         UserLog.Data.checkedItemsDeleted(items: toDelete.map { ($0.name, $0.units, $0.measure) })
 
-        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { !$0.isChecked }
-        isBulkDeleting = true
-        toDelete.forEach { deleteItem($0) }
-        isBulkDeleting = false
-        refreshItemsFromStore()
-        isBulkMutationActive = false
+
+        performBulkDelete(toDelete)
     }
 
     /// Löscht alle nicht abgehakten Artikel der aktuellen Liste.
@@ -257,14 +241,90 @@ extension ListViewModel {
         logVoid(params: (action: "deleteUncheckedItems", count: toDelete.count))
         UserLog.Data.uncheckedItemsDeleted(items: toDelete.map { ($0.name, $0.units, $0.measure) })
 
-        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { $0.isChecked }
-        isBulkDeleting = true
-        toDelete.forEach { deleteItem($0) }
-        isBulkDeleting = false
+
+        performBulkDelete(toDelete)
+    }
+
+    /// Shared batch-delete implementation for all three delete variants.
+    ///
+    /// 1. Batch-tombstone in SwiftData (`.pendingCreate` items are purged immediately)
+    /// 2. HLC enrichment for remaining items
+    /// 3. Single HTTP bulk-tombstone-upsert to Supabase
+    /// 4. On failure: fallback to SyncEngine queue for retry/backoff
+    private func performBulkDelete(_ snapshot: [ItemModel]) {
+        let uuids = snapshot.compactMap { UUID(uuidString: $0.id) }
+
+        // 1. Batch-tombstone in SwiftData. Items with .pendingCreate are purged (never synced).
+        let softDeletedIds: [UUID]
+        do {
+            softDeletedIds = try itemStore.batchDelete(ids: uuids)
+        } catch {
+            logVoid(params: (
+                action: "performBulkDelete.swiftDataError",
+                error: (error as NSError).localizedDescription
+            ))
+            refreshItemsFromStore()
+            return
+        }
+
         refreshItemsFromStore()
-        isBulkMutationActive = false
+
+        guard !softDeletedIds.isEmpty else {
+            logVoid(params: (action: "performBulkDelete.allPurgedLocally", count: uuids.count))
+            return
+        }
+
+        // 2. HLC enrichment
+        if let syncEngine {
+            for uuid in softDeletedIds {
+                guard let entity = try? itemStore.fetchItem(id: uuid) else { continue }
+                let newHLC = syncEngine.hlcForUpdate(
+                    currentTimestamp: entity.hlcTimestamp,
+                    currentCounter: entity.hlcCounter,
+                    currentNodeId: entity.hlcNodeId
+                )
+                entity.hlcTimestamp    = newHLC.timestamp
+                entity.hlcCounter     = newHLC.counter
+                entity.hlcNodeId      = newHLC.nodeId
+                entity.lastModifiedBy = newHLC.nodeId
+            }
+            try? itemStore.save()
+        }
+
+        // 3. Build ItemModels from enriched SwiftData entities
+        var itemModels: [ItemModel] = []
+        for uuid in softDeletedIds {
+            if let entity = try? itemStore.fetchItem(id: uuid) {
+                itemModels.append(entity.toItemModel())
+            }
+        }
+
+        guard !itemModels.isEmpty else { return }
+
+        let repository = self.repository
+        let currentListId = self.listId
+        let syncEngine = self.syncEngine
+
+        // 4. Single HTTP bulk-tombstone-upsert (async)
+        Task {
+            do {
+                try await repository.bulkDeleteItems(itemModels, listId: currentListId)
+                logVoid(params: (action: "performBulkDelete.completed", itemCount: itemModels.count))
+            } catch {
+                logVoid(params: (
+                    action: "performBulkDelete.httpError",
+                    itemCount: itemModels.count,
+                    error: (error as NSError).localizedDescription
+                ))
+                // Fallback: enqueue individual delete operations for retry/backoff
+                if let syncEngine {
+                    await syncEngine.enqueueBulkDeleteFallback(itemModels)
+                    logVoid(params: (action: "performBulkDelete.fallbackQueued", itemCount: itemModels.count))
+                }
+            }
+        }
     }
 
     // MARK: - Bulk Import

@@ -73,4 +73,9 @@ protocol SyncEngineProtocol: AnyObject {
     /// Does NOT call `storeLocally()` — the caller must ensure SwiftData is already
     /// up-to-date before calling this method.
     func enqueueBulkToggleFallback(_ items: [ItemModel]) async
+
+    /// Enqueues individual delete operations for items that already have correct
+    /// SwiftData state (.pendingDelete + HLC). Used as fallback when a bulk delete
+    /// HTTP request fails.
+    func enqueueBulkDeleteFallback(_ items: [ItemModel]) async
 }

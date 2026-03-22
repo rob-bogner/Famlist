@@ -53,6 +53,20 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     ///   - items: Items whose toggle state has already been updated locally (post-HLC enrichment).
     ///   - listId: List the items belong to (used for Gate logging only; list_id is in the payload).
     func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws
+
+    // MARK: - Bulk Delete
+
+    /// Bulk-upserts tombstone=true for multiple items in a single HTTP request.
+    ///
+    /// Uses one `upsert([N rows], onConflict: "id")` PostgREST call. Only these columns are written:
+    /// `id`, `list_id`, `tombstone`, `hlc_timestamp`, `hlc_counter`, `hlc_node_id`,
+    /// `last_modified_by`, `updated_at`. All other columns remain unchanged on the server.
+    ///
+    /// - Parameters:
+    ///   - items: Items whose tombstone state has already been set locally (post-HLC enrichment).
+    ///   - listId: List the items belong to (used for logging only; list_id is in the payload).
+    func bulkDeleteItems(_ items: [ItemModel], listId: UUID) async throws
+
     /// Delete an item by id within list.
     /// - Parameters:
     ///   - id: The item identifier to delete.
@@ -189,6 +203,17 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
                 arr[idx] = item
             }
         }
+        storage[listId] = arr
+        broadcast(listId)
+    }
+
+    // MARK: - Bulk Delete
+
+    /// Preview stub: removes items from in-memory storage.
+    func bulkDeleteItems(_ items: [ItemModel], listId: UUID) async throws {
+        guard var arr = storage[listId] else { return }
+        let idsToDelete = Set(items.map { $0.id })
+        arr.removeAll { idsToDelete.contains($0.id) }
         storage[listId] = arr
         broadcast(listId)
     }

@@ -172,11 +172,9 @@ extension ListViewModel {
     }
 
     /// Re-reads the current list from SwiftData and publishes it.
-    /// No-op while `isBulkDeleting` is true to avoid per-item re-renders during bulk operations.
     /// Also lazily clears `pendingBulkDeleteIDs` for items that are no longer active in SwiftData,
     /// so the guard dissolves naturally as async SyncEngine tasks confirm each deletion.
     internal func refreshItemsFromStore() {
-        guard !isBulkDeleting else { return }
         do {
             let localItems = try itemStore.fetchItems(listId: listId).map { $0.toItemModel() }
             if !pendingBulkDeleteIDs.isEmpty {

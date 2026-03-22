@@ -135,11 +135,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Never populated by local mutations — only by the Realtime stream handler and runIncrementalSync().
     @Published var recentlySyncedItemIDs: Set<String> = []
 
-    /// Suppresses `refreshItemsFromStore()` during the synchronous forEach phase of bulk-delete.
-    /// Prevents per-item SwiftData refreshes from re-rendering the list one item at a time.
-    internal var isBulkDeleting = false
-
-    /// True while a bulk operation (import or delete-all) is mutating SwiftData.
+    /// True while a bulk operation (import) is mutating SwiftData.
     /// While active, the stream handler, Realtime refreshes, and pagination are suppressed
     /// so the UI only sees the final stable state (before-bulk or after-bulk), never an intermediate.
     internal var isBulkMutationActive = false
@@ -434,15 +430,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Deletes an item by id within the current list.
     /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
-        // User-friendly log — nur außerhalb Bulk-Delete, um N Einzellogs beim Bulk zu vermeiden
-        if !isBulkDeleting {
-            let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-            UserLog.Data.itemDeleted(
-                name: displayName.isEmpty ? "Artikel" : displayName,
-                units: item.units,
-                measure: item.measure
-            )
-        }
+        let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        UserLog.Data.itemDeleted(
+            name: displayName.isEmpty ? "Artikel" : displayName,
+            units: item.units,
+            measure: item.measure
+        )
         
         guard let uuid = UUID(uuidString: item.id) else {
             markItemDeleted(item)

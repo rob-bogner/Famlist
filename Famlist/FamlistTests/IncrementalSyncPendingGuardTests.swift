@@ -39,6 +39,7 @@ private final class StubItemsRepository: ItemsRepository {
     func deleteItem(id: String, listId: UUID) async throws {}
     func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] { [] }
     func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws {}
+    func bulkDeleteItems(_ items: [ItemModel], listId: UUID) async throws {}
 }
 
 // MARK: - Tests

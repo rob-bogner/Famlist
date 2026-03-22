@@ -9,7 +9,7 @@
  - Supabase-backed implementation of ItemsRepository.
  - Core class: dependencies, Realtime observation, fetchAndYield, pagination, incremental sync.
  - CRUD operations live in SupabaseItemsRepository+CRUD.swift.
- - Suppression state is encapsulated in RealtimeGate.swift.
+ - Echo protection via ItemEntity.hasPendingLocalChange (no RealtimeGate needed).
 
  🛠 Includes:
  - observeItems: AsyncStream backed by Realtime subscriptions.
@@ -125,9 +125,6 @@ final class SupabaseItemsRepository: ItemsRepository {
     /// Local SwiftData store — used to yield locally-sourced snapshots after Realtime events.
     private let itemStore: SwiftDataItemStore
 
-    /// Suppression gate shared between the observation and CRUD layers.
-    let gate: RealtimeGate
-
     /// Orchestrator that serialises PageLoader and Realtime event processing.
     /// Optional for backward compatibility (nil in tests that don't inject it).
     var syncOrchestrator: SyncOrchestrator?
@@ -150,7 +147,6 @@ final class SupabaseItemsRepository: ItemsRepository {
         self.itemStore = itemStore
         self.realtimeManager = SupabaseRealtimeManager(client: client)
         self.eventProcessor = RealtimeEventProcessor(conflictResolver: conflictResolver, itemStore: itemStore)
-        self.gate = RealtimeGate()
         self.syncOrchestrator = syncOrchestrator
     }
 
@@ -196,37 +192,10 @@ final class SupabaseItemsRepository: ItemsRepository {
 
     // MARK: - Realtime Event Processing
 
-    /// Routes a Realtime event to the event processor, respecting suppression state and SyncOrchestrator buffering.
+    /// Routes a Realtime event to the event processor, respecting SyncOrchestrator buffering.
+    /// Echo protection for bulk operations is handled by `ItemEntity.hasPendingLocalChange`
+    /// in `RealtimeEventProcessor.processUpdate()` — no RealtimeGate needed.
     func processRealtimeEvent(_ event: RealtimeEvent, listId: UUID) async {
-        // Crash-recovery: clear a stale lock before checking suppression.
-        let staleCleared = gate.checkAndClearStaleLock()
-        if staleCleared {
-            logVoid(params: (action: "processRealtimeEvent.staleLockRecovered", listId: listId))
-        }
-
-        // EVENT COUNTER: decrement for batch-triggered updates; skip further processing.
-        if gate.isSuppressing && gate.expectedEvents > 0 {
-            if case .update = event {
-                gate.decrementEventCounter(for: listId)
-            }
-            logVoid(params: (
-                action: "processRealtimeEvent.skipped",
-                reason: "waitingForBatchEvents",
-                listId: listId
-            ))
-            return
-        }
-
-        // PESSIMISTIC LOCK: ignore all Realtime events during bulk operations.
-        if gate.isSuppressing {
-            logVoid(params: (
-                action: "processRealtimeEvent.skipped",
-                reason: "batchOperationInProgress",
-                listId: listId
-            ))
-            return
-        }
-
         // Extract a stable item id for SyncOrchestrator coalescing.
         let itemId = extractItemId(from: event) ?? UUID().uuidString
 

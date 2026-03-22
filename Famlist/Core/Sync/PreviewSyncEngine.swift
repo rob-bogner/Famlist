@@ -74,6 +74,9 @@ final class PreviewSyncEngine: SyncEngineProtocol {
     /// No-op: preview mode has no retry queue for bulk toggle fallback.
     func enqueueBulkToggleFallback(_ items: [ItemModel]) async {}
 
+    /// No-op: preview mode has no retry queue for bulk delete fallback.
+    func enqueueBulkDeleteFallback(_ items: [ItemModel]) async {}
+
     /// Returns a valid wall-clock HLC for previews and tests.
     /// No CRDT monotonicity guarantee — intentional, preview mode only.
     func hlcForUpdate(currentTimestamp: Int64?, currentCounter: Int?, currentNodeId: String?) -> HybridLogicalClock {

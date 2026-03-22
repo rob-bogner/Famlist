@@ -254,14 +254,6 @@ final class BulkDeleteRemoteReceiverTests: XCTestCase {
                       "Nach deleteAllItems() auf 44 Artikeln muss die Liste leer sein")
     }
 
-    /// AC: `isBulkDeleting` ist nach dem Aufruf wieder false (kein hängender Lock).
-    func test_deleteAll_isBulkDeletingIsFalseAfterCompletion() {
-        addItem(name: "Wasser")
-        sut.deleteAllItems()
-        XCTAssertFalse(sut.isBulkDeleting,
-                       "isBulkDeleting muss nach deleteAllItems() false sein")
-    }
-
     // MARK: - Private helpers
 
     @discardableResult
