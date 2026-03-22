@@ -41,12 +41,18 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     /// Update an existing item.
     /// - Parameter item: The full item to persist (identified by its id).
     func updateItem(_ item: ItemModel) async throws // Async update operation.
-    /// Batch update multiple items (optimized for bulk operations).
+    // MARK: - Bulk Toggle
+
+    /// Bulk-upserts only the toggle-relevant fields for multiple items in a single HTTP request.
+    ///
+    /// Uses one `upsert([N rows], onConflict: "id")` PostgREST call. Only these columns are written:
+    /// `id`, `list_id`, `is_checked`, `hlc_timestamp`, `hlc_counter`, `hlc_node_id`,
+    /// `last_modified_by`, `updated_at`. All other columns remain unchanged on the server.
+    ///
     /// - Parameters:
-    ///   - items: Array of items to update.
-    ///   - listId: The list that the items belong to.
-    /// - Note: Only triggers a single fetch after all updates complete.
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws // Async batch update operation.
+    ///   - items: Items whose toggle state has already been updated locally (post-HLC enrichment).
+    ///   - listId: List the items belong to (used for Gate logging only; list_id is in the payload).
+    func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws
     /// Delete an item by id within list.
     /// - Parameters:
     ///   - id: The item identifier to delete.
@@ -130,21 +136,6 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
         broadcast(listUUID) // Notify observers so UI refreshes.
     }
     
-    /// Batch updates multiple items in storage and notifies observers once.
-    /// - Parameters:
-    ///   - items: Array of items to update.
-    ///   - listId: The list that the items belong to.
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws { // Batch update for efficiency.
-        guard var arr = storage[listId] else { return } // If list has no items recorded yet, nothing to update.
-        for item in items { // Update each item in the batch.
-            if let idx = arr.firstIndex(where: { $0.id == item.id }) { // Find the index of the item by id.
-                arr[idx] = item // Replace the existing item with the updated one.
-            }
-        }
-        storage[listId] = arr // Persist updated array back to storage once.
-        broadcast(listId) // Notify observers so UI refreshes (single notification).
-    }
-
     /// Deletes an item by id from the specified list and broadcasts the new snapshot.
     /// - Parameters:
     ///   - id: The identifier of the item to remove.
@@ -186,5 +177,19 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
     func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel] {
         let all = storage[listId] ?? []
         return all.filter { ($0.updatedAt ?? Date.distantPast) > since }
+    }
+
+    // MARK: - Bulk Toggle
+
+    /// Preview no-op: updates items in-memory for preview/test behavior.
+    func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws {
+        guard var arr = storage[listId] else { return }
+        for item in items {
+            if let idx = arr.firstIndex(where: { $0.id == item.id }) {
+                arr[idx] = item
+            }
+        }
+        storage[listId] = arr
+        broadcast(listId)
     }
 }

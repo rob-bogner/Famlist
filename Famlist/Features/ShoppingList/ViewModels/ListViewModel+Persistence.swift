@@ -194,38 +194,17 @@ extension ListViewModel {
     
     // MARK: - Tombstone (FAM-41)
 
-    /// Applies a remote tombstone for `item` directly in SwiftData (used by IncrementalSync delta).
-    /// Uses HLC-aware conflict resolution: remote tombstone wins unless local HLC is strictly higher.
+    /// Delegates to `SwiftDataItemStore.applyRemoteTombstone(itemId:remoteHLC:)` — the single
+    /// canonical tombstone-application logic shared with `RealtimeEventProcessor`.
     internal func applyRemoteTombstoneModel(_ item: ItemModel) {
-        guard let uuid = UUID(uuidString: item.id),
-              let entity = try? itemStore.fetchItem(id: uuid) else { return }
-
-        switch entity.syncStatus {
-        case .synced, .pendingDelete, .failed, .pendingRecovery:
-            try? itemStore.purge(id: uuid)
-            logVoid(params: (action: "applyRemoteTombstoneModel.purge", itemId: item.id))
-
-        case .pendingCreate, .pendingUpdate:
-            let remoteHlcTimestamp = item.hlcTimestamp ?? 0
-            let remoteHlcCounter = item.hlcCounter ?? 0
-            let remoteHLC = HybridLogicalClock(
-                timestamp: remoteHlcTimestamp,
-                counter: remoteHlcCounter,
-                nodeId: item.hlcNodeId ?? ""
-            )
-            let localHLC = HybridLogicalClock(
-                timestamp: entity.hlcTimestamp ?? 0,
-                counter: entity.hlcCounter ?? 0,
-                nodeId: entity.hlcNodeId ?? ""
-            )
-            // Remote tombstone wins if remote >= local (tie → delete wins).
-            if !(localHLC > remoteHLC) {
-                try? itemStore.purge(id: uuid)
-                logVoid(params: (action: "applyRemoteTombstoneModel.purge", itemId: item.id, reason: "remoteHlcWins"))
-            } else {
-                logVoid(params: (action: "applyRemoteTombstoneModel.localWins", itemId: item.id))
-            }
-        }
+        guard let uuid = UUID(uuidString: item.id) else { return }
+        let remoteHLC = HybridLogicalClock(
+            timestamp: item.hlcTimestamp ?? 0,
+            counter: item.hlcCounter ?? 0,
+            nodeId: item.hlcNodeId ?? ""
+        )
+        let purged = itemStore.applyRemoteTombstone(itemId: uuid, remoteHLC: remoteHLC)
+        logVoid(params: (action: "applyRemoteTombstoneModel", itemId: item.id, purged: purged))
     }
 
     // MARK: - lastSyncTimestamp (FAM-41)

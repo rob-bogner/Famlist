@@ -128,4 +128,46 @@ final class SwiftDataItemStore {
             try context.save()
         }
     }
+
+    // MARK: - Remote Tombstone
+
+    /// Applies a remote tombstone: purges the item unless it has a pending local mutation
+    /// with a strictly higher HLC.
+    ///
+    /// Conflict resolution rules:
+    /// - `.synced`, `.pendingDelete`, `.failed`, `.pendingRecovery` → always purge.
+    /// - `.pendingCreate`, `.pendingUpdate` → HLC comparison:
+    ///     remote HLC >= local HLC → purge; local HLC > remote → keep local pending op.
+    ///
+    /// This is the single canonical implementation used by both `RealtimeEventProcessor`
+    /// (for Realtime UPDATE events with tombstone=true) and `ListViewModel.runIncrementalSync()`
+    /// (for IncrementalSync delta items with tombstone=true).
+    ///
+    /// - Parameters:
+    ///   - itemId: UUID of the item to tombstone.
+    ///   - remoteHLC: HLC from the remote tombstone event.
+    /// - Returns: `true` if the item was purged, `false` if local wins.
+    @discardableResult
+    func applyRemoteTombstone(itemId: UUID, remoteHLC: HybridLogicalClock) -> Bool {
+        guard let entity = try? fetchItem(id: itemId) else { return false }
+
+        switch entity.syncStatus {
+        case .synced, .pendingDelete, .failed, .pendingRecovery:
+            try? purge(id: itemId)
+            return true
+
+        case .pendingCreate, .pendingUpdate:
+            let localHLC = HybridLogicalClock(
+                timestamp: entity.hlcTimestamp ?? 0,
+                counter: entity.hlcCounter ?? 0,
+                nodeId: entity.hlcNodeId ?? ""
+            )
+            // Remote tombstone wins if remote >= local (tie → delete wins).
+            if !(localHLC > remoteHLC) {
+                try? purge(id: itemId)
+                return true
+            }
+            return false
+        }
+    }
 }

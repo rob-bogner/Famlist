@@ -132,35 +132,62 @@ extension ListViewModel {
             ))
         }
         
-        // 3. SERVER-SYNC (BATCH-UPDATE für minimale Overhead)
-        // Erstelle ItemModels auf MainActor bevor wir in Background-Task gehen
+        // P6 Schnitt A: HLC-Anreicherung vor dem Remote-Schreiben.
+        // batchUpdateCheckedStatus() setzt isChecked und .pendingUpdate, aber keinen neuen HLC.
+        // Ohne gültigen HLC verliert der Toggle-Payload jeden CRDT-Vergleich auf Empfänger-Geräten
+        // (epoch=0 < jeder valider lokaler HLC → Remote-Toggle wird verworfen).
+        // Lösung: neuen HLC via SyncEngine generieren und in SwiftData + ItemModel schreiben,
+        // bevor batchUpdateItems() den Payload an Supabase schickt.
+        if let syncEngine {
+            for uuid in uuidsToUpdate {
+                guard let entity = try? itemStore.fetchItem(id: uuid) else { continue }
+                let newHLC = syncEngine.hlcForUpdate(
+                    currentTimestamp: entity.hlcTimestamp,
+                    currentCounter: entity.hlcCounter,
+                    currentNodeId: entity.hlcNodeId
+                )
+                entity.hlcTimestamp    = newHLC.timestamp
+                entity.hlcCounter     = newHLC.counter
+                entity.hlcNodeId      = newHLC.nodeId
+                entity.lastModifiedBy = newHLC.nodeId  // nodeId == lastModifiedBy per SyncEngine-Konvention
+            }
+            try? itemStore.save()
+        }
+
+        // 3. SERVER-SYNC: single bulk upsert statt N paralleler .update() calls (P6 Schnitt B).
+        // Erstelle ItemModels auf MainActor bevor wir in Background-Task gehen.
         var itemModels: [ItemModel] = []
         for uuid in uuidsToUpdate {
             if let entity = try? itemStore.fetchItem(id: uuid) {
                 itemModels.append(entity.toItemModel())
             }
         }
-        
+
         // Capture dependencies for background task
         let repository = self.repository
         let currentListId = self.listId
-        
-        // Nutze Batch-Update um nur EINEN fetchAndYield-Call zu machen
-        // Das Repository handled die Suppression von Realtime-Fetches intern
+
         do {
-            try await repository.batchUpdateItems(itemModels, listId: currentListId)
+            try await repository.bulkToggleItems(itemModels, listId: currentListId)
         } catch {
             logVoid(params: (
-                action: "toggleAllItems.batchSync.error",
+                action: "toggleAllItems.bulkUpsert.error",
                 itemCount: itemModels.count,
                 error: (error as NSError).localizedDescription
             ))
+            // Fallback: enqueue individual update operations so the existing
+            // retry/backoff mechanism picks them up. SwiftData already has the
+            // correct state (.pendingUpdate + valid HLC); only the HTTP push failed.
+            if let syncEngine {
+                await syncEngine.enqueueBulkToggleFallback(itemModels)
+                logVoid(params: (
+                    action: "toggleAllItems.fallbackQueued",
+                    itemCount: itemModels.count
+                ))
+            }
         }
         
-        logVoid(params: (
-            action: "toggleAllItems.completed",
-            itemCount: uuidsToUpdate.count
-        ))
+        logVoid(params: (action: "toggleAllItems.completed", itemCount: uuidsToUpdate.count))
         
         UserLog.Sync.completed(itemCount: uuidsToUpdate.count)
     }

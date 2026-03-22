@@ -70,4 +70,14 @@ final class PreviewSyncEngine: SyncEngineProtocol {
 
     /// No-op: preview mode has no operation queue for bulk imports.
     func applyBulkItems(_ targets: [ImportTarget]) async {}
+
+    /// No-op: preview mode has no retry queue for bulk toggle fallback.
+    func enqueueBulkToggleFallback(_ items: [ItemModel]) async {}
+
+    /// Returns a valid wall-clock HLC for previews and tests.
+    /// No CRDT monotonicity guarantee — intentional, preview mode only.
+    func hlcForUpdate(currentTimestamp: Int64?, currentCounter: Int?, currentNodeId: String?) -> HybridLogicalClock {
+        let ts = Int64(Date().timeIntervalSince1970 * 1000)
+        return HybridLogicalClock(timestamp: ts, counter: 0, nodeId: "preview-node")
+    }
 }

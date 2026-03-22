@@ -36,9 +36,9 @@ private final class StubItemsRepository: ItemsRepository {
     func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> { AsyncStream { _ in } }
     func createItem(_ item: ItemModel) async throws -> ItemModel { item }
     func updateItem(_ item: ItemModel) async throws {}
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {}
     func deleteItem(id: String, listId: UUID) async throws {}
     func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] { [] }
+    func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws {}
 }
 
 // MARK: - Tests

@@ -152,6 +152,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Debounce task for bulk toggle operations to prevent rapid repeated calls.
     internal var toggleAllDebounceTask: Task<Void, Never>?
+
+    /// Safety-net reconciliation task (P5).
+    /// Scheduled by the stream handler when it detects that a remote snapshot has fewer
+    /// items than the last known UI state — a signal that a Realtime DELETE event may have
+    /// been lost. Runs a debounced IncrementalSync to bring local state back in sync.
+    /// Cancelled automatically on list switch and sign-out.
+    internal var reconciliationSyncTask: Task<Void, Never>?
     
     /// Enumerates triggers that can resume realtime sync to aid logging and debugging.
     internal enum ResumeTrigger: String {
@@ -249,6 +256,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     func switchList(to newId: UUID) {
         guard newId != self.listId else { return }
         observeTask?.cancel()
+        reconciliationSyncTask?.cancel()
+        reconciliationSyncTask = nil
         self.listId = newId
         self.items = []
         recentlySyncedItemIDs = []
@@ -266,6 +275,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         observeTask = nil
         membershipTask?.cancel()
         membershipTask = nil
+        reconciliationSyncTask?.cancel()
+        reconciliationSyncTask = nil
         items = []
         recentlySyncedItemIDs = []
         selectedItem = nil

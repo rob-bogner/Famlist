@@ -73,6 +73,17 @@ final class ItemEntity: Identifiable, Codable {
     /// Convenience helper indicating soft deletion state.
     var isSoftDeleted: Bool { deletedAt != nil }
 
+    /// Returns true when the entity has an outgoing local mutation that has not yet been
+    /// confirmed by the SyncEngine. Remote events (Realtime or IncrementalSync) must not
+    /// overwrite these items: the remote delta may carry stale field values that would reset
+    /// an in-flight local change (e.g. units=2 overwritten back to units=1).
+    ///
+    /// This is the single canonical definition of the echo-guard predicate used in both
+    /// RealtimeEventProcessor and runIncrementalSync() (P4 deduplication).
+    var hasPendingLocalChange: Bool {
+        syncStatus == .pendingUpdate || syncStatus == .pendingCreate
+    }
+
     /// Designated initialiser for SwiftData and manual creation.
     init(
         id: UUID = UUID(),

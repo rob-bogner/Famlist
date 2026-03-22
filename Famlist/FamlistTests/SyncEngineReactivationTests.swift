@@ -43,9 +43,9 @@ private final class SpyItemsRepository: ItemsRepository {
         AsyncStream { _ in }
     }
 
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {}
-
     func deleteItem(id: String, listId: UUID) async throws {}
+
+    func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws {}
 
     func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] { [] }
 

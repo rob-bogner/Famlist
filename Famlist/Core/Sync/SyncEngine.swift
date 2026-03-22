@@ -292,6 +292,53 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         await processQueue()
     }
 
+    // MARK: - HLC Generation (P6 Schnitt A)
+
+    /// Generates a causally-consistent HLC for a local update, advancing past the item's
+    /// current clock values. Used by `performToggleAll()` to stamp bulk-toggle writes
+    /// with a valid HLC before they reach Supabase.
+    ///
+    /// Calls `hlcGenerator.receive(existingHLC)` so the new clock is strictly after
+    /// both the existing item HLC and the local wall clock. The returned clock's `nodeId`
+    /// doubles as the `lastModifiedBy` value.
+    func hlcForUpdate(currentTimestamp: Int64?, currentCounter: Int?, currentNodeId: String?) -> HybridLogicalClock {
+        let existingHLC = HybridLogicalClock(
+            timestamp: currentTimestamp ?? 0,
+            counter: currentCounter ?? 0,
+            nodeId: currentNodeId.flatMap { $0.isEmpty ? nil : $0 } ?? hlcGenerator.nodeId
+        )
+        return hlcGenerator.receive(existingHLC)
+    }
+
+    /// Enqueues individual update operations for items whose SwiftData state is already
+    /// correct (HLC set, .pendingUpdate). Called when bulkToggleItems() HTTP request fails,
+    /// so the existing retry/backoff mechanism picks them up on the next processQueue() cycle.
+    func enqueueBulkToggleFallback(_ items: [ItemModel]) async {
+        guard !items.isEmpty else { return }
+
+        for item in items {
+            let hlc = HybridLogicalClock(
+                timestamp: item.hlcTimestamp ?? 0,
+                counter: item.hlcCounter ?? 0,
+                nodeId: item.hlcNodeId ?? hlcGenerator.nodeId
+            )
+            let metadata = CRDTMetadata(
+                hlc: hlc,
+                tombstone: false,
+                lastModifiedBy: item.lastModifiedBy ?? hlcGenerator.nodeId
+            )
+            await queueOperation(type: .update, item: item, metadata: metadata)
+        }
+
+        logVoid(params: (
+            action: "enqueueBulkToggleFallback",
+            itemCount: items.count
+        ))
+
+        // Trigger immediate retry — processQueue is idempotent and respects isProcessingQueue guard.
+        await processQueue()
+    }
+
     /// Resets a permanently-failed item back to pending and re-processes the queue.
     func retryItem(_ item: ItemModel) async {
         guard let uuid = UUID(uuidString: item.id) else { return }

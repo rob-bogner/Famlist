@@ -48,4 +48,29 @@ protocol SyncEngineProtocol: AnyObject {
     /// Applies a batch of merged import targets atomically:
     /// one local write + one queue operation per target, single save(), no per-item processQueue().
     func applyBulkItems(_ targets: [ImportTarget]) async
+
+    /// Generates a causally-consistent HLC for a local update, advancing past the item's
+    /// current clock values.
+    ///
+    /// Used by bulk operations (e.g. toggleAllItems) that write directly to the repository
+    /// without routing through the SyncEngine queue. Callers are responsible for persisting
+    /// the returned HLC to the corresponding SwiftData entity before calling save().
+    ///
+    /// The returned clock's `nodeId` is also the correct `lastModifiedBy` value.
+    ///
+    /// - Parameters:
+    ///   - currentTimestamp: Item's existing `hlcTimestamp` (nil treated as epoch 0).
+    ///   - currentCounter:   Item's existing `hlcCounter`   (nil treated as 0).
+    ///   - currentNodeId:    Item's existing `hlcNodeId`    (nil/empty uses local node).
+    /// - Returns: New `HybridLogicalClock` that is causally after both the item's clock
+    ///   and the local wall clock.
+    func hlcForUpdate(currentTimestamp: Int64?, currentCounter: Int?, currentNodeId: String?) -> HybridLogicalClock
+
+    /// Enqueues individual update operations for items that already have correct
+    /// SwiftData state (including HLC). Used as fallback when a bulk HTTP request
+    /// fails, so the existing retry/backoff mechanism picks them up.
+    ///
+    /// Does NOT call `storeLocally()` — the caller must ensure SwiftData is already
+    /// up-to-date before calling this method.
+    func enqueueBulkToggleFallback(_ items: [ItemModel]) async
 }

@@ -137,11 +137,10 @@ final class RealtimeEventProcessor {
             if let existingEntity = try? itemStore.fetchItem(id: uuid) {
                 // Guard: never overwrite an in-flight local mutation.
                 // A .pendingUpdate / .pendingCreate entity carries changes the SyncEngine has not
-                // yet confirmed with Supabase.  Applying a stale Realtime echo here would reset the
+                // yet confirmed with Supabase. Applying a stale Realtime echo here would reset
                 // field values (e.g. units=3 → units=1) before the outbound write completes.
-                // This mirrors the identical guard added to runIncrementalSync() (FAM-41).
-                guard existingEntity.syncStatus != .pendingUpdate,
-                      existingEntity.syncStatus != .pendingCreate else {
+                // Canonical definition: ItemEntity.hasPendingLocalChange (P4 deduplication).
+                guard !existingEntity.hasPendingLocalChange else {
                     logVoid(params: (
                         action: "processUpdate.skip",
                         itemId: item.id,
@@ -196,35 +195,13 @@ final class RealtimeEventProcessor {
 
     // MARK: - Tombstone (FAM-41)
 
-    /// Canonical delete path for remote tombstone events (Realtime UPDATE with tombstone=true
-    /// or IncrementalSync delta with tombstone=true).
-    ///
-    /// Conflict resolution per the plan's conflict matrix:
-    /// - `.synced`, `.pendingDelete`, `.failed`, `.pendingRecovery` → always purge.
-    /// - `.pendingCreate`, `.pendingUpdate` → HLC comparison:
-    ///     remote HLC ≥ local HLC → purge; local HLC > remote → keep local pending op.
-    ///
-    /// Tombstone wins on HLC tie (tiebreaker: delete is preferred for eventual consistency).
+    /// Delegates to `SwiftDataItemStore.applyRemoteTombstone(itemId:remoteHLC:)` — the single
+    /// canonical tombstone-application logic shared with `ListViewModel.runIncrementalSync()`.
     @MainActor
     func applyRemoteTombstone(_ item: ItemModel, remoteMeta: CRDTMetadata) {
         guard let uuid = UUID(uuidString: item.id) else { return }
-        guard let entity = try? itemStore.fetchItem(id: uuid) else { return }
-
-        switch entity.syncStatus {
-        case .synced, .pendingDelete, .failed, .pendingRecovery:
-            try? itemStore.purge(id: uuid)
-            logVoid(params: (action: "applyRemoteTombstone.purge", itemId: item.id, status: entity.syncStatus.rawValue))
-
-        case .pendingCreate, .pendingUpdate:
-            let localMeta = extractMetadataFromEntity(entity)
-            // Remote tombstone wins if it happened after local (or at the same time — tie → delete wins).
-            if !(localMeta.hlc > remoteMeta.hlc) {
-                try? itemStore.purge(id: uuid)
-                logVoid(params: (action: "applyRemoteTombstone.purge", itemId: item.id, reason: "remoteHlcWins"))
-            } else {
-                logVoid(params: (action: "applyRemoteTombstone.localWins", itemId: item.id, reason: "localHlcHigher"))
-            }
-        }
+        let purged = itemStore.applyRemoteTombstone(itemId: uuid, remoteHLC: remoteMeta.hlc)
+        logVoid(params: (action: "applyRemoteTombstone", itemId: item.id, purged: purged))
     }
     
     /// Processes a DELETE event from Realtime
@@ -262,11 +239,11 @@ final class RealtimeEventProcessor {
             return
         }
         
-        // Check if we have a pending local operation for this item
+        // Guard: skip remote deletion if we have a pending local mutation.
+        // Canonical definition: ItemEntity.hasPendingLocalChange (P4 deduplication).
         if let existingEntity = try? itemStore.fetchItem(id: uuid) {
-            if existingEntity.syncStatus == .pendingCreate ||
-               existingEntity.syncStatus == .pendingUpdate {
-                // We have local changes - don't delete yet, let sync engine handle it
+            if existingEntity.hasPendingLocalChange {
+                // We have local changes — don't delete yet, let sync engine handle it.
                 logVoid(params: (
                     action: "processDeletion.skip",
                     itemId: idString,

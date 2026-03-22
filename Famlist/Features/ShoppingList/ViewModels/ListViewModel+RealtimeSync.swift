@@ -83,6 +83,18 @@ extension ListViewModel {
                         self.markRecentlySynced(ids: remoteChangedIDs)
                     }
 
+                    // P5: Safety-net reconciliation for missed Realtime DELETE events.
+                    // When the incoming snapshot has fewer items than the current UI state,
+                    // a remote deletion may not have been reflected by a Realtime event
+                    // (e.g. event dropped during a brief network interruption).
+                    // Schedule a debounced IncrementalSync so the state converges correctly.
+                    // Only triggers on item-count decrease — not on adds or updates.
+                    let previousCount = self.items.count
+                    let incomingCount = sorted.count
+                    if incomingCount < previousCount {
+                        self.scheduleReconciliationSync()
+                    }
+
                     // applyItems filters pendingBulkDeleteIDs and guards against redundant UI updates.
                     self.applyItems(sorted)
                 }
@@ -128,7 +140,7 @@ extension ListViewModel {
                     let hasPendingLocalChange: Bool = {
                         guard let uuid = itemUUID,
                               let entity = try? itemStore.fetchItem(id: uuid) else { return false }
-                        return entity.syncStatus == .pendingUpdate || entity.syncStatus == .pendingCreate
+                        return entity.hasPendingLocalChange
                     }()
                     if !hasPendingLocalChange {
                         _ = try? itemStore.upsert(model: item)
@@ -136,9 +148,13 @@ extension ListViewModel {
                             highlightIDs.insert(item.id)
                         }
                     }
-                    if let updatedAt = item.updatedAt {
-                        maxUpdatedAt = maxUpdatedAt.map { max($0, updatedAt) } ?? updatedAt
-                    }
+                }
+                // P2: Advance the high-water mark for ALL delta items, including tombstones.
+                // Without this, a delta window that contains only tombstones (remote deletes)
+                // leaves lastSyncTimestamp unchanged, causing the same tombstones to be
+                // re-fetched on every subsequent sync until a non-tombstone arrives.
+                if let updatedAt = item.updatedAt {
+                    maxUpdatedAt = maxUpdatedAt.map { max($0, updatedAt) } ?? updatedAt
                 }
             }
             try? itemStore.save()
@@ -147,7 +163,8 @@ extension ListViewModel {
                 markRecentlySynced(ids: highlightIDs)
             }
 
-            // Update high-water mark only when at least one non-tombstone item was received.
+            // Advance high-water mark whenever any delta item (create, update, or tombstone)
+            // was returned — not only when non-tombstone items were present.
             if let newTs = maxUpdatedAt {
                 saveLastSyncTimestamp(newTs)
             }
@@ -205,6 +222,37 @@ extension ListViewModel {
         ))
         UserLog.Sync.realtimeResumed(listName: defaultList?.title)
         startObserving()
+    }
+
+    // MARK: - Reconciliation Safety Net (P5)
+
+    /// Schedules a debounced IncrementalSync as a safety net for missed Realtime DELETE events.
+    ///
+    /// Called by the stream handler when the incoming snapshot count drops below the current
+    /// UI item count — indicating that a remote deletion may not have been reflected by an
+    /// individual Realtime event (e.g. dropped during a brief network interruption or during
+    /// a bulk-delete from another device).
+    ///
+    /// Debounce behaviour:
+    /// - Any in-flight reconciliation task is cancelled and replaced.
+    /// - After a 500 ms quiet period, IncrementalSync runs once.
+    /// - Rapid successive calls coalesce into a single IncrementalSync execution.
+    /// - The task self-nils on completion so lifecycle checks remain accurate.
+    ///
+    /// Lifecycle:
+    /// - Cancelled and nilled by `switchList(to:)` and `clearForSignOut()`.
+    @MainActor
+    func scheduleReconciliationSync() {
+        reconciliationSyncTask?.cancel()
+        reconciliationSyncTask = Task { [weak self] in
+            // 500 ms debounce — lets rapid-fire events coalesce before hitting the network.
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            guard !Task.isCancelled, let self else { return }
+            logVoid(params: (action: "scheduleReconciliationSync.triggered", listId: self.listId))
+            await self.runIncrementalSync(suppressHighlight: false)
+            self.reconciliationSyncTask = nil
+        }
+        logVoid(params: (action: "scheduleReconciliationSync.scheduled", listId: listId))
     }
 
     // MARK: - Membership Observation (FAM-21 Bug Fix)

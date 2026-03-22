@@ -146,6 +146,92 @@ final class ListViewModelBulkTogglePerformanceTests: XCTestCase {
         XCTAssertTrue(viewModel.items.allSatisfy { !$0.isChecked }, "All items should be unchecked after second toggle")
     }
 
+    // MARK: - HLC Enrichment (P6 Schnitt A)
+
+    /// AC: Nach toggleAllItems() müssen alle betroffenen Items in SwiftData gültige
+    /// HLC-Werte tragen (hlcTimestamp > 0, hlcCounter gesetzt, hlcNodeId/lastModifiedBy nicht leer).
+    ///
+    /// Setzt einen SyncEngine voraus (hier: PreviewSyncEngine). Ohne SyncEngine wird die
+    /// HLC-Anreicherung übersprungen — das wird im Folgetest explizit abgesichert.
+    func test_toggleAll_enrichesSwiftDataEntitiesWithValidHLC() async throws {
+        // Given: ViewModel mit PreviewSyncEngine (liefert Wall-Clock-HLC)
+        let previewRepo = PreviewItemsRepository()
+        let vm = ListViewModel(
+            listId: testListId,
+            repository: previewRepo,
+            itemStore: SwiftDataItemStore(context: modelContext),
+            listStore: SwiftDataListStore(context: modelContext),
+            startImmediately: false
+        )
+        vm.configure(syncEngine: PreviewSyncEngine(repository: previewRepo))
+
+        // Items in SwiftData persistieren (storePendingChange → upsert + refreshItemsFromStore)
+        let items = [
+            ItemModel(id: UUID().uuidString, name: "Milch",  units: 1, measure: "L",   isChecked: false, listId: testListId.uuidString, ownerPublicId: nil),
+            ItemModel(id: UUID().uuidString, name: "Brot",   units: 1, measure: "Stk", isChecked: false, listId: testListId.uuidString, ownerPublicId: nil),
+            ItemModel(id: UUID().uuidString, name: "Käse",   units: 1, measure: "g",   isChecked: false, listId: testListId.uuidString, ownerPublicId: nil),
+        ]
+        for item in items {
+            vm.storePendingChange(for: item, status: .synced)
+        }
+
+        XCTAssertEqual(vm.items.count, 3, "Vorbedingung: 3 Items in der Liste")
+
+        // When
+        vm.toggleAllItems()
+        try await Task.sleep(nanoseconds: 200_000_000) // 50ms Debounce + Batch-Verarbeitung
+
+        // Then: alle Items sind gecheckt
+        XCTAssertTrue(vm.items.allSatisfy { $0.isChecked },
+                      "Alle Items müssen nach toggleAllItems() gecheckt sein")
+
+        // Then: SwiftData-Entities tragen valide HLC-Werte
+        let store = SwiftDataItemStore(context: modelContext)
+        for item in items {
+            guard let uuid = UUID(uuidString: item.id),
+                  let entity = try? store.fetchItem(id: uuid) else {
+                XCTFail("Entity für '\(item.name)' nicht in SwiftData gefunden")
+                continue
+            }
+            XCTAssertNotNil(entity.hlcTimestamp,
+                            "\(item.name): hlcTimestamp darf nicht nil sein")
+            XCTAssertGreaterThan(entity.hlcTimestamp ?? 0, 0,
+                                 "\(item.name): hlcTimestamp muss > 0 sein")
+            XCTAssertNotNil(entity.hlcCounter,
+                            "\(item.name): hlcCounter darf nicht nil sein")
+            XCTAssertFalse((entity.hlcNodeId ?? "").isEmpty,
+                           "\(item.name): hlcNodeId darf nicht leer sein")
+            XCTAssertFalse((entity.lastModifiedBy ?? "").isEmpty,
+                           "\(item.name): lastModifiedBy darf nicht leer sein")
+        }
+    }
+
+    /// AC: Ohne SyncEngine (syncEngine == nil) läuft toggleAllItems() ohne Crash durch,
+    /// die HLC-Felder bleiben unverändert (kein Guard-Fehler, kein Silent-Fail).
+    func test_toggleAll_withoutSyncEngine_doesNotCrash() async throws {
+        // Given: ViewModel OHNE SyncEngine (wie in Preview/Test-Kontext)
+        let previewRepo = PreviewItemsRepository()
+        let vm = ListViewModel(
+            listId: testListId,
+            repository: previewRepo,
+            itemStore: SwiftDataItemStore(context: modelContext),
+            listStore: SwiftDataListStore(context: modelContext),
+            startImmediately: false
+        )
+        // Kein vm.configure(syncEngine:) — syncEngine bleibt nil
+
+        let item = ItemModel(id: UUID().uuidString, name: "Wasser", units: 1, measure: "L",
+                             isChecked: false, listId: testListId.uuidString, ownerPublicId: nil)
+        vm.storePendingChange(for: item, status: .synced)
+
+        // When / Then: kein Crash
+        vm.toggleAllItems()
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        XCTAssertTrue(vm.items.allSatisfy { $0.isChecked },
+                      "Item muss auch ohne SyncEngine gecheckt sein")
+    }
+
     /// Only items whose state differs from the target should be mutated.
     func testOnlyDifferentItemsAreUpdated() async throws {
         createTestItems(count: 50)

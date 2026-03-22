@@ -12,9 +12,7 @@
 
  🛠 Includes:
  - winner(): private core — tombstone + HLC rules
- - resolve(): public full-result API (item + metadata)
- - shouldApplyRemote(): public boolean convenience, delegates to winner()
- - resolveFieldLevel(): optional field-level merge (advanced, not used in main path)
+ - shouldApplyRemote(): public boolean API, delegates to winner()
 
  🔰 Notes for Beginners:
  - Tombstones (deletions) always win to ensure eventual consistency
@@ -54,71 +52,6 @@ final class ConflictResolver {
     }
 
     // MARK: - Public API
-
-    /// Merges two ItemModels using Last-Write-Wins Element-Set CRDT semantics.
-    /// Delegates the winner decision to `winner(localMeta:remoteMeta:)`.
-    ///
-    /// - Returns: The winning `(item, metadata)` pair.
-    func resolve(
-        local: ItemModel,
-        remote: ItemModel,
-        localMeta: CRDTMetadata,
-        remoteMeta: CRDTMetadata
-    ) -> (item: ItemModel, metadata: CRDTMetadata) {
-        let winningMeta = winner(localMeta: localMeta, remoteMeta: remoteMeta)
-        return winningMeta == localMeta ? (local, localMeta) : (remote, remoteMeta)
-    }
-    
-    /// Performs field-level merge for more granular conflict resolution (optional advanced feature)
-    /// - Parameters:
-    ///   - local: Local version of the item
-    ///   - remote: Remote version of the item
-    ///   - localFields: Field-level CRDT metadata for local
-    ///   - remoteFields: Field-level CRDT metadata for remote
-    /// - Returns: Merged item with field-by-field resolution
-    func resolveFieldLevel(
-        local: ItemModel,
-        remote: ItemModel,
-        localFields: FieldLevelCRDT,
-        remoteFields: FieldLevelCRDT
-    ) -> (item: ItemModel, fields: FieldLevelCRDT) {
-        
-        var merged = local
-        var mergedFields = localFields
-
-        // Merge each field independently based on its HLC using the generic helper below.
-        mergeField("name",              remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.name },               set: { $0.name = $1 })
-        mergeField("units",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.units },              set: { $0.units = $1 })
-        mergeField("measure",           remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.measure },            set: { $0.measure = $1 })
-        mergeField("price",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.price },              set: { $0.price = $1 })
-        mergeField("isChecked",         remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.isChecked },          set: { $0.isChecked = $1 })
-        mergeField("category",          remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.category },           set: { $0.category = $1 })
-        mergeField("productDescription",remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.productDescription }, set: { $0.productDescription = $1 })
-        mergeField("brand",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.brand },              set: { $0.brand = $1 })
-        mergeField("imageData",         remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.imageData },          set: { $0.imageData = $1 })
-
-        return (merged, mergedFields)
-    }
-    
-    // MARK: - Helpers
-
-    /// Wendet einen Remote-Feldwert auf `merged` an, wenn der Remote-HLC neuer ist als der lokale.
-    private func mergeField<T>(
-        _ key: String,
-        remote: ItemModel,
-        localFields: FieldLevelCRDT,
-        remoteFields: FieldLevelCRDT,
-        merged: inout ItemModel,
-        mergedFields: inout FieldLevelCRDT,
-        get: (ItemModel) -> T,
-        set: (inout ItemModel, T) -> Void
-    ) {
-        guard let remoteHLC = remoteFields.getHLC(for: key),
-              let localHLC = localFields.getHLC(for: key),
-              localHLC.happenedBefore(remoteHLC) else { return }
-        set(&merged, get(remote))
-        mergedFields.updateField(key, hlc: remoteHLC, modifiedBy: remoteFields.fields[key]?.lastModifiedBy ?? "")
-    }
 
     /// Returns whether the remote version should replace the local version.
     /// Delegates to `winner(localMeta:remoteMeta:)` — the single merge decision point.

@@ -9,9 +9,17 @@
 
  CHANGELOG:
  - 16.03.2026: FAM-72 – MeasureCanonicalizer.canonicalize() in createItem,
-               updateItem, batchUpdateItems (Defense in depth).
+               updateItem (Defense in depth).
  - 16.03.2026: FAM-73 – ItemUpdatePayload entfernt; ItemRow für alle Writes
                genutzt. Custom encode(to:) schützt CRDT-Felder via encodeIfPresent.
+ - 21.03.2026: P6/Schnitt B – BulkTogglePayload + bulkToggleItems() eingeführt.
+               Ersetzt N parallele .update()-Calls durch einen einzigen
+               upsert([N rows], onConflict: "id") Request. Schreibt nur die
+               8 toggle-relevanten Felder; alle anderen Spalten bleiben unverändert.
+               updated_at wird client-seitig gesetzt (kein DB-Trigger auf items).
+ - 22.03.2026: batchUpdateItems() entfernt (toter Code seit Schnitt B).
+               ItemRow um updated_at erweitert — IncrementalSync sieht jetzt
+               alle Updates, nicht nur Tombstones und Creates.
 */
 
 import Foundation
@@ -61,6 +69,7 @@ private struct ItemRow: Encodable {
     let hlcNodeId: String?
     let tombstone: Bool?
     let lastModifiedBy: String?
+    let updatedAt: String   // ISO8601 — set by client; no BEFORE UPDATE trigger on items table.
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -75,6 +84,7 @@ private struct ItemRow: Encodable {
         case hlcNodeId = "hlc_node_id"
         case tombstone
         case lastModifiedBy = "last_modified_by"
+        case updatedAt = "updated_at"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -96,6 +106,38 @@ private struct ItemRow: Encodable {
         try container.encodeIfPresent(hlcNodeId, forKey: .hlcNodeId)
         try container.encodeIfPresent(tombstone, forKey: .tombstone)
         try container.encodeIfPresent(lastModifiedBy, forKey: .lastModifiedBy)
+        try container.encode(updatedAt, forKey: .updatedAt)
+    }
+}
+
+// MARK: - Bulk Toggle Payload
+
+/// Minimal upsert payload for toggleAllItems(). Writes ONLY the fields that change
+/// during a toggle operation; all other columns are left untouched on the server.
+///
+/// PostgreSQL upsert semantics (INSERT … ON CONFLICT DO UPDATE SET …) guarantee
+/// that only the listed columns are overwritten. `created_at` is not in this struct
+/// and will not be modified. `updated_at` is set client-side because the `items`
+/// table has no BEFORE UPDATE trigger (unlike `item_catalog`).
+private struct BulkTogglePayload: Encodable {
+    let id: UUID
+    let listId: UUID
+    let isChecked: Bool
+    let hlcTimestamp: Int64
+    let hlcCounter: Int
+    let hlcNodeId: String
+    let lastModifiedBy: String
+    let updatedAt: String   // ISO8601 — set by client; no BEFORE UPDATE trigger on items table.
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case listId         = "list_id"
+        case isChecked      = "is_checked"
+        case hlcTimestamp   = "hlc_timestamp"
+        case hlcCounter     = "hlc_counter"
+        case hlcNodeId      = "hlc_node_id"
+        case lastModifiedBy = "last_modified_by"
+        case updatedAt      = "updated_at"
     }
 }
 
@@ -107,6 +149,7 @@ extension SupabaseItemsRepository {
         let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID()
         // FAM-72: Defense in depth – normalize measure regardless of caller
         let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
+        let now = PaginationCursor.postgrestFormatter.string(from: Date())
         let row = ItemRow(
             id: UUID(uuidString: item.id) ?? UUID(),
             listId: listUUID,
@@ -124,7 +167,8 @@ extension SupabaseItemsRepository {
             hlcCounter: item.hlcCounter,
             hlcNodeId: item.hlcNodeId,
             tombstone: item.tombstone,
-            lastModifiedBy: item.lastModifiedBy
+            lastModifiedBy: item.lastModifiedBy,
+            updatedAt: now
         )
         // Upsert instead of insert: if the UUID already exists on the server (concurrent
         // creation on another device), the DB accepts the last writer's payload at the
@@ -168,6 +212,7 @@ extension SupabaseItemsRepository {
         let listId = UUID(uuidString: listIdString) ?? UUID()
         // FAM-72: Defense in depth – normalize measure regardless of caller
         let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
+        let now = PaginationCursor.postgrestFormatter.string(from: Date())
         let payload = ItemRow(
             id: UUID(uuidString: item.id) ?? UUID(),
             listId: listId,
@@ -185,7 +230,8 @@ extension SupabaseItemsRepository {
             hlcCounter: item.hlcCounter,
             hlcNodeId: item.hlcNodeId,
             tombstone: item.tombstone,
-            lastModifiedBy: item.lastModifiedBy
+            lastModifiedBy: item.lastModifiedBy,
+            updatedAt: now
         )
         _ = try await client
             .from("items")
@@ -198,105 +244,106 @@ extension SupabaseItemsRepository {
         logVoid(params: (itemId: item.id, listId: listId))
     }
 
-    /// Batch-updates items in parallel using the event-counter strategy.
-    /// Gate lock suppresses Realtime fetches; timeout provides fallback; final fetch ensures consistency.
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {
+    // MARK: - Bulk Toggle
+
+    /// Upserts toggle-state for N items with a single PostgREST call.
+    ///
+    /// One HTTP request replaces the N parallel `.update()` calls used by `batchUpdateItems()`.
+    /// Only the 8 toggle-relevant columns are written; name, units, measure, image, tombstone, etc.
+    /// remain untouched on the server (PostgreSQL UPDATE-column semantics).
+    ///
+    /// All items must carry valid HLC values before this call — enforced by
+    /// `performToggleAll()` via `hlcForUpdate()` (P6 Schnitt A).
+    func bulkToggleItems(_ items: [ItemModel], listId: UUID) async throws {
         guard !items.isEmpty else { return }
 
-        logVoid(params: (action: "batchUpdateItems.start", itemCount: items.count, listId: listId))
+        logVoid(params: (action: "bulkToggleItems.start", itemCount: items.count, listId: listId))
 
-        // Acquire lock: suppress Realtime fetches during batch and set event counter.
-        gate.acquireLock(expecting: items.count)
-        logVoid(params: (action: "batchUpdateItems.suppressionEnabled", expectedEvents: items.count, listId: listId))
+        // Build minimal payloads. Items missing HLC or listId are logged and skipped;
+        // in production this cannot occur after Schnitt-A HLC enrichment.
+        let now = PaginationCursor.postgrestFormatter.string(from: Date())
+        let payloads: [BulkTogglePayload] = items.compactMap { item in
+            guard let listUUID = UUID(uuidString: item.listId ?? ""),
+                  let ts       = item.hlcTimestamp,
+                  let counter  = item.hlcCounter,
+                  let nodeId   = item.hlcNodeId,
+                  let modifier = item.lastModifiedBy
+            else {
+                logVoid(params: (
+                    action: "bulkToggleItems.payloadSkipped",
+                    itemId: item.id,
+                    reason: "missingHLCOrListId"
+                ))
+                return nil
+            }
+            return BulkTogglePayload(
+                id: UUID(uuidString: item.id) ?? UUID(),
+                listId: listUUID,
+                isChecked: item.isChecked,
+                hlcTimestamp: ts,
+                hlcCounter: counter,
+                hlcNodeId: nodeId,
+                lastModifiedBy: modifier,
+                updatedAt: now
+            )
+        }
+
+        guard !payloads.isEmpty else {
+            logVoid(params: (action: "bulkToggleItems.aborted", reason: "allPayloadsSkipped"))
+            return
+        }
+
+        // Gate: suppresses Realtime echo-events arriving back on the Sender during the batch.
+        // Configured conservatively (expecting N events) — verified correct by live A3 test.
+        gate.acquireLock(expecting: payloads.count)
+        logVoid(params: (action: "bulkToggleItems.gateLocked", expecting: payloads.count, listId: listId))
 
         do {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                for item in items {
-                    group.addTask {
-                        guard let listIdForItem = item.listId,
-                              let listUUID = UUID(uuidString: listIdForItem) else {
-                            throw NSError(
-                                domain: "SupabaseItemsRepository",
-                                code: 2,
-                                userInfo: [NSLocalizedDescriptionKey: "Missing list_id"]
-                            )
-                        }
-                        // FAM-72: Defense in depth – normalize measure regardless of caller
-                        let payload = ItemRow(
-                            id: UUID(uuidString: item.id) ?? UUID(),
-                            listId: listUUID,
-                            ownerPublicId: item.ownerPublicId,
-                            imageData: item.imageData,
-                            name: item.name,
-                            units: item.units,
-                            measure: MeasureCanonicalizer.canonicalize(item.measure),
-                            price: item.price,
-                            isChecked: item.isChecked,
-                            category: item.category,
-                            productDescription: item.productDescription,
-                            brand: item.brand,
-                            hlcTimestamp: item.hlcTimestamp,
-                            hlcCounter: item.hlcCounter,
-                            hlcNodeId: item.hlcNodeId,
-                            tombstone: item.tombstone,
-                            lastModifiedBy: item.lastModifiedBy
-                        )
-                        _ = try await self.client
-                            .from("items")
-                            .update(payload)
-                            .eq("id", value: item.id)
-                            .eq("list_id", value: listUUID.uuidString)
-                            .execute()
-                    }
-                }
-                try await group.waitForAll()
-            }
-
-            // Start timeout task: releases lock if Realtime events don't arrive in time.
-            let timeoutTask = Task { @MainActor [weak self] in
-                guard let self else { return }
-                try? await Task.sleep(nanoseconds: UInt64(gate.eventCounterTimeout * 1_000_000_000))
-                if gate.isSuppressing {
-                    let remaining = gate.expectedEvents
-                    gate.releaseLock()
-                    logVoid(params: (
-                        action: "batchUpdateItems.suppressionDisabled.timeout",
-                        reason: "Timeout reached with \(remaining) events still pending",
-                        listId: listId
-                    ))
-                }
-            }
-
-            // Poll until gate is released (by event counter) or timeout fires.
-            let startTime = Date()
-            while gate.isSuppressing {
-                try? await Task.sleep(nanoseconds: 50_000_000) // 50 ms
-                if Date().timeIntervalSince(startTime) > gate.eventCounterTimeout + 0.5 { break }
-            }
-
-            timeoutTask.cancel()
-
-            // Ensure lock is released (may already be released by counter or timeout).
-            if gate.isSuppressing {
-                gate.releaseLock()
-                logVoid(params: (action: "batchUpdateItems.suppressionDisabled.manual", listId: listId))
-            }
-
-            // FAM-24: No fetchAndYield() here. Realtime UPDATE events will trigger
-            // granular processing via RealtimeEventProcessor for each item.
-
+            // Single atomic PostgREST upsert — all N rows or none (PostgreSQL transaction).
+            _ = try await client
+                .from("items")
+                .upsert(payloads, onConflict: "id")
+                .execute()
         } catch {
-            // Release lock on error to restore Realtime processing.
             gate.releaseLock()
             logVoid(params: (
-                action: "batchUpdateItems.suppressionDisabled.error",
-                listId: listId,
-                error: error.localizedDescription
+                action: "bulkToggleItems.upsertFailed",
+                itemCount: payloads.count,
+                error: error.localizedDescription,
+                listId: listId
             ))
             throw error
         }
 
-        logVoid(params: (action: "batchUpdateItems.completed", itemCount: items.count, listId: listId))
+        // Timeout task: releases gate if expected Realtime events don't arrive in time.
+        let timeoutTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: UInt64(gate.eventCounterTimeout * 1_000_000_000))
+            if gate.isSuppressing {
+                let remaining = gate.expectedEvents
+                gate.releaseLock()
+                logVoid(params: (
+                    action: "bulkToggleItems.gateReleased.timeout",
+                    remainingExpected: remaining,
+                    listId: listId
+                ))
+            }
+        }
+
+        // Poll until gate releases (by event counter) or timeout fires.
+        let pollStart = Date()
+        while gate.isSuppressing {
+            try? await Task.sleep(nanoseconds: 50_000_000) // 50 ms
+            if Date().timeIntervalSince(pollStart) > gate.eventCounterTimeout + 0.5 { break }
+        }
+        timeoutTask.cancel()
+
+        if gate.isSuppressing {
+            gate.releaseLock()
+            logVoid(params: (action: "bulkToggleItems.gateReleased.manual", listId: listId))
+        }
+
+        logVoid(params: (action: "bulkToggleItems.completed", itemCount: payloads.count, listId: listId))
     }
 
     /// Deletes an item by setting tombstone=true (soft delete per FAM-24 architecture).

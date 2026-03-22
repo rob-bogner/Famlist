@@ -137,6 +137,7 @@ final class SupabaseItemsRepository: ItemsRepository {
     /// Active continuations keyed by listId → unique observer token.
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
 
+
     // MARK: - Lifecycle
 
     init(
@@ -269,12 +270,18 @@ final class SupabaseItemsRepository: ItemsRepository {
 
     /// Fetches all live items for a list from Supabase and broadcasts them to observers.
     /// Called only on App-Start and Pull-to-Refresh — not after individual Realtime events (FAM-41).
+    ///
+    /// - Note: Tombstoned items (soft-deleted remotely) are excluded via the PostgREST filter.
+    ///   This prevents purged items from reappearing in the UI if this method is ever called.
+    ///   The main pull-to-refresh path uses runIncrementalSync() which handles tombstones
+    ///   via applyRemoteTombstoneModel(). This function is retained as a defensive fallback.
     func fetchAndYield(_ listId: UUID) async {
         do {
             let rows: [ItemRow] = try await client
                 .from("items")
                 .select()
                 .eq("list_id", value: listId.uuidString)
+                .or("tombstone.is.false,tombstone.is.null")
                 .order("created_at", ascending: true)
                 .execute()
                 .value
