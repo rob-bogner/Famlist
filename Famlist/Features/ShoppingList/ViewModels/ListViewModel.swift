@@ -112,6 +112,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
     /// Beobachtet list_members DELETE-Events für den eingeloggten User.
     internal var membershipTask: Task<Void, Never>?
+
+    /// P9: Cached userId für Membership-Channel-Reconnect nach Netzwerkwechsel.
+    internal var membershipUserId: UUID?
     
     /// Retains connectivity subscription so it lives with the view model.
     private var connectivityCancellable: AnyCancellable?
@@ -271,6 +274,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         observeTask = nil
         membershipTask?.cancel()
         membershipTask = nil
+        membershipUserId = nil
         reconciliationSyncTask?.cancel()
         reconciliationSyncTask = nil
         items = []

@@ -222,6 +222,12 @@ extension ListViewModel {
         ))
         UserLog.Sync.realtimeResumed(listName: defaultList?.title)
         startObserving()
+
+        // P9: Restart the membership-channel so eviction events are not silently missed
+        // after a WebSocket disconnect (e.g. network switch, backgrounding).
+        if let userId = membershipUserId {
+            startObservingMemberships(userId: userId)
+        }
     }
 
     // MARK: - Reconciliation Safety Net (P5)
@@ -261,6 +267,7 @@ extension ListViewModel {
     /// Wird beim Login gestartet und bei Sign-Out via clearForSignOut() gestoppt.
     func startObservingMemberships(userId: UUID) {
         guard let repo = listsRepository else { return }
+        membershipUserId = userId  // P9: Cache for reconnect in resumeRealtimeSync()
         membershipTask?.cancel()
         membershipTask = Task { [weak self] in
             guard let self else { return }

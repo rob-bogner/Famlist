@@ -291,46 +291,33 @@ final class SupabaseListsRepository: ListsRepository {
     }
 
     func fetchMembers(listId: UUID) async throws -> [ListMember] {
-        // 1. Hole profile_ids + added_at aus list_members
-        struct MemberRow: Codable {
+        // P7: Single PostgREST-Embed query via FK list_members.profile_id → profiles.id.
+        // Replaces previous 2-query + in-memory-join approach.
+        struct EmbeddedMemberRow: Codable {
             let profile_id: UUID
             let added_at: Date
+            let profiles: ProfileEmbed
+
+            struct ProfileEmbed: Codable {
+                let public_id: String?
+                let username: String?
+                let full_name: String?
+            }
         }
-        let memberRows: [MemberRow] = try await client
+        let rows: [EmbeddedMemberRow] = try await client
             .from("list_members")
-            .select("profile_id, added_at")
+            .select("profile_id, added_at, profiles(public_id, username, full_name)")
             .eq("list_id", value: listId.uuidString)
             .execute()
             .value
 
-        guard !memberRows.isEmpty else { return [] }
-
-        // 2. Hole Profil-Daten für alle profile_ids
-        // Kein PostgREST-Join möglich (kein FK profile_id → profiles.id) → zwei Queries
-        struct ProfileRow: Codable {
-            let id: UUID
-            let public_id: String?
-            let username: String?
-            let full_name: String?
-        }
-        let profileIds = memberRows.map { $0.profile_id.uuidString }
-        let profileRows: [ProfileRow] = try await client
-            .from("profiles")
-            .select("id, public_id, username, full_name")
-            .in("id", values: profileIds)
-            .execute()
-            .value
-
-        // 3. Join in Memory
-        let profileMap = Dictionary(uniqueKeysWithValues: profileRows.map { ($0.id, $0) })
-        let result = memberRows.compactMap { member -> ListMember? in
-            guard let profile = profileMap[member.profile_id] else { return nil }
-            return ListMember(
-                id: member.profile_id,
-                publicId: profile.public_id ?? "",
-                username: profile.username,
-                fullName: profile.full_name,
-                addedAt: member.added_at
+        let result = rows.map { row in
+            ListMember(
+                id: row.profile_id,
+                publicId: row.profiles.public_id ?? "",
+                username: row.profiles.username,
+                fullName: row.profiles.full_name,
+                addedAt: row.added_at
             )
         }
         return logResult(params: (listId: listId, count: result.count), result: result)
