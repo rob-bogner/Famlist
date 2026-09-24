@@ -9,7 +9,7 @@ Stand: 24.09.2026 · Branch `redesign-hybrid` (abgezweigt von `main` 20ea307)
 - [x] Phase 2 – Liste und Dock
 - [x] Phase 3 – Artikel
 - [x] Phase 4 – Listen, Teilen, Konto
-- [ ] Phase 5 – Einstieg
+- [x] Phase 5 – Einstieg
 - [ ] Phase 6 – Kategorien
 - [ ] Phase 7 – Kassenzettel und Preise
 
@@ -186,6 +186,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Phase | Build | Tests | Pixel-Abgleich (iPhone 17 Pro, `-uiTestFixture -designFixture`) |
 |---|---|---|---|
 | 1 | grün | – | – |
+| 5 | grün | 450 bestanden, 0 fehlgeschlagen (6 neue Unit-Tests; dabei gefunden: invitePreview fehlte als Protokoll-Anforderung) | SignIn, ProfileSetup, AcceptInvite: deckungsgleich bis auf §9; Migration 010 angewandt und geprüft |
 | 4 | grün (auch der vorgemerkte Stand separat gebaut) | 443 bestanden, 0 fehlgeschlagen (10 neue Unit-Tests, 9 neu geschriebene UI-Tests „Meine Listen“) | MyLists, CreateList, ListOptions, ShareMembers, Settings, EditProfile, DeleteAccount: deckungsgleich bis auf §9; Migration 009 angewandt und geprüft |
 | 3 | grün | 432 bestanden, 0 fehlgeschlagen (8 neue: Artikel verwalten, Barcode-Suche) | BarcodeScan, ManageItems, NewItem: deckungsgleich; Migration 008 angewandt und geprüft |
 | 2 | grün | 423 bestanden, 0 fehlgeschlagen (inkl. 23 UI-Tests, 20 neue Unit-Tests) | Hybrid, MenuOverlay, SortMenu, CopyChoice, CopyDone, DeleteChoice, UndoToast (Light), HybridDark, SortMenuDark, MenuOverlayDark: deckungsgleich bis auf die Punkte in §9 |
@@ -216,4 +217,9 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ShareMembers | „Link kopieren“ / ID-Knopf zeigen 2 s „Link kopiert“ bzw. Haken | Rückmeldung nicht gestaltet |
 | EditProfile | Unter dem Benutzernamen rote Meldung bei vergeben/ungültig; „Speichern“ erst bei gültigem, freiem Namen | Design zeigt nur den Hinweis |
 | Settings | Profilkarte zeigt vollen Namen bzw. Benutzernamen und das Profilfoto | Beispieldaten „Rob“ |
+| SignIn | Nutzungsbedingungen/Datenschutzerklärung sind keine Links | Es gibt keine URLs; offener Punkt für Robert |
+| SignIn | Nur DEBUG/Simulator: langer Druck auf die Korb-Kachel → Testkonten | Entwickler-Zugang, im Release nicht vorhanden |
+| ProfileSetup | Titelumbruch „Wie sollen dich / andere sehen?“ | Textbreite iOS vs. Browser, Code identisch mit Referenz |
+| ProfileSetup | Status im Feld: „frei“ (Design) bzw. „vergeben“/„ungültig“/„offline“ in Rot, Ladekreis beim Prüfen; „Los geht’s“ erst bei freiem Namen | Design zeigt nur „frei“ |
+| AcceptInvite | Chips entfallen ohne Verbindung (Zahlen unbekannt) | Zahlen kommen aus RPC invite_preview |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |

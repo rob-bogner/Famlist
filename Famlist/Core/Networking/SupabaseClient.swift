@@ -85,6 +85,15 @@ protocol AuthClienting: Sendable {
     func signUp(email: String, password: String) async throws
     func signOut(scope: SignOutScope) async throws
     func session(from url: URL) async throws -> Session
+    /// Sign in with Apple: ID-Token + Nonce an Supabase (Provider „apple“).
+    func signInWithIdToken(credentials: OpenIDConnectCredentials) async throws -> Session
+}
+
+extension AuthClienting {
+    // Standard für Test-Doubles.
+    func signInWithIdToken(credentials: OpenIDConnectCredentials) async throws -> Session {
+        throw URLError(.unsupportedURL)
+    }
 }
 
 /// Makes the Supabase `AuthClient` conform to `AuthClienting` so production code keeps working.
@@ -121,12 +130,15 @@ protocol SupabaseClienting { // Protocol to hide concrete Supabase types from th
     func rpc(_ function: String) async throws
     /// Löscht Dateien aus einem Storage-Bucket.
     func storageRemove(bucket: String, paths: [String]) async throws
+    /// Ruft eine Postgres-Funktion mit Parametern auf und dekodiert die Zeilen.
+    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R]
 }
 
 extension SupabaseClienting {
     // Standard für Test-Doubles, die diese Aufrufe nicht brauchen.
     func rpc(_ function: String) async throws {}
     func storageRemove(bucket: String, paths: [String]) async throws {}
+    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] { [] }
 }
 
 final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around SupabaseClient conforming to our facade.
@@ -192,6 +204,10 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
     func rpc(_ function: String) async throws {
         try await client.rpc(function).execute()
         logVoid(params: ["rpc": function])
+    }
+
+    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] {
+        try await client.rpc(function, params: params).execute().value
     }
 
     func storageRemove(bucket: String, paths: [String]) async throws {

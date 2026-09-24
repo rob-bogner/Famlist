@@ -134,7 +134,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
         WindowGroup { // Primary window scene for iOS apps.
             #if DEBUG
             if UITestFixture.isActive { // UI tests (-uiTestFixture): in-memory list, no Supabase.
-                ShoppingListView()
+                UITestFixture.rootView
                     .environmentObject(UITestFixture.listVM)
                     .environmentObject(UITestFixture.session)
             } else {

@@ -62,6 +62,29 @@ enum UITestFixture {
         return vm
     }()
 
+    /// Startscreen der Fixture. `-designScreen signIn|profileSetup|acceptInvite` zeigt einen Einstiegs-Screen
+    /// statt der Liste (Pixel-Abgleich gegen design-handoff/Design/png).
+    @ViewBuilder
+    static var rootView: some View {
+        switch UserDefaults.standard.string(forKey: "designScreen") {
+        case "signIn": SignInView()
+        case "profileSetup": ProfileSetupView()
+        case "acceptInvite":
+            let _ = setDesignInvitePreview()
+            AcceptInviteView(invite: .init(listId: designInviteId, listTitle: "Edeka", inviterPublicId: "Rob"))
+        default: ShoppingListView()
+        }
+    }
+
+    private static let designInviteId = UUID()
+
+    /// Beispielwerte aus AcceptInvite.dc.html, bevor der Screen erscheint.
+    private static func setDesignInvitePreview() {
+        guard session.invitePreview?.listId != designInviteId else { return }
+        session.invitePreview = InvitePreviewInfo(listId: designInviteId, inviterName: "Rob", listName: "Edeka",
+                                                  itemCount: 4, memberCount: 1)
+    }
+
     /// Owner of "My List" and "Drogerie"; "WG-Einkauf" belongs to someone else (shared list).
     private static let ownerId = UUID()
 

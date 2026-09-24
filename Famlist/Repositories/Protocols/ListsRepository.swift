@@ -90,6 +90,9 @@ protocol ListsRepository {
     ///   - listId: The UUID of the list to make default.
     ///   - ownerId: The owner UUID (needed to clear previous default).
     func setDefaultList(listId: UUID, ownerId: UUID) async throws
+
+    /// Einladung annehmen: Titel, Artikel- und Mitgliederzahl einer Liste, die man noch nicht lesen darf (RPC invite_preview).
+    func invitePreview(listId: UUID) async throws -> InvitePreviewRow?
 }
 
 /// Convenience API to retrieve the default list as a strongly-typed ListModel.
@@ -110,5 +113,23 @@ extension ListsRepository {
             createdAt: row.created_at ?? Date(),
             updatedAt: row.updated_at ?? row.created_at ?? Date() // Prefer updated_at; fallback to created_at or now
         )
+    }
+}
+
+extension ListsRepository {
+    /// Einladung annehmen: Titel, Artikel- und Mitgliederzahl einer Liste, die man noch nicht lesen darf.
+    func invitePreview(listId: UUID) async throws -> InvitePreviewRow? { nil }
+}
+
+/// Zeile aus der RPC `invite_preview` (Migration 010).
+struct InvitePreviewRow: Decodable, Equatable {
+    let title: String
+    let itemCount: Int
+    let memberCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case title
+        case itemCount = "item_count"
+        case memberCount = "member_count"
     }
 }

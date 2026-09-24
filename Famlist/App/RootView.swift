@@ -36,21 +36,23 @@ struct RootView: View { // SwiftUI View declaration.
                 ProgressView() // Show a spinner while restoring session.
                     .accessibilityLabel(Text(String(localized: "auth.session.restoring"))) // Accessibility label for loading.
             } else if session.isAuthenticated { // If authenticated and not restoring, show the main app UI.
-                ShoppingListView() // Main list UI.
-                    .environmentObject(listViewModel) // Ensure list VM is available to descendants.
+                if session.needsProfileSetup {
+                    ProfileSetupView() // Schritt 2 von 2: Benutzername fehlt noch.
+                } else if let invite = session.pendingInvite {
+                    AcceptInviteView(invite: invite) // Einladungslink: annehmen oder ablehnen.
+                } else {
+                    ShoppingListView() // Main list UI.
+                        .environmentObject(listViewModel) // Ensure list VM is available to descendants.
+                }
             } else { // Not authenticated and not restoring -> present sign-in form.
-                AuthView() // Email magic-link sign-in screen.
+                SignInView() // E-Mail-Anmeldelink oder „Mit Apple anmelden“.
             }
         }
         .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
+        .animation(.easeInOut(duration: 0.3), value: session.needsProfileSetup)
+        .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.listId)
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
-        }
-        .sheet(item: $session.pendingInvite) { invite in
-            InviteAcceptView(invite: invite)
-                .environmentObject(session)
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
         }
     }
 }

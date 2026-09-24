@@ -38,6 +38,10 @@ final class AppSessionViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var isRestoringSession: Bool = false
     @Published var currentProfile: Profile? = nil
+    /// Adresse, an die zuletzt ein Anmeldelink ging (Toast „Wir haben dir einen Link geschickt“).
+    @Published var magicLinkSentTo: String? = nil
+    /// Vorschau der offenen Einladung (Name des Einladenden, Liste, Zahlen) für „Einladung annehmen“.
+    @Published var invitePreview: InvitePreviewInfo? = nil
     /// Profilfoto des angemeldeten Nutzers (aus dem privaten Bucket `avatars`, per signiertem Link geladen).
     @Published var avatarImage: UIImage? = nil
     
@@ -59,7 +63,7 @@ final class AppSessionViewModel: ObservableObject {
     /// Wird gesetzt, wenn ein Invite-Link geöffnet wird und der Nutzer eingeloggt ist.
     @Published var pendingInvite: InvitePayload? = nil
     /// Zwischenspeicher für Invites, die vor dem Login ankommen.
-    private var pendingInviteStorage: InvitePayload? = nil
+    internal var pendingInviteStorage: InvitePayload? = nil
 
     // MARK: - Lightweight Toasts
 
