@@ -3,142 +3,273 @@
 
  Famlist
  Created on: 27.11.2023
- Last updated on: 18.10.2025
+ Last updated on: 24.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Main shopping list screen combining decorative accent header, progress indicator and list content.
+ - Hauptscreen der Einkaufsliste im Hybrid-Design: Hintergrund, scrollender Inhalt, Dock
+   und die Hybrid-Sheets (Suchen, Neuer Artikel, Bearbeiten, Produktbild) als eigene Ebene.
 
  🛠 Includes:
- - Accent header background + title + progress, list content, AddItemView sheet.
- - FloatingBottomMenuBar mit Toggle-All, Sort, Add, Import und Hamburger-Menu.
+ - ShoppingListContent (Top-Bar, Suche, Fortschritt, Tabs, Abschnitte) + ListDock.
+ - Sheet-Ebene: Liste 3 pt weichgezeichnet, Abdunkelung (scrim), Sheet von unten.
+ - „Mehr“-Menü: Import, Alle abhaken/zurücksetzen, Lösch-Varianten, Profil, Abmelden.
+ - Rückfragen (ListConfirmation) für Duplizieren und Löschen.
 
  🔰 Notes for Beginners:
- - Uses an EnvironmentObject (ListViewModel) so all subviews share the same data.
- - FloatingBottomMenuBar liegt als eigene Komponente in Shared/Components.
+ - Die Hybrid-Sheets sind bewusst KEINE `.sheet()`-Präsentationen (eigene Radien, kein System-Glas).
+   Listen-Übersicht, Import und Profil sind nicht Teil des Designs und bleiben System-Sheets.
+ - Light/Dark folgt dem System (`colorScheme`), der Akzent ist der Design-Standard.
+ - Oben und unten gilt die echte Safe Area. Auf dem Referenzgerät (Top 62 / Bottom 34)
+   ergibt das exakt die Design-Abstände, auf anderen Geräten rutscht nichts unter Notch oder Home-Indikator.
 
  📝 Last Change:
- - Quick-Add-Inline-Feld entfernt, FloatingBottomMenuBar (dunkles Pill-Design) integriert.
+ - Komplett auf das Hybrid-Design umgestellt (ersetzt AccentHeader, ListView und FloatingBottomMenuBar).
  ------------------------------------------------------------------------
  */
 
 import SwiftUI // Imports SwiftUI for declarative UI building blocks and property wrappers.
-import SwiftData // Provides ModelContext access for SwiftData-backed persistence.
 
+/// The main shopping list screen in the Hybrid design.
+struct ShoppingListView: View {
+    @EnvironmentObject var listViewModel: ListViewModel
+    @EnvironmentObject var session: AppSessionViewModel
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
 
-/// The main screen showing the shopping list with a decorative header and actions.
-struct ShoppingListView: View { // Declares a SwiftUI view type.
-    @EnvironmentObject var listViewModel: ListViewModel // Shared data source and actions across the hierarchy.
-    @EnvironmentObject var session: AppSessionViewModel // Session VM used to perform sign-out from the hamburger menu.
-    @Environment(\.modelContext) private var modelContext // SwiftData context injected from FamlistApp.
-    @Environment(\.scenePhase) private var scenePhase // Tracks foreground/background transitions for lifecycle-driven sync.
-    @State private var addNewItem: Bool = false // Controls whether the AddItemView sheet is presented.
-    @State private var showListsOverview: Bool = false // Controls whether the ListsOverviewView sheet is presented.
-    private var contentOffsetBelowHeader: CGFloat { DS.Layout.headerFixedHeight + DS.Layout.headerBottomSpacing } // Push list completely below header with consistent spacing.
+    @StateObject private var keyboard = KeyboardObserver()
+    @State private var activeSheet: ActiveListSheet?
+    @State private var openRow: OpenSwipeRow?
+    @State private var pendingConfirmation: ListConfirmation?
+    @State private var showListsOverview = false
+    @State private var showImport = false
+    @State private var showProfile = false
 
-    var body: some View { // The view’s content and layout tree.
-        NavigationView { // Embed in navigation for consistent behavior and potential future navigation.
-            ZStack(alignment: .top) { // Stack layers starting from the top of the screen.
-                Color.theme.background.ignoresSafeArea() // Fill the background with the app theme color, including safe areas.
-                AccentHeaderBackground() // Decorative accent background with rounded bottom corners.
-                    .frame(height: DS.Layout.headerFixedHeight) // Give the header a fixed height.
-                    .zIndex(0) // Place behind other layers.
-                VStack(alignment: .leading, spacing: 12) { // Header content: title and progress.
-                    HStack(alignment: .center) {
-                        Text(listViewModel.defaultList?.title ?? String(localized: "shoppingList.title")) // Aktiver Listen-Name oder Fallback.
-                            .font(.largeTitle.bold())
-                            .foregroundColor(Color.theme.universalWhite)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        Spacer()
-                        Button {
-                            showListsOverview = true
-                        } label: {
-                            Image(systemName: "list.bullet.below.rectangle")
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(Color.theme.universalWhite)
-                        }
-                        .padding(.trailing, 18)
-                        .accessibilityLabel("Listen-Übersicht öffnen")
-                    }
-                    .padding(.top, 30)
-                    .padding(.leading, 18)
+    var body: some View {
+        let appearance = Appearance(colorScheme)
+        let t = ListTheme(appearance)
+        let k = SheetTheme(appearance)
 
-                    ShoppingListProgressView(listViewModel: listViewModel) // Small progress card showing checked vs total.
-                        .padding(.top, 8) // Space below the title.
-                    Spacer().frame(height: 4) // Tiny spacer to balance layout visually.
+        GeometryReader { geo in
+            let screenHeight = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
+            listLayer(t: t, bottomInset: geo.safeAreaInsets.bottom)
+                .blur(radius: activeSheet == nil ? 0 : 3, opaque: true)
+                .allowsHitTesting(activeSheet == nil)
+                .overlay(alignment: .bottom) {
+                    sheetLayer(k: k, maxHeight: screenHeight - 54)   // Design: 54 pt Luft über dem höchsten Sheet
                 }
- //               .frame(height: headerHeight, alignment: .top) // Constrain header content to the header area.
-                .zIndex(1) // Float above the background.
-                VStack(spacing: 0) { // Main content column with list.
-                    Spacer().frame(height: contentOffsetBelowHeader) // Push list down so it starts under the header.
-                    ListView()
-                        .environmentObject(listViewModel) // The list content reading from shared view model.
-                        .safeAreaInset(edge: .bottom) {
-                            Spacer().frame(height: 90) // Freiraum damit Items nicht hinter der Menüleiste verschwinden.
-                        }
-                    Spacer() // Push content up slightly for breathing room.
-                }
-                .zIndex(2) // Place above header content.
-
-                // Schwebende Menüleiste am unteren Bildschirmrand.
-                VStack {
-                    Spacer()
-                    FloatingBottomMenuBar(onAddTap: { addNewItem = true })
-                        .environmentObject(listViewModel)
-                        .environmentObject(session)
-                }
-                .zIndex(3) // Über allen anderen Ebenen.
-                
-            }
-            .navigationBarHidden(true) // Use our custom header; hide default nav bar.
-            .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity.combined(with: .move(edge: .trailing)))) // Animated appear/disappear.
         }
-        .navigationViewStyle(StackNavigationViewStyle()) // Stack style for iPhone/iPad consistency.
-        .sheet(isPresented: $showListsOverview) { // Present lists overview sheet.
+        .ignoresSafeArea(.keyboard)
+        .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)
+        .sheet(isPresented: $showListsOverview) {
             ListsOverviewView()
                 .environmentObject(listViewModel)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $addNewItem) { // Present search sheet or direct add form.
-            if let catalogRepo = listViewModel.catalogRepository {
-                // Smart search: user can find existing catalog items or create new ones.
-                ItemSearchView(
-                    catalogRepository: catalogRepo,
-                    globalCatalogRepository: listViewModel.globalCatalogRepository
-                )
-            } else {
-                // Fallback: direct add form (preview mode / no catalog configured).
-                AddItemView()
-                    .presentationDetents([.fraction(0.45), .large, .medium])
-                    .presentationCornerRadius(15)
+        .sheet(isPresented: $showImport) {
+            ClipboardImportView()
+                .environmentObject(listViewModel)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showProfile) {
+            if let profile = session.currentProfile {
+                ProfileView(profile: profile)
+                    .environmentObject(session)
                     .presentationDragIndicator(.visible)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .onChange(of: scenePhase) { _, newPhase in // React to lifecycle changes so realtime sync stays reliable.
-            switch newPhase { // Branch on scene state to decide which action to take.
-            case .active: // When the app enters the foreground again.
-                listViewModel.handleAppDidBecomeActive() // Resume observation when the app returns to the foreground.
-            case .background: // When the app transitions to the background.
-                listViewModel.handleAppDidEnterBackground() // Suspend observation when the app backgrounds.
-            default:
-                break // No action required for the inactive transition.
+        .confirmationDialog(pendingConfirmation?.title ?? "", isPresented: confirmationBinding,
+                            titleVisibility: .visible, presenting: pendingConfirmation) { confirmation in
+            Button(confirmation.confirmLabel, role: confirmation.isDestructive ? .destructive : nil) {
+                perform(confirmation)
             }
+            Button("Abbrechen", role: .cancel) {}
+        } message: { confirmation in
+            Text(confirmation.message)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .active: listViewModel.handleAppDidBecomeActive()
+            case .background: listViewModel.handleAppDidEnterBackground()
+            default: break
+            }
+        }
+    }
+
+    // MARK: - List Layer
+
+    private func listLayer(t: ListTheme, bottomInset: CGFloat) -> some View {
+        ZStack(alignment: .bottom) {
+            ListBackground(t: t)
+            ScrollView {
+                ShoppingListContent(
+                    t: t,
+                    openRow: $openRow,
+                    onSearch: openSearch,
+                    onShowLists: { showListsOverview = true },
+                    onEdit: { activeSheet = .edit($0) },
+                    onShowImage: { activeSheet = .productImage($0) },
+                    moreMenu: { moreMenu }
+                )
+                .padding(.horizontal, 20)
+                .padding(.bottom, 68 + 28)       // Dock 68 + Luft, damit die letzte Karte frei liegt
+            }
+            .scrollIndicators(.hidden)
+            .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
+            ListDock(
+                t: t,
+                sortOrder: ListViewModel.currentSortOrder,
+                hasCheckedItems: listViewModel.checkedItemCount > 0,
+                liveBlur: t.isDark,               // Dark-Pille ist nur zu 78 % deckend → Karten scheinen sonst durch
+                onSort: { listViewModel.setSortOrder($0) },
+                onDuplicate: { pendingConfirmation = .duplicate },
+                onDeleteChecked: { pendingConfirmation = .deleteChecked },
+                onAdd: openSearch
+            )
+            .padding(.horizontal, 20)
+            .padding(.bottom, bottomInset > 0 ? 0 : 16)   // ohne Home-Indikator trotzdem Abstand halten
+        }
+    }
+
+    // MARK: - Sheet Layer
+
+    @ViewBuilder
+    private func sheetLayer(k: SheetTheme, maxHeight: CGFloat) -> some View {
+        ZStack(alignment: .bottom) {
+            if activeSheet != nil {
+                k.scrim
+                    .onTapGesture(perform: closeSheet)
+                    .transition(.opacity)
+                    .accessibilityHidden(true)
+            }
+            if let sheet = activeSheet {
+                sheetView(sheet, k: k, maxHeight: maxHeight)
+                    .id(sheet.id)
+                    .transition(.move(edge: .bottom))
+                    .zIndex(1)
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    @ViewBuilder
+    private func sheetView(_ sheet: ActiveListSheet, k: SheetTheme, maxHeight: CGFloat) -> some View {
+        switch sheet {
+        case .search:
+            if let catalog = listViewModel.catalogRepository {
+                ItemSearchSheet(catalogRepository: catalog,
+                                globalCatalogRepository: listViewModel.globalCatalogRepository,
+                                k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
+                                onClose: closeSheet,
+                                onCreateNew: { activeSheet = .newItem(initialName: $0) })
+            }
+        case .newItem(let name):
+            NewItemSheet(initialName: name, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
+        case .edit(let item):
+            EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
+        case .productImage(let item):
+            ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
+        }
+    }
+
+    // MARK: - More Menu
+
+    @ViewBuilder
+    private var moreMenu: some View {
+        let allChecked = !listViewModel.items.isEmpty && listViewModel.items.allSatisfy(\.isChecked)
+        Button { showImport = true } label: {
+            Label("Aus Zwischenablage importieren", systemImage: "doc.on.clipboard")
+        }
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { listViewModel.toggleAllItems() }
+        } label: {
+            Label(allChecked ? "Alle zurücksetzen" : "Alle abhaken",
+                  systemImage: allChecked ? "arrow.uturn.backward.circle" : "checkmark.circle")
+        }
+        .disabled(listViewModel.items.isEmpty)
+        Menu {
+            Button("Offene löschen", role: .destructive) { pendingConfirmation = .deleteOpen }
+                .disabled(listViewModel.uncheckedItems.isEmpty)
+            Button("Alle Artikel löschen", role: .destructive) { pendingConfirmation = .deleteAll }
+        } label: {
+            Label("Löschen", systemImage: "trash")
+        }
+        .disabled(listViewModel.items.isEmpty)
+        Divider()
+        Button { showProfile = true } label: {
+            Label(String(localized: "menu.profile"), systemImage: "person.circle")
+        }
+        Button(role: .destructive) { session.signOut() } label: {
+            Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right")
+        }
+    }
+
+    // MARK: - Actions
+
+    private var confirmationBinding: Binding<Bool> {
+        Binding(get: { pendingConfirmation != nil }, set: { if !$0 { pendingConfirmation = nil } })
+    }
+
+    /// Opens the search sheet, or the new-item form when no catalog is configured (preview / fallback).
+    private func openSearch() {
+        openRow = nil
+        activeSheet = listViewModel.catalogRepository == nil ? .newItem(initialName: "") : .search
+    }
+
+    private func closeSheet() {
+        hideKeyboard()
+        activeSheet = nil
+    }
+
+    private func perform(_ confirmation: ListConfirmation) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            switch confirmation {
+            case .duplicate: listViewModel.duplicateActiveList()
+            case .deleteChecked: listViewModel.deleteCheckedItems()
+            case .deleteOpen: listViewModel.deleteUncheckedItems()
+            case .deleteAll: listViewModel.deleteAllItems()
+            }
+        }
+    }
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+/// Schließt eine offene Wisch-Zeile, sobald der Nutzer die Liste scrollt (iOS 18+, wie in Mail).
+private struct CloseSwipedRowOnScroll: ViewModifier {
+    @Binding var openRow: OpenSwipeRow?
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollPhaseChange { _, phase in
+                if phase == .interacting, openRow != nil {
+                    withAnimation(SwipeableItemRow.snap) { openRow = nil }
+                }
+            }
+        } else {
+            content
         }
     }
 }
 
-#Preview { // SwiftUI live preview for this view.
-    // Build preview dependencies and inject both list and session view models.
-    let listVM = PreviewMocks.makeListViewModelWithSamples() // In-memory list VM with sample items.
-    let sessionVM = AppSessionViewModel(client: nil, // No real client in previews.
-                                        profiles: PreviewProfilesRepository(), // Preview profiles repo.
-                                        lists: PreviewListsRepository(), // Preview lists repo.
-                                        listViewModel: listVM) // Inject list VM.
-    return ShoppingListView() // Render the list view.
-        .modelContainer(PersistenceController.preview.container) // Provide in-memory SwiftData container for previews.
-        .environmentObject(listVM) // Provide list view model to the environment.
-        .environmentObject(sessionVM) // Provide session view model for the hamburger menu.
+#Preview("Light") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    ShoppingListView()
+        .modelContainer(PersistenceController.preview.container)
+        .environmentObject(listVM)
+        .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
+                                               lists: PreviewListsRepository(), listViewModel: listVM))
+}
+
+#Preview("Dark") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    ShoppingListView()
+        .modelContainer(PersistenceController.preview.container)
+        .environmentObject(listVM)
+        .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
+                                               lists: PreviewListsRepository(), listViewModel: listVM))
+        .preferredColorScheme(.dark)
 }

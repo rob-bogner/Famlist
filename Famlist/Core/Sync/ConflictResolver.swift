@@ -95,6 +95,7 @@ final class ConflictResolver {
         mergeField("measure",           remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.measure },            set: { $0.measure = $1 })
         mergeField("price",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.price },              set: { $0.price = $1 })
         mergeField("isChecked",         remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.isChecked },          set: { $0.isChecked = $1 })
+        mergeField("isUnavailable",     remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.isUnavailable },      set: { $0.isUnavailable = $1 })
         mergeField("category",          remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.category },           set: { $0.category = $1 })
         mergeField("productDescription",remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.productDescription }, set: { $0.productDescription = $1 })
         mergeField("brand",             remote: remote, localFields: localFields, remoteFields: remoteFields, merged: &merged, mergedFields: &mergedFields, get: { $0.brand },              set: { $0.brand = $1 })

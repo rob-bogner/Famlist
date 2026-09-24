@@ -32,4 +32,14 @@ extension ListViewModel {
             return (category: cat, items: items)
         }
     }
+
+    /// Kategorie-Gruppen, die der aktive Tab-Filter zeigt (leer bei „Erledigt“).
+    var visibleOpenGroups: [(category: ItemCategory, items: [ItemModel])] {
+        itemFilter.showsOpenItems ? uncheckedItemsByCategory : []
+    }
+
+    /// Abgehakte Artikel, die der aktive Tab-Filter zeigt (leer bei „Offen“).
+    var visibleCheckedItems: [ItemModel] {
+        itemFilter.showsCheckedItems ? checkedItems : []
+    }
 }

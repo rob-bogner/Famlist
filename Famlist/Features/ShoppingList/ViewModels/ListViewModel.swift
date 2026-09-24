@@ -43,7 +43,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// The items currently displayed in the UI. Changes re-render views.
     @Published var items: [ItemModel] = []
     
-    /// The item currently selected for editing (opens EditItemView sheet).
+    /// Legacy selection state (the Hybrid UI passes the item to EditItemSheet directly).
     @Published var selectedItem: ItemModel?
     
     /// Optional error message surfaced to the UI on operation failures.
@@ -60,6 +60,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
     /// Item counts per list id, sourced from the local SwiftData store.
     @Published var listItemCounts: [UUID: Int] = [:]
+
+    /// Active tab filter ("Alle · Offen · Erledigt"). Display-only state, never persisted or synced.
+    @Published var itemFilter: ItemFilter = .all
     
     // MARK: - Dependencies & Core State
     
@@ -216,6 +219,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         defaultList = nil
         allLists = []
         listItemCounts = [:]
+        itemFilter = .all
         errorMessage = nil
         listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
         refreshItemsFromStore()

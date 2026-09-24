@@ -433,6 +433,21 @@ struct UserLog {
         static func listSetDefault(name: String) {
             log("⭐ '\(name)' als Standard-Liste gesetzt")
         }
+
+        /// Liste dupliziert
+        static func listDuplicated(name: String, newName: String, itemCount: Int) {
+            log("📑 Liste '\(name)' dupliziert als '\(newName)' (\(itemCount) Artikel)")
+        }
+
+        /// Artikel als „nicht verfügbar“ markiert oder wieder verfügbar gemacht
+        static func itemAvailabilityChanged(name: String, isUnavailable: Bool) {
+            log(isUnavailable ? "🚫 Nicht verfügbar: \(name)" : "↩️ Wieder verfügbar: \(name)")
+        }
+
+        /// Alle Artikel einer Kategorie abgehakt
+        static func categoryItemsChecked(category: String, count: Int) {
+            log("☑️ \(count) Artikel in '\(category)' abgehakt")
+        }
     }
     
     /// UI-Events

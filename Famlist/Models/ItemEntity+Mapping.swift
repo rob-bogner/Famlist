@@ -2,13 +2,13 @@
  ItemEntity+Mapping.swift
  Famlist
  Created on: 12.10.2025
- Last updated on: 12.10.2025
+ Last updated on: 24.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview: Bridges ItemEntity <-> ItemModel for the local-first data pipeline.
  🛠 Includes: Helper methods to convert between SwiftData entities and the existing ItemModel struct.
  🔰 Notes for Beginners: Use these helpers to keep mapping logic consistent across repositories and sync jobs.
- 📝 Last Change: Initial creation for local-first migration step.
+ 📝 Last Change: isUnavailable in toItemModel/apply/make gemappt.
  ------------------------------------------------------------------------
 */
 
@@ -28,6 +28,7 @@ extension ItemEntity {
             measure: measure,
             price: price,
             isChecked: isChecked,
+            isUnavailable: isUnavailable,
             category: category,
             productDescription: productDescription,
             brand: brand,
@@ -56,6 +57,7 @@ extension ItemEntity {
         self.measure = model.measure
         self.price = model.price
         self.isChecked = model.isChecked
+        self.isUnavailable = model.isUnavailable
         self.category = model.category
         self.productDescription = model.productDescription
         self.brand = model.brand
@@ -108,6 +110,7 @@ extension ItemEntity {
             measure: model.measure,
             price: model.price,
             isChecked: model.isChecked,
+            isUnavailable: model.isUnavailable,
             category: model.category,
             productDescription: model.productDescription,
             brand: model.brand,

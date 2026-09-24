@@ -8,6 +8,8 @@
     duplicated local structs from the original monolith.
 
  CHANGELOG:
+ - 24.09.2026: is_unavailable in ItemRow/ItemUpdatePayload („Nicht verfügbar“-Status).
+               Setzt Migration 005_add_item_is_unavailable.sql voraus.
  - 16.03.2026: FAM-72 – MeasureCanonicalizer.canonicalize() in createItem,
                updateItem, batchUpdateItems (Defense in depth).
 */
@@ -28,6 +30,7 @@ private struct ItemRow: Codable {
     let measure: String
     let price: Double
     let isChecked: Bool
+    let isUnavailable: Bool
     let category: String?
     let productDescription: String?
     let brand: String?
@@ -43,6 +46,7 @@ private struct ItemRow: Codable {
         case ownerPublicId = "ownerpublicid"
         case imageData = "imagedata"
         case name, units, measure, price, isChecked, category
+        case isUnavailable = "is_unavailable"
         case productDescription = "productdescription"
         case brand
         case hlcTimestamp = "hlc_timestamp"
@@ -62,6 +66,7 @@ private struct ItemUpdatePayload: Encodable {
     let measure: String
     let price: Double
     let isChecked: Bool
+    let isUnavailable: Bool
     let category: String?
     let productDescription: String?
     let brand: String?
@@ -74,6 +79,7 @@ private struct ItemUpdatePayload: Encodable {
     enum CodingKeys: String, CodingKey {
         case imageData = "imagedata"
         case name, units, measure, price, isChecked, category
+        case isUnavailable = "is_unavailable"
         case productDescription = "productdescription"
         case brand
         case hlcTimestamp = "hlc_timestamp"
@@ -91,6 +97,7 @@ private struct ItemUpdatePayload: Encodable {
         try container.encode(measure, forKey: .measure)
         try container.encode(price, forKey: .price)
         try container.encode(isChecked, forKey: .isChecked)
+        try container.encode(isUnavailable, forKey: .isUnavailable)
         try container.encode(category, forKey: .category)
         try container.encode(productDescription, forKey: .productDescription)
         try container.encode(brand, forKey: .brand)
@@ -120,6 +127,7 @@ extension SupabaseItemsRepository {
             measure: canonicalMeasure,
             price: item.price,
             isChecked: item.isChecked,
+            isUnavailable: item.isUnavailable,
             category: item.category,
             productDescription: item.productDescription,
             brand: item.brand,
@@ -142,6 +150,7 @@ extension SupabaseItemsRepository {
             measure: canonicalMeasure,
             price: item.price,
             isChecked: item.isChecked,
+            isUnavailable: item.isUnavailable,
             category: item.category,
             productDescription: item.productDescription,
             brand: item.brand,
@@ -176,6 +185,7 @@ extension SupabaseItemsRepository {
             measure: canonicalMeasure,
             price: item.price,
             isChecked: item.isChecked,
+            isUnavailable: item.isUnavailable,
             category: item.category,
             productDescription: item.productDescription,
             brand: item.brand,
@@ -228,6 +238,7 @@ extension SupabaseItemsRepository {
                             measure: MeasureCanonicalizer.canonicalize(item.measure),
                             price: item.price,
                             isChecked: item.isChecked,
+                            isUnavailable: item.isUnavailable,
                             category: item.category,
                             productDescription: item.productDescription,
                             brand: item.brand,

@@ -2,7 +2,7 @@
  SupabaseItemsRepository.swift
  Famlist
  Created on: 01.07.2025 (est.)
- Last updated on: 15.03.2026
+ Last updated on: 24.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -154,6 +154,7 @@ final class SupabaseItemsRepository: ItemsRepository {
             let measure: String
             let price: Double
             let isChecked: Bool
+            let isUnavailable: Bool? // nil until migration 005 is applied
             let category: String?
             let productDescription: String?
             let brand: String?
@@ -170,6 +171,7 @@ final class SupabaseItemsRepository: ItemsRepository {
                 case ownerPublicId = "ownerpublicid"
                 case imageData = "imagedata"
                 case name, units, measure, price, isChecked, category
+                case isUnavailable = "is_unavailable"
                 case productDescription = "productdescription"
                 case brand
                 case createdAt = "created_at"
@@ -199,6 +201,7 @@ final class SupabaseItemsRepository: ItemsRepository {
                     measure: r.measure,
                     price: r.price,
                     isChecked: r.isChecked,
+                    isUnavailable: r.isUnavailable ?? false,
                     category: r.category,
                     productDescription: r.productDescription,
                     brand: r.brand,

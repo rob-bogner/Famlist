@@ -117,6 +117,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 measure: item.measure,
                 price: item.price,
                 isChecked: item.isChecked,
+                isUnavailable: item.isUnavailable,
                 category: item.category,
                 productDescription: item.productDescription,
                 brand: item.brand,

@@ -2,13 +2,13 @@
  ItemEntity.swift
  Famlist
  Created on: 12.10.2025
- Last updated on: 18.10.2025
+ Last updated on: 24.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview: SwiftData item model shared with Supabase JSON payloads.
  🛠 Includes: @Model declaration, Codable bridge, sync-state helpers, relationship to parent list.
  🔰 Notes for Beginners: Represents a product entry; syncStatus steuert, ob Datensätze zur Cloud synchronisiert werden müssen.
- 📝 Last Change: Removed unused position field to reduce technical debt and simplify schema.
+ 📝 Last Change: isUnavailable ergänzt (Spalte is_unavailable). Standardwert false → SwiftData migriert leichtgewichtig.
  ------------------------------------------------------------------------
 */
 
@@ -37,6 +37,8 @@ final class ItemEntity: Identifiable, Codable {
     var measure: String
     var price: Double
     var isChecked: Bool
+    /// „Nicht verfügbar“-Status. Default nötig für die automatische SwiftData-Migration bestehender Stores.
+    var isUnavailable: Bool = false
     var category: String?
     var productDescription: String?
     var brand: String?
@@ -84,6 +86,7 @@ final class ItemEntity: Identifiable, Codable {
         measure: String,
         price: Double,
         isChecked: Bool,
+        isUnavailable: Bool = false,
         category: String?,
         productDescription: String?,
         brand: String?,
@@ -107,6 +110,7 @@ final class ItemEntity: Identifiable, Codable {
         self.measure = measure
         self.price = price
         self.isChecked = isChecked
+        self.isUnavailable = isUnavailable
         self.category = category
         self.productDescription = productDescription
         self.brand = brand
@@ -134,6 +138,7 @@ final class ItemEntity: Identifiable, Codable {
         case measure
         case price
         case isChecked
+        case isUnavailable = "is_unavailable"
         case category
         case productDescription = "productdescription"
         case brand
@@ -159,6 +164,7 @@ final class ItemEntity: Identifiable, Codable {
         let measure = try container.decode(String.self, forKey: .measure)
         let price = try container.decode(Double.self, forKey: .price)
         let isChecked = try container.decode(Bool.self, forKey: .isChecked)
+        let isUnavailable = try container.decodeIfPresent(Bool.self, forKey: .isUnavailable) ?? false
         let category = try container.decodeIfPresent(String.self, forKey: .category)
         let productDescription = try container.decodeIfPresent(String.self, forKey: .productDescription)
         let brand = try container.decodeIfPresent(String.self, forKey: .brand)
@@ -183,6 +189,7 @@ final class ItemEntity: Identifiable, Codable {
             measure: measure,
             price: price,
             isChecked: isChecked,
+            isUnavailable: isUnavailable,
             category: category,
             productDescription: productDescription,
             brand: brand,
@@ -210,6 +217,7 @@ final class ItemEntity: Identifiable, Codable {
         try container.encode(measure, forKey: .measure)
         try container.encode(price, forKey: .price)
         try container.encode(isChecked, forKey: .isChecked)
+        try container.encode(isUnavailable, forKey: .isUnavailable)
         try container.encodeIfPresent(category, forKey: .category)
         try container.encodeIfPresent(productDescription, forKey: .productDescription)
         try container.encodeIfPresent(brand, forKey: .brand)

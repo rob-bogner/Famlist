@@ -41,6 +41,7 @@ final class ItemFormViewModel: ObservableObject {
     @Published var productDescription: String = ""
     @Published var category: String = ""
     @Published var isChecked: Bool = false
+    @Published var isUnavailable: Bool = false
     @Published var selectedImage: UIImage? = nil
     
     // MARK: - Validation State
@@ -79,6 +80,7 @@ final class ItemFormViewModel: ObservableObject {
         self.productDescription = item.productDescription ?? ""
         self.category = item.category ?? ""
         self.isChecked = item.isChecked
+        self.isUnavailable = item.isUnavailable
         
         // Load image from base64 if available
         if let img = ImageCache.shared.image(fromBase64: item.imageData) {
@@ -135,6 +137,7 @@ final class ItemFormViewModel: ObservableObject {
             measure: measure,
             price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,
             isChecked: isChecked,
+            isUnavailable: isUnavailable,
             category: category.isEmpty ? nil : category,
             productDescription: productDescription.isEmpty ? nil : productDescription,
             brand: brand.isEmpty ? nil : brand,

@@ -289,6 +289,7 @@ final class RealtimeEventProcessor {
         let measure = extractString("measure") ?? ""
         let price = extractDouble("price") ?? 0.0
         let isChecked = extractBool("isChecked") ?? false
+        let isUnavailable = extractBool("is_unavailable") ?? false
         let category = extractString("category")
         let productDescription = extractString("productdescription")
         let brand = extractString("brand")
@@ -353,6 +354,7 @@ final class RealtimeEventProcessor {
             measure: measure,
             price: price,
             isChecked: isChecked,
+            isUnavailable: isUnavailable,
             category: category,
             productDescription: productDescription,
             brand: brand,

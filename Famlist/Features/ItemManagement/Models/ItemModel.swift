@@ -3,7 +3,7 @@
 
  Famlist
  Created on: 27.11.2023
- Last updated on: 18.10.2025
+ Last updated on: 24.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -19,7 +19,8 @@
  - listId links the item to a specific list (matches items.list_id in the DB).
 
  📝 Last Change:
- - Documented imageUrl/imageData migration plan and position field as technical debt.
+ - isUnavailable ergänzt („Nicht verfügbar“-Status, Hybrid-Redesign). Eigener Decoder mit Fallback false,
+   damit ältere SyncOperation-Snapshots ohne diesen Schlüssel weiterhin dekodierbar sind.
  ------------------------------------------------------------------------
  */
 
@@ -63,6 +64,9 @@ struct ItemModel: Identifiable, Hashable, Codable {
     
     /// Boolean flag indicating whether the item has been checked off the list.
     var isChecked: Bool
+
+    /// Marks the item as "not available" in the store (swipe action). Synced like isChecked (column is_unavailable).
+    var isUnavailable: Bool
     
     /// Category or group of the product (e.g., "Dairy", "Bakery", "Vegetables").
     var category: String?
@@ -127,6 +131,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     // MARK: - CodingKeys
     private enum CodingKeys: String, CodingKey {
         case id, imageUrl, imageData, name, units, measure, price, isChecked, category
+        case isUnavailable
         case productDescription, brand, listId, ownerPublicId
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -171,6 +176,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         measure: String = "", // Default measurement is empty
         price: Double = 0.0, // Default price is 0.0
         isChecked: Bool = false, // Default to unchecked
+        isUnavailable: Bool = false, // Default to available
         category: String? = nil, // Default category is nil (optional)
         productDescription: String? = nil, // Default product description is nil
         brand: String? = nil, // Default brand is nil
@@ -192,6 +198,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.measure = measure // Assigns the measurement unit
         self.price = price // Assigns the price per unit
         self.isChecked = isChecked // Assigns the checked status
+        self.isUnavailable = isUnavailable // Assigns the availability status
         self.category = category // Assigns the optional product category
         self.productDescription = productDescription // Assigns the exact product designation
         self.brand = brand // Assigns the brand or manufacturer
@@ -204,5 +211,35 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.hlcNodeId = hlcNodeId
         self.tombstone = tombstone
         self.lastModifiedBy = lastModifiedBy
+    }
+
+    // MARK: - Decoding
+
+    /// Custom decoder so snapshots written before `isUnavailable` existed (queued SyncOperations) still decode.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try c.decode(String.self, forKey: .id),
+            imageUrl: try c.decodeIfPresent(String.self, forKey: .imageUrl),
+            imageData: try c.decodeIfPresent(String.self, forKey: .imageData),
+            name: try c.decode(String.self, forKey: .name),
+            units: try c.decode(Int.self, forKey: .units),
+            measure: try c.decode(String.self, forKey: .measure),
+            price: try c.decode(Double.self, forKey: .price),
+            isChecked: try c.decode(Bool.self, forKey: .isChecked),
+            isUnavailable: try c.decodeIfPresent(Bool.self, forKey: .isUnavailable) ?? false,
+            category: try c.decodeIfPresent(String.self, forKey: .category),
+            productDescription: try c.decodeIfPresent(String.self, forKey: .productDescription),
+            brand: try c.decodeIfPresent(String.self, forKey: .brand),
+            listId: try c.decodeIfPresent(String.self, forKey: .listId),
+            ownerPublicId: try c.decodeIfPresent(String.self, forKey: .ownerPublicId),
+            createdAt: try c.decodeIfPresent(Date.self, forKey: .createdAt),
+            updatedAt: try c.decodeIfPresent(Date.self, forKey: .updatedAt),
+            hlcTimestamp: try c.decodeIfPresent(Int64.self, forKey: .hlcTimestamp),
+            hlcCounter: try c.decodeIfPresent(Int.self, forKey: .hlcCounter),
+            hlcNodeId: try c.decodeIfPresent(String.self, forKey: .hlcNodeId),
+            tombstone: try c.decodeIfPresent(Bool.self, forKey: .tombstone),
+            lastModifiedBy: try c.decodeIfPresent(String.self, forKey: .lastModifiedBy)
+        )
     }
 }
