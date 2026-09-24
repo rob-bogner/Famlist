@@ -33,6 +33,20 @@ private final class StubCatalog: ItemCatalogRepository {
     func find(barcode: String) async throws -> ItemCatalogEntry? { entries.first { $0.barcode == barcode } }
 }
 
+/// Artikelstamm, dessen Schreiben erst nach einer Pause beim „Server“ ankommt (wie im Netz).
+@MainActor
+private final class SlowCatalog: ItemCatalogRepository {
+    var entries: [ItemCatalogEntry]
+    init(_ entries: [ItemCatalogEntry]) { self.entries = entries }
+    func search(query: String) async throws -> [ItemCatalogEntry] { [] }
+    func save(_ entry: ItemCatalogEntry) async throws { entries.append(entry) }
+    func fetchAll() async throws -> [ItemCatalogEntry] { entries }
+    func update(_ entry: ItemCatalogEntry) async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        if let i = entries.firstIndex(where: { $0.id == entry.id }) { entries[i] = entry }
+    }
+}
+
 @MainActor
 private final class StubGlobal: GlobalProductCatalogRepository {
     let products: [GlobalProductEntry]
@@ -85,6 +99,32 @@ final class ManageItemsAndBarcodeTests: XCTestCase {
         await waitUntil { vm.errorMessage != nil }
         XCTAssertEqual(vm.entries.map(\.name), ["Brot", "Milch"])
         XCTAssertNotNil(vm.errorMessage)
+    }
+
+    /// Gerätefehler: Maßeinheit geändert → „Artikel verwalten“ lädt beim Zurückkehren neu → alte Einheit war wieder da.
+    func test_update_thenImmediateReload_keepsChange() async {
+        let catalog = SlowCatalog([entry("Butter", .milch)])
+        let vm = ManageItemsViewModel(repository: catalog)
+        await vm.load()
+        var changed = vm.entries[0]
+        changed.measure = "Packung"
+        vm.update(changed)
+        await vm.load()
+        XCTAssertEqual(vm.entries.first?.measure, "Packung", "Neuladen darf die Änderung nicht überschreiben")
+        XCTAssertEqual(catalog.entries.first?.measure, "Packung")
+    }
+
+    func test_twoQuickUpdates_arriveInOrder() async {
+        let catalog = SlowCatalog([entry("Butter", .milch)])
+        let vm = ManageItemsViewModel(repository: catalog)
+        await vm.load()
+        var first = vm.entries[0]; first.measure = "g"
+        var second = first; second.measure = "kg"
+        vm.update(first)
+        vm.update(second)
+        await vm.load()
+        XCTAssertEqual(catalog.entries.first?.measure, "kg")
+        XCTAssertEqual(vm.entries.first?.measure, "kg")
     }
 
     func test_meta_prefersBrand_elseCategory() {
