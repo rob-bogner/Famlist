@@ -102,7 +102,7 @@ extension ShoppingListView {
         case .editCatalog(let entry):
             EditItemSheet(item: entry.toEditableItem(), k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
                           onClose: { hideKeyboard(); activeSheet = .manageItems },
-                          onSave: { manageItemsVM?.update(entry.applying($0)) })
+                          onSave: { saveCatalogEdit(from: entry, to: entry.applying($0)) })
         case .edit(let item):
             EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
         case .productImage(let item):
@@ -169,6 +169,12 @@ extension ShoppingListView {
                                              ownerPublicId: listViewModel.defaultList?.ownerId.uuidString)
         item.units = quantity
         listViewModel.addItem(item, barcode: product.barcode)
+    }
+
+    /// Artikel verwalten → Bearbeiten: Artikelstamm speichern und gleichnamige Artikel der Liste anpassen.
+    private func saveCatalogEdit(from old: ItemCatalogEntry, to new: ItemCatalogEntry) {
+        manageItemsVM?.update(new)
+        listViewModel.applyCatalogEdit(from: old, to: new)
     }
 
     /// Öffnet „Artikel verwalten“ (ViewModel lebt über das Bearbeiten-Sheet hinweg).

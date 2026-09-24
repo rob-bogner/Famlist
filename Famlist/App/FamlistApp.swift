@@ -97,7 +97,10 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             )
             lvm.configure(connectivityMonitor: connectivityMonitor)
             lvm.configure(syncEngine: syncEngine)
-            lvm.configure(catalogRepository: SupabaseItemCatalogRepository(client: client))
+            // Artikelstamm offline zuerst: lokale Warteschlange, Senden sofort bzw. sobald wieder Netz da ist.
+            lvm.configure(catalogRepository: OfflineItemCatalogRepository(
+                remote: SupabaseItemCatalogRepository(client: client),
+                reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher()))
             lvm.configure(globalCatalogRepository: SupabaseGlobalProductCatalogRepository(client: client))
             // Wire pagination (FAM-79/FAM-40).
             let pageLoader = PageLoader(repository: itemsRepo)
@@ -107,7 +110,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             // Create the session VM that coordinates auth and default list bootstrap.
             self.sessionViewModel = AppSessionViewModel(client: client, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm)
             self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client))
-            self.priceBook = PriceBook(repository: SupabasePricePointsRepository(client: client))
+            self.priceBook = PriceBook(repository: SupabasePricePointsRepository(client: client),
+                                       reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
             let itemsRepo = PreviewItemsRepository() // Items repo in memory.

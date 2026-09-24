@@ -303,6 +303,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         // Reset pagination state and clear persisted cursor/timestamp.
         PaginationCursor.clear(listId: listId)
         clearLastSyncTimestamp()
+        (catalogRepository as? OfflineItemCatalogRepository)?.clearLocalData()   // Artikelstamm des Kontos
         currentCursor = nil
         hasMoreItems = true
         isLoadingNextPage = false
@@ -384,7 +385,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Updates an existing item after normalizing fields.
     /// - Parameter suppressUserLog: Pass `true` when the caller has already logged the action
     ///   (e.g. `toggleItemChecked`, increment path in `addItem`) to avoid duplicate logs.
-    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false, suppressUserLog: Bool = false) {
+    /// - Parameter updateCatalog: false, wenn die Änderung aus dem Artikelstamm kommt (dort schon gespeichert).
+    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false, suppressUserLog: Bool = false,
+                    updateCatalog: Bool = true) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
@@ -414,7 +417,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }
 
         // Update personal item catalog (fire-and-forget; keeps catalog in sync with edits)
-        if let catalogRepo = catalogRepository {
+        if updateCatalog, let catalogRepo = catalogRepository {
             let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
             Task {
                 do {

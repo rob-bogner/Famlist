@@ -9,15 +9,16 @@
 
  🔰 Notes for Beginners:
  - Offline-First: Neue Preise landen zuerst in einer Warteschlange (UserDefaults) und werden dann an
-   Supabase geschickt. Klappt das nicht, bleiben sie in der Warteschlange und werden beim nächsten
-   Speichern oder Öffnen des Preisverlaufs erneut gesendet.
+   Supabase geschickt. Klappt das nicht, bleiben sie in der Warteschlange und werden gesendet,
+   sobald wieder Netz da ist (bzw. beim nächsten Speichern oder Öffnen des Preisverlaufs).
  - Der Preisverlauf zeigt Supabase-Daten plus noch nicht gesendete Preise.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 7).
+ - Senden, sobald wieder Netz da ist (`reconnect`).
  ------------------------------------------------------------------------
  */
 
+import Combine
 import Foundation
 
 @MainActor
@@ -25,10 +26,17 @@ final class PriceBook: ObservableObject {
     private let repository: PricePointsRepository?
     private let defaults: UserDefaults
     private static let pendingKey = "pendingPricePoints"
+    private var reconnectSubscription: AnyCancellable?
 
-    init(repository: PricePointsRepository?, defaults: UserDefaults = .standard) {
+    /// `reconnect`: meldet „wieder online“ (ConnectivityMonitor) → Warteschlange sofort senden.
+    init(repository: PricePointsRepository?, defaults: UserDefaults = .standard,
+         reconnect: AnyPublisher<Bool, Never>? = nil) {
         self.repository = repository
         self.defaults = defaults
+        reconnectSubscription = reconnect?
+            .removeDuplicates()
+            .filter { $0 }
+            .sink { [weak self] _ in Task { await self?.flush() } }
     }
 
     private(set) var pending: [PricePoint] {
