@@ -57,6 +57,11 @@ private final class StubLists: ListsRepository {
 
 @MainActor
 final class AccountAndSharingTests: XCTestCase {
+    /// Wartet, bis `condition` erfüllt ist (höchstens 2 s) – statt fester Pausen, die unter Last zu kurz sind.
+    private func waitUntil(_ condition: @escaping () -> Bool) async {
+        for _ in 0..<200 where !condition() { try? await Task.sleep(nanoseconds: 10_000_000) }
+    }
+
     private let meId = UUID()
     private lazy var me = Profile(id: meId, publicId: "rob123", username: "rob", fullName: "Rob",
                                   avatarUrl: nil, createdAt: nil, updatedAt: nil)
@@ -119,7 +124,7 @@ final class AccountAndSharingTests: XCTestCase {
         XCTAssertEqual(session.currentProfile?.favoriteListId, drogerie.id)
         session.toggleFavorite(drogerie)
         XCTAssertNil(session.currentProfile?.favoriteListId)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { profiles.favoriteCalls.count == 2 }
         XCTAssertEqual(profiles.favoriteCalls, [drogerie.id, nil])
     }
 
@@ -128,7 +133,7 @@ final class AccountAndSharingTests: XCTestCase {
         profiles.failFavorite = true
         let session = try makeSession(profiles)
         session.toggleFavorite(list("Drogerie", owner: meId))
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { session.errorMessage != nil }
         XCTAssertNil(session.currentProfile?.favoriteListId)
         XCTAssertNotNil(session.errorMessage)
     }
@@ -180,7 +185,7 @@ final class AccountAndSharingTests: XCTestCase {
         let vm = ShareMembersViewModel(list: myList, me: me, lists: lists, profiles: nil)
         await vm.load()
         vm.remove(vm.members[1])
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { !lists.removed.isEmpty }
         XCTAssertEqual(vm.members.count, 1)
         XCTAssertEqual(lists.removed.first?.1, anna.id)
     }
@@ -198,7 +203,7 @@ final class AccountAndSharingTests: XCTestCase {
         vm.leaveList(shared, profileId: meId)
         XCTAssertEqual(vm.allLists.map(\.title), ["My List"])
         XCTAssertEqual(vm.defaultList?.id, own.id)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { !lists.removed.isEmpty }
         XCTAssertEqual(lists.removed.first?.0, shared.id)
         XCTAssertEqual(lists.removed.first?.1, meId)
     }

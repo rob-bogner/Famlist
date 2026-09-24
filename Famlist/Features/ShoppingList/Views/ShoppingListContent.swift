@@ -80,7 +80,7 @@ struct ShoppingListContent: View {
         case .category(let category):
             ListSectionHeader(t: t, kind: .category(category), count: section.items.count) {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                    listViewModel.checkAllItems(in: category)
+                    listViewModel.checkAllItems(in: category.name)
                 }
             }
             .padding(.top, 16)

@@ -11,7 +11,7 @@
  🔰 Notes for Beginners:
  - Der Artikelstamm liegt nur in Supabase (siehe PLAN.md, Risiko R3). Löschen wird optimistisch
    angezeigt und bei einem Fehler zurückgenommen.
- - Filter „Alle“ plus jede Kategorie, die im Artikelstamm vorkommt, in Ladenweg-Reihenfolge.
+ - Filter „Alle“ plus jede Kategorie des Nutzers, die im Artikelstamm vorkommt, in Ladenweg-Reihenfolge.
 
  📝 Last Change:
  - Initial creation (Redesign „Hybrid“, Phase 3).
@@ -31,15 +31,18 @@ final class ManageItemsViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let repository: any ItemCatalogRepository
+    /// Kategorien des Nutzers (Filterchips in Ladenweg-Reihenfolge).
+    var categories: [CategoryDefinition]
 
-    init(repository: any ItemCatalogRepository) {
+    init(repository: any ItemCatalogRepository, categories: [CategoryDefinition] = CategoryDefinition.defaults) {
         self.repository = repository
+        self.categories = categories
     }
 
     /// „Alle“ + vorhandene Kategorien in Ladenweg-Reihenfolge.
     var filters: [String] {
-        let present = Set(entries.map { ItemCategory.from($0.category) })
-        return [Self.allFilter] + ItemCategory.displayOrder.filter(present.contains).map(\.rawValue)
+        let present = Set(entries.map { CategoryResolver.name(for: $0.category, in: categories) })
+        return [Self.allFilter] + categories.map(\.name).filter(present.contains)
     }
 
     /// Einträge nach Suche und Filter.
@@ -47,7 +50,7 @@ final class ManageItemsViewModel: ObservableObject {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         return entries.filter { entry in
             let matchesFilter = selectedFilter == Self.allFilter
-                || ItemCategory.from(entry.category).rawValue == selectedFilter
+                || CategoryResolver.name(for: entry.category, in: categories) == selectedFilter
             let matchesQuery = q.isEmpty || entry.name.lowercased().contains(q)
                 || (entry.brand?.lowercased().contains(q) ?? false)
             return matchesFilter && matchesQuery
@@ -55,8 +58,8 @@ final class ManageItemsViewModel: ObservableObject {
     }
 
     /// Zweite Zeile einer Karte, z. B. „Kerrygold · 250 g“ oder „Sonstiges · 1 Packung“.
-    static func meta(for entry: ItemCatalogEntry) -> String {
-        let lead = (entry.brand?.isEmpty == false ? entry.brand : nil) ?? ItemCategory.from(entry.category).rawValue
+    static func meta(for entry: ItemCatalogEntry, categories: [CategoryDefinition] = CategoryDefinition.defaults) -> String {
+        let lead = (entry.brand?.isEmpty == false ? entry.brand : nil) ?? CategoryResolver.name(for: entry.category, in: categories)
         guard !entry.measure.isEmpty else { return lead }
         return "\(lead) · 1 \(Measure.fromExternal(entry.measure).localizedName)"
     }

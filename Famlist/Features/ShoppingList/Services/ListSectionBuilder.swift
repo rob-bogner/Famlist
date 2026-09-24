@@ -9,7 +9,8 @@
 
  🔰 Notes for Beginners:
  - Reine Funktion ohne Zustand → einfach zu testen (ListSectionBuilderTests).
- - „Nach Kategorie“: Gruppen in Ladenweg-Reihenfolge, darin alphabetisch.
+ - „Nach Kategorie“: Gruppen in der Ladenweg-Reihenfolge des Nutzers (Kategorien verwalten), darin
+   alphabetisch. Unbekannte Kategorien landen unter „Sonstiges“ (CategoryResolver).
    „Alphabetisch“ / „Zuletzt hinzugefügt“ / „Manuell“: eine flache Liste ohne Kopf.
  - „Erledigte nach unten“ an: abgehakte Artikel stehen im eigenen Abschnitt „Abgehakt“ ganz unten.
    Aus: sie bleiben an ihrer Stelle in der Gruppe bzw. der flachen Liste.
@@ -27,7 +28,7 @@ enum ListSectionBuilder {
                          settings: ListSortSettings,
                          filter: ItemFilter,
                          manualOrder: [String] = [],
-                         categoryOrder: [ItemCategory] = ItemCategory.displayOrder) -> [ListSection] {
+                         categoryOrder: [CategoryDefinition] = CategoryDefinition.defaults) -> [ListSection] {
         let visible = items.filter { $0.isChecked ? filter.showsCheckedItems : filter.showsOpenItems }
         let open = visible.filter { !$0.isChecked }
         let checked = visible.filter(\.isChecked)
@@ -49,10 +50,10 @@ enum ListSectionBuilder {
         return result
     }
 
-    private static func categorySections(_ items: [ItemModel], order: [ItemCategory]) -> [ListSection] {
-        let grouped = Dictionary(grouping: items) { ItemCategory.from($0.category) }
+    private static func categorySections(_ items: [ItemModel], order: [CategoryDefinition]) -> [ListSection] {
+        let grouped = Dictionary(grouping: items) { CategoryResolver.name(for: $0.category, in: order) }
         return order.compactMap { category in
-            guard let group = grouped[category], !group.isEmpty else { return nil }
+            guard let group = grouped[category.name], !group.isEmpty else { return nil }
             return ListSection(kind: .category(category), items: group.sorted(by: byName))
         }
     }

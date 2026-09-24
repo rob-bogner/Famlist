@@ -67,6 +67,7 @@ struct RootView: View { // SwiftUI View declaration.
     return RootView() // Render RootView for preview.
         .environmentObject(sessionVM) // Inject session VM.
         .environmentObject(listVM) // Inject list VM.
+        .environmentObject(CategoryStore(repository: nil))
 }
 
 #Preview("Authenticated") {
@@ -80,4 +81,5 @@ struct RootView: View { // SwiftUI View declaration.
     return RootView() // Render RootView for preview.
         .environmentObject(sessionVM) // Inject session VM.
         .environmentObject(listVM) // Inject list VM.
+        .environmentObject(CategoryStore(repository: nil))
 }

@@ -93,7 +93,7 @@ struct NewItemSheet: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 FieldLabel(text: "Kategorie", k: k)
-                CategoryChipRow(k: k, selection: $formVM.category)
+                CategoryChipRow(k: k, selection: $formVM.category, categories: listViewModel.categoryOrder)
             }
         }
     }

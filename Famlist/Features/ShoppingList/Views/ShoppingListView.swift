@@ -32,6 +32,7 @@ import SwiftUI // Imports SwiftUI for declarative UI building blocks and propert
 struct ShoppingListView: View {
     @EnvironmentObject var listViewModel: ListViewModel
     @EnvironmentObject var session: AppSessionViewModel
+    @EnvironmentObject var categoryStore: CategoryStore
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
 
@@ -89,6 +90,10 @@ struct ShoppingListView: View {
             default: break
             }
         }
+        .task(id: session.currentProfile?.id) {
+            if let id = session.currentProfile?.id { await categoryStore.load(profileId: id) }
+        }
+        .onReceive(categoryStore.$categories) { listViewModel.categoryOrder = $0 }
         #if DEBUG
         .onAppear { applyDesignLaunchState() }
         #endif
@@ -193,6 +198,7 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
         .environmentObject(listVM)
         .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
                                                lists: PreviewListsRepository(), listViewModel: listVM))
+        .environmentObject(CategoryStore(repository: nil))
 }
 
 #Preview("Dark") {
@@ -202,5 +208,6 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
         .environmentObject(listVM)
         .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
                                                lists: PreviewListsRepository(), listViewModel: listVM))
+        .environmentObject(CategoryStore(repository: nil))
         .preferredColorScheme(.dark)
 }

@@ -43,6 +43,10 @@ enum ActiveListSheet: Equatable, Identifiable {
     case editProfile
     /// „Konto löschen?“; liegt über den Einstellungen.
     case deleteAccount
+    /// Kategorien verwalten (Ladenweg).
+    case manageCategories
+    /// Kategorie bearbeiten (nil = neue Kategorie); liegt über „Kategorien verwalten“.
+    case editCategory(CategoryDefinition?)
 
     var id: String {
         switch self {
@@ -61,6 +65,8 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .settings: return "settings"
         case .editProfile: return "editProfile"
         case .deleteAccount: return "deleteAccount"
+        case .manageCategories: return "manageCategories"
+        case .editCategory(let category): return "editCategory-\(category?.id.uuidString ?? "new")"
         }
     }
 }
@@ -71,6 +77,7 @@ extension ActiveListSheet {
         switch self {
         case .listOptions, .createList, .listName: return .lists
         case .deleteAccount: return .settings
+        case .editCategory: return .manageCategories
         default: return nil
         }
     }

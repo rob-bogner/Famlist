@@ -21,8 +21,8 @@ import Foundation
 /// A rendered section of the shopping list.
 struct ListSection: Identifiable, Equatable {
     enum Kind: Equatable {
-        /// Kategorie-Gruppe (Sortierung „Nach Kategorie“).
-        case category(ItemCategory)
+        /// Kategorie-Gruppe (Sortierung „Nach Kategorie“), Reihenfolge = Ladenweg des Nutzers.
+        case category(CategoryDefinition)
         /// Abgehakte Artikel unten („Erledigte nach unten“).
         case checked
         /// Flache Liste ohne Kopf (Alphabetisch, Zuletzt hinzugefügt, Manuell).
@@ -34,7 +34,7 @@ struct ListSection: Identifiable, Equatable {
 
     var id: String {
         switch kind {
-        case .category(let category): return "category-\(category.rawValue)"
+        case .category(let category): return "category-\(category.id.uuidString)"
         case .checked: return "checked"
         case .flat: return "flat"
         }

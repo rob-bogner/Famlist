@@ -154,7 +154,7 @@ final class ItemAvailabilityTests: XCTestCase {
         viewModel.items = [makeItem("Butter", category: .milch),
                            makeItem("Joghurt", category: .milch),
                            makeItem("Äpfel", category: .obstGemuese)]
-        viewModel.checkAllItems(in: .milch)
+        viewModel.checkAllItems(in: ItemCategory.milch.rawValue)
 
         let checkedNames = Set(viewModel.items.filter(\.isChecked).map(\.name))
         XCTAssertEqual(checkedNames, ["Butter", "Joghurt"])

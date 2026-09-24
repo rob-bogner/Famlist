@@ -58,6 +58,8 @@ extension ShoppingListView {
         case "settings": return .settings
         case "editProfile": return .editProfile
         case "deleteAccount": return .deleteAccount
+        case "manageCategories": return .manageCategories
+        case "editCategory": return .editCategory(categoryStore.categories.first { $0.name == "Milchprodukte" })
         case "manageItems":
             if let repo = listViewModel.catalogRepository, manageItemsVM == nil {
                 manageItemsVM = ManageItemsViewModel(repository: repo)

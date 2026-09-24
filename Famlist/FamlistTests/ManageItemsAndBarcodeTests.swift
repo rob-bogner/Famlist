@@ -43,6 +43,10 @@ private final class StubGlobal: GlobalProductCatalogRepository {
 
 @MainActor
 final class ManageItemsAndBarcodeTests: XCTestCase {
+    /// Wartet, bis `condition` erfüllt ist (höchstens 2 s) – statt fester Pausen, die unter Last zu kurz sind.
+    private func waitUntil(_ condition: @escaping () -> Bool) async {
+        for _ in 0..<200 where !condition() { try? await Task.sleep(nanoseconds: 10_000_000) }
+    }
 
     private func entry(_ name: String, _ category: ItemCategory?, brand: String? = nil,
                        barcode: String? = nil) -> ItemCatalogEntry {
@@ -78,7 +82,7 @@ final class ManageItemsAndBarcodeTests: XCTestCase {
         await vm.load()
         vm.delete(vm.entries[0])
         XCTAssertEqual(vm.entries.map(\.name), ["Milch"])
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { vm.errorMessage != nil }
         XCTAssertEqual(vm.entries.map(\.name), ["Brot", "Milch"])
         XCTAssertNotNil(vm.errorMessage)
     }

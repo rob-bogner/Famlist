@@ -34,17 +34,37 @@ final class ListSectionBuilderTests: XCTestCase {
 
     // MARK: - Nach Kategorie
 
+    /// Abschnitts-Namen zum Vergleichen („Obst & Gemüse“, …, „✓“ für Abgehakt, „—“ für flach).
+    private func names(_ sections: [ListSection]) -> [String] {
+        sections.map {
+            switch $0.kind {
+            case .category(let c): return c.name
+            case .checked: return "✓"
+            case .flat: return "—"
+            }
+        }
+    }
+
     func test_category_groupsInStoreOrder_andCheckedAtBottom() {
         let sections = ListSectionBuilder.sections(items: sample, settings: .default, filter: .all)
-        XCTAssertEqual(sections.map(\.kind), [.category(.obstGemuese), .category(.milch), .category(.backwaren), .checked])
+        XCTAssertEqual(names(sections), ["Obst & Gemüse", "Milchprodukte", "Backwaren", "✓"])
         XCTAssertEqual(sections.last?.items.map(\.name), ["Butter"])
+    }
+
+    func test_category_followsCustomStoreRoute_unknownGoesToFallback() {
+        let route = [CategoryDefinition(id: UUID(), name: "Backwaren", icon: "cutlery", position: 0),
+                     CategoryDefinition(id: UUID(), name: "Milchprodukte", icon: "drop", position: 1),
+                     CategoryDefinition(id: UUID(), name: "Sonstiges", icon: "tag", position: 2)]
+        let sections = ListSectionBuilder.sections(items: sample, settings: .default, filter: .all, categoryOrder: route)
+        XCTAssertEqual(names(sections), ["Backwaren", "Milchprodukte", "Sonstiges", "✓"],
+                       "Obst & Gemüse fehlt in der Route → Sonstiges")
     }
 
     func test_category_withoutDoneAtBottom_keepsCheckedInGroup() {
         let settings = ListSortSettings(order: .category, doneAtBottom: false)
         let sections = ListSectionBuilder.sections(items: sample, settings: settings, filter: .all)
         XCTAssertFalse(sections.contains { $0.kind == .checked })
-        XCTAssertEqual(sections.first { $0.kind == .category(.milch) }?.items.map(\.name), ["Butter", "Milch"])
+        XCTAssertEqual(sections.first { names([$0]) == ["Milchprodukte"] }?.items.map(\.name), ["Butter", "Milch"])
     }
 
     // MARK: - Flache Sortierungen

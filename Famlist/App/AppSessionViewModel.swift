@@ -42,6 +42,8 @@ final class AppSessionViewModel: ObservableObject {
     @Published var magicLinkSentTo: String? = nil
     /// Vorschau der offenen Einladung (Name des Einladenden, Liste, Zahlen) für „Einladung annehmen“.
     @Published var invitePreview: InvitePreviewInfo? = nil
+    /// Letzter Schreibauftrag für den Favoriten; neue Aufträge warten darauf (Reihenfolge beim Server = Tipp-Reihenfolge).
+    internal var favoriteWriteTask: Task<Void, Never>? = nil
     /// Profilfoto des angemeldeten Nutzers (aus dem privaten Bucket `avatars`, per signiertem Link geladen).
     @Published var avatarImage: UIImage? = nil
     

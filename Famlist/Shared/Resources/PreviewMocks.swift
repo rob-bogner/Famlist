@@ -96,4 +96,6 @@ struct PreviewMocks { // Namespace for preview data and factories.
 #Preview { // SwiftUI preview using pre-seeded mock data.
     ShoppingListView() // Use the app's main list view.
         .environmentObject(PreviewMocks.makeListViewModelWithSamples()) // Inject a preview ListViewModel with sample data.
+        .environmentObject(PreviewMocks.makeAppSessionViewModel())
+        .environmentObject(CategoryStore(repository: nil))
 }

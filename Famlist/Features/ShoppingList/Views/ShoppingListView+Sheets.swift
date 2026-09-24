@@ -129,6 +129,16 @@ extension ShoppingListView {
                           onDeleteAccount: { deleteAccountError = nil; activeSheet = .deleteAccount })
         case .editProfile:
             EditProfileSheet(appearance: appearance, onClose: { hideKeyboard(); activeSheet = .settings })
+        case .manageCategories:
+            ManageCategoriesSheet(store: categoryStore, appearance: appearance, onClose: closeSheet,
+                                  onEdit: { activeSheet = .editCategory($0) },
+                                  onAdd: { activeSheet = .editCategory(nil) })
+        case .editCategory(let category):
+            EditCategorySheet(appearance: appearance, category: category, keyboardHeight: keyboard.height,
+                              isNameAvailable: { categoryStore.isAvailable($0, except: category?.id) },
+                              onClose: { hideKeyboard(); activeSheet = .manageCategories },
+                              onSave: { saveCategory(category, name: $0, icon: $1) },
+                              onDelete: { deleteCategory(category) })
         case .deleteAccount:
             DeleteAccountDialog(appearance: appearance, isWorking: isDeletingAccount, errorText: deleteAccountError,
                                 onConfirm: deleteAccount, onCancel: { activeSheet = .settings })
@@ -226,5 +236,26 @@ extension ShoppingListView {
                 deleteAccountError = session.errorMessage
             }
         }
+    }
+
+    // MARK: - Kategorien
+
+    private func saveCategory(_ category: CategoryDefinition?, name: String, icon: String) {
+        hideKeyboard()
+        if let category {
+            if let oldName = categoryStore.update(category.id, name: name, icon: icon),
+               let newName = categoryStore.categories.first(where: { $0.id == category.id })?.name {
+                listViewModel.reassignCategory(from: oldName, to: newName)
+            }
+        } else {
+            categoryStore.add(name: name, icon: icon)
+        }
+        activeSheet = .manageCategories
+    }
+
+    private func deleteCategory(_ category: CategoryDefinition?) {
+        guard let category, let removed = categoryStore.delete(category.id) else { return }
+        listViewModel.reassignCategory(from: removed, to: CategoryDefinition.fallbackName)
+        activeSheet = .manageCategories
     }
 }

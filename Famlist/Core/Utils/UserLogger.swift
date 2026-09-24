@@ -421,6 +421,26 @@ struct UserLog {
             log("✅ \(count) Kategorien geladen")
         }
 
+        /// Preise aus dem Kassenzettel gespeichert
+        static func pricesSaved(count: Int) {
+            log("🧾 \(count) Preise gespeichert")
+        }
+
+        /// Kassenzettel erkannt
+        static func receiptRecognized(lines: Int, store: String?) {
+            log("🧾 Kassenzettel erkannt: \(lines) Positionen\(store.map { " bei \($0)" } ?? "")")
+        }
+
+        /// Kategorie umbenannt / Icon geändert
+        static func categoryUpdated(name: String) {
+            log("🏷️ Kategorie „\(name)“ gespeichert")
+        }
+
+        /// Kategorie gelöscht (Artikel wandern nach „Sonstiges“)
+        static func categoryDeleted(name: String) {
+            log("🏷️ Kategorie „\(name)“ gelöscht – Artikel stehen jetzt unter „Sonstiges“")
+        }
+
         static func categoryCreated(name: String) {
             log("➕ Kategorie erstellt: \(name)")
         }

@@ -78,6 +78,9 @@ enum UITestFixture {
 
     private static let designInviteId = UUID()
 
+    /// Kategorien im Speicher (Standard-Kategorien, kein Supabase).
+    static let categoryStore = CategoryStore(repository: InMemoryCategoryDefinitionsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
+
     /// Beispielwerte aus AcceptInvite.dc.html, bevor der Screen erscheint.
     private static func setDesignInvitePreview() {
         guard session.invitePreview?.listId != designInviteId else { return }

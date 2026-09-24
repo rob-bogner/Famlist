@@ -10,7 +10,7 @@
    • Abgehakt: graue Kachel mit Haken, „Abgehakte Artikel“ in sub, Anzahl.
 
  🔰 Notes for Beginners:
- - Ersetzt CategorySectionHeader. Das Icon kommt aus ItemCategory.svgIcon.
+ - Ersetzt CategorySectionHeader. Name und Icon kommen aus der Kategorie des Nutzers (CategoryDefinition).
  - „Alle abhaken“ hakt nur die offenen Artikel dieser Kategorie ab.
 
  📝 Last Change:
@@ -23,7 +23,7 @@ import SwiftUI
 /// Section header for a category group or the checked-items group.
 struct ListSectionHeader: View {
     enum Kind {
-        case category(ItemCategory)
+        case category(CategoryDefinition)
         case checked
     }
 
@@ -41,13 +41,13 @@ struct ListSectionHeader: View {
         }
     }
 
-    private func categoryHeader(_ category: ItemCategory) -> some View {
+    private func categoryHeader(_ category: CategoryDefinition) -> some View {
         HStack(spacing: 0) {
             HStack(spacing: 10) {
                 SVGIcon(category.svgIcon, size: 16, color: .white, lineWidth: 2.1)
                     .frame(width: 30, height: 30)
                     .background(CSSBox(shape: RR(10), paint: t.chipGrad, shadows: t.chipShadow))
-                Text(category.rawValue)
+                Text(category.name)
                     .font(AppFont.outfit(20, 600))
                     .foregroundStyle(t.text)
                     .lineLimit(1)
@@ -56,7 +56,7 @@ struct ListSectionHeader: View {
                     .foregroundStyle(t.sub)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(category.rawValue), \(count) Artikel")
+            .accessibilityLabel("\(category.name), \(count) Artikel")
             .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)
             Button(action: onCheckAll) {
@@ -71,7 +71,7 @@ struct ListSectionHeader: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Alle \(category.rawValue) abhaken")
+            .accessibilityLabel("Alle \(category.name) abhaken")
         }
     }
 
@@ -97,7 +97,7 @@ struct ListSectionHeader: View {
 
 #Preview {
     VStack(spacing: 20) {
-        ListSectionHeader(t: ListTheme(.light), kind: .category(.sonstiges), count: 1)
+        ListSectionHeader(t: ListTheme(.light), kind: .category(CategoryDefinition.defaults[7]), count: 1)
         ListSectionHeader(t: ListTheme(.light), kind: .checked, count: 1)
     }
     .padding(20)

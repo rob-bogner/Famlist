@@ -10,8 +10,21 @@ Stand: 24.09.2026 · Branch `redesign-hybrid` (abgezweigt von `main` 20ea307)
 - [x] Phase 3 – Artikel
 - [x] Phase 4 – Listen, Teilen, Konto
 - [x] Phase 5 – Einstieg
-- [ ] Phase 6 – Kategorien
-- [ ] Phase 7 – Kassenzettel und Preise
+- [x] Phase 6 – Kategorien
+- [ ] Phase 7 – Kassenzettel und Preise (**in Arbeit**, Stand 24.09.2026 21:00)
+  - Fertig, aber noch NICHT im Xcode-Projekt eingetragen und nicht gebaut: `Famlist/Features/Receipts/**`
+    (ReceiptParser, ReceiptItemMatcher, PriceStatistics, ReceiptTextRecognizer, ReceiptCamera, PriceBook,
+    ReceiptFlowViewModel, PriceHistoryViewModel, ReceiptCaptureView, ReceiptReviewSheet, ShoppingDoneView,
+    PriceHistorySheet, CameraPreviewView, ViewfinderCorner), `Repositories/*PricePoints*`,
+    Tests `ReceiptParserTests.swift`, `ReceiptFlowTests.swift`. Migration 012 ist angewandt und geprüft.
+  - Offen: 1) `PriceHistoryChart` um Parameter `values: [Double?]` und `average: Double?` erweitern
+    (y = 114,4 − (v − min)/(max − min) · 75, x = i · 53; Durchschnittslinie auf avg);
+    2) PriceBook in FamlistApp erzeugen (SupabasePricePointsRepository) und bereitstellen;
+    3) ActiveListSheet: .receiptCapture (Vollbild), .receiptReview, .shoppingDone, .priceHistory(ItemCatalogEntry)
+       (Basis .manageItems); ☰ „Kassenzettel scannen“ öffnet .receiptCapture; ManageItemsSheet `onPriceHistory` setzen;
+       „Abgehakte löschen & fertig“ → listViewModel.deleteCheckedItems();
+    4) Dateien eintragen (xadd), bauen, Tests laufen lassen, Screenshots gegen ReceiptCapture/ReceiptReview/
+       ShoppingDone/PriceHistory, PLAN §8a/§9 ergänzen, committen.
 
 ---
 
@@ -186,6 +199,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Phase | Build | Tests | Pixel-Abgleich (iPhone 17 Pro, `-uiTestFixture -designFixture`) |
 |---|---|---|---|
 | 1 | grün | – | – |
+| 6 | grün | 461 bestanden, 0 fehlgeschlagen (9 neue Unit-Tests; dabei gefunden und behoben: parallele Schreibaufträge bei Favorit und Kategorien konnten beim Server vertauscht ankommen) | ManageCategories, EditCategory: deckungsgleich; Migration 011 angewandt |
 | 5 | grün | 450 bestanden, 0 fehlgeschlagen (6 neue Unit-Tests; dabei gefunden: invitePreview fehlte als Protokoll-Anforderung) | SignIn, ProfileSetup, AcceptInvite: deckungsgleich bis auf §9; Migration 010 angewandt und geprüft |
 | 4 | grün (auch der vorgemerkte Stand separat gebaut) | 443 bestanden, 0 fehlgeschlagen (10 neue Unit-Tests, 9 neu geschriebene UI-Tests „Meine Listen“) | MyLists, CreateList, ListOptions, ShareMembers, Settings, EditProfile, DeleteAccount: deckungsgleich bis auf §9; Migration 009 angewandt und geprüft |
 | 3 | grün | 432 bestanden, 0 fehlgeschlagen (8 neue: Artikel verwalten, Barcode-Suche) | BarcodeScan, ManageItems, NewItem: deckungsgleich; Migration 008 angewandt und geprüft |
@@ -222,4 +236,6 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ProfileSetup | Titelumbruch „Wie sollen dich / andere sehen?“ | Textbreite iOS vs. Browser, Code identisch mit Referenz |
 | ProfileSetup | Status im Feld: „frei“ (Design) bzw. „vergeben“/„ungültig“/„offline“ in Rot, Ladekreis beim Prüfen; „Los geht’s“ erst bei freiem Namen | Design zeigt nur „frei“ |
 | AcceptInvite | Chips entfallen ohne Verbindung (Zahlen unbekannt) | Zahlen kommen aus RPC invite_preview |
+| ManageCategories | Mehr als 4 Kategorien → Inhalt scrollt; Ziehen per langem Druck auf die Zeile | Design zeigt 4 Kategorien |
+| EditCategory | Dasselbe Sheet als „Neue Kategorie“ (ohne Löschen); bei „Sonstiges“ Name gesperrt, Löschen gedimmt | Nicht gestaltet |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |

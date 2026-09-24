@@ -61,7 +61,10 @@ extension AppSessionViewModel {
     func setFavorite(_ listId: UUID?, profile me: Profile, listTitle: String) {
         currentProfile = me.with(favoriteListId: .some(listId))
         UserLog.Data.listSetDefault(name: listId == nil ? "–" : listTitle)
-        Task {
+        // Nacheinander senden: Zwei schnelle Tipps dürfen beim Server nicht vertauscht ankommen.
+        let previous = favoriteWriteTask
+        favoriteWriteTask = Task {
+            await previous?.value
             do {
                 try await profiles.setFavoriteList(listId)
             } catch {

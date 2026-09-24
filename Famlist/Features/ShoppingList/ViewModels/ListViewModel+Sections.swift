@@ -24,12 +24,13 @@ extension ListViewModel {
     /// Abschnitte, die ShoppingListContent zeichnet.
     var visibleSections: [ListSection] {
         ListSectionBuilder.sections(items: items, settings: sortSettings, filter: itemFilter,
-                                    manualOrder: manualOrder)
+                                    manualOrder: manualOrder, categoryOrder: categoryOrder)
     }
 
     /// Abschnitte ohne Tab-Filter – Reihenfolge für „In Zwischenablage kopieren“.
     var visibleSectionsIgnoringFilter: [ListSection] {
-        ListSectionBuilder.sections(items: items, settings: sortSettings, filter: .all, manualOrder: manualOrder)
+        ListSectionBuilder.sections(items: items, settings: sortSettings, filter: .all, manualOrder: manualOrder,
+                                    categoryOrder: categoryOrder)
     }
 
     /// Lädt die Mitglieder der aktiven Liste (ohne Eigentümer). Fehler lassen die alte Liste stehen.

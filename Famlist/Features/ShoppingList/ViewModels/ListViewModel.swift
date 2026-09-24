@@ -67,6 +67,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Sortier-Einstellung der aktiven Liste (Dock „Sortieren“), lokal pro Liste gespeichert.
     @Published var sortSettings: ListSortSettings = .default
 
+    /// Kategorien des Nutzers in Ladenweg-Reihenfolge (CategoryStore); steuert „Nach Kategorie“.
+    @Published var categoryOrder: [CategoryDefinition] = CategoryDefinition.defaults
+
     /// Manuelle Reihenfolge der aktiven Liste (Artikel-IDs), lokal pro Liste gespeichert.
     @Published var manualOrder: [String] = []
 

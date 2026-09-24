@@ -152,7 +152,7 @@ struct ManageItemsSheet: View {
     /// Artikel-Karte: Innenabstand 10 / 12 / 10 / 10 + Rahmen 1, Radius 22, Bild 52, Chevron 18 (schrumpfbar).
     @ViewBuilder
     private func itemCard(_ entry: ItemCatalogEntry, k: SheetTheme, t: ItemExtraTokens) -> some View {
-        let meta = ManageItemsViewModel.meta(for: entry)
+        let meta = ManageItemsViewModel.meta(for: entry, categories: vm.categories)
         let card = Button(action: { onEdit(entry) }) {
             HStack(spacing: 14) {
                 thumbnail(entry, t: t)
