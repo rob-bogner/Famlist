@@ -279,6 +279,36 @@ struct UserLog {
             log("🗑️ Alle \(count) Artikel entfernt")
         }
 
+        /// Artikel aus dem Dock gelöscht, 5 s lang rückgängig machbar
+        static func itemsDeletedWithUndo(count: Int) {
+            log("🗑️ \(count) Artikel gelöscht (Rückgängig möglich)")
+        }
+
+        /// Löschung per „Rückgängig“ zurückgenommen
+        static func deletionUndone(count: Int) {
+            log("↩️ \(count) Artikel wiederhergestellt")
+        }
+
+        /// Liste in die Zwischenablage kopiert
+        static func listCopied(title: String, count: Int) {
+            log("📋 „\(title)“ kopiert (\(count) Artikel)")
+        }
+
+        /// Artikel aus dem Artikelstamm gelöscht (Artikel verwalten)
+        static func catalogItemDeleted(name: String) {
+            log("🗂️ „\(name)“ aus gespeicherten Artikeln entfernt")
+        }
+
+        /// Artikel im Artikelstamm geändert (Artikel verwalten)
+        static func catalogItemUpdated(name: String) {
+            log("🗂️ „\(name)“ gespeichert")
+        }
+
+        /// Sortierung der Liste geändert
+        static func sortChanged(to order: String) {
+            log("↕️ Sortierung: \(order)")
+        }
+
         /// Abgehakte Artikel entfernt
         /// ≤5 → Namen aufführen als Bullet-Liste, >5 → Anzahl
         static func checkedItemsDeleted(items: [(name: String, units: Int, measure: String)]) {

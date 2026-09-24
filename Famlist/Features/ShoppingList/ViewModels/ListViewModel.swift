@@ -64,6 +64,21 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Active tab filter ("Alle · Offen · Erledigt"). Display-only state, never persisted or synced.
     @Published var itemFilter: ItemFilter = .all
 
+    /// Sortier-Einstellung der aktiven Liste (Dock „Sortieren“), lokal pro Liste gespeichert.
+    @Published var sortSettings: ListSortSettings = .default
+
+    /// Manuelle Reihenfolge der aktiven Liste (Artikel-IDs), lokal pro Liste gespeichert.
+    @Published var manualOrder: [String] = []
+
+    /// Mitglieder der aktiven Liste ohne Eigentümer (für ☰ „Mitglieder & Teilen“ und das Teilen-Sheet).
+    @Published var activeListMembers: [ListMember] = []
+
+    /// Gelöschte Artikel, die noch per „Rückgängig“ zurückgeholt werden können (Toast, 5 s).
+    @Published var pendingDeletion: PendingItemDeletion?
+
+    /// Läuft ab, sobald der Rückgängig-Toast ausgeblendet wird; schreibt dann die Löschung.
+    internal var pendingDeletionTask: Task<Void, Never>?
+
     // MARK: - Pagination State (FAM-40)
 
     /// True when more remote pages might be available for the current list.
@@ -91,7 +106,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     internal var syncEngine: (any SyncEngineProtocol)?
     
     /// Current list context; switching replaces the observed stream of items.
-    private(set) var listId: UUID
+    private(set) var listId: UUID {
+        didSet { loadListPreferences() }
+    }
     
     /// Optional ListsRepository used to resolve default list (injected post-init to keep compatibility).
     internal var listsRepository: ListsRepository?
@@ -182,6 +199,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         self.repository = repository // Store the data source implementation.
         self.itemStore = itemStore
         self.listStore = listStore
+        loadListPreferences()
         if startImmediately {
             startObserving() // Begin listening for item updates only when requested.
         }
@@ -251,6 +269,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Switches the active list; cancels current observation and starts a new one for the new list id.
     func switchList(to newId: UUID) {
         guard newId != self.listId else { return }
+        commitPendingDeletion()              // offene Rückgängig-Löschung der alten Liste festschreiben
         observeTask?.cancel()
         self.listId = newId
         self.items = []
@@ -265,6 +284,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Clears view model state in response to sign-out.
     func clearForSignOut() {
+        commitPendingDeletion()
         observeTask?.cancel()
         observeTask = nil
         membershipTask?.cancel()

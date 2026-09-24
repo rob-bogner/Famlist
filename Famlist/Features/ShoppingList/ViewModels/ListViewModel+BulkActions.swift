@@ -28,10 +28,12 @@ import SwiftUI
 // MARK: - Sort Order
 
 /// Definiert die verfügbaren Sortieroptionen für die Einkaufsliste
-enum SortOrder: String, CaseIterable {
+enum SortOrder: String, CaseIterable, Codable {
     case category = "Kategorie"
     case alphabetical = "Alphabetisch"
     case dateAdded = "Datum"
+    /// Reihenfolge per Ziehen; die Reihenfolge liegt lokal in `ManualOrderStore`.
+    case manual = "Manuell"
 
     var displayName: String { rawValue }
 
@@ -39,8 +41,20 @@ enum SortOrder: String, CaseIterable {
     /// Gecheckte Items werden immer hinter ungecheckte gestellt.
     /// - Parameter items: Das zu sortierende Array.
     /// - Returns: Neues, sortiertes Array.
-    func apply(to items: [ItemModel]) -> [ItemModel] {
+    func apply(to items: [ItemModel], manualOrder: [String] = []) -> [ItemModel] {
         switch self {
+        case .manual:
+            // Unbekannte (neue) Artikel stehen hinter den angeordneten, neueste zuerst.
+            let rank = Dictionary(manualOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+            return items.sorted { item1, item2 in
+                if item1.isChecked != item2.isChecked { return !item1.isChecked }
+                switch (rank[item1.id], rank[item2.id]) {
+                case let (r1?, r2?): return r1 < r2
+                case (_?, nil): return true
+                case (nil, _?): return false
+                case (nil, nil): return (item1.createdAt ?? .distantPast) > (item2.createdAt ?? .distantPast)
+                }
+            }
         case .category:
             return items.sorted { item1, item2 in
                 if item1.isChecked != item2.isChecked { return !item1.isChecked }
@@ -280,23 +294,28 @@ extension ListViewModel {
     }
 
     // MARK: - Sorting
-    
-    /// Setzt die Sortierreihenfolge und sortiert die Items entsprechend
+
+    /// Setzt den Sortier-Modus der aktiven Liste und speichert ihn (Dock „Sortieren“).
     func setSortOrder(_ order: SortOrder) {
-        ListViewModel.currentSortOrder = order
-        sortItems(by: order)
-        
-        logVoid(params: (
-            action: "setSortOrder",
-            order: order.rawValue
-        ))
+        var settings = sortSettings
+        settings.order = order
+        applySortSettings(settings)
+        logVoid(params: (action: "setSortOrder", order: order.rawValue))
     }
-    
-    /// Sortiert die Items nach der angegebenen Reihenfolge
-    private func sortItems(by order: SortOrder) {
+
+    /// Schalter „Erledigte nach unten“ der aktiven Liste.
+    func setDoneAtBottom(_ enabled: Bool) {
+        var settings = sortSettings
+        settings.doneAtBottom = enabled
+        applySortSettings(settings)
+        logVoid(params: (action: "setDoneAtBottom", enabled: enabled))
+    }
+
+    private func applySortSettings(_ settings: ListSortSettings) {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-            items = order.apply(to: items)
+            sortSettings = settings
         }
+        settings.save(listId: listId)
     }
 }
 

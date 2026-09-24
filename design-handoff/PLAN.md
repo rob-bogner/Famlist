@@ -6,7 +6,7 @@ Stand: 24.09.2026 · Branch `redesign-hybrid` (abgezweigt von `main` 20ea307)
 
 - [x] Phase 0 – Bestandsaufnahme (dieses Dokument)
 - [x] Phase 1 – Fundament
-- [ ] Phase 2 – Liste und Dock
+- [x] Phase 2 – Liste und Dock
 - [ ] Phase 3 – Artikel
 - [ ] Phase 4 – Listen, Teilen, Konto
 - [ ] Phase 5 – Einstieg
@@ -109,7 +109,7 @@ Alle Supabase-Änderungen kommen als nummerierte Datei nach `migrations/` (ab `0
 
 | Funktion | Lokal (SwiftData) | Supabase |
 |---|---|---|
-| Manuelle Reihenfolge | `ItemEntity.position: Int?` (Pfad wie bei `isUnavailable`, alle Stellen laut Grep) | `items.position` existiert schon |
+| Manuelle Reihenfolge | **geändert in Phase 2:** geordnete Artikel-IDs pro Liste in UserDefaults (`ManualOrderStore`), nicht synchronisiert | – (`items.position` bleibt ungenutzt) |
 | Sortierung pro Liste | `ListSortSettings` pro `listId` in UserDefaults (nur auf diesem Gerät) | – |
 | Favorit = öffnet beim Start | – | **neu** `profiles.favorite_list_id uuid`. Grund: `lists.is_default` gehört zur Liste und damit allen Mitgliedern; ein Mitglied darf es per RLS nicht ändern. `is_default` bleibt als Rückfall für Altdaten. |
 | Liste verlassen | – | **neu** Policy `lm_self_delete` (`profile_id = auth.uid()`) |
@@ -181,9 +181,23 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 6. **Kategorien:** Migration `categories`, Verwalten mit Ziehen, Bearbeiten, „Sonstiges“ geschützt, Sortierung „Nach Kategorie“ nutzt die Reihenfolge.
 7. **Kassenzettel und Preise:** Aufnahme mehrteilig, Vision-OCR `de-DE`, Parser + Zuordnung, Preispunkte (Migration `stores`, `price_points`), Einkauf erledigt, Preisverlauf. Unit-Tests mit 4 Beispiel-Bons.
 
+## 8a. Prüfung je Phase
+
+| Phase | Build | Tests | Pixel-Abgleich (iPhone 17 Pro, `-uiTestFixture -designFixture`) |
+|---|---|---|---|
+| 1 | grün | – | – |
+| 2 | grün | 423 bestanden, 0 fehlgeschlagen (inkl. 23 UI-Tests, 20 neue Unit-Tests) | Hybrid, MenuOverlay, SortMenu, CopyChoice, CopyDone, DeleteChoice, UndoToast (Light), HybridDark, SortMenuDark, MenuOverlayDark: deckungsgleich bis auf die Punkte in §9 |
+
 ## 9. Abweichungen vom Design (werden je Phase ergänzt)
 
 | Screen | Abweichung | Grund |
 |---|---|---|
 | MenuOverlay ☰ | 6 statt 4 Einträge (Kassenzettel scannen, Import) | Roberts Entscheidung F1/F4; Einstieg nicht gestaltet |
 | SignIn | Toast nach „Weiter mit E-Mail“ | Roberts Entscheidung F2; Zwischenzustand nicht gestaltet |
+| MenuOverlay ☰ | Eintrag heißt „Import aus Zwischenablage“ | „Aus Zwischenablage importieren“ bricht in der 286-pt-Zeile um |
+| SortMenu | Schalter „aus“ nutzt `toggleOff` aus Settings (#DCE5E6 / weiß 14 %) | Design zeigt nur „an“ |
+| SortMenu | Zeilenumbruch „Erledigte / nach unten“ statt „Erledigte nach / unten“ | Kante der Textbreite, < 1 pt Unterschied in der Schriftbreite |
+| CopyChoice | Vorschau höchstens 8 Zeilen | Design zeigt 2 Zeilen; lange Listen würden das Popover über den Bildschirm schieben |
+| DeleteChoice | Untertitel „Offene Artikel bleiben“, wenn Abgehakte vorhanden | Design zeigt nur „Noch nichts abgehakt“ |
+| Dock | Weichzeichner (`.ultraThinMaterial`) in Light und Dark | `backdrop-filter` des Designs; ohne ihn scheinen Karten durch die zu 84 % deckende Leiste |
+| Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |

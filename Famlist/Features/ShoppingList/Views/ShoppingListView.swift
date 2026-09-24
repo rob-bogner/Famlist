@@ -7,24 +7,22 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Hauptscreen der Einkaufsliste im Hybrid-Design: Hintergrund, scrollender Inhalt, Dock
-   und die Hybrid-Sheets (Suchen, Neuer Artikel, Bearbeiten, Produktbild) als eigene Ebene.
+ - Hauptscreen der Einkaufsliste im Hybrid-Design: Hintergrund, scrollender Inhalt, Dock,
+   Overlays (☰, Sortieren, Kopieren, Löschen), Toasts und die Hybrid-Sheets als eigene Ebenen.
 
  🛠 Includes:
- - ShoppingListContent (Top-Bar, Suche, Fortschritt, Tabs, Abschnitte) + ListDock.
- - Sheet-Ebene: Liste 3 pt weichgezeichnet (Hintergrund bleibt scharf, opaque: false), Abdunkelung (scrim), Sheet von unten.
- - „Mehr“-Menü: Import, Alle abhaken/zurücksetzen, Lösch-Varianten, Mitglieder, Liste teilen, Profil, Abmelden.
- - Rückfragen (ListConfirmation) für Duplizieren und Löschen.
+ - ShoppingListView+Overlays.swift: Dock, Abdunkelung, Popovers, Toasts, Dock-Aktionen.
+ - ShoppingListView+Sheets.swift: Sheet-Ebene (Suchen, Neuer Artikel, Bearbeiten, …).
 
  🔰 Notes for Beginners:
- - Die Hybrid-Sheets sind bewusst KEINE `.sheet()`-Präsentationen (eigene Radien, kein System-Glas).
-   Import, Profil, Teilen und Mitglieder sind nicht Teil des Designs und bleiben System-Sheets.
- - Light/Dark folgt dem System (`colorScheme`), der Akzent ist der Design-Standard.
- - Oben und unten gilt die echte Safe Area. Auf dem Referenzgerät (Top 62 / Bottom 34)
-   ergibt das exakt die Design-Abstände, auf anderen Geräten rutscht nichts unter Notch oder Home-Indikator.
+ - Sheets und Overlays sind bewusst KEINE `.sheet()`-Präsentationen (eigene Radien, kein System-Glas).
+ - Die Design-Screens laufen mit `hybridHosted = true`: Sie zeichnen nur ihren Inhalt,
+   Weichzeichner und Abdunkelung liegen hier über der echten Liste.
+ - Oben und unten gilt die echte Safe Area. Auf dem Referenzgerät (Top 62 / Bottom 34) ergibt
+   das exakt die Design-Abstände; `topShift`/`dockShift` gleichen andere Geräte aus.
 
  📝 Last Change:
- - Komplett auf das Hybrid-Design umgestellt (ersetzt AccentHeader, ListView und FloatingBottomMenuBar).
+ - Redesign „Hybrid“ (Handoff 24.09.2026): DockView, Kontext-Menü, Dock-Menüs, Toasts.
  ------------------------------------------------------------------------
  */
 
@@ -34,46 +32,45 @@ import SwiftUI // Imports SwiftUI for declarative UI building blocks and propert
 struct ShoppingListView: View {
     @EnvironmentObject var listViewModel: ListViewModel
     @EnvironmentObject var session: AppSessionViewModel
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
 
-    @StateObject private var keyboard = KeyboardObserver()
-    @State private var activeSheet: ActiveListSheet?
-    @State private var openRow: OpenSwipeRow?
-    @State private var pendingConfirmation: ListConfirmation?
-    @State private var showImport = false
-    @State private var showProfile = false
-    @State private var showShareSheet = false
-    @State private var showMembersSheet = false
+    @StateObject var keyboard = KeyboardObserver()
+    @State var activeSheet: ActiveListSheet?
+    @State var activeOverlay: ListOverlay?
+    @State var openRow: OpenSwipeRow?
+    /// Dock zeigt 2 s lang „Kopiert“, dazu der Toast „Liste kopiert“.
+    @State var copied: CopyResult?
+    /// Restzeit-Balken des Rückgängig-Toasts (1 → 0 in 5 s).
+    @State var undoRemaining: CGFloat = 1
+    @State var showImport = false
+    @State var showProfile = false
+    @State var showMembersSheet = false
+
+    var appearance: Appearance { Appearance(colorScheme) }
 
     var body: some View {
-        let appearance = Appearance(colorScheme)
         let t = ListTheme(appearance)
         let k = SheetTheme(appearance)
 
         GeometryReader { geo in
             let screenHeight = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
-            listLayer(t: t, bottomInset: geo.safeAreaInsets.bottom)
-                // opaque: false ist Pflicht: `opaque: true` teilt jedes Pixel durch seinen Alpha-Wert
-                // (Apple-Doku GraphicsContext.BlurOptions.opaque). Halbtransparente Schatten wurden dadurch
-                // pixelig und bunt gesäumt, durchsichtige Stellen schwarz (auf dem Gerät nachgewiesen).
-                .blur(radius: activeSheet == nil ? 0 : 3, opaque: false)
-                // Hintergrund liegt außerhalb des Weichzeichners: einfarbig/weicher Verlauf, sieht
-                // unverändert aus, und die Ränder der Liste blenden in echte Hintergrundfarbe statt in Transparenz.
-                .background { ListBackground(t: t) }
-                .allowsHitTesting(activeSheet == nil)
-                .overlay(alignment: .bottom) {
-                    sheetLayer(k: k, maxHeight: screenHeight - 54)   // Design: 54 pt Luft über dem höchsten Sheet
-                }
+            let insets = LayoutShift(top: geo.safeAreaInsets.top, bottom: geo.safeAreaInsets.bottom)
+            ZStack(alignment: .bottom) {
+                listLayer(t: t)
+                    // opaque: false ist Pflicht: `opaque: true` teilt jedes Pixel durch seinen Alpha-Wert
+                    // (Apple-Doku GraphicsContext.BlurOptions.opaque) → pixelig/schwarz (auf dem Gerät nachgewiesen).
+                    .blur(radius: backgroundBlur, opaque: false)
+                    .background { ListBackground(t: t) }
+                    .allowsHitTesting(activeSheet == nil && activeOverlay == nil)
+                overlayLayer(t: t, insets: insets)
+                sheetLayer(k: k, maxHeight: screenHeight - 54)   // Design: 54 pt Luft über dem höchsten Sheet
+            }
+            .environment(\.hybridHosted, true)
         }
         .ignoresSafeArea(.keyboard)
         .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)
-        .sheet(isPresented: $showShareSheet) {
-            ShareListView(list: listViewModel.defaultList,
-                          currentPublicId: session.currentProfile?.publicId ?? "")
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: activeOverlay)
         .sheet(isPresented: $showMembersSheet) {
             MembersView(list: listViewModel.defaultList)
                 .environmentObject(session)
@@ -92,188 +89,92 @@ struct ShoppingListView: View {
                     .presentationDragIndicator(.visible)
             }
         }
-        .confirmationDialog(pendingConfirmation?.title ?? "", isPresented: confirmationBinding,
-                            titleVisibility: .visible, presenting: pendingConfirmation) { confirmation in
-            Button(confirmation.confirmLabel, role: confirmation.isDestructive ? .destructive : nil) {
-                perform(confirmation)
-            }
-            Button("Abbrechen", role: .cancel) {}
-        } message: { confirmation in
-            Text(confirmation.message)
-        }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active: listViewModel.handleAppDidBecomeActive()
-            case .background: listViewModel.handleAppDidEnterBackground()
+            case .background:
+                listViewModel.commitPendingDeletion()        // Rückgängig-Zeitraum endet mit dem Verlassen der App
+                listViewModel.handleAppDidEnterBackground()
             default: break
             }
         }
+        #if DEBUG
+        .onAppear { applyDesignLaunchState() }
+        #endif
+        .onChange(of: listViewModel.pendingDeletion?.id) { _, newId in
+            guard newId != nil else { return }
+            undoRemaining = 1
+            withAnimation(.linear(duration: PendingItemDeletion.undoDuration)) { undoRemaining = 0 }
+        }
+    }
+
+    /// Sheet: 3 pt (SheetScreen), Overlay: 2 pt (OverlayScrim), sonst scharf.
+    private var backgroundBlur: CGFloat {
+        if activeSheet != nil { return 3 }
+        return activeOverlay == nil ? 0 : 2
     }
 
     // MARK: - List Layer
 
-    private func listLayer(t: ListTheme, bottomInset: CGFloat) -> some View {
-        ZStack(alignment: .bottom) {
-            ScrollView {
-                ShoppingListContent(
-                    t: t,
-                    openRow: $openRow,
-                    onSearch: openSearch,
-                    onShowLists: openLists,
-                    onEdit: { activeSheet = .edit($0) },
-                    onShowImage: { activeSheet = .productImage($0) },
-                    moreMenu: { moreMenu }
-                )
-                .padding(.horizontal, 20)
-                .padding(.bottom, 68 + 28)       // Dock 68 + Luft, damit die letzte Karte frei liegt
-            }
-            .scrollIndicators(.hidden)
-            .refreshable { await listViewModel.pullToRefresh() }   // FAM-40
-            .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
-            ListDock(
+    private func listLayer(t: ListTheme) -> some View {
+        ScrollView {
+            ShoppingListContent(
                 t: t,
-                sortOrder: ListViewModel.currentSortOrder,
-                hasCheckedItems: listViewModel.checkedItemCount > 0,
-                liveBlur: t.isDark,               // Dark-Pille ist nur zu 78 % deckend → Karten scheinen sonst durch
-                onSort: { listViewModel.setSortOrder($0) },
-                onDuplicate: { pendingConfirmation = .duplicate },
-                onDeleteChecked: { pendingConfirmation = .deleteChecked },
-                onAdd: openSearch
+                openRow: $openRow,
+                onSearch: openSearch,
+                onScan: openScanner,
+                onShowLists: openLists,
+                onMenu: { open(.menu) },
+                onEdit: { activeSheet = .edit($0) },
+                onShowImage: { activeSheet = .productImage($0) }
             )
             .padding(.horizontal, 20)
-            .padding(.bottom, bottomInset > 0 ? 0 : 16)   // ohne Home-Indikator trotzdem Abstand halten
+            .padding(.bottom, 64 + 28)       // Dock 64 + Luft, damit die letzte Karte frei liegt
         }
+        .scrollIndicators(.hidden)
+        .refreshable { await listViewModel.pullToRefresh() }   // FAM-40
+        .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
     }
 
-    // MARK: - Sheet Layer
-
-    @ViewBuilder
-    private func sheetLayer(k: SheetTheme, maxHeight: CGFloat) -> some View {
-        ZStack(alignment: .bottom) {
-            if activeSheet != nil {
-                k.scrim
-                    .onTapGesture(perform: closeSheet)
-                    .transition(.opacity)
-                    .accessibilityHidden(true)
-            }
-            if let sheet = activeSheet {
-                sheetView(sheet, k: k, maxHeight: maxHeight)
-                    .id(sheet.id)
-                    .transition(.move(edge: .bottom))
-                    .zIndex(1)
-            }
-        }
-        .ignoresSafeArea()
-    }
-
-    @ViewBuilder
-    private func sheetView(_ sheet: ActiveListSheet, k: SheetTheme, maxHeight: CGFloat) -> some View {
-        switch sheet {
-        case .search:
-            if let catalog = listViewModel.catalogRepository {
-                ItemSearchSheet(catalogRepository: catalog,
-                                globalCatalogRepository: listViewModel.globalCatalogRepository,
-                                k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
-                                onClose: closeSheet,
-                                onCreateNew: { activeSheet = .newItem(initialName: $0) })
-            }
-        case .newItem(let name):
-            NewItemSheet(initialName: name, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
-        case .edit(let item):
-            EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
-        case .productImage(let item):
-            ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
-        case .lists:
-            MyListsSheet(k: k, maxHeight: maxHeight, onClose: closeSheet,
-                         onCreate: { activeSheet = .listName(.create) },
-                         onRename: { activeSheet = .listName(.rename($0)) })
-        case .listName(let mode):
-            ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {
-                hideKeyboard()
-                activeSheet = .lists             // zurück zur Listenverwaltung
-            }
-        }
-    }
-
-    // MARK: - More Menu
-
-    @ViewBuilder
-    private var moreMenu: some View {
-        let allChecked = !listViewModel.items.isEmpty && listViewModel.items.allSatisfy(\.isChecked)
-        Button { showImport = true } label: {
-            Label("Aus Zwischenablage importieren", systemImage: "doc.on.clipboard")
-        }
-        Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { listViewModel.toggleAllItems() }
-        } label: {
-            Label(allChecked ? "Alle zurücksetzen" : "Alle abhaken",
-                  systemImage: allChecked ? "arrow.uturn.backward.circle" : "checkmark.circle")
-        }
-        .disabled(listViewModel.items.isEmpty)
-        Menu {
-            Button("Offene löschen", role: .destructive) { pendingConfirmation = .deleteOpen }
-                .disabled(listViewModel.uncheckedItems.isEmpty)
-            Button("Alle Artikel löschen", role: .destructive) { pendingConfirmation = .deleteAll }
-        } label: {
-            Label("Löschen", systemImage: "trash")
-        }
-        .disabled(listViewModel.items.isEmpty)
-        Divider()
-        if listViewModel.defaultList != nil {
-            Button { showMembersSheet = true } label: {
-                Label("Mitglieder", systemImage: "person.2")
-            }
-        }
-        if let list = listViewModel.defaultList, list.ownerId == session.currentProfile?.id {
-            Button { showShareSheet = true } label: {
-                Label("Liste teilen", systemImage: "person.badge.plus")
-            }
-        }
-        Divider()
-        Button { showProfile = true } label: {
-            Label(String(localized: "menu.profile"), systemImage: "person.circle")
-        }
-        Button(role: .destructive) { session.signOut() } label: {
-            Label(String(localized: "auth.signout.button"), systemImage: "rectangle.portrait.and.arrow.right")
-        }
-    }
-
-    // MARK: - Actions
-
-    private var confirmationBinding: Binding<Bool> {
-        Binding(get: { pendingConfirmation != nil }, set: { if !$0 { pendingConfirmation = nil } })
-    }
+    // MARK: - Navigation Helpers
 
     /// Opens the search sheet, or the new-item form when no catalog is configured (preview / fallback).
-    private func openSearch() {
+    func openSearch() {
         openRow = nil
         activeSheet = listViewModel.catalogRepository == nil ? .newItem(initialName: "") : .search
     }
 
-    private func openLists() {
+    /// Scan-Knopf im Suchfeld (Barcode-Scanner folgt in Phase 3).
+    func openScanner() {
+        openRow = nil
+    }
+
+    func openLists() {
         openRow = nil
         activeSheet = .lists
     }
 
-    private func closeSheet() {
+    func closeSheet() {
         hideKeyboard()
         activeSheet = nil
     }
 
-    private func perform(_ confirmation: ListConfirmation) {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            switch confirmation {
-            case .duplicate: listViewModel.duplicateActiveList()
-            case .deleteChecked: listViewModel.deleteCheckedItems()
-            case .deleteOpen: listViewModel.deleteUncheckedItems()
-            case .deleteAll: listViewModel.deleteAllItems()
-            }
-        }
-    }
-
-    private func hideKeyboard() {
+    func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
+}
+
+/// Abstand der echten Safe Area zu den Design-Werten (Top 62 / Dock-Unterkante 34).
+struct LayoutShift {
+    let top: CGFloat
+    let bottom: CGFloat
+
+    /// Unterkante des Docks über dem Bildschirmrand (ohne Home-Indikator: 16).
+    var dockBottom: CGFloat { bottom > 0 ? bottom : 16 }
+    /// Verschiebung für absolut positionierte Design-Overlays, die sich auf das Dock beziehen.
+    var dockShift: CGFloat { 34 - dockBottom }
+    /// Verschiebung für Overlays, die sich auf die Oberkante (62) beziehen.
+    var topShift: CGFloat { top - 62 }
 }
 
 /// Schließt eine offene Wisch-Zeile, sobald der Nutzer die Liste scrollt (iOS 18+, wie in Mail).

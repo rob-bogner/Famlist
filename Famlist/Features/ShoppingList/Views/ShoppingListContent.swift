@@ -6,97 +6,97 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Scrollender Inhalt der Liste im vertikalen Rhythmus des Designs:
-   Top-Bar → 18 → Suchfeld → 18 → Fortschritt → 18 → Tabs → 16 → Sektions-Kopf → 12 → Karten (12 Abstand).
-   Ersetzt ListView (SwiftUI.List mit System-Wischaktionen).
+   Kopfzeile → 18 → Suchfeld → 18 → Fortschritt → 18 → Tabs → 16 → Sektions-Kopf → 12 → Karten (12 Abstand).
+   Leere Liste: Tabs → 44 → ListEmptyState.
 
  🔰 Notes for Beginners:
- - Offene Artikel stehen nach Kategorie gruppiert, abgehakte in einem eigenen Abschnitt darunter.
-   Welche Abschnitte sichtbar sind, bestimmt der Tab-Filter (visibleOpenGroups / visibleCheckedItems).
+ - Welche Abschnitte es gibt, bestimmt ListViewModel.visibleSections (Sortierung + Tab-Filter).
+ - Sortierung „Manuell“: Karten lassen sich per langem Druck ziehen (onDrag/onDrop).
  - Alle Aktionen gehen direkt an das ListViewModel (Offline-First: erst lokal, dann SyncEngine).
- - Sheets öffnet nicht diese View, sondern ShoppingListView über die Callbacks.
+ - Sheets und Overlays öffnet nicht diese View, sondern ShoppingListView über die Callbacks.
 
  📝 Last Change:
- - Initial creation (Hybrid-Redesign).
+ - Abschnitte über ListSectionBuilder, Leer-Zustand aus dem Handoff, Ziehen bei „Manuell“.
  ------------------------------------------------------------------------
  */
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Scroll column of the shopping list screen.
-struct ShoppingListContent<MoreMenu: View>: View {
+struct ShoppingListContent: View {
     @EnvironmentObject var listViewModel: ListViewModel
     let t: ListTheme
     @Binding var openRow: OpenSwipeRow?
     var onSearch: () -> Void = {}
+    var onScan: () -> Void = {}
     var onShowLists: () -> Void = {}
+    var onMenu: () -> Void = {}
     var onEdit: (ItemModel) -> Void = { _ in }
     var onShowImage: (ItemModel) -> Void = { _ in }
-    @ViewBuilder let moreMenu: () -> MoreMenu
+
+    @State private var draggingId: String?
 
     var body: some View {
+        let sections = listViewModel.visibleSections
         LazyVStack(alignment: .leading, spacing: 0) {
             ListTopBar(t: t, title: listViewModel.defaultList?.title ?? String(localized: "shoppingList.title"),
-                       onShowLists: onShowLists, moreMenu: moreMenu)
-            ListSearchBar(t: t, action: onSearch)
+                       onShowLists: onShowLists, onMenu: onMenu)
+            ListSearchBar(t: t, action: onSearch, onScan: onScan)
                 .padding(.top, 18)
             ProgressHero(t: t, checked: listViewModel.checkedItemCount, total: listViewModel.totalItemCount)
                 .padding(.top, 18)
             ListFilterTabs(t: t, selection: $listViewModel.itemFilter)
                 .padding(.top, 18)
-            openSections
-            checkedSection
+            if listViewModel.items.isEmpty && !listViewModel.isLoadingNextPage {
+                ListEmptyState(t: t)
+                    .padding(.top, 44)                 // gap 18 + margin-top 26
+            } else {
+                ForEach(sections) { section in
+                    sectionView(section, isLast: section.id == sections.last?.id)
+                }
+                if sections.isEmpty {
+                    filterEmptyState
+                        .padding(.top, 40)
+                }
+            }
             if listViewModel.isLoadingNextPage {
                 ProgressView()                      // FAM-40: nächste Seite wird geladen
                     .tint(t.accent)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 20)
             }
-            if showsEmptyState {
-                emptyState
-                    .padding(.top, 40)
-            }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: listViewModel.items)
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: listViewModel.itemFilter)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: listViewModel.sortSettings)
     }
 
     // MARK: - Sections
 
     @ViewBuilder
-    private var openSections: some View {
-        ForEach(listViewModel.visibleOpenGroups, id: \.category) { group in
-            ListSectionHeader(t: t, kind: .category(group.category), count: group.items.count) {
+    private func sectionView(_ section: ListSection, isLast: Bool) -> some View {
+        switch section.kind {
+        case .category(let category):
+            ListSectionHeader(t: t, kind: .category(category), count: section.items.count) {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                    listViewModel.checkAllItems(in: group.category)
+                    listViewModel.checkAllItems(in: category)
                 }
             }
             .padding(.top, 16)
-            ForEach(group.items) { item in
-                row(for: item)
-                    .padding(.top, 12)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var checkedSection: some View {
-        let checked = listViewModel.visibleCheckedItems
-        if !checked.isEmpty {
-            ListSectionHeader(t: t, kind: .checked, count: checked.count)
+        case .checked:
+            ListSectionHeader(t: t, kind: .checked, count: section.items.count)
                 .padding(.top, 16)
-            ForEach(checked) { item in
-                row(for: item)
-                    .padding(.top, 12)
-            }
+        case .flat:
+            EmptyView()
+        }
+        ForEach(section.items) { item in
+            row(for: item, isLastVisible: isLast && item.id == section.items.last?.id)
+                .padding(.top, section.kind == .flat && item.id == section.items.first?.id ? 16 : 12)
         }
     }
 
-    /// Letzte sichtbare Karte (Abgehakte stehen unten, sonst die letzte offene).
-    private var lastVisibleItemId: String? {
-        listViewModel.visibleCheckedItems.last?.id ?? listViewModel.visibleOpenGroups.last?.items.last?.id
-    }
-
-    private func row(for item: ItemModel) -> some View {
+    private func row(for item: ItemModel, isLastVisible: Bool) -> some View {
         SwipeableItemRow(
             t: t,
             item: item,
@@ -114,9 +114,12 @@ struct ShoppingListContent<MoreMenu: View>: View {
             onRetry: { listViewModel.retryItem(item) }
         )
         .id("\(item.isChecked ? "checked" : "open")-\(item.id)") // eigene Identität je Abschnitt
+        .modifier(ManualReorder(enabled: listViewModel.sortSettings.order == .manual,
+                                itemId: item.id, draggingId: $draggingId,
+                                onMove: { listViewModel.moveItem($0, to: $1) }))
         .onAppear {
             // FAM-40: nächste Seite laden, sobald die letzte sichtbare Karte erscheint.
-            if item.id == lastVisibleItemId && listViewModel.hasMoreItems {
+            if isLastVisible && listViewModel.hasMoreItems {
                 Task { await listViewModel.loadNextPage() }
             }
         }
@@ -124,33 +127,68 @@ struct ShoppingListContent<MoreMenu: View>: View {
                                 removal: .opacity.combined(with: .scale(scale: 0.9))))
     }
 
-    // MARK: - Empty State
+    // MARK: - Filter Empty State
 
-    private var showsEmptyState: Bool {
-        listViewModel.visibleOpenGroups.isEmpty && listViewModel.visibleCheckedItems.isEmpty
-    }
-
-    private var emptyTexts: (title: String, message: String) {
-        if listViewModel.items.isEmpty {
-            return ("Deine Liste ist leer", "Tippe auf +, um den ersten Artikel hinzuzufügen.")
-        }
+    /// Tab „Offen“ / „Erledigt“ ohne Treffer (Liste selbst ist nicht leer).
+    private var filterTexts: (title: String, message: String) {
         switch listViewModel.itemFilter {
         case .open: return ("Alles erledigt", "Auf dieser Liste sind keine offenen Artikel mehr.")
         case .done, .all: return ("Noch nichts abgehakt", "Abgehakte Artikel erscheinen hier.")
         }
     }
 
-    private var emptyState: some View {
+    private var filterEmptyState: some View {
         VStack(spacing: 6) {
-            Text(emptyTexts.title)
+            Text(filterTexts.title)
                 .font(AppFont.outfit(20, 600))
                 .foregroundStyle(t.text)
-            Text(emptyTexts.message)
+            Text(filterTexts.message)
                 .font(AppFont.dm(15, 500))
                 .foregroundStyle(t.sub)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Sortierung „Manuell“: langer Druck hebt die Karte an, Ablegen auf einer anderen Karte verschiebt sie.
+private struct ManualReorder: ViewModifier {
+    let enabled: Bool
+    let itemId: String
+    @Binding var draggingId: String?
+    let onMove: (String, String) -> Void
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .onDrag {
+                    draggingId = itemId
+                    return NSItemProvider(object: itemId as NSString)
+                }
+                .onDrop(of: [UTType.text], delegate: ReorderDropDelegate(targetId: itemId,
+                                                                        draggingId: $draggingId,
+                                                                        onMove: onMove))
+        } else {
+            content
+        }
+    }
+}
+
+private struct ReorderDropDelegate: DropDelegate {
+    let targetId: String
+    @Binding var draggingId: String?
+    let onMove: (String, String) -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let draggingId, draggingId != targetId else { return }
+        onMove(draggingId, targetId)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggingId = nil
+        return true
     }
 }

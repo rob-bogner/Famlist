@@ -26,6 +26,9 @@ import SwiftUI
 @MainActor
 enum UITestFixture {
     static let isActive = ProcessInfo.processInfo.arguments.contains("-uiTestFixture")
+    private static let args = ProcessInfo.processInfo.arguments
+    /// `-designFixture`: Beispieldaten exakt wie in den Design-Artboards (für den Pixel-Abgleich).
+    static let designMode = args.contains("-designFixture")
 
     static let listVM: ListViewModel = {
         let repo = PreviewItemsRepository()
@@ -42,8 +45,17 @@ enum UITestFixture {
                                  createdAt: Date(), updatedAt: Date()),
                        ListModel(id: UUID(), ownerId: UUID(), title: "WG-Einkauf", isDefault: false,
                                  createdAt: Date(), updatedAt: Date())]
-        for (name, category) in sampleItems {
-            vm.addItem(ItemModel(name: name, units: 1, category: category.rawValue, listId: vm.listId.uuidString))
+        if designMode {
+            // Design-Abgleich (Hybrid.dc.html): genau ein Artikel „Butter · 1 Packung“ in Milchprodukte.
+            // -designEmpty: leere Liste, -designChecked: Butter abgehakt.
+            if !args.contains("-designEmpty") {
+                vm.addItem(ItemModel(name: "Butter", units: 1, measure: "pack", isChecked: args.contains("-designChecked"),
+                                     category: ItemCategory.sonstiges.rawValue, listId: vm.listId.uuidString))
+            }
+        } else {
+            for (name, category) in sampleItems {
+                vm.addItem(ItemModel(name: name, units: 1, category: category.rawValue, listId: vm.listId.uuidString))
+            }
         }
         vm.listItemCounts = Dictionary(uniqueKeysWithValues: vm.allLists.map { ($0.id, $0.id == vm.listId ? sampleItems.count : 2) })
         return vm

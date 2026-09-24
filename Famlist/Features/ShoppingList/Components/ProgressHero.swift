@@ -6,12 +6,13 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Fortschritts-Karte (Glas-Karte): Padding 18, Radius 28, Inhalt 16 auseinander:
-   Icon-Reihe mit Prozentzahl → Balken 10 → Chips „n offen“ / „n erledigt“.
+   Icon-Reihe mit Prozentzahl → Balken 10 (ohne Chips, Handoff 24.09.2026).
 
  🔰 Notes for Beginners:
  - Das Design zeigt nur 0 % (Punkt am Anfang) und 100 % (voller Balken).
    Zwischenwerte füllen den Balken anteilig mit demselben Verlauf.
- - „1 von 1 Artikel“ / „0 von 3 Artikeln“: Singular nur bei genau einem Artikel insgesamt.
+ - Texte wie im Design: „0 von 0 Artikeln“, „0 von 1 Artikeln“, „1 von 1 Artikel“.
+   Singular nur, wenn genau ein Artikel da ist und er erledigt ist.
 
  📝 Last Change:
  - Aus ListScreen des Design-Pakets MyListUI übernommen, an echte Zahlen angebunden.
@@ -33,10 +34,6 @@ struct ProgressHero: View {
         VStack(alignment: .leading, spacing: 16) {
             headerRow
             ProgressTrack(fraction: fraction)
-            HStack(spacing: 8) {
-                HeroChip(text: "\(total - checked) offen")
-                HeroChip(text: "\(checked) erledigt")
-            }
         }
         .padding(18)
         .background { decoration }
@@ -61,7 +58,7 @@ struct ProgressHero: View {
                 Text("Fortschritt")
                     .font(AppFont.dm(13, 600))
                     .foregroundStyle(Color.rgba(255, 255, 255, 0.86))
-                Text("\(checked) von \(total) \(total == 1 ? "Artikel" : "Artikeln")")
+                Text("\(checked) von \(total) \(checked == 1 && total == 1 ? "Artikel" : "Artikeln")")
                     .font(AppFont.dm(16, 600))
                     .foregroundStyle(Color.white)
             }
@@ -126,6 +123,8 @@ private struct ProgressTrack: View {
                         .background(CSSBox(shape: Circle(), paint: .color(.white),
                                            shadows: [.drop(0, 0, 10, 3, .rgba(255, 255, 255, 0.75))]))
                         .padding(.leading, 1)
+                        .padding(.top, 1)                  // left 1, top 1, 8 × 8
+                        .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -137,22 +136,6 @@ private struct ProgressTrack: View {
                            shadows: [.inner(0, 1, 3, 0, .rgba(0, 25, 28, 0.5)),
                                      .drop(0, 1, 0, 0, .rgba(255, 255, 255, 0.25))]))
         .accessibilityHidden(true)
-    }
-}
-
-/// Glas-Chip unter dem Balken („1 offen“ / „0 erledigt“).
-private struct HeroChip: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(AppFont.dm(13, 600))
-            .foregroundStyle(Color.white)
-            .padding(.vertical, 7)     // 6 padding + 1 border (content-box)
-            .padding(.horizontal, 13)  // 12 padding + 1 border
-            .background(CSSBox(shape: Pill, paint: .color(.rgba(255, 255, 255, 0.18)),
-                               border: 1, borderColor: .rgba(255, 255, 255, 0.32),
-                               shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.4))]))
     }
 }
 
