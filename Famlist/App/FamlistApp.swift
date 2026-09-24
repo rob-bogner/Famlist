@@ -3,7 +3,7 @@
 
  Famlist
  Created on: 27.11.2023
- Last updated on: 15.11.2025
+ Last updated on: 24.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -17,7 +17,7 @@
  - When Supabase config is missing, preview/in-memory repositories are used so the app still runs.
 
  📝 Last Change:
- - Injected ConnectivityMonitor so view models resume realtime sync after backgrounding or offline periods.
+ - DEBUG only: launch argument -uiTestFixture shows ShoppingListView with in-memory data (UITestFixture) for UI tests.
  ------------------------------------------------------------------------
  */
 
@@ -132,11 +132,26 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     /// Defines the app's window group scene and root view composition.
     var body: some Scene { // Top-level scene container for the app's UI.
         WindowGroup { // Primary window scene for iOS apps.
-            RootView() // Root view deciding between AuthView and ShoppingListView.
-                .environmentObject(sessionViewModel) // Inject shared session VM for auth state.
-                .environmentObject(listViewModel) // Inject shared list VM for list screens.
-                .environmentObject(syncMonitor) // Inject sync monitor for status tracking
-                .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
+            #if DEBUG
+            if UITestFixture.isActive { // UI tests (-uiTestFixture): in-memory list, no Supabase.
+                ShoppingListView()
+                    .environmentObject(UITestFixture.listVM)
+                    .environmentObject(UITestFixture.session)
+            } else {
+                appRoot
+            }
+            #else
+            appRoot
+            #endif
         }
+    }
+
+    /// Regular root view with all shared environment objects.
+    private var appRoot: some View {
+        RootView() // Root view deciding between AuthView and ShoppingListView.
+            .environmentObject(sessionViewModel) // Inject shared session VM for auth state.
+            .environmentObject(listViewModel) // Inject shared list VM for list screens.
+            .environmentObject(syncMonitor) // Inject sync monitor for status tracking
+            .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
     }
 }
