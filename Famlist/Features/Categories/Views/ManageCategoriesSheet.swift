@@ -12,11 +12,12 @@
  - Vorlage: ManageCategoriesScreen in design-handoff/MyListUI/Screens/CategoryScreens.swift
    (ManageCategories.dc.html). Werte 1:1; Beispieldaten durch CategoryStore ersetzt.
  - Ziehen: langer Druck auf eine Zeile hebt sie an, Ablegen auf einer anderen Zeile verschiebt sie.
+ - Wischen nach links zeigt „Löschen“ (wie in „Artikel verwalten“); „Sonstiges“ lässt sich nicht wischen.
    VoiceOver: Aktionen „Nach oben“ / „Nach unten“ am Griff.
  - Mehr als 4 Kategorien (Design) → der Bereich scrollt.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 6).
+ - Wischen zum Löschen; Name ist kein Button mehr (Wischen wurde sonst blockiert).
  ------------------------------------------------------------------------
  */
 
@@ -29,6 +30,8 @@ struct ManageCategoriesSheet: View {
     var onClose: () -> Void = {}
     var onEdit: (CategoryDefinition) -> Void = { _ in }
     var onAdd: () -> Void = {}
+    /// Wischen nach links → „Löschen“ (nicht für die Standardkategorie).
+    var onDelete: (CategoryDefinition) -> Void = { _ in }
 
     @State private var draggingId: UUID?
 
@@ -69,7 +72,7 @@ struct ManageCategoriesSheet: View {
 
                             VStack(spacing: 8) {
                                 ForEach(Array(store.categories.enumerated()), id: \.element.id) { index, c in
-                                    categoryRow(index: index, c, k: k, t: t)
+                                    swipeableRow(index: index, c, k: k, t: t)
                                         .onDrag {
                                             draggingId = c.id
                                             return NSItemProvider(object: c.id.uuidString as NSString)
@@ -108,6 +111,18 @@ struct ManageCategoriesSheet: View {
         }
     }
 
+    /// „Sonstiges“ bleibt immer erhalten → keine Wischgeste.
+    @ViewBuilder
+    private func swipeableRow(index: Int, _ c: CategoryDefinition, k: SheetTheme, t: EKKTokens) -> some View {
+        if c.isFallback {
+            categoryRow(index: index, c, k: k, t: t)
+        } else {
+            SwipeToDeleteRow(labelColor: k.sub, columnHeight: 68, onDelete: { onDelete(c) }) {
+                categoryRow(index: index, c, k: k, t: t)
+            }
+        }
+    }
+
     /// Zeile 68 (border-box): Nummer 22 · Kachel 44 · Name/Untertitel (grow) · Griff 44, Abstand 12.
     private func categoryRow(index: Int, _ c: CategoryDefinition, k: SheetTheme, t: EKKTokens) -> some View {
         EKKFlexRow(spacing: 12, grow: [0, 0, 1, 0], shrink: [1, 0, 1, 1]) {
@@ -122,22 +137,20 @@ struct ManageCategoriesSheet: View {
                 .background(CSSBox(shape: RR(14), paint: t.tile, shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.4))]))
                 .accessibilityHidden(true)
 
-            Button(action: { onEdit(c) }) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(c.name)
-                        .font(AppFont.outfit(16, 600))
-                        .foregroundStyle(k.text)
-                        .lineLimit(1)
-                    Text(c.isFallback ? "Standard · kann nicht gelöscht werden" : "Tippen zum Bearbeiten")
-                        .font(AppFont.dm(12, 400))
-                        .foregroundStyle(k.sub)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+            // Kein Button: Er hielte die Berührung fest und blockierte das Wischen (View+SwipeFriendlyTap).
+            VStack(alignment: .leading, spacing: 2) {
+                Text(c.name)
+                    .font(AppFont.outfit(16, 600))
+                    .foregroundStyle(k.text)
+                    .lineLimit(1)
+                Text(c.isFallback ? "Standard · kann nicht gelöscht werden" : "Tippen zum Bearbeiten")
+                    .font(AppFont.dm(12, 400))
+                    .foregroundStyle(k.sub)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("\(index + 1). \(c.name) bearbeiten")
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .swipeFriendlyTap("\(index + 1). \(c.name) bearbeiten") { onEdit(c) }
 
             SVGIcon(EKKIcon.grip, size: 20, color: k.sub, lineWidth: 3)
                 .frame(minWidth: 0, idealWidth: 44, maxWidth: 44)

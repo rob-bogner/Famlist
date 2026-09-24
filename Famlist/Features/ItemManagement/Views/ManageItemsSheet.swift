@@ -6,7 +6,7 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Sheet „Artikel verwalten“ (Höhe 790): alle gespeicherten Artikel mit Suche und Kategorie-Filterchips.
-   Tippen → Artikel bearbeiten, Wischen → löschen, langer Druck → „Preisverlauf“ (SPEC §5).
+   Tippen auf den Pfeil → Artikel bearbeiten, Wischen → löschen, langer Druck → „Preisverlauf“ (SPEC §5).
 
  🔰 Notes for Beginners:
  - Vorlage: ManageItemsScreen in design-handoff/MyListUI/Screens/ItemExtraScreens.swift
@@ -14,7 +14,7 @@
  - Kopf: Titelzeile → 16 → Suchfeld 50 → 12 → Chips 36 (Reihe ab x 30) → 18 → „n Artikel“ → 10 → Karten 74.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 3).
+ - Karte ist kein Button mehr: nur der Pfeil öffnet das Bearbeiten, Wischen greift überall zuverlässig.
  ------------------------------------------------------------------------
  */
 
@@ -153,40 +153,48 @@ struct ManageItemsSheet: View {
     @ViewBuilder
     private func itemCard(_ entry: ItemCatalogEntry, k: SheetTheme, t: ItemExtraTokens) -> some View {
         let meta = ManageItemsViewModel.meta(for: entry, categories: vm.categories)
-        let card = Button(action: { onEdit(entry) }) {
-            HStack(spacing: 14) {
-                thumbnail(entry, t: t)
-                ManageItemsShrinkRow(gap: 14, trailingBasis: 18) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(entry.name)
-                            .font(AppFont.outfit(16, 600))
-                            .foregroundStyle(k.text)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                        Text(meta)
-                            .font(AppFont.dm(13, 400))
-                            .foregroundStyle(k.sub)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
-                    // SVG ohne flex-shrink: 0 → schrumpft mit (preserveAspectRatio meet, zentriert)
-                    GeometryReader { g in
-                        SVGIcon(Icon.chevronRight, size: min(g.size.width, g.size.height), color: k.sub, lineWidth: 2.2)
-                            .frame(width: g.size.width, height: g.size.height)
-                    }
-                    .frame(height: 18)
+        let card = HStack(spacing: 14) {
+            thumbnail(entry, t: t)
+            ManageItemsShrinkRow(gap: 14, trailingBasis: 18) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(entry.name)
+                        .font(AppFont.outfit(16, 600))
+                        .foregroundStyle(k.text)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Text(meta)
+                        .font(AppFont.dm(13, 400))
+                        .foregroundStyle(k.sub)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
+                // SVG ohne flex-shrink: 0 → schrumpft mit (preserveAspectRatio meet, zentriert)
+                GeometryReader { g in
+                    SVGIcon(Icon.chevronRight, size: min(g.size.width, g.size.height), color: k.sub, lineWidth: 2.2)
+                        .frame(width: g.size.width, height: g.size.height)
+                }
+                .frame(height: 18)
             }
-            .padding(.leading, 11)                                  // 1 border + 10 padding
-            .padding(.trailing, 13)                                 // 1 border + 12 padding
-            .padding(.vertical, 11)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(CSSBox(shape: RR(22), paint: t.card, border: 1, borderColor: t.cardBorder, shadows: t.cardShadow))
-            .contentShape(RR(22))
         }
-        .buttonStyle(.plain)
+        .padding(.leading, 11)                                      // 1 border + 10 padding
+        .padding(.trailing, 13)                                     // 1 border + 12 padding
+        .padding(.vertical, 11)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(CSSBox(shape: RR(22), paint: t.card, border: 1, borderColor: t.cardBorder, shadows: t.cardShadow))
+        .contentShape(RR(22))
+        // Nur der Pfeil öffnet das Bearbeiten (Tippfläche 56 × Kartenhöhe). Kein Button: Er würde die
+        // Berührung festhalten und das Wischen zum Löschen blockieren (siehe View+SwipeFriendlyTap).
+        .overlay(alignment: .trailing) {
+            Color.clear
+                .frame(width: 56)
+                .contentShape(Rectangle())
+                .swipeFriendlyTap("\(entry.name) bearbeiten") { onEdit(entry) }
+        }
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(entry.name), \(meta)")
+        .accessibilityAddTraits(.isButton)
         .accessibilityHint("Bearbeiten")
+        .accessibilityAction { onEdit(entry) }
 
         if let onPriceHistory {
             card.contextMenu {

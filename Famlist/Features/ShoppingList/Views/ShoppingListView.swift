@@ -13,6 +13,7 @@
  🛠 Includes:
  - ShoppingListView+Overlays.swift: Dock, Abdunkelung, Popovers, Toasts, Dock-Aktionen.
  - ShoppingListView+Sheets.swift: Sheet-Ebene (Suchen, Neuer Artikel, Bearbeiten, …).
+ - ShoppingListView+Receipts.swift: Kassenzettel und Preisverlauf.
 
  🔰 Notes for Beginners:
  - Sheets und Overlays sind bewusst KEINE `.sheet()`-Präsentationen (eigene Radien, kein System-Glas).
@@ -33,6 +34,7 @@ struct ShoppingListView: View {
     @EnvironmentObject var listViewModel: ListViewModel
     @EnvironmentObject var session: AppSessionViewModel
     @EnvironmentObject var categoryStore: CategoryStore
+    @EnvironmentObject var priceBook: PriceBook
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
 
@@ -51,6 +53,8 @@ struct ShoppingListView: View {
     @State var deleteAccountError: String?
     /// „Artikel verwalten“ bleibt beim Wechsel ins Bearbeiten-Sheet erhalten.
     @State var manageItemsVM: ManageItemsViewModel?
+    /// Ablauf „Kassenzettel“: lebt von der Aufnahme bis „Einkauf erledigt“.
+    @State var receiptFlow: ReceiptFlowViewModel?
 
     var appearance: Appearance { Appearance(colorScheme) }
 
@@ -199,6 +203,7 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
         .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
                                                lists: PreviewListsRepository(), listViewModel: listVM))
         .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
 }
 
 #Preview("Dark") {
@@ -209,5 +214,6 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
         .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
                                                lists: PreviewListsRepository(), listViewModel: listVM))
         .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
         .preferredColorScheme(.dark)
 }

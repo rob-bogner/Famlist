@@ -34,6 +34,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     private let connectivityMonitor: ConnectivityMonitor // Shared connectivity observer injected into view models.
     private let syncMonitor: SyncMonitor // Shared sync monitor for tracking sync status and metrics.
     private let categoryStore: CategoryStore // Kategorien des Nutzers (Ladenweg), Redesign „Hybrid“ Phase 6.
+    private let priceBook: PriceBook // Preise aus Kassenzetteln (offline zuerst), Redesign „Hybrid“ Phase 7.
 
     // MARK: - Init (Dependency Composition)
     /// Initializes repositories and view models for the app.
@@ -106,6 +107,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             // Create the session VM that coordinates auth and default list bootstrap.
             self.sessionViewModel = AppSessionViewModel(client: client, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm)
             self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client))
+            self.priceBook = PriceBook(repository: SupabasePricePointsRepository(client: client))
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
             let itemsRepo = PreviewItemsRepository() // Items repo in memory.
@@ -128,6 +130,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             // Session VM without a client (auth disabled in previews); remains unauthenticated.
             self.sessionViewModel = AppSessionViewModel(client: nil, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm) // Root VM with preview repos.
             self.categoryStore = CategoryStore(repository: nil)
+            self.priceBook = PriceBook(repository: nil) // Ohne Supabase bleiben Preise in der lokalen Warteschlange.
         }
     }
 
@@ -141,6 +144,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                     .environmentObject(UITestFixture.listVM)
                     .environmentObject(UITestFixture.session)
                     .environmentObject(UITestFixture.categoryStore)
+                    .environmentObject(UITestFixture.priceBook)
             } else {
                 appRoot
             }
@@ -157,6 +161,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             .environmentObject(listViewModel) // Inject shared list VM for list screens.
             .environmentObject(syncMonitor) // Inject sync monitor for status tracking
             .environmentObject(categoryStore) // Kategorien (Ladenweg) für Liste und „Kategorien verwalten“
+            .environmentObject(priceBook) // Kassenzettel → Preise, Preisverlauf
             .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
     }
 }

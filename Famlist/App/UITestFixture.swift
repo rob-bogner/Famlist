@@ -81,6 +81,11 @@ enum UITestFixture {
     /// Kategorien im Speicher (Standard-Kategorien, kein Supabase).
     static let categoryStore = CategoryStore(repository: InMemoryCategoryDefinitionsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
 
+    /// Preise im Speicher; im Design-Modus die Werte aus PriceHistory.dc.html („Butter“, Mär … Sep).
+    static let priceBook: PriceBook = designMode
+        ? .designSample
+        : PriceBook(repository: InMemoryPricePointsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
+
     /// Beispielwerte aus AcceptInvite.dc.html, bevor der Screen erscheint.
     private static func setDesignInvitePreview() {
         guard session.invitePreview?.listId != designInviteId else { return }

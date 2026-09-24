@@ -13,7 +13,7 @@
  - Die Werte tragen nur Wert-Typen (ItemModel), keine SwiftData-Modelle.
 
  📝 Last Change:
- - Sheets „Meine Listen“ und Listen-Name ergänzt.
+ - Kassenzettel (Aufnehmen, Prüfen, Einkauf erledigt) und Preisverlauf ergänzt (Phase 7).
  ------------------------------------------------------------------------
  */
 
@@ -47,6 +47,14 @@ enum ActiveListSheet: Equatable, Identifiable {
     case manageCategories
     /// Kategorie bearbeiten (nil = neue Kategorie); liegt über „Kategorien verwalten“.
     case editCategory(CategoryDefinition?)
+    /// Kassenzettel aufnehmen (Vollbild, Kamera).
+    case receiptCapture
+    /// Kassenzettel prüfen (Zuordnung, „Preise speichern“).
+    case receiptReview
+    /// Einkauf erledigt (Vollbild).
+    case shoppingDone
+    /// Preisverlauf eines Artikels; liegt über „Artikel verwalten“.
+    case priceHistory(ItemCatalogEntry)
 
     var id: String {
         switch self {
@@ -67,6 +75,10 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .deleteAccount: return "deleteAccount"
         case .manageCategories: return "manageCategories"
         case .editCategory(let category): return "editCategory-\(category?.id.uuidString ?? "new")"
+        case .receiptCapture: return "receiptCapture"
+        case .receiptReview: return "receiptReview"
+        case .shoppingDone: return "shoppingDone"
+        case .priceHistory(let entry): return "priceHistory-\(entry.id)"
         }
     }
 }
@@ -78,6 +90,7 @@ extension ActiveListSheet {
         case .listOptions, .createList, .listName: return .lists
         case .deleteAccount: return .settings
         case .editCategory: return .manageCategories
+        case .priceHistory: return .manageItems
         default: return nil
         }
     }

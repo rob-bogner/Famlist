@@ -202,7 +202,7 @@ extension ShoppingListView {
             if let list = listViewModel.defaultList { activeSheet = .shareMembers(list) }
         case .manageItems: openManageItems()
         case .manageCategories: activeSheet = .manageCategories
-        case .receipt: break                                    // folgt in Phase 7
+        case .receipt: openReceiptCapture()
         case .importClipboard: showImport = true
         case .settings: activeSheet = .settings
         }

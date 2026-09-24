@@ -11,8 +11,12 @@
  - Übernommen aus design-handoff/MyListUI/Screens/ItemExtraScreens.swift.
    Werte 1:1 aus dem Design (1 CSS-px = 1 pt), nicht runden oder „verschönern“.
 
+ - Echte Werte (Phase 7): Monatswerte und Durchschnitt werden auf die Design-Achse abgebildet:
+   x = i · 53, y = 114,4 − (v − min) / (max − min) · 75. Monate ohne Preis (nil) bekommen keinen Punkt;
+   die Linie verbindet nur vorhandene Werte. Sind alle Werte gleich, liegen sie auf halber Höhe.
+
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Handoff 24.09.2026).
+ - Parameter `values` und `average` statt fester Beispielpunkte (Redesign „Hybrid“, Phase 7).
  ------------------------------------------------------------------------
  */
 
@@ -26,49 +30,77 @@ struct PriceHistoryChart: View {
     let areaFill: Color
     let accent: Color
     let dotFill: Color
+    /// Ein Wert pro Monat (älteste zuerst); nil = kein Preis in diesem Monat.
+    var values: [Double?] = PriceHistoryChart.designValues
+    /// Durchschnitt aller Preise (gestrichelte Linie); nil = keine Linie.
+    var average: Double? = PriceHistoryChart.designAverage
 
-    /// Punkte in viewBox-Koordinaten (Mär … Sep)
-    private static let points: [CGPoint] = [
-        CGPoint(x: 0.0, y: 114.4), CGPoint(x: 53.0, y: 95.6), CGPoint(x: 106.0, y: 95.6),
-        CGPoint(x: 159.0, y: 58.1), CGPoint(x: 212.0, y: 76.9), CGPoint(x: 265.0, y: 39.4),
-        CGPoint(x: 318.0, y: 58.1)
-    ]
+    /// Werte aus PriceHistory.dc.html (Mär … Sep) für Vorschauen.
+    static let designValues: [Double?] = [2.19, 2.29, 2.29, 2.49, 2.39, 2.59, 2.49]
+    static let designAverage: Double? = 2.39
+
+    /// Achse des Designs: niedrigster Wert auf y 114,4, höchster auf y 39,4, Abstand x 53.
+    static let bottomY: CGFloat = 114.4
+    static let span: CGFloat = 75
+    static let stepX: CGFloat = 53
+
+    /// Punkte in viewBox-Koordinaten; Monate ohne Wert fehlen.
+    static func points(for values: [Double?]) -> [CGPoint] {
+        let present = values.compactMap { $0 }
+        guard let lo = present.min(), let hi = present.max() else { return [] }
+        return values.enumerated().compactMap { i, v in
+            v.map { CGPoint(x: CGFloat(i) * stepX, y: y(for: $0, lo: lo, hi: hi)) }
+        }
+    }
+
+    /// y eines Werts; gleiche Werte → halbe Höhe. Auf die Zeichenfläche (0 … 150) begrenzt.
+    static func y(for value: Double, lo: Double, hi: Double) -> CGFloat {
+        let fraction = hi > lo ? (value - lo) / (hi - lo) : 0.5
+        return min(150, max(0, bottomY - CGFloat(fraction) * span))
+    }
 
     var body: some View {
         Canvas { ctx, size in
             let sx = size.width / 330
             let sy = size.height / 162
             let tf = CGAffineTransform(a: sx, b: 0, c: 0, d: sy, tx: 6 * sx, ty: 6 * sy)
-            let pts = Self.points
+            let pts = Self.points(for: values)
+            guard let first = pts.first, let last = pts.last else { return }
 
-            // Durchschnittslinie: M0 75 H318, 1 px, gestrichelt 4 4
-            var avg = Path()
-            avg.move(to: CGPoint(x: 0, y: 75))
-            avg.addLine(to: CGPoint(x: 318, y: 75))
-            ctx.fill(avg.strokedPath(StrokeStyle(lineWidth: 1, dash: [4, 4])).applying(tf), with: .color(line))
+            // Durchschnittslinie: M0 y H318, 1 px, gestrichelt 4 4
+            let present = values.compactMap { $0 }
+            if let average, let lo = present.min(), let hi = present.max() {
+                let y = Self.y(for: average, lo: lo, hi: hi)
+                var avg = Path()
+                avg.move(to: CGPoint(x: 0, y: y))
+                avg.addLine(to: CGPoint(x: 318, y: y))
+                ctx.fill(avg.strokedPath(StrokeStyle(lineWidth: 1, dash: [4, 4])).applying(tf), with: .color(line))
+            }
 
-            // Fläche: Linie + L318 150 L0 150 Z
-            var area = Path()
-            area.move(to: pts[0])
-            for p in pts.dropFirst() { area.addLine(to: p) }
-            area.addLine(to: CGPoint(x: 318, y: 150))
-            area.addLine(to: CGPoint(x: 0, y: 150))
-            area.closeSubpath()
-            ctx.fill(area.applying(tf), with: .color(areaFill))
+            if pts.count > 1 {
+                // Fläche: Linie + L last.x 150 L first.x 150 Z
+                var area = Path()
+                area.move(to: first)
+                for p in pts.dropFirst() { area.addLine(to: p) }
+                area.addLine(to: CGPoint(x: last.x, y: 150))
+                area.addLine(to: CGPoint(x: first.x, y: 150))
+                area.closeSubpath()
+                ctx.fill(area.applying(tf), with: .color(areaFill))
 
-            // Linie: 2,5, runde Enden/Ecken
-            var polyline = Path()
-            polyline.move(to: pts[0])
-            for p in pts.dropFirst() { polyline.addLine(to: p) }
-            ctx.fill(polyline.strokedPath(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)).applying(tf),
-                     with: .color(accent))
+                // Linie: 2,5, runde Enden/Ecken
+                var polyline = Path()
+                polyline.move(to: first)
+                for p in pts.dropFirst() { polyline.addLine(to: p) }
+                ctx.fill(polyline.strokedPath(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)).applying(tf),
+                         with: .color(accent))
+            }
 
             // Punkte: r 3,5 (Füllung dotFill), letzter r 5 (Füllung Akzent); Kontur jeweils 2 in Akzent
             for (i, p) in pts.enumerated() {
-                let last = i == pts.count - 1
-                let r: CGFloat = last ? 5 : 3.5
+                let isLast = i == pts.count - 1
+                let r: CGFloat = isLast ? 5 : 3.5
                 let dot = Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: 2 * r, height: 2 * r))
-                ctx.fill(dot.applying(tf), with: .color(last ? accent : dotFill))
+                ctx.fill(dot.applying(tf), with: .color(isLast ? accent : dotFill))
                 ctx.fill(dot.strokedPath(StrokeStyle(lineWidth: 2)).applying(tf), with: .color(accent))
             }
         }

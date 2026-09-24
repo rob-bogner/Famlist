@@ -10,7 +10,8 @@
 
  🔰 Notes for Beginners:
  - Beispiel: `-uiTestFixture -designFixture -designOverlay sort`
-   Werte: menu, sort, copy, delete, copied, undo · `-designSheet <name>` siehe `designSheet(named:)`.
+   Werte: menu, sort, copy, delete, copied, undo · `-designSheet <name>` siehe `designSheet(named:)`
+   (u. a. receiptCapture, receiptReview, shoppingDone, priceHistory).
  - Im Release-Build ist diese Datei leer.
 
  📝 Last Change:
@@ -60,6 +61,20 @@ extension ShoppingListView {
         case "deleteAccount": return .deleteAccount
         case "manageCategories": return .manageCategories
         case "editCategory": return .editCategory(categoryStore.categories.first { $0.name == "Milchprodukte" })
+        case "receiptCapture":
+            receiptFlow = designReceiptFlow(filled: false)
+            return .receiptCapture
+        case "receiptReview":
+            receiptFlow = designReceiptFlow(filled: true)
+            return .receiptReview
+        case "shoppingDone":
+            receiptFlow = designReceiptFlow(filled: true)
+            return .shoppingDone
+        case "priceHistory":
+            if let repo = listViewModel.catalogRepository, manageItemsVM == nil {
+                manageItemsVM = ManageItemsViewModel(repository: repo)
+            }
+            return .priceHistory(.priceHistorySample)
         case "manageItems":
             if let repo = listViewModel.catalogRepository, manageItemsVM == nil {
                 manageItemsVM = ManageItemsViewModel(repository: repo)
@@ -67,6 +82,23 @@ extension ShoppingListView {
             return .manageItems
         default: return nil
         }
+    }
+
+    /// Positionen aus ReceiptReview.dc.html (Edeka, 5 Positionen, 11,51 €).
+    private func designReceiptFlow(filled: Bool) -> ReceiptFlowViewModel {
+        let flow = ReceiptFlowViewModel(listItemNames: listViewModel.items.map(\.name), catalog: nil, priceBook: priceBook)
+        guard filled else { return flow }
+        let rows: [(String, String, String, ReceiptItemMatcher.Status)] = [
+            ("KERRYGOLD BUTTER", "2.49", "Kerrygold, original irische Butter", .matched),
+            ("ALPRO SOJA DRINK", "2.29", "Soyamilch · alpro", .matched),
+            ("KOKOSM. 400ML", "1.39", "Kokosmilch · Freshona?", .check),
+            ("MANDELDR.O.Z.", "1.85", "Milch Mandel ohne Zucker", .matched),
+            ("FAIRGL.VM SCHOKO", "3.49", "Bio Vollmilch-Schokolade", .new)
+        ]
+        flow.storeName = "Edeka"
+        flow.purchaseDate = Date()
+        flow.lines = rows.map { ReceiptReviewLine(id: UUID(), raw: $0.0, price: Decimal(string: $0.1) ?? 0, itemName: $0.2, status: $0.3) }
+        return flow
     }
 }
 #endif

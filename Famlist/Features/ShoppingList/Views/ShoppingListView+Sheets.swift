@@ -97,7 +97,7 @@ extension ShoppingListView {
             if let vm = manageItemsVM {
                 ManageItemsSheet(viewModel: vm, appearance: appearance, onClose: closeSheet,
                                  onEdit: { activeSheet = .editCatalog($0) },
-                                 onPriceHistory: nil)
+                                 onPriceHistory: { activeSheet = .priceHistory($0) })
             }
         case .editCatalog(let entry):
             EditItemSheet(item: entry.toEditableItem(), k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
@@ -132,7 +132,8 @@ extension ShoppingListView {
         case .manageCategories:
             ManageCategoriesSheet(store: categoryStore, appearance: appearance, onClose: closeSheet,
                                   onEdit: { activeSheet = .editCategory($0) },
-                                  onAdd: { activeSheet = .editCategory(nil) })
+                                  onAdd: { activeSheet = .editCategory(nil) },
+                                  onDelete: { deleteCategory($0) })
         case .editCategory(let category):
             EditCategorySheet(appearance: appearance, category: category, keyboardHeight: keyboard.height,
                               isNameAvailable: { categoryStore.isAvailable($0, except: category?.id) },
@@ -143,6 +144,8 @@ extension ShoppingListView {
             DeleteAccountDialog(appearance: appearance, isWorking: isDeletingAccount, errorText: deleteAccountError,
                                 onConfirm: deleteAccount, onCancel: { activeSheet = .settings })
                 .offset(y: insets.topShift)
+        case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory:
+            receiptSheetView(sheet, k: k)
         case .listName(let mode):
             ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {
                 hideKeyboard()
