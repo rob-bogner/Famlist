@@ -12,7 +12,7 @@
 
  🛠 Includes:
  - ShoppingListContent (Top-Bar, Suche, Fortschritt, Tabs, Abschnitte) + ListDock.
- - Sheet-Ebene: Liste 3 pt weichgezeichnet, Abdunkelung (scrim), Sheet von unten.
+ - Sheet-Ebene: Liste 3 pt weichgezeichnet (Hintergrund bleibt scharf, opaque: false), Abdunkelung (scrim), Sheet von unten.
  - „Mehr“-Menü: Import, Alle abhaken/zurücksetzen, Lösch-Varianten, Mitglieder, Liste teilen, Profil, Abmelden.
  - Rückfragen (ListConfirmation) für Duplizieren und Löschen.
 
@@ -55,7 +55,13 @@ struct ShoppingListView: View {
         GeometryReader { geo in
             let screenHeight = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
             listLayer(t: t, bottomInset: geo.safeAreaInsets.bottom)
-                .blur(radius: activeSheet == nil ? 0 : 3, opaque: true)
+                // opaque: false ist Pflicht: `opaque: true` teilt jedes Pixel durch seinen Alpha-Wert
+                // (Apple-Doku GraphicsContext.BlurOptions.opaque). Halbtransparente Schatten wurden dadurch
+                // pixelig und bunt gesäumt, durchsichtige Stellen schwarz (auf dem Gerät nachgewiesen).
+                .blur(radius: activeSheet == nil ? 0 : 3, opaque: false)
+                // Hintergrund liegt außerhalb des Weichzeichners: einfarbig/weicher Verlauf, sieht
+                // unverändert aus, und die Ränder der Liste blenden in echte Hintergrundfarbe statt in Transparenz.
+                .background { ListBackground(t: t) }
                 .allowsHitTesting(activeSheet == nil)
                 .overlay(alignment: .bottom) {
                     sheetLayer(k: k, maxHeight: screenHeight - 54)   // Design: 54 pt Luft über dem höchsten Sheet
@@ -116,7 +122,6 @@ struct ShoppingListView: View {
 
     private func listLayer(t: ListTheme, bottomInset: CGFloat) -> some View {
         ZStack(alignment: .bottom) {
-            ListBackground(t: t)
             ScrollView {
                 ShoppingListContent(
                     t: t,
