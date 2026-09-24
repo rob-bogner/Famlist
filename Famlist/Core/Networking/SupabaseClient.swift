@@ -117,6 +117,16 @@ protocol SupabaseClienting { // Protocol to hide concrete Supabase types from th
     // Minimal storage helpers to avoid exposing StorageClient type in public API
     func storageUpload(bucket: String, path: String, data: Data, contentType: String) async throws // Uploads a file to a bucket.
     func storageCreateSignedURL(bucket: String, path: String, expiresIn: Int) async throws -> String // Generates a signed URL string.
+    /// Ruft eine Postgres-Funktion ohne Parameter und ohne Rückgabe auf (z. B. delete_my_account).
+    func rpc(_ function: String) async throws
+    /// Löscht Dateien aus einem Storage-Bucket.
+    func storageRemove(bucket: String, paths: [String]) async throws
+}
+
+extension SupabaseClienting {
+    // Standard für Test-Doubles, die diese Aufrufe nicht brauchen.
+    func rpc(_ function: String) async throws {}
+    func storageRemove(bucket: String, paths: [String]) async throws {}
 }
 
 final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around SupabaseClient conforming to our facade.
@@ -177,6 +187,16 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         // Provide a concrete cacheControl to satisfy non-optional String API
         _ = try await client.storage.from(bucket).upload(path, data: data, options: FileOptions(cacheControl: "3600", contentType: contentType, upsert: true)) // Upsert file with cache control.
         logVoid(params: (bucket: bucket, path: path, contentType: contentType, bytes: data.count)) // Log summary (no payload).
+    }
+
+    func rpc(_ function: String) async throws {
+        try await client.rpc(function).execute()
+        logVoid(params: ["rpc": function])
+    }
+
+    func storageRemove(bucket: String, paths: [String]) async throws {
+        _ = try await client.storage.from(bucket).remove(paths: paths)
+        logVoid(params: (bucket: bucket, removed: paths.count))
     }
 
     func storageCreateSignedURL(bucket: String, path: String, expiresIn: Int) async throws -> String { // Creates a temporary URL to access a stored file.

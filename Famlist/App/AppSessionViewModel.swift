@@ -38,6 +38,8 @@ final class AppSessionViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var isRestoringSession: Bool = false
     @Published var currentProfile: Profile? = nil
+    /// Profilfoto des angemeldeten Nutzers (aus dem privaten Bucket `avatars`, per signiertem Link geladen).
+    @Published var avatarImage: UIImage? = nil
     
     /// Current user's email address (if authenticated)
     var currentUserEmail: String? {
@@ -88,7 +90,7 @@ final class AppSessionViewModel: ObservableObject {
     internal let onboardingService: OnboardingService?
     internal let profiles: ProfilesRepository
     internal let lists: ListsRepository
-    private let listViewModel: ListViewModel
+    internal let listViewModel: ListViewModel
     
     // MARK: - Lifecycle
     
@@ -301,7 +303,7 @@ final class AppSessionViewModel: ObservableObject {
             }
 
             await markPhase(.defaultList)
-            let defaultList = try await lists.fetchDefaultList(for: me.id)
+            let defaultList = try await startList(for: me)
             listViewModel.configure(listsRepository: lists)
             // Membership-Observation starten — muss nach configure(listsRepository:) aufgerufen
             // werden, damit listsRepository gesetzt ist, sonst startet die Observation nicht (RC-5).

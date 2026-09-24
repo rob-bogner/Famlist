@@ -31,5 +31,41 @@ protocol ProfilesRepository {
     /// - Parameter publicId: The public identifier to search for.
     /// - Returns: Matching profile or nil if not found.
     func profileByPublicId(_ publicId: String) async throws -> Profile?
+
+    /// Profil über die ID (z. B. Eigentümer einer geteilten Liste).
+    func profile(id: UUID) async throws -> Profile?
+
+    /// Profil bearbeiten / anlegen: Benutzername und optional voller Name.
+    func updateProfile(username: String, fullName: String?) async throws
+
+    /// Live-Prüfung „frei“: true, wenn kein ANDERES Profil diesen Benutzernamen trägt.
+    func isUsernameAvailable(_ username: String) async throws -> Bool
+
+    /// Favorit „öffnet beim App-Start“ setzen (nil = kein Favorit).
+    func setFavoriteList(_ listId: UUID?) async throws
+
+    /// Einstellungen → Benachrichtigungen.
+    func updateNotifications(sharedLists: Bool, invites: Bool) async throws
+
+    /// Profilfoto hochladen (JPEG); liefert den Pfad im Bucket `avatars`.
+    func uploadAvatar(_ jpeg: Data) async throws -> String
+
+    /// Signierter Link zum Profilfoto (1 h gültig).
+    func avatarURL(path: String) async throws -> URL?
+
+    /// Konto löschen: Profilfoto entfernen, dann RPC delete_my_account (App-Store-Pflicht).
+    func deleteAccount() async throws
+}
+
+extension ProfilesRepository {
+    // Standard-Implementierungen, damit Test-Doubles und Vorschauen nur das Nötige überschreiben.
+    func profile(id: UUID) async throws -> Profile? { nil }
+    func updateProfile(username: String, fullName: String?) async throws {}
+    func isUsernameAvailable(_ username: String) async throws -> Bool { true }
+    func setFavoriteList(_ listId: UUID?) async throws {}
+    func updateNotifications(sharedLists: Bool, invites: Bool) async throws {}
+    func uploadAvatar(_ jpeg: Data) async throws -> String { "" }
+    func avatarURL(path: String) async throws -> URL? { nil }
+    func deleteAccount() async throws {}
 }
 

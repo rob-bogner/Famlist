@@ -44,8 +44,10 @@ struct ShoppingListView: View {
     /// Restzeit-Balken des Rückgängig-Toasts (1 → 0 in 5 s).
     @State var undoRemaining: CGFloat = 1
     @State var showImport = false
-    @State var showProfile = false
-    @State var showMembersSheet = false
+    /// Liste, deren Löschen gerade bestätigt werden soll (Listen-Optionen → „Liste löschen“).
+    @State var listToDelete: ListModel?
+    @State var isDeletingAccount = false
+    @State var deleteAccountError: String?
     /// „Artikel verwalten“ bleibt beim Wechsel ins Bearbeiten-Sheet erhalten.
     @State var manageItemsVM: ManageItemsViewModel?
 
@@ -66,30 +68,17 @@ struct ShoppingListView: View {
                     .background { ListBackground(t: t) }
                     .allowsHitTesting(activeSheet == nil && activeOverlay == nil)
                 overlayLayer(t: t, insets: insets)
-                sheetLayer(k: k, maxHeight: screenHeight - 54)   // Design: 54 pt Luft über dem höchsten Sheet
+                sheetLayer(k: k, maxHeight: screenHeight - 54, insets: insets)   // Design: 54 pt Luft über dem höchsten Sheet
             }
             .environment(\.hybridHosted, true)
         }
         .ignoresSafeArea(.keyboard)
         .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: activeOverlay)
-        .sheet(isPresented: $showMembersSheet) {
-            MembersView(list: listViewModel.defaultList)
-                .environmentObject(session)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-        }
         .sheet(isPresented: $showImport) {
             ClipboardImportView()
                 .environmentObject(listViewModel)
                 .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showProfile) {
-            if let profile = session.currentProfile {
-                ProfileView(profile: profile)
-                    .environmentObject(session)
-                    .presentationDragIndicator(.visible)
-            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {

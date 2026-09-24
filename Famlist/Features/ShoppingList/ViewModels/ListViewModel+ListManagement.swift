@@ -64,7 +64,7 @@ extension ListViewModel {
     // MARK: - Create New List
 
     /// Creates a new list remotely and appends it to allLists.
-    func createNewList(title: String, ownerId: UUID) {
+    func createNewList(title: String, ownerId: UUID, completion: ((ListModel) -> Void)? = nil) {
         guard let repo = listsRepository else { return }
         let trimmed = title.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
@@ -84,6 +84,7 @@ extension ListViewModel {
                     self.listItemCounts[model.id] = 0
                     UserLog.Data.listCreated(name: model.title)
                     logVoid(params: (action: "createNewList.success", id: model.id))
+                    completion?(model)
                 }
             } catch {
                 await MainActor.run {
@@ -177,6 +178,33 @@ extension ListViewModel {
                     self.listItemCounts[list.id] = (try? self.itemStore.fetchItems(listId: list.id))?.count ?? 0
                     self.setError(error)
                     logVoid(params: (action: "deleteList.error", error: (error as NSError).localizedDescription))
+                }
+            }
+        }
+    }
+
+    // MARK: - Leave List
+
+    /// Listen-Optionen „Liste verlassen“ (geteilte Liste): eigene Mitgliedschaft löschen (Policy lm_self_delete).
+    func leaveList(_ list: ListModel, profileId: UUID) {
+        guard let repo = listsRepository else { return }
+        logVoid(params: (action: "leaveList", listId: list.id))
+        allLists.removeAll { $0.id == list.id }
+        listItemCounts.removeValue(forKey: list.id)
+        UserLog.Data.listLeft(name: list.title)
+        if listId == list.id, let next = allLists.first(where: { $0.isDefault }) ?? allLists.first {
+            switchToList(next)
+        }
+        Task { [weak self] in
+            do {
+                try await repo.removeMember(listId: list.id, profileId: profileId)
+                await MainActor.run { try? self?.listStore.purge(listId: list.id) }
+            } catch {
+                await MainActor.run {
+                    guard let self else { return }
+                    self.allLists.append(list)
+                    self.allLists.sort { $0.createdAt < $1.createdAt }
+                    self.setError(error)
                 }
             }
         }

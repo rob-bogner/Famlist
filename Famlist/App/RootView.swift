@@ -27,6 +27,8 @@ import SwiftUI // Import SwiftUI to define views.
 struct RootView: View { // SwiftUI View declaration.
     @EnvironmentObject var session: AppSessionViewModel // Session VM controlling auth status.
     @EnvironmentObject var listViewModel: ListViewModel // List VM used by ShoppingListView subtree.
+    /// Einstellungen → Erscheinungsbild (System / Hell / Dunkel), gilt app-weit.
+    @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
 
     var body: some View { // Root view body.
         Group { // Conditional container to switch views without rebuilding hierarchy unnecessarily.
@@ -40,6 +42,7 @@ struct RootView: View { // SwiftUI View declaration.
                 AuthView() // Email magic-link sign-in screen.
             }
         }
+        .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
         }

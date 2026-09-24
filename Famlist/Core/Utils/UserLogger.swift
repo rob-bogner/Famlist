@@ -98,6 +98,31 @@ struct UserLog {
             log("👤 Benutzerprofil wird geladen...")
         }
 
+        /// Profil gespeichert (Benutzername / Name)
+        static func profileUpdated(username: String) {
+            log("👤 Profil gespeichert: @\(username)")
+        }
+
+        /// Profilfoto geändert
+        static func avatarUpdated() {
+            log("👤 Profilfoto aktualisiert")
+        }
+
+        /// Konto gelöscht (alle Daten entfernt)
+        static func accountDeleted() {
+            log("🗑️ Konto und alle Daten gelöscht")
+        }
+
+        /// Anmeldelink per E-Mail verschickt
+        static func magicLinkSent(email: String) {
+            log("✉️ Anmeldelink an \(email) gesendet")
+        }
+
+        /// Mit Apple angemeldet
+        static func appleSignIn() {
+            log("🍎 Mit Apple angemeldet")
+        }
+
         static func profileLoaded(publicId: String? = nil) {
             if let publicId = publicId {
                 log("✅ Benutzerprofil geladen (ID: \(publicId))")
@@ -406,6 +431,21 @@ struct UserLog {
 
         static func listRenamed(oldName: String, newName: String) {
             log("✏️ Liste '\(oldName)' umbenannt zu '\(newName)'")
+        }
+
+        /// Mitglied aus einer Liste entfernt
+        static func memberRemoved(name: String) {
+            log("👥 \(name) aus der Liste entfernt")
+        }
+
+        /// Einladungslink kopiert
+        static func inviteLinkCopied(listName: String) {
+            log("🔗 Einladungslink für „\(listName)“ kopiert")
+        }
+
+        /// Geteilte Liste verlassen
+        static func listLeft(name: String) {
+            log("🚪 Liste „\(name)“ verlassen")
         }
 
         static func listDeleted(name: String) {

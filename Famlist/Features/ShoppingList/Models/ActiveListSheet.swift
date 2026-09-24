@@ -33,6 +33,16 @@ enum ActiveListSheet: Equatable, Identifiable {
     case productImage(ItemModel)
     case lists
     case listName(ListNameMode)
+    /// Neue Liste (mit „Als Favorit“).
+    case createList
+    /// Listen-Optionen (langer Druck in „Meine Listen“); liegt über „Meine Listen“.
+    case listOptions(ListModel)
+    /// Mitglieder & Teilen einer Liste.
+    case shareMembers(ListModel)
+    case settings
+    case editProfile
+    /// „Konto löschen?“; liegt über den Einstellungen.
+    case deleteAccount
 
     var id: String {
         switch self {
@@ -45,6 +55,31 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .productImage(let item): return "image-\(item.id)"
         case .lists: return "lists"
         case .listName: return "listName"
+        case .createList: return "createList"
+        case .listOptions(let list): return "listOptions-\(list.id)"
+        case .shareMembers(let list): return "shareMembers-\(list.id)"
+        case .settings: return "settings"
+        case .editProfile: return "editProfile"
+        case .deleteAccount: return "deleteAccount"
+        }
+    }
+}
+
+extension ActiveListSheet {
+    /// Sheet, das weichgezeichnet UNTER diesem liegt (Design: ListOptions/CreateList über MyLists, DeleteAccount über Settings).
+    var baseSheet: ActiveListSheet? {
+        switch self {
+        case .listOptions, .createList, .listName: return .lists
+        case .deleteAccount: return .settings
+        default: return nil
+        }
+    }
+
+    /// Unterliegende Sheets als Menü/Dialog (skaliert ein) statt als Sheet von unten.
+    var isPopup: Bool {
+        switch self {
+        case .listOptions, .deleteAccount: return true
+        default: return false
         }
     }
 }

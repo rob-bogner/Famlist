@@ -22,28 +22,57 @@ import SwiftUI
 
 extension ShoppingListView {
     @ViewBuilder
-    func sheetLayer(k: SheetTheme, maxHeight: CGFloat) -> some View {
+    func sheetLayer(k: SheetTheme, maxHeight: CGFloat, insets: LayoutShift) -> some View {
         ZStack(alignment: .bottom) {
-            if activeSheet != nil {
-                k.scrim
-                    .onTapGesture(perform: closeSheet)
-                    .transition(.opacity)
-                    .accessibilityHidden(true)
-            }
             if let sheet = activeSheet {
-                // Scanner ist Vollbild und bringt seinen eigenen Hintergrund mit.
-                sheetView(sheet, k: k, maxHeight: maxHeight)
-                    .environment(\.hybridSheetMaxHeight, maxHeight)
+                if let base = sheet.baseSheet {
+                    // Design: das darunterliegende Sheet (Meine Listen / Einstellungen) weichgezeichnet + eigene Abdunkelung
+                    ZStack(alignment: .bottom) {
+                        k.scrim
+                        sheetView(base, k: k, maxHeight: maxHeight, insets: insets)
+                    }
+                    .blur(radius: 3, opaque: false)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                    .transition(.opacity)
+                    overlayScrim(for: sheet)
+                        .onTapGesture { activeSheet = base }
+                        .transition(.opacity)
+                        .accessibilityHidden(true)
+                } else {
+                    k.scrim
+                        .onTapGesture(perform: closeSheet)
+                        .transition(.opacity)
+                        .accessibilityHidden(true)
+                }
+                sheetView(sheet, k: k, maxHeight: maxHeight, insets: insets)
                     .id(sheet.id)
-                    .transition(.move(edge: .bottom))
+                    .transition(sheet.isPopup ? .opacity.combined(with: .scale(scale: 0.96)) : .move(edge: .bottom))
                     .zIndex(1)
             }
         }
+        .environment(\.hybridSheetMaxHeight, maxHeight)
         .ignoresSafeArea()
+        .confirmationDialog(listToDelete.map { "„\($0.title)“ löschen?" } ?? "", isPresented: deleteListBinding,
+                            titleVisibility: .visible, presenting: listToDelete) { list in
+            Button("Löschen", role: .destructive) { deleteList(list) }
+            Button("Abbrechen", role: .cancel) {}
+        } message: { _ in
+            Text("Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.")
+        }
+    }
+
+    private func overlayScrim(for sheet: ActiveListSheet) -> Color {
+        let t = ListAccountTokens(appearance)
+        switch sheet {
+        case .deleteAccount: return t.scrimDialog
+        case .listOptions: return t.scrimMenu
+        default: return t.scrimSheet            // CreateList / Umbenennen über „Meine Listen“
+        }
     }
 
     @ViewBuilder
-    private func sheetView(_ sheet: ActiveListSheet, k: SheetTheme, maxHeight: CGFloat) -> some View {
+    private func sheetView(_ sheet: ActiveListSheet, k: SheetTheme, maxHeight: CGFloat, insets: LayoutShift) -> some View {
         switch sheet {
         case .search:
             if let catalog = listViewModel.catalogRepository {
@@ -80,8 +109,30 @@ extension ShoppingListView {
             ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
         case .lists:
             MyListsSheet(k: k, maxHeight: maxHeight, onClose: closeSheet,
-                         onCreate: { activeSheet = .listName(.create) },
-                         onRename: { activeSheet = .listName(.rename($0)) })
+                         onCreate: { activeSheet = .createList },
+                         onOptions: { activeSheet = .listOptions($0) })
+        case .createList:
+            CreateListSheet(appearance: appearance, keyboardHeight: keyboard.height,
+                            onClose: { hideKeyboard(); activeSheet = .lists },
+                            onCreate: createList)
+        case .listOptions(let list):
+            listOptions(list, insets: insets)
+        case .shareMembers(let list):
+            ShareMembersSheet(viewModel: ShareMembersViewModel(list: list, me: session.currentProfile,
+                                                               lists: listViewModel.listsRepository,
+                                                               profiles: session.profiles),
+                              appearance: appearance, publicID: session.currentProfile?.publicId ?? "–",
+                              onClose: closeSheet)
+        case .settings:
+            SettingsSheet(appearance: appearance, onClose: closeSheet,
+                          onEditProfile: { activeSheet = .editProfile },
+                          onDeleteAccount: { deleteAccountError = nil; activeSheet = .deleteAccount })
+        case .editProfile:
+            EditProfileSheet(appearance: appearance, onClose: { hideKeyboard(); activeSheet = .settings })
+        case .deleteAccount:
+            DeleteAccountDialog(appearance: appearance, isWorking: isDeletingAccount, errorText: deleteAccountError,
+                                onConfirm: deleteAccount, onCancel: { activeSheet = .settings })
+                .offset(y: insets.topShift)
         case .listName(let mode):
             ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {
                 hideKeyboard()
@@ -112,5 +163,68 @@ extension ShoppingListView {
         guard let repo = listViewModel.catalogRepository else { return }
         if manageItemsVM == nil { manageItemsVM = ManageItemsViewModel(repository: repo) }
         activeSheet = .manageItems
+    }
+
+    // MARK: - Listen-Optionen
+
+    private func listOptions(_ list: ListModel, insets: LayoutShift) -> some View {
+        let isOwner = list.ownerId == session.currentProfile?.id
+        return ListOptionsMenu(appearance: appearance, listName: list.title,
+                               isFavorite: session.isFavorite(list), isOwner: isOwner,
+                               onRename: { activeSheet = .listName(.rename(list)) },
+                               onDuplicate: {
+                                   listViewModel.duplicateList(list, ownerId: session.currentProfile?.id ?? list.ownerId)
+                                   closeSheet()
+                               },
+                               onToggleFavorite: {
+                                   session.toggleFavorite(list)
+                                   activeSheet = .lists
+                               },
+                               onMembers: { activeSheet = .shareMembers(list) },
+                               onDelete: {
+                                   if isOwner {
+                                       activeSheet = .lists
+                                       listToDelete = list
+                                   } else if let me = session.currentProfile?.id {
+                                       listViewModel.leaveList(list, profileId: me)
+                                       activeSheet = .lists
+                                   }
+                               },
+                               onDismiss: { activeSheet = .lists })
+            .offset(y: insets.topShift)
+    }
+
+    private var deleteListBinding: Binding<Bool> {
+        Binding(get: { listToDelete != nil }, set: { if !$0 { listToDelete = nil } })
+    }
+
+    private func deleteList(_ list: ListModel) {
+        withAnimation(.easeInOut(duration: 0.3)) { listViewModel.deleteList(list) }
+        listToDelete = nil
+    }
+
+    private func createList(name: String, isFavorite: Bool) {
+        guard let me = session.currentProfile?.id ?? listViewModel.defaultList?.ownerId else { return }
+        hideKeyboard()
+        activeSheet = .lists
+        listViewModel.createNewList(title: name, ownerId: me) { created in
+            if isFavorite, let profile = session.currentProfile {
+                session.setFavorite(created.id, profile: profile, listTitle: created.title)
+            }
+        }
+    }
+
+    private func deleteAccount() {
+        isDeletingAccount = true
+        deleteAccountError = nil
+        Task {
+            let ok = await session.deleteAccount()
+            isDeletingAccount = false
+            if ok {
+                activeSheet = nil
+            } else {
+                deleteAccountError = session.errorMessage
+            }
+        }
     }
 }

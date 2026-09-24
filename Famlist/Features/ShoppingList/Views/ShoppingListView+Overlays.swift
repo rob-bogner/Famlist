@@ -198,11 +198,12 @@ extension ShoppingListView {
     private func handleMenu(_ item: ListMenuItem) {
         activeOverlay = nil
         switch item {
-        case .members: showMembersSheet = true
+        case .members:
+            if let list = listViewModel.defaultList { activeSheet = .shareMembers(list) }
         case .manageItems: openManageItems()
         case .manageCategories, .receipt: break                 // folgt in Phase 6/7
         case .importClipboard: showImport = true
-        case .settings: showProfile = true                      // Einstellungen folgen in Phase 4
+        case .settings: activeSheet = .settings
         }
     }
 }

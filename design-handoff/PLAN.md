@@ -8,7 +8,7 @@ Stand: 24.09.2026 · Branch `redesign-hybrid` (abgezweigt von `main` 20ea307)
 - [x] Phase 1 – Fundament
 - [x] Phase 2 – Liste und Dock
 - [x] Phase 3 – Artikel
-- [ ] Phase 4 – Listen, Teilen, Konto
+- [x] Phase 4 – Listen, Teilen, Konto
 - [ ] Phase 5 – Einstieg
 - [ ] Phase 6 – Kategorien
 - [ ] Phase 7 – Kassenzettel und Preise
@@ -115,7 +115,7 @@ Alle Supabase-Änderungen kommen als nummerierte Datei nach `migrations/` (ab `0
 | Liste verlassen | – | **neu** Policy `lm_self_delete` (`profile_id = auth.uid()`) |
 | Konto löschen | lokalen Store leeren | **neu** RPC `delete_my_account()` (SECURITY DEFINER): löscht eigene Listen samt Artikeln, Mitgliedschaften, Katalog, Kategorien, Preispunkte, Profil und `auth.users`-Zeile |
 | Benutzername | – | `profiles.username` existiert (unique, ≥ 3 Zeichen); Live-Prüfung per `select … where username = …` |
-| Profilfoto | – | **neu** Storage-Bucket `avatars` (öffentlich lesbar, schreiben nur in den eigenen Ordner), `profiles.avatar_url` existiert |
+| Profilfoto | – | Storage-Bucket `avatars` **existierte bereits (privat, leer)** und bleibt privat: lesen dürfen angemeldete Nutzer (signierte Links), schreiben nur im eigenen Ordner; `profiles.avatar_url` speichert den Pfad |
 | Benachrichtigungs-Schalter | – | **neu** `profiles.notify_shared_lists bool`, `profiles.notify_invites bool` (siehe Risiko R5) |
 | Kategorien mit Ladenweg | neu `CategoryEntity` als Cache | `categories` erweitern: `position int`, `icon text`, `updated_at`. Beim ersten Start werden die 8 bisherigen Kategorien pro Nutzer angelegt. „Sonstiges“ ist geschützt. |
 | Barcode | – | `global_product_catalog.code` (vorhanden); **neu** `item_catalog.barcode text` für eigene Artikel |
@@ -186,6 +186,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Phase | Build | Tests | Pixel-Abgleich (iPhone 17 Pro, `-uiTestFixture -designFixture`) |
 |---|---|---|---|
 | 1 | grün | – | – |
+| 4 | grün (auch der vorgemerkte Stand separat gebaut) | 443 bestanden, 0 fehlgeschlagen (10 neue Unit-Tests, 9 neu geschriebene UI-Tests „Meine Listen“) | MyLists, CreateList, ListOptions, ShareMembers, Settings, EditProfile, DeleteAccount: deckungsgleich bis auf §9; Migration 009 angewandt und geprüft |
 | 3 | grün | 432 bestanden, 0 fehlgeschlagen (8 neue: Artikel verwalten, Barcode-Suche) | BarcodeScan, ManageItems, NewItem: deckungsgleich; Migration 008 angewandt und geprüft |
 | 2 | grün | 423 bestanden, 0 fehlgeschlagen (inkl. 23 UI-Tests, 20 neue Unit-Tests) | Hybrid, MenuOverlay, SortMenu, CopyChoice, CopyDone, DeleteChoice, UndoToast (Light), HybridDark, SortMenuDark, MenuOverlayDark: deckungsgleich bis auf die Punkte in §9 |
 
@@ -206,4 +207,13 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | BarcodeScan | Ohne Kamera (Simulator) Hinweis „Kamera nicht verfügbar“ statt „Kamerabild“; Knopf „Licht“ gedimmt | Platzhalter des Designs |
 | BarcodeScan | Mengen-Kreis erhöht per Tippen 1×…9× | Design zeigt nur „1×“ |
 | Suchen | Eigene Artikel und Open-Food-Facts in EINER Liste „n Treffer“ | Design SearchResults; vorher zwei Abschnitte |
+| ListOptions | „Liste löschen“ mit Untertitel „Mit allen Artikeln, für alle Mitglieder“; bei geteilten Listen „Liste verlassen“ / „Die Liste bleibt für die anderen erhalten“ | Design-Untertitel „Bei geteilten Listen: „Liste verlassen““ ist eine Anmerkung |
+| ListOptions | „Umbenennen“ bei geteilten Listen gedimmt | Nur Besitzer dürfen umbenennen (RLS list_update_owner) |
+| ListOptions → Löschen | System-Rückfrage vor dem Löschen einer Liste | Löschen ist endgültig und betrifft alle Mitglieder; Design zeigt keinen Zwischenzustand |
+| CreateList | „Liste erstellen“ gedimmt, solange der Name leer ist | Design zeigt nur den leeren Anfangszustand |
+| CreateList | Sheet rutscht mit der Tastatur nach oben | Design zeigt keine Tastatur |
+| ShareMembers | Besitzer kann Mitglieder per Wischen entfernen (roter Knopf wie in „Artikel verwalten“); Inhalt scrollt | Funktion der alten Mitglieder-Ansicht erhalten; Design zeigt ein Mitglied |
+| ShareMembers | „Link kopieren“ / ID-Knopf zeigen 2 s „Link kopiert“ bzw. Haken | Rückmeldung nicht gestaltet |
+| EditProfile | Unter dem Benutzernamen rote Meldung bei vergeben/ungültig; „Speichern“ erst bei gültigem, freiem Namen | Design zeigt nur den Hinweis |
+| Settings | Profilkarte zeigt vollen Namen bzw. Benutzernamen und das Profilfoto | Beispieldaten „Rob“ |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |

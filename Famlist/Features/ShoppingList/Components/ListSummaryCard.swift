@@ -10,12 +10,12 @@
 
  🔰 Notes for Beginners:
  - Aktive Liste: Rahmen in Akzent + 4-pt-Ring und Häkchen. Andere Listen: neutraler Rahmen.
- - Stern = Standard-Liste (isDefault).
+ - Stern = Favorit (profiles.favorite_list_id, öffnet beim App-Start).
  - Famlist-Ergänzung (nicht im Design): Personen-Symbol neben dem Namen, wenn die Liste jemand anderem gehört.
- - Bewusst kein Button: Die Karte liegt in einer Wischgeste, ein Button würde die Berührung festhalten.
+ - Tippen wechselt die Liste, langer Druck öffnet die Listen-Optionen (MyListsSheet).
 
  📝 Last Change:
- - Aus MyListsScreen des Design-Pakets MyListUI 2 übernommen, an ListModel angebunden.
+ - Stern zeigt den Favoriten; Symbol für geteilte Listen als SVG statt SF Symbol (Handoff 24.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -28,6 +28,8 @@ struct ListSummaryCard: View {
     let itemCount: Int
     let isSelected: Bool
     var isShared = false
+    /// Favorit (öffnet beim App-Start) → gelber Stern wie im Design.
+    var isFavorite = false
 
     var body: some View {
         HStack(spacing: 14) {
@@ -38,14 +40,12 @@ struct ListSummaryCard: View {
                         .font(AppFont.outfit(17, 600))
                         .foregroundStyle(k.text)
                         .lineLimit(1)
-                    if list.isDefault {
+                    if isFavorite {
                         SVGFilledIcon(Icon.star, size: 16, color: .hex("#F5B521"), lineWidth: 1.5)
-                            .accessibilityLabel("Standard-Liste")
+                            .accessibilityLabel("Favorit")
                     }
                     if isShared {
-                        Image(systemName: "person.2.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(k.accentText)
+                        SVGIcon(ListAccountIcon.members, size: 16, color: k.accentText, lineWidth: 1.9)
                             .accessibilityLabel("Geteilte Liste")
                     }
                 }
