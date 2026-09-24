@@ -22,6 +22,8 @@ struct SheetSurface<Content: View>: View {
     let k: SheetTheme
     let height: CGFloat
     @ViewBuilder let content: () -> Content
+    /// Auf Geräten, die niedriger als 844 pt sind, darf das Sheet nicht über den Bildschirm hinausragen.
+    @Environment(\.hybridSheetMaxHeight) private var maxHeight
 
     private var shape: UnevenRoundedRectangle {
         UnevenRoundedRectangle(topLeadingRadius: 34, topTrailingRadius: 34, style: .circular)
@@ -31,7 +33,7 @@ struct SheetSurface<Content: View>: View {
         content()
             .frame(maxWidth: .infinity)
             .padding(.top, 1)                      // border-top: 1px (Light: transparent, belegt aber Platz)
-            .frame(height: height, alignment: .top)
+            .frame(height: min(height, maxHeight), alignment: .top)
             .overlay(alignment: .top) {
                 if k.isDark {
                     ZStack(alignment: .top) {

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Produktbild</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif; color: {{k.text}}">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" hint-size="390px,844px"></dc-import>
+</div>
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: {{k.scrim}}; backdrop-filter: blur(3px)"></div>
+
+<section aria-label="Produktbild" style="position: absolute; left: 0; bottom: 0; width: 390px; height: 452px; box-sizing: border-box; border-radius: 34px 34px 0 0; background: {{k.sheet}}; border-top: 1px solid {{k.sheetBorder}}; box-shadow: {{k.sheetShadow}}; padding: 10px 20px 34px 20px; display: flex; flex-direction: column; align-items: center">
+<div style="width: 40px; height: 5px; border-radius: 3px; background: {{k.grabber}}"></div>
+<div style="width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: 12px">
+<h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em">Produktbild</h1>
+<button aria-label="Schließen" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: {{k.close}}; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{k.icon}}" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</button>
+</div>
+<div style="position: relative; margin-top: 22px; width: 220px; height: 220px; border-radius: 40px; background: {{k.thumb}}; box-shadow: {{k.thumbShadow}}, {{k.imgShadow}}; display: flex; align-items: center; justify-content: center; overflow: hidden">
+<div style="position: absolute; left: -40px; top: -60px; width: 220px; height: 160px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,0.55), rgba(255,255,255,0)); pointer-events: none"></div>
+<svg style="position: relative" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="{{k.thumbIcon}}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg>
+</div>
+<div style="margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<span style="font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 600; letter-spacing: -0.01em">Butter</span>
+<span style="padding: 5px 12px; border-radius: 999px; background: {{k.accentSoft}}; color: {{k.accentText}}; font-size: 13px; font-weight: 600; box-shadow: inset 0 0 0 1px {{k.accentLine}}">1 Packung</span>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const k = dark ? {
+      sheet: 'linear-gradient(180deg, #102022 0%, #0A1416 100%)', sheetBorder: 'rgba(255,255,255,0.08)', sheetShadow: '0 -24px 50px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+      text: '#EAF5F6', sub: '#93ADB1', close: 'rgba(255,255,255,0.08)', icon: '#D3E6E8', grabber: 'rgba(255,255,255,0.18)', scrim: 'rgba(0,0,0,0.6)',
+      thumb: 'linear-gradient(150deg, ' + rgba(accent, 0.24) + ', ' + rgba(accent, 0.06) + ')', thumbShadow: 'inset 0 1px 0 rgba(255,255,255,0.14)', imgShadow: '0 24px 40px -18px rgba(0,0,0,0.8)', thumbIcon: light,
+      accentSoft: rgba(accent, 0.16), accentLine: rgba(accent, 0.3), accentText: light
+    } : {
+      sheet: '#FFFFFF', sheetBorder: 'rgba(255,255,255,0)', sheetShadow: '0 -20px 40px -20px rgba(8,30,33,0.35)',
+      text: '#0F2528', sub: '#5F7579', close: '#F1F5F5', icon: '#1E3A3E', grabber: '#D5DEDF', scrim: 'rgba(8,24,27,0.42)',
+      thumb: 'linear-gradient(150deg, #F4F8F8, #E2ECED)', thumbShadow: 'inset 0 1px 0 #ffffff, inset 0 -8px 18px rgba(12,40,44,0.06)', imgShadow: '0 24px 40px -20px rgba(12,40,44,0.35)', thumbIcon: '#8AA0A4',
+      accentSoft: rgba(accent, 0.1), accentLine: rgba(accent, 0.16), accentText: deep
+    };
+    return { k, theme, accent };
+  }
+}
+</script>
+</body>
+</html>

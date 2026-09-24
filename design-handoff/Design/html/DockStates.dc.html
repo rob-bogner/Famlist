@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Dock – alle Zustände</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif;background:#F6F9F9}
+</style>
+</helmet>
+<div style="width: 1240px; box-sizing: border-box; padding: 48px 56px 56px 56px; background: #F6F9F9; color: #0F2528; font-family: 'DM Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #0B6C75">Komponente · Dock</span>
+<h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 40px; font-weight: 700; letter-spacing: -0.02em">Untere Leiste – alle Zustände</h1>
+<span style="font-size: 15px; color: #4E6468; max-width: 900px; line-height: 1.5">Leiste 276 × 64, Innenabstand 5, Radius 32 · Plus 64 · Abstand 10. Immer genau ein Knopf ausgewählt: Pille 54 hoch, Radius 27, mit Highlight und Beschriftung. Wird ein anderer Knopf angetippt, wandert Pille + Text dorthin, der vorherige wird wieder zum Icon. Ruhezustand: „Alle abhaken“. Löschen in Rot.</span>
+</div>
+<div style="display: grid; grid-template-columns: 300px 1fr 1fr; gap: 0; border-radius: 24px; overflow: hidden; border: 1px solid #E3ECED; background: #FFFFFF">
+<span style="padding: 16px 24px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #5F7579; border-bottom: 1px solid #E3ECED">Zustand</span>
+<span style="padding: 16px 24px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #5F7579; border-bottom: 1px solid #E3ECED">Light</span>
+<span style="padding: 16px 24px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #93ADB1; background: #071012; border-bottom: 1px solid rgba(255,255,255,0.08)">Dark</span>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+<div style="padding: 22px 24px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #EDF2F2">
+<span style="font-size: 16px; font-weight: 700">{{r.title}}</span>
+<span style="font-size: 13px; color: #4E6468; line-height: 1.4">{{r.note}}</span>
+</div>
+<div style="padding: 22px 24px; display: flex; align-items: center; border-bottom: 1px solid #EDF2F2">
+<div style="width: 350px; height: 64px"><dc-import name="Dock" theme="light" accent="#0FA3AE" active="{{r.active}}" pill="{{r.pill}}" hint-size="350px,64px"></dc-import></div>
+</div>
+<div style="padding: 22px 24px; display: flex; align-items: center; background: radial-gradient(120% 140% at 50% 100%, rgba(31,194,204,0.08), rgba(0,0,0,0) 60%), #071012; border-bottom: 1px solid rgba(255,255,255,0.06)">
+<div style="width: 350px; height: 64px"><dc-import name="Dock" theme="dark" accent="#1FC2CC" active="{{r.active}}" pill="{{r.pill}}" hint-size="350px,64px"></dc-import></div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1240,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const rows = [
+      { title: 'Standard', note: '„Alle abhaken“ ist ausgewählt', active: 'none', pill: 'open' },
+      { title: 'Sortieren geöffnet', note: 'Menü: Kategorie, A–Z, Neueste, Manuell · Erledigte nach unten', active: 'sort', pill: 'open' },
+      { title: 'Kopieren geöffnet', note: 'Offene oder alle Artikel, mit Vorschau', active: 'copy', pill: 'open' },
+      { title: 'Kopiert', note: 'Pille zeigt „Kopiert“ mit Haken + Hinweis, 2 s', active: 'copied', pill: 'open' },
+      { title: 'Löschen geöffnet', note: 'Nur abgehakte oder alle · danach Rückgängig', active: 'delete', pill: 'open' },
+      { title: 'Alles erledigt', note: 'Pille wird zu „Zurücksetzen“ (alle wieder offen)', active: 'none', pill: 'allDone' },
+      { title: 'Leere Liste', note: 'Abhaken, Kopieren, Löschen gedimmt · Sortieren bleibt aktiv', active: 'none', pill: 'empty' }
+    ];
+    return { rows };
+  }
+}
+</script>
+</body>
+</html>
