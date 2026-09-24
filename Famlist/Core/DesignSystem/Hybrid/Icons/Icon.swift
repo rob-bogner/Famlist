@@ -37,6 +37,9 @@ enum Icon {
     static let camera: [SVGElement] = [.path("M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"),
                                        .circle(12, 12.5, 3.5)]
     static let undo: [SVGElement] = [.path("M9 14L4 9l5-5"), .path("M4 9h10.5a5.5 5.5 0 0 1 0 11H11")]
+    static let listBullets: [SVGElement] = [.path("M9 7h11M9 12h11M9 17h11"),
+                                            .circle(5, 7, 1), .circle(5, 12, 1), .circle(5, 17, 1)]
+    static let star: [SVGElement] = [.path("M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z")]
     static let trashAction: [SVGElement] = [.path("M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 11.2a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8L17.5 7")]
     static let pencil: [SVGElement] = [.path("M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4")]
     static let unavailable: [SVGElement] = [.path("M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12h8")]

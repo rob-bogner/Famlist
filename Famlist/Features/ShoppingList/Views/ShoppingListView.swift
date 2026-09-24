@@ -18,7 +18,7 @@
 
  🔰 Notes for Beginners:
  - Die Hybrid-Sheets sind bewusst KEINE `.sheet()`-Präsentationen (eigene Radien, kein System-Glas).
-   Listen-Übersicht, Import und Profil sind nicht Teil des Designs und bleiben System-Sheets.
+   Import, Profil, Teilen und Mitglieder sind nicht Teil des Designs und bleiben System-Sheets.
  - Light/Dark folgt dem System (`colorScheme`), der Akzent ist der Design-Standard.
  - Oben und unten gilt die echte Safe Area. Auf dem Referenzgerät (Top 62 / Bottom 34)
    ergibt das exakt die Design-Abstände, auf anderen Geräten rutscht nichts unter Notch oder Home-Indikator.
@@ -41,7 +41,6 @@ struct ShoppingListView: View {
     @State private var activeSheet: ActiveListSheet?
     @State private var openRow: OpenSwipeRow?
     @State private var pendingConfirmation: ListConfirmation?
-    @State private var showListsOverview = false
     @State private var showImport = false
     @State private var showProfile = false
     @State private var showShareSheet = false
@@ -69,13 +68,6 @@ struct ShoppingListView: View {
         }
         .ignoresSafeArea(.keyboard)
         .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)
-        .sheet(isPresented: $showListsOverview) {
-            ListsOverviewView()
-                .environmentObject(listViewModel)
-                .environmentObject(session)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-        }
         .sheet(isPresented: $showShareSheet) {
             ShareListView(list: listViewModel.defaultList,
                           currentPublicId: session.currentProfile?.publicId ?? "")
@@ -127,7 +119,7 @@ struct ShoppingListView: View {
                     t: t,
                     openRow: $openRow,
                     onSearch: openSearch,
-                    onShowLists: { showListsOverview = true },
+                    onShowLists: openLists,
                     onEdit: { activeSheet = .edit($0) },
                     onShowImage: { activeSheet = .productImage($0) },
                     moreMenu: { moreMenu }
@@ -191,6 +183,15 @@ struct ShoppingListView: View {
             EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
         case .productImage(let item):
             ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
+        case .lists:
+            MyListsSheet(k: k, maxHeight: maxHeight, onClose: closeSheet,
+                         onCreate: { activeSheet = .listName(.create) },
+                         onRename: { activeSheet = .listName(.rename($0)) })
+        case .listName(let mode):
+            ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {
+                hideKeyboard()
+                activeSheet = .lists             // zurück zur Listenverwaltung
+            }
         }
     }
 
@@ -247,6 +248,11 @@ struct ShoppingListView: View {
     private func openSearch() {
         openRow = nil
         activeSheet = listViewModel.catalogRepository == nil ? .newItem(initialName: "") : .search
+    }
+
+    private func openLists() {
+        openRow = nil
+        activeSheet = .lists
     }
 
     private func closeSheet() {

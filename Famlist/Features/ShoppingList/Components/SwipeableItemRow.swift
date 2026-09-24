@@ -22,7 +22,7 @@
  - VoiceOver erreicht dieselben Aktionen über Accessibility-Actions.
 
  📝 Last Change:
- - Wischgeste neu: UIKit-Pan statt DragGesture, Gummiband, Geschwindigkeits-Entscheidung, stufenlose Aktionen.
+ - Glas-Aktionen nach GlassActionButton ausgelagert (gemeinsam mit den Listen-Karten).
  ------------------------------------------------------------------------
  */
 
@@ -109,11 +109,12 @@ struct SwipeableItemRow: View {
             UndoActionButton(t: t, isArmed: isArmedTrailing) { perform(onToggleChecked) }
         } else {
             HStack(spacing: 8) {
-                SwipeActionButton(t: t, style: .delete, title: "Löschen", icon: Icon.trashAction) { perform(onDelete) }
-                SwipeActionButton(t: t, style: .edit, title: "Bearbeiten", icon: Icon.pencil) { perform(onEdit) }
-                SwipeActionButton(t: t, style: .unavailable,
+                GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: t.sub) { perform(onDelete) }
+                GlassActionButton(style: .edit, title: "Bearbeiten", icon: Icon.pencil, labelColor: t.sub) { perform(onEdit) }
+                GlassActionButton(style: .unavailable,
                                   title: item.isUnavailable ? "Verfügbar" : "Nicht verfügbar",
-                                  icon: item.isUnavailable ? Icon.restore : Icon.unavailable) { perform(onToggleUnavailable) }
+                                  icon: item.isUnavailable ? Icon.restore : Icon.unavailable,
+                                  labelColor: t.sub) { perform(onToggleUnavailable) }
             }
         }
     }
@@ -263,63 +264,6 @@ private struct LeadingCheckAction: View {
                               .drop(0, 10, 20, -8, colors.3)]))
                 .scaleEffect(isArmed ? 1.12 : 0.7 + 0.3 * progress)
                 .contentShape(Circle())
-    }
-}
-
-// MARK: - Swipe Action Button
-
-/// Glas-Aktion 64 × 52, Radius 20, darunter Beschriftung 12/600 (Spalte 76 breit).
-private struct SwipeActionButton: View {
-    enum Style {
-        case delete, edit, unavailable
-
-        var colors: (String, String, String, Color) {
-            switch self {
-            case .delete:      return ("#FF8A80", "#E5484D", "#B4232A", .rgba(229, 72, 77, 0.6))
-            case .edit:        return ("#8DB8FF", "#3B7BF6", "#1F4FC0", .rgba(59, 123, 246, 0.6))
-            case .unavailable: return ("#FFC08A", "#F08A2C", "#BD5F0E", .rgba(240, 138, 44, 0.6))
-            }
-        }
-    }
-
-    let t: ListTheme
-    let style: Style
-    let title: String
-    let icon: [SVGElement]
-    let action: () -> Void
-
-    var body: some View {
-        let (c1, c2, c3, glow) = style.colors
-        VStack(spacing: 6) {
-            Button(action: action) {
-                SVGIcon(icon, size: 22, color: .white, lineWidth: 2.1)
-                    .frame(width: 64, height: 52)
-                    .background(alignment: .top) {
-                        GlossEllipse(opacity: 0.5)
-                            .frame(height: 20)
-                            .padding(.horizontal, 8)
-                            .padding(.top, 2)
-                    }
-                    .clipShape(RR(20))
-                    .background(CSSBox(
-                        shape: RR(20),
-                        paint: .radialCircle(UnitPoint(x: 0.32, y: 0.2),
-                                             [stop(.hex(c1), 0), stop(.hex(c2), 0.55), stop(.hex(c3), 1)]),
-                        shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.5)),
-                                  .inner(0, -3, 8, 0, .rgba(0, 0, 0, 0.18)),
-                                  .drop(0, 10, 20, -8, glow)]))
-                    .contentShape(RR(20))
-            }
-            .buttonStyle(.plain)
-            .accessibilityHidden(true)
-
-            Text(title)
-                .font(AppFont.dm(12, 600))
-                .foregroundStyle(t.sub)
-                .lineLimit(1)
-                .fixedSize()           // white-space: nowrap – darf mittig über 76 pt hinausragen
-        }
-        .frame(width: 76, height: 94)
     }
 }
 

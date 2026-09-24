@@ -13,7 +13,7 @@
  - Die Werte tragen nur Wert-Typen (ItemModel), keine SwiftData-Modelle.
 
  📝 Last Change:
- - Initial creation (Hybrid-Redesign).
+ - Sheets „Meine Listen“ und Listen-Name ergänzt.
  ------------------------------------------------------------------------
  */
 
@@ -25,6 +25,8 @@ enum ActiveListSheet: Equatable, Identifiable {
     case newItem(initialName: String)
     case edit(ItemModel)
     case productImage(ItemModel)
+    case lists
+    case listName(ListNameMode)
 
     var id: String {
         switch self {
@@ -32,6 +34,8 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .newItem: return "newItem"
         case .edit(let item): return "edit-\(item.id)"
         case .productImage(let item): return "image-\(item.id)"
+        case .lists: return "lists"
+        case .listName: return "listName"
         }
     }
 }

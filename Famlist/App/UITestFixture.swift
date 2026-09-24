@@ -11,10 +11,11 @@
  🔰 Notes for Beginners:
  - Nur in DEBUG-Builds enthalten; Release-Builds kennen diesen Typ nicht.
  - Genutzt von FamlistUITests/SwipeUITests (Wischgeste auf Gerät oder Simulator).
- - Die Artikelnamen („Äpfel“, „Butter“ …) sind Teil des Test-Vertrags; beim Ändern die UI-Tests anpassen.
+ - Die Artikelnamen („Äpfel“, „Butter“ …) und Listen („My List“, „Drogerie“, geteilte „WG-Einkauf“)
+   sind Teil des Test-Vertrags; beim Ändern die UI-Tests anpassen.
 
  📝 Last Change:
- - Aus der UI-Test-Kopie der Hybrid-Redesign-Session übernommen.
+ - Drei Listen und ein angemeldetes Testprofil für das Sheet „Meine Listen“.
  ------------------------------------------------------------------------
  */
 
@@ -33,16 +34,31 @@ enum UITestFixture {
                                itemStore: SwiftDataItemStore(context: container.mainContext),
                                listStore: SwiftDataListStore(context: container.mainContext))
         vm.configure(syncEngine: PreviewSyncEngine(repository: repo))
-        vm.defaultList = ListModel(id: vm.listId, ownerId: UUID(), title: "My List", isDefault: true,
-                                   createdAt: Date(), updatedAt: Date())
+        let active = ListModel(id: vm.listId, ownerId: ownerId, title: "My List", isDefault: true,
+                               createdAt: Date(), updatedAt: Date())
+        vm.defaultList = active
+        vm.allLists = [active,
+                       ListModel(id: UUID(), ownerId: ownerId, title: "Drogerie", isDefault: false,
+                                 createdAt: Date(), updatedAt: Date()),
+                       ListModel(id: UUID(), ownerId: UUID(), title: "WG-Einkauf", isDefault: false,
+                                 createdAt: Date(), updatedAt: Date())]
         for (name, category) in sampleItems {
             vm.addItem(ItemModel(name: name, units: 1, category: category.rawValue, listId: vm.listId.uuidString))
         }
+        vm.listItemCounts = Dictionary(uniqueKeysWithValues: vm.allLists.map { ($0.id, $0.id == vm.listId ? sampleItems.count : 2) })
         return vm
     }()
 
-    static let session = AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
-                                             lists: PreviewListsRepository(), listViewModel: listVM)
+    /// Owner of "My List" and "Drogerie"; "WG-Einkauf" belongs to someone else (shared list).
+    private static let ownerId = UUID()
+
+    static let session: AppSessionViewModel = {
+        let session = AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
+                                          lists: PreviewListsRepository(), listViewModel: listVM)
+        session.currentProfile = Profile(id: ownerId, publicId: "ui-test", username: "uitest", fullName: "UI Test",
+                                         avatarUrl: nil, createdAt: nil, updatedAt: nil)
+        return session
+    }()
 
     private static let sampleItems: [(String, ItemCategory)] = [
         ("Butter", .milch), ("Joghurt", .milch), ("Käse", .milch),
