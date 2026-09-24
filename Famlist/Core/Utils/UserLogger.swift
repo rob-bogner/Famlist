@@ -304,6 +304,16 @@ struct UserLog {
             log("🗂️ „\(name)“ gespeichert")
         }
 
+        /// Barcode erkannt und Artikel gefunden
+        static func barcodeRecognized(name: String) {
+            log("📷 Barcode erkannt: „\(name)“")
+        }
+
+        /// Barcode unbekannt → Neuer Artikel
+        static func barcodeUnknown(code: String) {
+            log("📷 Unbekannter Barcode \(code) – neuer Artikel wird angelegt")
+        }
+
         /// Sortierung der Liste geändert
         static func sortChanged(to order: String) {
             log("↕️ Sortierung: \(order)")

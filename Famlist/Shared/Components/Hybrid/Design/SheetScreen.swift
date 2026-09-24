@@ -26,17 +26,20 @@ struct SheetScreen<Sheet: View>: View {
     @Environment(\.hybridHosted) private var hosted
 
     var body: some View {
-        let k = SheetTheme(appearance, accentHex: accentHex)
-        ZStack(alignment: .bottom) {
-            if !hosted {
+        if hosted {
+            // App: Das Sheet bestimmt seine Höhe selbst; der Host legt es unten bündig ab.
+            sheet()
+        } else {
+            let k = SheetTheme(appearance, accentHex: accentHex)
+            ZStack(alignment: .bottom) {
                 DesignListScreen(appearance: appearance, accentHex: accentHex, state: .normal)
                     .blur(radius: 3, opaque: false)      // opaque: true wird pixelig (siehe ShoppingListView)
                     .allowsHitTesting(false)
                 k.scrim
+                sheet()
             }
-            sheet()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea()
     }
 }

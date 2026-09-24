@@ -46,6 +46,8 @@ struct ShoppingListView: View {
     @State var showImport = false
     @State var showProfile = false
     @State var showMembersSheet = false
+    /// „Artikel verwalten“ bleibt beim Wechsel ins Bearbeiten-Sheet erhalten.
+    @State var manageItemsVM: ManageItemsViewModel?
 
     var appearance: Appearance { Appearance(colorScheme) }
 
@@ -144,9 +146,10 @@ struct ShoppingListView: View {
         activeSheet = listViewModel.catalogRepository == nil ? .newItem(initialName: "") : .search
     }
 
-    /// Scan-Knopf im Suchfeld (Barcode-Scanner folgt in Phase 3).
+    /// Scan-Knopf im Suchfeld → Barcode-Scanner (SPEC §3.2).
     func openScanner() {
         openRow = nil
+        activeSheet = .barcode
     }
 
     func openLists() {

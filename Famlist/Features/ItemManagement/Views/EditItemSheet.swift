@@ -31,14 +31,18 @@ struct EditItemSheet: View {
     let maxHeight: CGFloat
     let keyboardHeight: CGFloat
     let onClose: () -> Void
+    /// Eigene Speicher-Aktion (Artikel verwalten → Artikelstamm). nil = Listenartikel aktualisieren.
+    var onSave: ((ItemModel) -> Void)?
 
-    init(item: ItemModel, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat, onClose: @escaping () -> Void) {
+    init(item: ItemModel, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat,
+         onClose: @escaping () -> Void, onSave: ((ItemModel) -> Void)? = nil) {
         _formVM = StateObject(wrappedValue: ItemFormViewModel(item: item))
         self.item = item
         self.k = k
         self.maxHeight = maxHeight
         self.keyboardHeight = keyboardHeight
         self.onClose = onClose
+        self.onSave = onSave
     }
 
     private var bottomInset: CGFloat { keyboardHeight > 0 ? keyboardHeight + 14 : 34 }
@@ -108,7 +112,11 @@ struct EditItemSheet: View {
         formVM.validateAll()
         guard formVM.isValid else { return }
         let updated = formVM.toItemModel(existingId: item.id, listId: item.listId, ownerPublicId: item.ownerPublicId)
-        listViewModel.updateItem(updated)
+        if let onSave {
+            onSave(updated)
+        } else {
+            listViewModel.updateItem(updated)
+        }
         onClose()
     }
 }

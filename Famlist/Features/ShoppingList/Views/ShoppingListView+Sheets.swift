@@ -31,6 +31,7 @@ extension ShoppingListView {
                     .accessibilityHidden(true)
             }
             if let sheet = activeSheet {
+                // Scanner ist Vollbild und bringt seinen eigenen Hintergrund mit.
                 sheetView(sheet, k: k, maxHeight: maxHeight)
                     .environment(\.hybridSheetMaxHeight, maxHeight)
                     .id(sheet.id)
@@ -52,8 +53,27 @@ extension ShoppingListView {
                                 onClose: closeSheet,
                                 onCreateNew: { activeSheet = .newItem(initialName: $0) })
             }
-        case .newItem(let name):
-            NewItemSheet(initialName: name, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
+        case .newItem(let name, let barcode):
+            NewItemSheet(initialName: name, barcode: barcode, k: k, maxHeight: maxHeight,
+                         keyboardHeight: keyboard.height, onClose: closeSheet)
+        case .barcode:
+            BarcodeScanSheet(viewModel: BarcodeScanViewModel(catalog: listViewModel.catalogRepository,
+                                                             global: listViewModel.globalCatalogRepository),
+                             appearance: appearance,
+                             previewProduct: designScanPreview,
+                             onClose: closeSheet,
+                             onAdd: addScanned,
+                             onUnknown: { activeSheet = .newItem(initialName: "", barcode: $0) })
+        case .manageItems:
+            if let vm = manageItemsVM {
+                ManageItemsSheet(viewModel: vm, appearance: appearance, onClose: closeSheet,
+                                 onEdit: { activeSheet = .editCatalog($0) },
+                                 onPriceHistory: nil)
+            }
+        case .editCatalog(let entry):
+            EditItemSheet(item: entry.toEditableItem(), k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
+                          onClose: { hideKeyboard(); activeSheet = .manageItems },
+                          onSave: { manageItemsVM?.update(entry.applying($0)) })
         case .edit(let item):
             EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
         case .productImage(let item):
@@ -68,5 +88,29 @@ extension ShoppingListView {
                 activeSheet = .lists             // zurück zur Listenverwaltung
             }
         }
+    }
+
+    /// Nur DEBUG `-designSheet barcode`: Karte „Artikel erkannt“ wie im Design (Simulator hat keine Kamera).
+    private var designScanPreview: ScannedProduct? {
+        #if DEBUG
+        return UserDefaults.standard.string(forKey: "designSheet") == "barcode" ? .designSample : nil
+        #else
+        return nil
+        #endif
+    }
+
+    /// Barcode-Scanner: erkannten Artikel mit Menge zur Liste hinzufügen.
+    private func addScanned(_ product: ScannedProduct, quantity: Int) {
+        var item = product.entry.toItemModel(listId: listViewModel.listId.uuidString,
+                                             ownerPublicId: listViewModel.defaultList?.ownerId.uuidString)
+        item.units = quantity
+        listViewModel.addItem(item, barcode: product.barcode)
+    }
+
+    /// Öffnet „Artikel verwalten“ (ViewModel lebt über das Bearbeiten-Sheet hinweg).
+    func openManageItems() {
+        guard let repo = listViewModel.catalogRepository else { return }
+        if manageItemsVM == nil { manageItemsVM = ManageItemsViewModel(repository: repo) }
+        activeSheet = .manageItems
     }
 }

@@ -22,7 +22,13 @@ import Foundation
 /// The Hybrid sheet currently presented above the shopping list.
 enum ActiveListSheet: Equatable, Identifiable {
     case search
-    case newItem(initialName: String)
+    case newItem(initialName: String, barcode: String? = nil)
+    /// Barcode-Scanner (Vollbild, Kamera).
+    case barcode
+    /// Artikel verwalten (Artikelstamm).
+    case manageItems
+    /// Artikel des Artikelstamms bearbeiten (aus „Artikel verwalten“).
+    case editCatalog(ItemCatalogEntry)
     case edit(ItemModel)
     case productImage(ItemModel)
     case lists
@@ -32,6 +38,9 @@ enum ActiveListSheet: Equatable, Identifiable {
         switch self {
         case .search: return "search"
         case .newItem: return "newItem"
+        case .barcode: return "barcode"
+        case .manageItems: return "manageItems"
+        case .editCatalog(let entry): return "editCatalog-\(entry.id)"
         case .edit(let item): return "edit-\(item.id)"
         case .productImage(let item): return "image-\(item.id)"
         case .lists: return "lists"

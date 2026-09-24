@@ -313,7 +313,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     // MARK: - CRUD Operations
     
     /// Adds a new item after normalizing fields (e.g., measure, listId).
-    func addItem(_ item: ItemModel) {
+    /// - Parameter barcode: EAN/UPC aus dem Barcode-Scanner; wird im Artikelstamm gemerkt.
+    func addItem(_ item: ItemModel, barcode: String? = nil) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
@@ -351,7 +352,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         // ownerPublicId is resolved by the repository from the active auth session,
         // so we pass an empty placeholder here to avoid a nil-guard race condition.
         if let catalogRepo = catalogRepository {
-            let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
+            var catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
+            catalogEntry.barcode = barcode
             Task {
                 do {
                     try await catalogRepo.save(catalogEntry)

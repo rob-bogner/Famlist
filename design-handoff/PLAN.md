@@ -7,7 +7,7 @@ Stand: 24.09.2026 · Branch `redesign-hybrid` (abgezweigt von `main` 20ea307)
 - [x] Phase 0 – Bestandsaufnahme (dieses Dokument)
 - [x] Phase 1 – Fundament
 - [x] Phase 2 – Liste und Dock
-- [ ] Phase 3 – Artikel
+- [x] Phase 3 – Artikel
 - [ ] Phase 4 – Listen, Teilen, Konto
 - [ ] Phase 5 – Einstieg
 - [ ] Phase 6 – Kategorien
@@ -186,6 +186,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Phase | Build | Tests | Pixel-Abgleich (iPhone 17 Pro, `-uiTestFixture -designFixture`) |
 |---|---|---|---|
 | 1 | grün | – | – |
+| 3 | grün | 432 bestanden, 0 fehlgeschlagen (8 neue: Artikel verwalten, Barcode-Suche) | BarcodeScan, ManageItems, NewItem: deckungsgleich; Migration 008 angewandt und geprüft |
 | 2 | grün | 423 bestanden, 0 fehlgeschlagen (inkl. 23 UI-Tests, 20 neue Unit-Tests) | Hybrid, MenuOverlay, SortMenu, CopyChoice, CopyDone, DeleteChoice, UndoToast (Light), HybridDark, SortMenuDark, MenuOverlayDark: deckungsgleich bis auf die Punkte in §9 |
 
 ## 9. Abweichungen vom Design (werden je Phase ergänzt)
@@ -200,4 +201,9 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | CopyChoice | Vorschau höchstens 8 Zeilen | Design zeigt 2 Zeilen; lange Listen würden das Popover über den Bildschirm schieben |
 | DeleteChoice | Untertitel „Offene Artikel bleiben“, wenn Abgehakte vorhanden | Design zeigt nur „Noch nichts abgehakt“ |
 | Dock | Weichzeichner (`.ultraThinMaterial`) in Light und Dark | `backdrop-filter` des Designs; ohne ihn scheinen Karten durch die zu 84 % deckende Leiste |
+| ManageItems | Filterchips scrollen waagerecht; Chips = „Alle“ + vorhandene Kategorien | Design zeigt feste Chips mit abgeschnittenem Rand |
+| ManageItems | Zweite Zeile „Marke · 1 Einheit“ bzw. „Kategorie · 1 Einheit“ | Artikelstamm speichert Einheit, keine Packungsgröße („250 g“ im Design) |
+| BarcodeScan | Ohne Kamera (Simulator) Hinweis „Kamera nicht verfügbar“ statt „Kamerabild“; Knopf „Licht“ gedimmt | Platzhalter des Designs |
+| BarcodeScan | Mengen-Kreis erhöht per Tippen 1×…9× | Design zeigt nur „1×“ |
+| Suchen | Eigene Artikel und Open-Food-Facts in EINER Liste „n Treffer“ | Design SearchResults; vorher zwei Abschnitte |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |

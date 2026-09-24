@@ -44,6 +44,8 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
     var measure: String
     var price: Double
     var imageData: String?
+    /// EAN/UPC-Code, wenn der Artikel per Barcode-Scanner angelegt wurde (Migration 008).
+    var barcode: String? = nil
 
     // MARK: - CodingKeys (maps camelCase Swift properties to snake_case DB columns)
 
@@ -57,6 +59,7 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
         case measure
         case price
         case imageData = "image_data"
+        case barcode
     }
 
     // MARK: - Factory
@@ -77,6 +80,25 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
     }
 
     // MARK: - Conversion
+
+    /// Artikel verwalten: Eintrag als ItemModel mit gleicher ID bearbeiten (EditItemSheet).
+    func toEditableItem() -> ItemModel {
+        ItemModel(id: id, imageData: imageData, name: name, units: 1, measure: measure, price: price,
+                  category: category, productDescription: productDescription, brand: brand)
+    }
+
+    /// Übernimmt die bearbeiteten Felder zurück in den Eintrag (ID, Besitzer und Barcode bleiben).
+    func applying(_ item: ItemModel) -> ItemCatalogEntry {
+        var copy = self
+        copy.name = item.name
+        copy.brand = item.brand
+        copy.category = item.category
+        copy.productDescription = item.productDescription
+        copy.measure = item.measure
+        copy.price = item.price
+        copy.imageData = item.imageData
+        return copy
+    }
 
     /// Converts this catalog entry into a new ItemModel ready to be added to a list.
     /// - Parameters:
@@ -111,6 +133,26 @@ protocol ItemCatalogRepository {
 
     /// Upserts a catalog entry. Entries with the same owner + lowercase name are updated, not duplicated.
     func save(_ entry: ItemCatalogEntry) async throws
+
+    /// Alle Einträge des Artikelstamms (Artikel verwalten), alphabetisch.
+    func fetchAll() async throws -> [ItemCatalogEntry]
+
+    /// Ändert einen bestehenden Eintrag über seine ID (auch der Name darf sich ändern).
+    func update(_ entry: ItemCatalogEntry) async throws
+
+    /// Löscht einen Eintrag endgültig (Artikel verwalten → Wischen).
+    func delete(id: String) async throws
+
+    /// Sucht einen eigenen Artikel mit diesem Barcode (Barcode-Scanner).
+    func find(barcode: String) async throws -> ItemCatalogEntry?
+}
+
+extension ItemCatalogRepository {
+    // Standard-Implementierungen, damit Test-Doubles nur das Nötige überschreiben müssen.
+    func fetchAll() async throws -> [ItemCatalogEntry] { [] }
+    func update(_ entry: ItemCatalogEntry) async throws { try await save(entry) }
+    func delete(id: String) async throws {}
+    func find(barcode: String) async throws -> ItemCatalogEntry? { nil }
 }
 
 // MARK: - Preview / In-Memory Implementation
@@ -137,5 +179,21 @@ final class PreviewItemCatalogRepository: ItemCatalogRepository {
         } else {
             entries.append(entry)
         }
+    }
+
+    func fetchAll() async throws -> [ItemCatalogEntry] {
+        entries.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    func update(_ entry: ItemCatalogEntry) async throws {
+        if let idx = entries.firstIndex(where: { $0.id == entry.id }) { entries[idx] = entry }
+    }
+
+    func delete(id: String) async throws {
+        entries.removeAll { $0.id == id }
+    }
+
+    func find(barcode: String) async throws -> ItemCatalogEntry? {
+        entries.first { $0.barcode == barcode }
     }
 }

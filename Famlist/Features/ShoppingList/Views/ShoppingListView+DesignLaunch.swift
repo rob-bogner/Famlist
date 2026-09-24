@@ -51,6 +51,12 @@ extension ShoppingListView {
         case "edit": return listViewModel.items.first.map { .edit($0) }
         case "productImage": return listViewModel.items.first.map { .productImage($0) }
         case "lists": return .lists
+        case "barcode": return .barcode
+        case "manageItems":
+            if let repo = listViewModel.catalogRepository, manageItemsVM == nil {
+                manageItemsVM = ManageItemsViewModel(repository: repo)
+            }
+            return .manageItems
         default: return nil
         }
     }

@@ -57,4 +57,16 @@ final class SupabaseGlobalProductCatalogRepository: GlobalProductCatalogReposito
             .value
         return results
     }
+
+    /// Barcode-Scanner: Produkt zum EAN/UPC-Code (Primärschlüssel `code`).
+    func product(code: String) async throws -> GlobalProductEntry? {
+        let rows: [GlobalProductEntry] = try await client
+            .from("global_product_catalog")
+            .select("code,name,brand,category,measure,image_url,scans_n")
+            .eq("code", value: code)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first
+    }
 }

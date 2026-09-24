@@ -37,6 +37,7 @@ enum UITestFixture {
                                itemStore: SwiftDataItemStore(context: container.mainContext),
                                listStore: SwiftDataListStore(context: container.mainContext))
         vm.configure(syncEngine: PreviewSyncEngine(repository: repo))
+        vm.configure(catalogRepository: PreviewItemCatalogRepository())
         let active = ListModel(id: vm.listId, ownerId: ownerId, title: "My List", isDefault: true,
                                createdAt: Date(), updatedAt: Date())
         vm.defaultList = active

@@ -199,7 +199,8 @@ extension ShoppingListView {
         activeOverlay = nil
         switch item {
         case .members: showMembersSheet = true
-        case .manageItems, .manageCategories, .receipt: break   // folgt in Phase 3/6/7
+        case .manageItems: openManageItems()
+        case .manageCategories, .receipt: break                 // folgt in Phase 6/7
         case .importClipboard: showImport = true
         case .settings: showProfile = true                      // Einstellungen folgen in Phase 4
         }
