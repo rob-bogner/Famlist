@@ -88,7 +88,11 @@ struct ItemModel: Identifiable, Hashable, Codable {
 
     /// Last update timestamp of the item.
     var updatedAt: Date?
-    
+
+    /// Soft-delete timestamp. Non-nil when the item is locally deleted (pendingDelete / tombstoned).
+    /// Not persisted in the database — derived from `ItemEntity.deletedAt` at mapping time.
+    var deletedAt: Date? = nil
+
     // MARK: - CRDT Metadata (Optional for backward compatibility)
     
     /// HLC timestamp in milliseconds for causal ordering
@@ -105,7 +109,11 @@ struct ItemModel: Identifiable, Hashable, Codable {
     
     /// Identifier of last modifier (for conflict tracking)
     var lastModifiedBy: String?
-    
+
+    /// Whether the last sync attempt for this item permanently failed (all retries exhausted).
+    /// Not persisted in the database — derived from `ItemEntity.syncStatus` at mapping time.
+    var isSyncFailed: Bool = false
+
     // MARK: - Sorting Logic
     
     /// Determines the sort order between two items based on creation date and ID.
@@ -184,11 +192,13 @@ struct ItemModel: Identifiable, Hashable, Codable {
         ownerPublicId: String? = nil,
         createdAt: Date? = nil,
         updatedAt: Date? = nil,
+        deletedAt: Date? = nil,
         hlcTimestamp: Int64? = nil,
         hlcCounter: Int? = nil,
         hlcNodeId: String? = nil,
         tombstone: Bool? = nil,
-        lastModifiedBy: String? = nil
+        lastModifiedBy: String? = nil,
+        isSyncFailed: Bool = false
     ) {
         self.id = id // Assigns the unique identifier
         self.imageUrl = imageUrl
@@ -206,11 +216,13 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.ownerPublicId = ownerPublicId
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
         self.hlcTimestamp = hlcTimestamp
         self.hlcCounter = hlcCounter
         self.hlcNodeId = hlcNodeId
         self.tombstone = tombstone
         self.lastModifiedBy = lastModifiedBy
+        self.isSyncFailed = isSyncFailed
     }
 
     // MARK: - Decoding

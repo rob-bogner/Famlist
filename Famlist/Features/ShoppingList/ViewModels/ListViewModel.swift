@@ -42,16 +42,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// The items currently displayed in the UI. Changes re-render views.
     @Published var items: [ItemModel] = []
-    
+
     /// Legacy selection state (the Hybrid UI passes the item to EditItemSheet directly).
     @Published var selectedItem: ItemModel?
-    
+
     /// Optional error message surfaced to the UI on operation failures.
     @Published var errorMessage: String?
-    
+
     /// Indicates when the view is performing a long-running action.
     @Published var isLoading: Bool = false
-    
+
     /// The resolved default list for the current user; nil while loading.
     @Published var defaultList: ListModel? = nil
 
@@ -63,6 +63,23 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
     /// Active tab filter ("Alle · Offen · Erledigt"). Display-only state, never persisted or synced.
     @Published var itemFilter: ItemFilter = .all
+
+    // MARK: - Pagination State (FAM-40)
+
+    /// True when more remote pages might be available for the current list.
+    /// Reset to true on Pull-to-Refresh and Sign-Out.
+    @Published var hasMoreItems: Bool = true
+
+    /// True while a remote page fetch is in progress (drives loading indicator).
+    @Published var isLoadingNextPage: Bool = false
+
+    /// Composite cursor pointing to the last loaded remote item.
+    /// Nil triggers loading from the first page. Cleared on Pull-to-Refresh and Sign-Out.
+    var currentCursor: PaginationCursor? = nil
+
+    /// Consecutive empty-page counter for the T3 termination rule:
+    /// after 1 empty page following a full page, hasMoreItems is set to false.
+    var consecutiveEmptyPages: Int = 0
     
     // MARK: - Dependencies & Core State
     
@@ -95,20 +112,40 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Holds the background task that observes live item changes.
     internal var observeTask: Task<Void, Never>?
+
+    /// Beobachtet list_members DELETE-Events für den eingeloggten User.
+    internal var membershipTask: Task<Void, Never>?
     
     /// Retains connectivity subscription so it lives with the view model.
     private var connectivityCancellable: AnyCancellable?
-    
+
     /// Tracks whether realtime observation has started at least once.
     internal var hasObservedActiveList: Bool = false
+
+    /// Sync orchestrator used by loadNextPage() to serialise page fetches with Realtime events.
+    internal var syncOrchestrator: SyncOrchestrator?
+
+    /// Page loader responsible for remote cursor-based pagination.
+    internal var pageLoader: PageLoader?
     
     /// Item identifiers that currently have an optimistic reorder animation in flight.
     /// While they remain here, we keep the local ordering authoritative to avoid jitter.
     internal var pendingAnimatedItemIDs: Set<String> = []
 
+    /// IDs of items freshly applied from a remote source (Realtime event or IncrementalSync delta).
+    /// Drives the one-shot sync-highlight animation in ListRowView.
+    /// Entries are removed automatically after 2 seconds via markRecentlySynced(ids:).
+    /// Never populated by local mutations — only by the Realtime stream handler and runIncrementalSync().
+    @Published var recentlySyncedItemIDs: Set<String> = []
+
     /// Suppresses `refreshItemsFromStore()` during the synchronous forEach phase of bulk-delete.
     /// Prevents per-item SwiftData refreshes from re-rendering the list one item at a time.
     internal var isBulkDeleting = false
+
+    /// True while a bulk operation (import or delete-all) is mutating SwiftData.
+    /// While active, the stream handler, Realtime refreshes, and pagination are suppressed
+    /// so the UI only sees the final stable state (before-bulk or after-bulk), never an intermediate.
+    internal var isBulkMutationActive = false
 
     /// IDs of items currently undergoing a bulk delete operation.
     /// Populated before deletion starts; cleared lazily as items are confirmed removed from SwiftData.
@@ -198,6 +235,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     func configure(globalCatalogRepository: any GlobalProductCatalogRepository) {
         self.globalCatalogRepository = globalCatalogRepository
     }
+
+    /// Injects the SyncOrchestrator and PageLoader for cursor-based pagination (FAM-79/FAM-40).
+    func configure(syncOrchestrator: SyncOrchestrator, pageLoader: PageLoader) {
+        self.syncOrchestrator = syncOrchestrator
+        self.pageLoader = pageLoader
+        syncOrchestrator.onBudgetExceeded = { [weak self] in
+            guard let self else { return }
+            Task { await self.runIncrementalSync() }
+        }
+    }
     
     // MARK: - List Switching
     
@@ -207,6 +254,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         observeTask?.cancel()
         self.listId = newId
         self.items = []
+        recentlySyncedItemIDs = []
+        // Reset pagination state for the new list (cursor is loaded from UserDefaults per listId in startObserving).
+        currentCursor = PaginationCursor.load(listId: newId)
+        hasMoreItems = true
+        isLoadingNextPage = false
+        consecutiveEmptyPages = 0
         startObserving()
     }
     
@@ -214,13 +267,23 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     func clearForSignOut() {
         observeTask?.cancel()
         observeTask = nil
+        membershipTask?.cancel()
+        membershipTask = nil
         items = []
+        recentlySyncedItemIDs = []
         selectedItem = nil
         defaultList = nil
         allLists = []
         listItemCounts = [:]
         itemFilter = .all
         errorMessage = nil
+        // Reset pagination state and clear persisted cursor/timestamp.
+        PaginationCursor.clear(listId: listId)
+        clearLastSyncTimestamp()
+        currentCursor = nil
+        hasMoreItems = true
+        isLoadingNextPage = false
+        consecutiveEmptyPages = 0
         listId = UUID(uuidString: "00000000-0000-0000-0000-000000000000") ?? UUID()
         refreshItemsFromStore()
         hasObservedActiveList = false
@@ -236,13 +299,23 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         normalized.listId = normalized.listId ?? listId.uuidString
 
         // Duplikat-Check: existiert bereits ein ungehacktes Item mit gleichem Namen?
-        if let existing = items.first(where: {
+        if let existingIndex = items.firstIndex(where: {
             $0.name.lowercased() == normalized.name.lowercased() && !$0.isChecked
         }) {
-            var incremented = existing
-            incremented.units += 1
-            UserLog.Data.itemCountIncremented(name: incremented.name, units: incremented.units)
-            updateItem(incremented)
+            var incremented = items[existingIndex]
+            let oldUnits = incremented.units
+            incremented.units = oldUnits + 1
+            UserLog.Data.itemCountIncremented(
+                name: incremented.name,
+                from: oldUnits,
+                to: incremented.units,
+                measure: incremented.measure
+            )
+            // Optimistic update: immediately reflect the incremented count in the UI
+            // without waiting for the async SwiftData round-trip. The subsequent
+            // refreshItemsFromStore() (inside updateItem's Task) will confirm the value.
+            items[existingIndex] = incremented
+            updateItem(incremented, suppressUserLog: true)
             return
         }
 
@@ -269,18 +342,28 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             }
         }
 
+        // Optimistic UI add: show the item immediately without waiting for the
+        // Realtime echo or the async refreshItemsFromStore() round-trip.
+        // The subsequent refreshItemsFromStore() (inside the Task below) will replace
+        // this entry with the authoritative SwiftData entity (deterministic UUID).
+        items.append(normalized)
+
         guard let syncEngine else { return }
         Task {
             await syncEngine.createItem(normalized)
+            // Refresh replaces the optimistic item with the canonical SwiftData entity.
+            await MainActor.run { self.refreshItemsFromStore() }
         }
     }
     
     /// Updates an existing item after normalizing fields.
-    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false) {
+    /// - Parameter suppressUserLog: Pass `true` when the caller has already logged the action
+    ///   (e.g. `toggleItemChecked`, increment path in `addItem`) to avoid duplicate logs.
+    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false, suppressUserLog: Bool = false) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
-        
+
         logVoid(params: (
             action: "updateItem",
             itemId: normalized.id,
@@ -288,12 +371,22 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             category: normalized.category ?? "nil",
             description: normalized.productDescription ?? "nil"
         ))
-        let displayNameForLog = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        UserLog.Data.itemUpdated(
-            name: displayNameForLog.isEmpty ? "Artikel" : displayNameForLog,
-            units: normalized.units > 1 ? normalized.units : nil,
-            measure: normalized.measure.isEmpty ? nil : normalized.measure
-        )
+
+        if !suppressUserLog {
+            let displayName = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+            let resolvedName = displayName.isEmpty ? "Artikel" : displayName
+            // Detect quantity change by comparing with current items snapshot (still holds old state at call time).
+            if let oldItem = items.first(where: { $0.id == normalized.id }), oldItem.units != normalized.units {
+                UserLog.Data.itemQuantityChanged(
+                    name: resolvedName,
+                    from: oldItem.units,
+                    to: normalized.units,
+                    measure: normalized.measure
+                )
+            } else {
+                UserLog.Data.itemUpdated(name: resolvedName)
+            }
+        }
 
         // Update personal item catalog (fire-and-forget; keeps catalog in sync with edits)
         if let catalogRepo = catalogRepository {
@@ -320,6 +413,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         Task {
             await syncEngine.updateItem(normalized)
             await MainActor.run {
+                // Refresh UI from SwiftData so the edit (e.g. price change) is immediately visible
+                // without waiting for a Realtime echo. storeLocally() already wrote the correct
+                // value; this call propagates it to self.items.
+                self.refreshItemsFromStore()
                 if trackPendingAnimation {
                     self.pendingAnimatedItemIDs.remove(normalized.id)
                 }
@@ -330,9 +427,15 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Deletes an item by id within the current list.
     /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
-        // User-friendly log
-        let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        UserLog.Data.itemDeleted(name: displayName.isEmpty ? "Artikel" : displayName)
+        // User-friendly log — nur außerhalb Bulk-Delete, um N Einzellogs beim Bulk zu vermeiden
+        if !isBulkDeleting {
+            let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+            UserLog.Data.itemDeleted(
+                name: displayName.isEmpty ? "Artikel" : displayName,
+                units: item.units,
+                measure: item.measure
+            )
+        }
         
         guard let uuid = UUID(uuidString: item.id) else {
             markItemDeleted(item)
@@ -366,6 +469,11 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }
     }
     
+    /// Re-queues a permanently-failed item for sync.
+    func retryItem(_ item: ItemModel) {
+        Task { await syncEngine?.retryItem(item) }
+    }
+
     /// Toggles the checked state of an item and persists the change via updateItem.
     /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
     func toggleItemChecked(_ item: ItemModel) {
@@ -378,12 +486,37 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         items[index] = updatedItem
         items = ListViewModel.currentSortOrder.apply(to: items)
 
+        // Specific check/uncheck log — suppresses generic "bearbeitet" in updateItem.
+        let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        let resolvedName = displayName.isEmpty ? "Artikel" : displayName
+        if updatedItem.isChecked {
+            UserLog.Data.itemChecked(name: resolvedName, units: updatedItem.units, measure: updatedItem.measure)
+        } else {
+            UserLog.Data.itemUnchecked(name: resolvedName, units: updatedItem.units, measure: updatedItem.measure)
+        }
+
         pendingAnimatedItemIDs.insert(updatedItem.id)
-        updateItem(updatedItem, trackPendingAnimation: true)
+        updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true)
     }
     
+    // MARK: - Remote Sync Highlight
+
+    /// Marks items as recently synced from a remote source and schedules their removal after 2 seconds.
+    /// Safe to call with an overlapping set — `formUnion` is idempotent.
+    /// The removal subtracts only the IDs passed in this call, so a concurrent markRecentlySynced()
+    /// for different items is not affected.
+    internal func markRecentlySynced(ids: Set<String>) {
+        guard !ids.isEmpty else { return }
+        recentlySyncedItemIDs.formUnion(ids)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard let self else { return }
+            self.recentlySyncedItemIDs.subtract(ids)
+        }
+    }
+
     // MARK: - Error Handling
-    
+
     /// Stores a user-presentable error string on the main actor.
     @MainActor
     internal func setError(_ error: Error) {

@@ -52,6 +52,28 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     ///   - id: The item identifier to delete.
     ///   - listId: The list that the item belongs to (used to scope deletion and updates in streams).
     func deleteItem(id: String, listId: UUID) async throws // Async delete operation.
+
+    // MARK: - Pagination & Incremental Sync (FAM-79 / FAM-41)
+
+    /// Fetches a page of non-tombstoned items sorted by (created_at ASC, id ASC).
+    /// Uses a composite cursor to guarantee no rows are skipped or duplicated even when
+    /// multiple items share the same created_at timestamp.
+    ///
+    /// - Parameters:
+    ///   - listId: List to scope the query.
+    ///   - cursor: Composite cursor from the previous page. Nil loads from the beginning.
+    ///   - limit: Maximum number of items to return.
+    /// - Returns: Items for this page. Callers should upsert them into SwiftData.
+    func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel]
+
+    /// Fetches all items (including tombstoned) whose updated_at is strictly after `since`.
+    /// Used by IncrementalSync to pull only the delta since the last successful sync.
+    ///
+    /// - Parameters:
+    ///   - listId: List to scope the query.
+    ///   - since: High-water mark timestamp. Items updated before or at this time are excluded.
+    /// - Returns: Changed items (creates, updates, tombstones) since `since`.
+    func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel]
 }
 
 // MARK: - Preview/In-Memory Implementation
@@ -139,5 +161,30 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
     private func broadcast(_ listId: UUID) { // Helper to yield new values to all saved continuations.
         let arr = storage[listId] ?? [] // Read current items or use empty array.
         continuations[listId]?.values.forEach { $0.yield(arr) } // Yield the array to each subscriber's continuation.
+    }
+
+    // MARK: - Pagination & Incremental Sync (Preview Stubs)
+
+    /// Returns the first `limit` non-tombstoned items after the given cursor (or from the start).
+    func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] {
+        let all = storage[listId] ?? []
+        let live = all.filter { $0.tombstone != true }
+        guard let cursor else {
+            return Array(live.prefix(limit))
+        }
+        // Advance past cursor position using the same composite sort (created_at ASC, id ASC).
+        let after = live.filter { item in
+            guard let createdAt = item.createdAt else { return false }
+            if createdAt > cursor.createdAt { return true }
+            if createdAt == cursor.createdAt, item.id > cursor.id.uuidString { return true }
+            return false
+        }
+        return Array(after.prefix(limit))
+    }
+
+    /// Returns items updated after `since` (delta for IncrementalSync).
+    func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel] {
+        let all = storage[listId] ?? []
+        return all.filter { ($0.updatedAt ?? Date.distantPast) > since }
     }
 }

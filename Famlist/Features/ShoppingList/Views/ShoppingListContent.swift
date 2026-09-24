@@ -45,6 +45,12 @@ struct ShoppingListContent<MoreMenu: View>: View {
                 .padding(.top, 18)
             openSections
             checkedSection
+            if listViewModel.isLoadingNextPage {
+                ProgressView()                      // FAM-40: nächste Seite wird geladen
+                    .tint(t.accent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 20)
+            }
             if showsEmptyState {
                 emptyState
                     .padding(.top, 40)
@@ -85,6 +91,11 @@ struct ShoppingListContent<MoreMenu: View>: View {
         }
     }
 
+    /// Letzte sichtbare Karte (Abgehakte stehen unten, sonst die letzte offene).
+    private var lastVisibleItemId: String? {
+        listViewModel.visibleCheckedItems.last?.id ?? listViewModel.visibleOpenGroups.last?.items.last?.id
+    }
+
     private func row(for item: ItemModel) -> some View {
         SwipeableItemRow(
             t: t,
@@ -98,9 +109,17 @@ struct ShoppingListContent<MoreMenu: View>: View {
             },
             onEdit: { onEdit(item) },
             onToggleUnavailable: { listViewModel.toggleItemUnavailable(item) },
-            onTapImage: { onShowImage(item) }
+            onTapImage: { onShowImage(item) },
+            isRecentlySynced: listViewModel.recentlySyncedItemIDs.contains(item.id),
+            onRetry: { listViewModel.retryItem(item) }
         )
         .id("\(item.isChecked ? "checked" : "open")-\(item.id)") // eigene Identität je Abschnitt
+        .onAppear {
+            // FAM-40: nächste Seite laden, sobald die letzte sichtbare Karte erscheint.
+            if item.id == lastVisibleItemId && listViewModel.hasMoreItems {
+                Task { await listViewModel.loadNextPage() }
+            }
+        }
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)),
                                 removal: .opacity.combined(with: .scale(scale: 0.9))))
     }

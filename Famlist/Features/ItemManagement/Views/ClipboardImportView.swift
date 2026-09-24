@@ -274,46 +274,33 @@ struct ClipboardImportView: View {
     private func importSelectedItems() {
         guard let result = parseResult else { return }
         guard !isLoading else { return }
-
         isLoading = true
 
+        let selectedParsed = selectedItems.sorted().compactMap { index -> ClipboardImportParser.ParsedItem? in
+            guard index < result.items.count else { return nil }
+            return result.items[index]
+        }
+
         let currentListId = listViewModel.listId
-        let existingIds = Set(listViewModel.items.map(\.id))
+        // Full store state incl. soft-deleted/pendingDelete — not just the UI snapshot.
+        let allLocalItems = listViewModel.fetchAllLocalItems()
 
-        let itemsToImport = selectedItems
-            .sorted()
-            .compactMap { index -> ItemModel? in
-                guard index < result.items.count else { return nil }
-                let parsed = result.items[index]
-                let stableId = parsed.stableId(forList: currentListId)
+        let mergeResult = ImportMergeService.merge(
+            selected: selectedParsed,
+            allLocalItems: allLocalItems,
+            listId: currentListId
+        )
 
-                // FAM-71: Bereits vorhandene Items per deterministischer ID überspringen
-                guard !existingIds.contains(stableId) else { return nil }
+        guard !mergeResult.targets.isEmpty else {
+            isLoading = false
+            dismiss()
+            return
+        }
 
-                return ItemModel(
-                    id: stableId,
-                    name: parsed.name,
-                    units: parsed.units,
-                    measure: parsed.measure,
-                    category: parsed.category,
-                    productDescription: parsed.productDescription,
-                    brand: parsed.brand
-                )
-            }
+        listViewModel.applyBulkImport(mergeResult)
 
-        // User-friendly log
-        UserLog.Data.clipboardImport(count: itemsToImport.count)
-
-        // Add items to list
         Task { @MainActor in
-            defer {
-                isLoading = false
-            }
-
-            for item in itemsToImport {
-                listViewModel.addItem(item)
-            }
-
+            isLoading = false
             dismiss()
         }
     }

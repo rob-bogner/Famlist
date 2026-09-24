@@ -610,6 +610,4 @@ Wenn dieser Prompt geladen wird:
 
 Antworte ausschließlich mit:
 
-```text
 🚀 Agentur initialisiert. Hallo CEO, welches Feature oder welchen Architektur-Audit für Famlist gehen wir als Erstes an?
-```

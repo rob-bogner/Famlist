@@ -106,7 +106,9 @@ final class RealtimeEventProcessor {
         }
     }
     
-    /// Processes an UPDATE event from Realtime
+    /// Processes an UPDATE event from Realtime.
+    /// If the remote payload carries tombstone=true, delegates to applyRemoteTombstone()
+    /// which applies HLC-aware conflict resolution and purges the item from SwiftData.
     /// - Parameters:
     ///   - payload: Raw payload from Supabase Realtime
     ///   - listId: UUID of the list being observed
@@ -120,37 +122,56 @@ final class RealtimeEventProcessor {
                 ))
                 return
             }
-            
+
             let (item, metadata) = try parseItemFromPayload(record)
-            
+
             guard let uuid = UUID(uuidString: item.id) else { return }
-            
+
+            // FAM-41: Remote tombstone → route to canonical delete path.
+            if metadata.tombstone {
+                applyRemoteTombstone(item, remoteMeta: metadata)
+                logVoid(params: (action: "processUpdate.tombstone", itemId: item.id))
+                return
+            }
+
             if let existingEntity = try? itemStore.fetchItem(id: uuid) {
+                // Guard: never overwrite an in-flight local mutation.
+                // A .pendingUpdate / .pendingCreate entity carries changes the SyncEngine has not
+                // yet confirmed with Supabase.  Applying a stale Realtime echo here would reset the
+                // field values (e.g. units=3 → units=1) before the outbound write completes.
+                // This mirrors the identical guard added to runIncrementalSync() (FAM-41).
+                guard existingEntity.syncStatus != .pendingUpdate,
+                      existingEntity.syncStatus != .pendingCreate else {
+                    logVoid(params: (
+                        action: "processUpdate.skip",
+                        itemId: item.id,
+                        reason: "pendingLocalChange",
+                        status: existingEntity.syncStatus.rawValue
+                    ))
+                    return
+                }
+
                 let existingMetadata = extractMetadataFromEntity(existingEntity)
-                
+
                 // Use CRDT conflict resolution
                 if conflictResolver.shouldApplyRemote(localMeta: existingMetadata, remoteMeta: metadata) {
                     applyToEntity(existingEntity, item: item, metadata: metadata)
-                    
-                    // Only mark as synced if we don't have pending local changes
-                    if existingEntity.syncStatus == .synced {
-                        existingEntity.setSyncStatus(.synced)
-                    }
-                    
                     try itemStore.save()
-                    
+
                     logVoid(params: (
                         action: "processUpdate.merge",
                         itemId: item.id,
                         decision: "remote_wins"
                     ))
-                    
-                    UserLog.Sync.realtimeUpdateReceived(name: item.name)
+
                 } else {
                     logVoid(params: (
                         action: "processUpdate.merge",
                         itemId: item.id,
-                        decision: "local_wins"
+                        decision: "local_wins",
+                        localHlcTimestamp: existingEntity.hlcTimestamp as Any,
+                        remoteHlcTimestamp: metadata.hlc.timestamp,
+                        localSyncStatus: existingEntity.syncStatus.rawValue
                     ))
                 }
             } else {
@@ -159,7 +180,7 @@ final class RealtimeEventProcessor {
                 applyMetadataToEntity(entity, metadata: metadata)
                 entity.setSyncStatus(.synced)
                 try itemStore.save()
-                
+
                 logVoid(params: (
                     action: "processUpdate.insertMissing",
                     itemId: item.id
@@ -170,6 +191,39 @@ final class RealtimeEventProcessor {
                 action: "processUpdate.error",
                 error: error.localizedDescription
             ))
+        }
+    }
+
+    // MARK: - Tombstone (FAM-41)
+
+    /// Canonical delete path for remote tombstone events (Realtime UPDATE with tombstone=true
+    /// or IncrementalSync delta with tombstone=true).
+    ///
+    /// Conflict resolution per the plan's conflict matrix:
+    /// - `.synced`, `.pendingDelete`, `.failed`, `.pendingRecovery` → always purge.
+    /// - `.pendingCreate`, `.pendingUpdate` → HLC comparison:
+    ///     remote HLC ≥ local HLC → purge; local HLC > remote → keep local pending op.
+    ///
+    /// Tombstone wins on HLC tie (tiebreaker: delete is preferred for eventual consistency).
+    @MainActor
+    func applyRemoteTombstone(_ item: ItemModel, remoteMeta: CRDTMetadata) {
+        guard let uuid = UUID(uuidString: item.id) else { return }
+        guard let entity = try? itemStore.fetchItem(id: uuid) else { return }
+
+        switch entity.syncStatus {
+        case .synced, .pendingDelete, .failed, .pendingRecovery:
+            try? itemStore.purge(id: uuid)
+            logVoid(params: (action: "applyRemoteTombstone.purge", itemId: item.id, status: entity.syncStatus.rawValue))
+
+        case .pendingCreate, .pendingUpdate:
+            let localMeta = extractMetadataFromEntity(entity)
+            // Remote tombstone wins if it happened after local (or at the same time — tie → delete wins).
+            if !(localMeta.hlc > remoteMeta.hlc) {
+                try? itemStore.purge(id: uuid)
+                logVoid(params: (action: "applyRemoteTombstone.purge", itemId: item.id, reason: "remoteHlcWins"))
+            } else {
+                logVoid(params: (action: "applyRemoteTombstone.localWins", itemId: item.id, reason: "localHlcHigher"))
+            }
         }
     }
     
@@ -209,9 +263,7 @@ final class RealtimeEventProcessor {
         }
         
         // Check if we have a pending local operation for this item
-        var itemName: String?
         if let existingEntity = try? itemStore.fetchItem(id: uuid) {
-            itemName = existingEntity.name // Speichere Namen für User-Log
             if existingEntity.syncStatus == .pendingCreate ||
                existingEntity.syncStatus == .pendingUpdate {
                 // We have local changes - don't delete yet, let sync engine handle it
@@ -232,7 +284,6 @@ final class RealtimeEventProcessor {
             itemId: idString
         ))
         
-        UserLog.Sync.realtimeDeleteReceived(name: itemName)
     }
     
     // MARK: - Helpers
@@ -269,12 +320,29 @@ final class RealtimeEventProcessor {
             if let value = record[key] as? Int {
                 return Double(value)
             }
+            // Handle AnyJSON wrapper: analogous to extractString / extractBool
+            if let anyValue = record[key], String(describing: anyValue) != "<null>" {
+                let str = String(describing: anyValue).replacingOccurrences(of: "AnyJSON.", with: "")
+                if let doubleVal = Double(str) { return doubleVal }
+                if let intVal = Int(str) { return Double(intVal) }
+            }
             return nil
         }
         
         func extractBool(_ key: String) -> Bool? {
             if let value = record[key] as? Bool {
                 return value
+            }
+            // Handle AnyJSON wrapper: AnyJSON.bool(true) describes as "bool(true)"
+            if let anyValue = record[key] {
+                let description = String(describing: anyValue)
+                    .replacingOccurrences(of: "AnyJSON.", with: "")
+                    .lowercased()
+                switch description {
+                case "true", "bool(true)": return true
+                case "false", "bool(false)": return false
+                default: return nil
+                }
             }
             return nil
         }
@@ -327,7 +395,12 @@ final class RealtimeEventProcessor {
             return nil
         }
         
-        let hlcTimestamp = extractInt64("hlc_timestamp") ?? Int64(Date().timeIntervalSince1970 * 1000)
+        // Fallback of 0 (epoch) ensures a row with null hlc_timestamp always loses to any valid
+        // local HLC in CRDT conflict resolution (happenedBefore → remote epoch < local ms ≫ 0).
+        // The previous fallback of Int64(Date().timeIntervalSince1970 * 1000) could TIE with or
+        // beat the freshly-generated local HLC, causing stale Realtime echoes to overwrite
+        // in-flight local changes (e.g. units=3 overwritten back to units=1).
+        let hlcTimestamp = extractInt64("hlc_timestamp") ?? 0
         let hlcCounter = extractInt("hlc_counter") ?? 0
         let hlcNodeId = extractString("hlc_node_id") ?? ""
         let tombstone = extractBool("tombstone") ?? false
@@ -373,8 +446,12 @@ final class RealtimeEventProcessor {
     }
     
     private func extractMetadataFromEntity(_ entity: ItemEntity) -> CRDTMetadata {
-        // Initialize CRDT fields if they're missing (for old data)
-        let timestamp = entity.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000)
+        // Initialize CRDT fields if they're missing (for old data).
+        // Fallback epoch=0 is consistent with parseItemFromPayload's remote fallback.
+        // Using current time here would make legacy items (hlcTimestamp==nil) appear
+        // causally newer than any remote HLC → CRDT always rejects the remote update →
+        // Realtime events silently dropped for items that predate the HLC system (Bug 1).
+        let timestamp = entity.hlcTimestamp ?? 0
         let counter = entity.hlcCounter ?? 0
         let nodeId = entity.hlcNodeId ?? ""
         

@@ -96,27 +96,20 @@ struct ItemSearchSheet: View {
     private var results: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                Text("\(searchVM.results.count) Treffer")
-                    .font(AppFont.dm(13, 600))
-                    .tracking(0.52)                       // 0.04em × 13
-                    .textCase(.uppercase)
-                    .foregroundStyle(k.sub)
-                    .padding(.horizontal, 4)
                 if searchVM.isSearching {
                     ProgressView()
                         .tint(k.accent)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 24)
-                } else if searchVM.results.isEmpty {
+                } else if searchVM.personalResults.isEmpty && searchVM.globalResults.isEmpty {
                     Text(searchVM.errorMessage ?? "Kein passender Artikel. Lege ihn unten neu an.")
                         .font(AppFont.dm(15, 500))
                         .foregroundStyle(searchVM.errorMessage == nil ? k.sub : .hex("#E5484D"))
                         .padding(.horizontal, 4)
                         .padding(.top, 4)
                 }
-                ForEach(searchVM.results) { result in
-                    SearchResultCard(k: k, result: result) { add(result) }
-                }
+                resultSection(String(localized: "itemSearch.section.personal"), searchVM.personalResults)
+                resultSection(String(localized: "itemSearch.section.global"), searchVM.globalResults)
             }
             .padding(.top, 20)
             .padding(.horizontal, 20)
@@ -124,6 +117,23 @@ struct ItemSearchSheet: View {
         }
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
+    }
+
+    /// Eine Ergebnis-Sektion („Deine Artikel“ / „OpenFood“); leere Sektionen entfallen.
+    @ViewBuilder
+    private func resultSection(_ title: String, _ items: [SearchResult]) -> some View {
+        if !searchVM.isSearching && !items.isEmpty {
+            Text("\(title) · \(items.count)")
+                .font(AppFont.dm(13, 600))
+                .tracking(0.52)                       // 0.04em × 13
+                .textCase(.uppercase)
+                .foregroundStyle(k.sub)
+                .padding(.horizontal, 4)
+                .padding(.top, 6)
+            ForEach(items) { result in
+                SearchResultCard(k: k, result: result) { add(result) }
+            }
+        }
     }
 
     // MARK: - Footer

@@ -40,6 +40,8 @@ struct SwipeableItemRow: View {
     var onEdit: () -> Void = {}
     var onToggleUnavailable: () -> Void = {}
     var onTapImage: () -> Void = {}
+    var isRecentlySynced: Bool = false
+    var onRetry: (() -> Void)? = nil
 
     @State private var dragX: CGFloat = 0
     @State private var isDragging = false
@@ -82,7 +84,8 @@ struct SwipeableItemRow: View {
                 .opacity(Double(progress))
                 .scaleEffect(0.86 + 0.14 * progress, anchor: .trailing)
                 .allowsHitTesting(rest == .trailing && !isDragging)
-            ItemCard(t: t, item: item, onToggleChecked: onToggleChecked, onTapImage: onTapImage)
+            ItemCard(t: t, item: item, onToggleChecked: onToggleChecked, onTapImage: onTapImage,
+                     isRecentlySynced: isRecentlySynced, onRetry: onRetry)
                 .overlay {
                     if rest != .closed && !isDragging {
                         Color.clear

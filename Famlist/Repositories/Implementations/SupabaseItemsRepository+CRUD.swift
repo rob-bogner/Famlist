@@ -4,14 +4,16 @@
  Created on: 15.03.2026
 
  📄 CRUD extension for SupabaseItemsRepository (extracted FAM-67).
- 📝 Shared row structs (ItemRow, ItemUpdatePayload) replace the four
-    duplicated local structs from the original monolith.
+ 📝 Single ItemRow struct used for both upsert and update – eliminates
+    payload duplication (FAM-73).
 
  CHANGELOG:
- - 24.09.2026: is_unavailable in ItemRow/ItemUpdatePayload („Nicht verfügbar“-Status).
+ - 24.09.2026: is_unavailable in ItemRow („Nicht verfügbar“-Status).
                Setzt Migration 005_add_item_is_unavailable.sql voraus.
  - 16.03.2026: FAM-72 – MeasureCanonicalizer.canonicalize() in createItem,
                updateItem, batchUpdateItems (Defense in depth).
+ - 16.03.2026: FAM-73 – ItemUpdatePayload entfernt; ItemRow für alle Writes
+               genutzt. Custom encode(to:) schützt CRDT-Felder via encodeIfPresent.
 */
 
 import Foundation
@@ -19,8 +21,31 @@ import Supabase
 
 // MARK: - Private Row Types
 
-/// Codable payload for upsert (createItem).
-private struct ItemRow: Codable {
+/// Single Codable payload used for both upsert (createItem) and update operations.
+///
+/// **Encoding rules (FAM-73):**
+/// - Regular mutable fields (imageData, category, etc.) use `encode` so that an explicit nil
+///   clears the column — intentional user action (e.g. removing a photo).
+/// - CRDT fields use `encodeIfPresent` to never accidentally overwrite existing metadata with null.
+/// - Identity fields (id, listId) are always encoded; including them in UPDATE payloads is safe
+///   in PostgREST because the WHERE filter matches the same values.
+/// Minimal payload for tombstone-setting a single item (FAM-24 canonical delete).
+private struct TombstonePayload: Encodable {
+    let tombstone = true
+    let updatedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case tombstone
+        case updatedAt = "updated_at"
+    }
+
+    /// Creates a payload with the current UTC timestamp in ISO8601 format.
+    static func now() -> TombstonePayload {
+        TombstonePayload(updatedAt: PaginationCursor.postgrestFormatter.string(from: Date()))
+    }
+}
+
+private struct ItemRow: Encodable {
     let id: UUID
     let listId: UUID
     let ownerPublicId: String?
@@ -55,42 +80,12 @@ private struct ItemRow: Codable {
         case tombstone
         case lastModifiedBy = "last_modified_by"
     }
-}
-
-/// Encodable payload for update operations.
-/// Shared by both `updateItem` and `batchUpdateItems` to avoid duplication.
-private struct ItemUpdatePayload: Encodable {
-    let imageData: String?
-    let name: String
-    let units: Int
-    let measure: String
-    let price: Double
-    let isChecked: Bool
-    let isUnavailable: Bool
-    let category: String?
-    let productDescription: String?
-    let brand: String?
-    let hlcTimestamp: Int64?
-    let hlcCounter: Int?
-    let hlcNodeId: String?
-    let tombstone: Bool?
-    let lastModifiedBy: String?
-
-    enum CodingKeys: String, CodingKey {
-        case imageData = "imagedata"
-        case name, units, measure, price, isChecked, category
-        case isUnavailable = "is_unavailable"
-        case productDescription = "productdescription"
-        case brand
-        case hlcTimestamp = "hlc_timestamp"
-        case hlcCounter = "hlc_counter"
-        case hlcNodeId = "hlc_node_id"
-        case tombstone
-        case lastModifiedBy = "last_modified_by"
-    }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(listId, forKey: .listId)
+        try container.encodeIfPresent(ownerPublicId, forKey: .ownerPublicId)
         try container.encode(imageData, forKey: .imageData)
         try container.encode(name, forKey: .name)
         try container.encode(units, forKey: .units)
@@ -137,10 +132,13 @@ extension SupabaseItemsRepository {
             tombstone: item.tombstone,
             lastModifiedBy: item.lastModifiedBy
         )
-        // Upsert instead of insert: if the deterministic UUID already exists on the server
-        // (from a concurrent creation on another device), LWW-HLC resolves the conflict.
+        // Upsert instead of insert: if the UUID already exists on the server (concurrent
+        // creation on another device), the DB accepts the last writer's payload at the
+        // storage layer. The HLC embedded in the row ensures that the subsequent Realtime
+        // event is correctly arbitrated by ConflictResolver on every observing device.
         _ = try await client.from("items").upsert(row, onConflict: "id").execute()
-        await fetchAndYield(listUUID)
+        // FAM-24: No fetchAndYield() here. Local state was already written via storeLocally().
+        // Realtime INSERT event will trigger granular processing via RealtimeEventProcessor.
         let model = ItemModel(
             id: row.id.uuidString,
             imageUrl: item.imageUrl,
@@ -163,7 +161,6 @@ extension SupabaseItemsRepository {
             lastModifiedBy: item.lastModifiedBy
         )
         let result = logResult(params: (itemId: model.id, listId: listUUID), result: model)
-        UserLog.Data.itemAdded(name: item.name, units: item.units, measure: item.measure)
         return result
     }
 
@@ -178,7 +175,10 @@ extension SupabaseItemsRepository {
         let listId = UUID(uuidString: listIdString) ?? UUID()
         // FAM-72: Defense in depth – normalize measure regardless of caller
         let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
-        let payload = ItemUpdatePayload(
+        let payload = ItemRow(
+            id: UUID(uuidString: item.id) ?? UUID(),
+            listId: listId,
+            ownerPublicId: item.ownerPublicId,
             imageData: item.imageData,
             name: item.name,
             units: item.units,
@@ -201,9 +201,9 @@ extension SupabaseItemsRepository {
             .eq("id", value: item.id)
             .eq("list_id", value: listIdString)
             .execute()
-        await fetchAndYield(listId)
+        // FAM-24: No fetchAndYield() here. Local state was already written via storeLocally().
+        // Realtime UPDATE event will trigger granular processing via RealtimeEventProcessor.
         logVoid(params: (itemId: item.id, listId: listId))
-        UserLog.Data.itemUpdated(name: item.name, units: item.units, measure: item.measure)
     }
 
     /// Batch-updates items in parallel using the event-counter strategy.
@@ -212,7 +212,6 @@ extension SupabaseItemsRepository {
         guard !items.isEmpty else { return }
 
         logVoid(params: (action: "batchUpdateItems.start", itemCount: items.count, listId: listId))
-        UserLog.Data.bulkUpdate(count: items.count)
 
         // Acquire lock: suppress Realtime fetches during batch and set event counter.
         gate.acquireLock(expecting: items.count)
@@ -231,7 +230,10 @@ extension SupabaseItemsRepository {
                             )
                         }
                         // FAM-72: Defense in depth – normalize measure regardless of caller
-                        let payload = ItemUpdatePayload(
+                        let payload = ItemRow(
+                            id: UUID(uuidString: item.id) ?? UUID(),
+                            listId: listUUID,
+                            ownerPublicId: item.ownerPublicId,
                             imageData: item.imageData,
                             name: item.name,
                             units: item.units,
@@ -289,8 +291,8 @@ extension SupabaseItemsRepository {
                 logVoid(params: (action: "batchUpdateItems.suppressionDisabled.manual", listId: listId))
             }
 
-            // Final fetch synchronises state including changes from other clients.
-            await fetchAndYield(listId)
+            // FAM-24: No fetchAndYield() here. Realtime UPDATE events will trigger
+            // granular processing via RealtimeEventProcessor for each item.
 
         } catch {
             // Release lock on error to restore Realtime processing.
@@ -306,15 +308,18 @@ extension SupabaseItemsRepository {
         logVoid(params: (action: "batchUpdateItems.completed", itemCount: items.count, listId: listId))
     }
 
+    /// Deletes an item by setting tombstone=true (soft delete per FAM-24 architecture).
+    /// The Realtime UPDATE event (tombstone=true) triggers applyRemoteTombstone() on all observers.
+    /// Physical row purge is a server-side retention concern, not a client operation.
     func deleteItem(id: String, listId: UUID) async throws {
         _ = try await client
             .from("items")
-            .delete()
+            .update(TombstonePayload.now())
             .eq("id", value: id)
             .eq("list_id", value: listId.uuidString)
             .execute()
-        await fetchAndYield(listId)
+        // FAM-24: No fetchAndYield() here. Realtime UPDATE(tombstone=true) event
+        // will trigger applyRemoteTombstone() via RealtimeEventProcessor.
         logVoid(params: (id: id, listId: listId))
-        UserLog.Data.itemDeleted()
     }
 }

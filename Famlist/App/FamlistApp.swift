@@ -58,11 +58,15 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             let conflictResolver = ConflictResolver()
             let hlcGenerator = HybridLogicalClockGenerator()
             
+            // Sync orchestrator serialises PageLoader and Realtime event processing (FAM-79).
+            let syncOrchestrator = SyncOrchestrator()
+
             // Repositories backed by Supabase with CRDT support
             let itemsRepo = SupabaseItemsRepository(
                 client: client,
                 itemStore: itemStore,
-                conflictResolver: conflictResolver
+                conflictResolver: conflictResolver,
+                syncOrchestrator: syncOrchestrator
             )
             let profilesRepo = SupabaseProfilesRepository(client: client)
             let listsRepo = SupabaseListsRepository(client: client)
@@ -76,7 +80,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 itemStore: itemStore,
                 operationQueue: operationQueue,
                 conflictResolver: conflictResolver,
-                hlcGenerator: hlcGenerator
+                hlcGenerator: hlcGenerator,
+                syncMonitor: syncMonitor
             )
             
             // Create list VM without starting observation; it will start after auth completes.
@@ -92,6 +97,9 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             lvm.configure(syncEngine: syncEngine)
             lvm.configure(catalogRepository: SupabaseItemCatalogRepository(client: client))
             lvm.configure(globalCatalogRepository: SupabaseGlobalProductCatalogRepository(client: client))
+            // Wire pagination (FAM-79/FAM-40).
+            let pageLoader = PageLoader(repository: itemsRepo)
+            lvm.configure(syncOrchestrator: syncOrchestrator, pageLoader: pageLoader)
             self.listViewModel = lvm
 
             // Create the session VM that coordinates auth and default list bootstrap.

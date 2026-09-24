@@ -176,40 +176,107 @@ extension ListViewModel {
     /// 4. Finales `refreshItemsFromStore()` bereinigt `pendingBulkDeleteIDs` für bereits entfernte Items
     func deleteAllItems() {
         let snapshot = items
+        guard !snapshot.isEmpty else { return }
         logVoid(params: (action: "deleteAllItems", count: snapshot.count))
         UserLog.Data.allItemsDeleted(count: snapshot.count)
+
+        // --- Atomic UI transition: before-bulk → after-bulk, no intermediate states ---
+        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(snapshot.map { $0.id })
         items = []
+        // Reset pagination — all items gone, cursor is stale.
+        currentCursor = nil
+        PaginationCursor.clear(listId: listId)
+        hasMoreItems = true
+        isLoadingNextPage = false
+        consecutiveEmptyPages = 0
+
+        // Tombstone all items locally in a single batch commit, then queue remote ops.
+        // isBulkDeleting suppresses per-item refreshItemsFromStore() inside the loop.
         isBulkDeleting = true
         snapshot.forEach { deleteItem($0) }
         isBulkDeleting = false
+
+        // Single consolidated UI refresh from SwiftData. Items are now soft-deleted
+        // (deletedAt set by setSyncStatus(.pendingDelete)), so fetchItems(includeDeleted:false)
+        // excludes them. This also clears pendingBulkDeleteIDs via intersection.
         refreshItemsFromStore()
+
+        // Gate off — stream handler and pagination can resume.
+        isBulkMutationActive = false
     }
 
     /// Löscht alle abgehakten Artikel der aktuellen Liste.
     func deleteCheckedItems() {
         let toDelete = items.filter { $0.isChecked }
+        guard !toDelete.isEmpty else { return }
         logVoid(params: (action: "deleteCheckedItems", count: toDelete.count))
-        UserLog.Data.checkedItemsDeleted(count: toDelete.count)
+        UserLog.Data.checkedItemsDeleted(items: toDelete.map { ($0.name, $0.units, $0.measure) })
+
+        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { !$0.isChecked }
         isBulkDeleting = true
         toDelete.forEach { deleteItem($0) }
         isBulkDeleting = false
         refreshItemsFromStore()
+        isBulkMutationActive = false
     }
 
     /// Löscht alle nicht abgehakten Artikel der aktuellen Liste.
     func deleteUncheckedItems() {
         let toDelete = items.filter { !$0.isChecked }
+        guard !toDelete.isEmpty else { return }
         logVoid(params: (action: "deleteUncheckedItems", count: toDelete.count))
-        UserLog.Data.uncheckedItemsDeleted(count: toDelete.count)
+        UserLog.Data.uncheckedItemsDeleted(items: toDelete.map { ($0.name, $0.units, $0.measure) })
+
+        isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { $0.isChecked }
         isBulkDeleting = true
         toDelete.forEach { deleteItem($0) }
         isBulkDeleting = false
         refreshItemsFromStore()
+        isBulkMutationActive = false
+    }
+
+    // MARK: - Bulk Import
+
+    /// Applies a batch of merged import targets from the clipboard import flow.
+    ///
+    /// Writes are handled by SyncEngine.applyBulkItems() which issues a single save()
+    /// and enqueues one operation per target — no per-item processQueue().
+    /// UI is refreshed once after all writes complete.
+    func applyBulkImport(_ result: ImportMergeService.MergeResult) {
+        guard let syncEngine else { return }
+        guard !result.targets.isEmpty else { return }
+
+        isBulkMutationActive = true
+
+        // Count targets for summary — no individual logs during import.
+        var added = 0, reactivated = 0, incremented = 0
+        for target in result.targets {
+            switch target {
+            case .createNew: added += 1
+            case .reactivate: reactivated += 1
+            case .update: incremented += 1
+            }
+        }
+
+        let lvm = self
+
+        Task {
+            await syncEngine.applyBulkItems(result.targets)
+
+            await MainActor.run {
+                lvm.refreshItemsFromStore()
+                lvm.isBulkMutationActive = false
+                // Summary log after UI is updated — kein Einzel-Spam während des Imports.
+                UserLog.Data.bulkImportCompleted(added: added, reactivated: reactivated, incremented: incremented)
+            }
+
+            await syncEngine.resumeSync()
+        }
     }
 
     // MARK: - Sorting

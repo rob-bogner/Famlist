@@ -32,6 +32,7 @@ import SwiftUI
 /// Präsentiert alle Listen des Nutzers und ermöglicht Wechsel sowie Verwaltung.
 struct ListsOverviewView: View {
     @EnvironmentObject var listViewModel: ListViewModel
+    @EnvironmentObject var session: AppSessionViewModel
     @Environment(\.dismiss) private var dismiss
 
     @State private var showCreateAlert = false
@@ -112,7 +113,8 @@ struct ListsOverviewView: View {
                 ListsOverviewRow(
                     list: list,
                     itemCount: listViewModel.listItemCounts[list.id] ?? 0,
-                    isActive: list.id == listViewModel.listId
+                    isActive: list.id == listViewModel.listId,
+                    currentUserId: session.currentProfile?.id
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -127,7 +129,7 @@ struct ListsOverviewView: View {
                         Label("Umbenennen", systemImage: "pencil")
                     }
 
-                    if !list.isDefault {
+                    if !list.isDefault && list.ownerId == session.currentProfile?.id {
                         Button {
                             listViewModel.setDefaultList(list)
                         } label: {
@@ -137,10 +139,13 @@ struct ListsOverviewView: View {
 
                     Divider()
 
-                    Button(role: .destructive) {
-                        listToDelete = list
-                    } label: {
-                        Label("Löschen", systemImage: "trash")
+                    // Nur Owner darf löschen
+                    if list.ownerId == session.currentProfile?.id {
+                        Button(role: .destructive) {
+                            listToDelete = list
+                        } label: {
+                            Label("Löschen", systemImage: "trash")
+                        }
                     }
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -177,10 +182,13 @@ struct ListsOverviewView: View {
 
     @ViewBuilder
     private func trailingSwipeActions(for list: ListModel) -> some View {
-        Button(role: .destructive) {
-            listToDelete = list
-        } label: {
-            Label("Löschen", systemImage: "trash")
+        // Nur Owner darf löschen
+        if list.ownerId == session.currentProfile?.id {
+            Button(role: .destructive) {
+                listToDelete = list
+            } label: {
+                Label("Löschen", systemImage: "trash")
+            }
         }
 
         Button {
@@ -194,7 +202,8 @@ struct ListsOverviewView: View {
 
     @ViewBuilder
     private func leadingSwipeActions(for list: ListModel) -> some View {
-        if !list.isDefault {
+        // Standard setzen ist nur für eigene Listen sinnvoll
+        if !list.isDefault && list.ownerId == session.currentProfile?.id {
             Button {
                 listViewModel.setDefaultList(list)
             } label: {
@@ -234,6 +243,9 @@ struct ListsOverviewRow: View {
     let list: ListModel
     let itemCount: Int
     let isActive: Bool
+    var currentUserId: UUID? = nil
+
+    private var isMemberList: Bool { currentUserId != nil && list.ownerId != currentUserId }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -250,6 +262,12 @@ struct ListsOverviewRow: View {
                         Image(systemName: "star.fill")
                             .font(.caption2)
                             .foregroundColor(.yellow)
+                    }
+                    // Member-Indikator: Liste gehört jemand anderem
+                    if isMemberList {
+                        Image(systemName: "person.2.fill")
+                            .font(.caption2)
+                            .foregroundColor(.accentColor)
                     }
                 }
                 Text(itemCountLabel)
@@ -335,6 +353,9 @@ private struct ListNameInputSheet: View {
         ListModel(id: UUID(), ownerId: UUID(), title: "Drogerie", isDefault: false, createdAt: Date(), updatedAt: Date()),
         ListModel(id: UUID(), ownerId: UUID(), title: "Baumarkt", isDefault: false, createdAt: Date(), updatedAt: Date())
     ]
+    let sessionVM = AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
+                                        lists: PreviewListsRepository(), listViewModel: listVM)
     return ListsOverviewView()
         .environmentObject(listVM)
+        .environmentObject(sessionVM)
 }

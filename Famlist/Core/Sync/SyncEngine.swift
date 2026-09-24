@@ -42,12 +42,14 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     @Published var pendingOperations: Int = 0
     
     // MARK: - Dependencies
-    
+
     private let repository: ItemsRepository
     private let itemStore: SwiftDataItemStore
     private let operationQueue: SyncOperationQueue
     private let conflictResolver: ConflictResolver
     private let hlcGenerator: HybridLogicalClockGenerator
+    private let backoffCalculator: BackoffCalculator
+    private let syncMonitor: SyncMonitor?
     
     // MARK: - State
     
@@ -67,13 +69,17 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         itemStore: SwiftDataItemStore,
         operationQueue: SyncOperationQueue,
         conflictResolver: ConflictResolver,
-        hlcGenerator: HybridLogicalClockGenerator
+        hlcGenerator: HybridLogicalClockGenerator,
+        backoffCalculator: BackoffCalculator = .default,
+        syncMonitor: SyncMonitor? = nil
     ) {
         self.repository = repository
         self.itemStore = itemStore
         self.operationQueue = operationQueue
         self.conflictResolver = conflictResolver
         self.hlcGenerator = hlcGenerator
+        self.backoffCalculator = backoffCalculator
+        self.syncMonitor = syncMonitor
         
         // Start background queue processing
         startQueueProcessing()
@@ -165,13 +171,15 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             return
         }
         
-        // Initialize HLC if missing (for old data)
+        // Initialize HLC if missing (for old data).
+        // Epoch=0 fallback: hlcGenerator.receive() uses max(wallClock, remoteHLC+1),
+        // so epoch loses every comparison and the new HLC is always causally after now.
         let existingHLC = HybridLogicalClock(
-            timestamp: existingEntity.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000),
+            timestamp: existingEntity.hlcTimestamp ?? 0,
             counter: existingEntity.hlcCounter ?? 0,
             nodeId: existingEntity.hlcNodeId ?? hlcGenerator.nodeId
         )
-        
+
         let newHLC = hlcGenerator.receive(existingHLC)
         let metadata = CRDTMetadata(
             hlc: newHLC,
@@ -198,13 +206,14 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             return
         }
         
-        // Initialize HLC if missing (for old data)
+        // Initialize HLC if missing (for old data). Epoch=0 fallback is safe here
+        // because hlcGenerator.receive() always produces max(wallClock, remoteHLC+1).
         let existingHLC = HybridLogicalClock(
-            timestamp: existingEntity.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000),
+            timestamp: existingEntity.hlcTimestamp ?? 0,
             counter: existingEntity.hlcCounter ?? 0,
             nodeId: existingEntity.hlcNodeId ?? hlcGenerator.nodeId
         )
-        
+
         let newHLC = hlcGenerator.receive(existingHLC)
         let metadata = CRDTMetadata.deleted(by: hlcGenerator.nodeId, hlc: newHLC)
         
@@ -218,8 +227,80 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         await processQueue()
     }
     
+    /// Applies a batch of merged import targets atomically.
+    ///
+    /// For each target: one local upsert, one queue operation.
+    /// A single `save()` is issued after all writes — no per-item `save()` or `processQueue()`.
+    /// The caller is responsible for calling `resumeSync()` afterwards.
+    func applyBulkItems(_ targets: [ImportTarget]) async {
+        guard !targets.isEmpty else { return }
+
+        // Queue-invariant guard: max 1 op per canonical item ID in this batch
+        var seenIds = Set<String>()
+
+        for target in targets {
+            let item = target.item
+            guard !seenIds.contains(item.id) else { continue }
+            seenIds.insert(item.id)
+
+            let hlc = hlcGenerator.tick()
+
+            switch target {
+            case .createNew(let model), .reactivate(let model):
+                // For reactivate: apply() on the existing entity is guarded (syncStatus == .pendingDelete),
+                // so we set all payload fields manually after upsert.
+                let metadata = CRDTMetadata.created(by: hlcGenerator.nodeId, hlc: hlc)
+                if let entity = try? itemStore.upsert(model: model) {
+                    entity.name               = model.name
+                    entity.units              = model.units
+                    entity.measure            = model.measure
+                    entity.category           = model.category
+                    entity.productDescription = model.productDescription
+                    entity.brand              = model.brand
+                    entity.isChecked          = false
+                    entity.hlcTimestamp       = hlc.timestamp
+                    entity.hlcCounter         = hlc.counter
+                    entity.hlcNodeId          = hlc.nodeId
+                    entity.tombstone          = false
+                    entity.lastModifiedBy     = hlcGenerator.nodeId
+                    entity.setSyncStatus(.pendingCreate)  // clears deletedAt for reactivate
+                }
+                await queueOperation(type: .create, item: model, metadata: metadata)
+
+            case .update(let model):
+                let metadata = CRDTMetadata(hlc: hlc, tombstone: false, lastModifiedBy: hlcGenerator.nodeId)
+                if let entity = try? itemStore.upsert(model: model) {
+                    entity.hlcTimestamp   = hlc.timestamp
+                    entity.hlcCounter     = hlc.counter
+                    entity.hlcNodeId      = hlc.nodeId
+                    entity.tombstone      = false
+                    entity.lastModifiedBy = hlcGenerator.nodeId
+                    entity.setSyncStatus(.pendingUpdate)
+                }
+                await queueOperation(type: .update, item: model, metadata: metadata)
+            }
+        }
+
+        // Single save for all writes — no per-item save
+        try? itemStore.save()
+        updatePendingCount()
+        // processQueue() / resumeSync() is intentionally NOT called here.
+        // The caller (ListViewModel.applyBulkImport) calls resumeSync() after UI refresh.
+    }
+
     /// Manually triggers queue processing (called on connectivity restore)
     func resumeSync() async {
+        await processQueue()
+    }
+
+    /// Resets a permanently-failed item back to pending and re-processes the queue.
+    func retryItem(_ item: ItemModel) async {
+        guard let uuid = UUID(uuidString: item.id) else { return }
+        if let entity = try? itemStore.fetchItem(id: uuid) {
+            entity.setSyncStatus(.pendingUpdate)
+            try? itemStore.save()
+        }
+        operationQueue.resetFailedOperation(itemId: item.id)
         await processQueue()
     }
     
@@ -239,15 +320,15 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             // Set sync status based on operation
             if metadata.tombstone {
                 entity.setSyncStatus(.pendingDelete)
+            } else if entity.isSoftDeleted {
+                // FAM-XX: Reactivation path — re-add of a previously deleted item whose
+                // deletedAt is still set from the confirmed deletion. setSyncStatus(.pendingCreate)
+                // clears deletedAt so the item becomes visible in the UI immediately.
+                entity.setSyncStatus(.pendingCreate)
+            } else if entity.syncStatus == .pendingCreate {
+                // In-flight new item: keep as pending create.
             } else {
-                // Check if this is new or existing
-                if entity.syncStatus == .synced {
-                    entity.setSyncStatus(.pendingUpdate)
-                } else if entity.syncStatus == .pendingCreate {
-                    // Keep as pending create
-                } else {
-                    entity.setSyncStatus(.pendingUpdate)
-                }
+                entity.setSyncStatus(.pendingUpdate)
             }
             
             try itemStore.save()
@@ -259,11 +340,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 tombstone: metadata.tombstone
             ))
             
-            if metadata.tombstone {
-                UserLog.Data.itemDeletedLocally()
-            } else {
-                UserLog.Data.itemStoredLocally(name: item.name)
-            }
         } catch {
             logVoid(params: (
                 action: "storeLocally.error",
@@ -287,8 +363,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 itemId: item.id,
                 operationId: operation.id
             ))
-            
-            UserLog.Sync.operationQueued(type: type.rawValue)
         } catch {
             logVoid(params: (
                 action: "queueOperation.error",
@@ -331,9 +405,11 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     }
     
     private func processOperation(_ operation: SyncOperation) async {
+        let monitorId = syncMonitor?.startOperation()
+        let start = Date()
         do {
             let item = try operation.decodeItemSnapshot()
-            
+
             logVoid(params: (
                 action: "processOperation",
                 operationId: operation.id,
@@ -341,21 +417,42 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 itemId: operation.itemId,
                 retryCount: operation.retryCount
             ))
-            
-            UserLog.Sync.processingOperation(type: operation.type.rawValue)
-            
+
             switch operation.type {
             case .create:
-                _ = try await repository.createItem(item)
+                // FAM-XX: The item snapshot was captured before HLC.tick(), so it carries
+                // nil CRDT fields (tombstone=nil, hlcTimestamp=nil). Apply the stored
+                // CRDTMetadata here so the Supabase upsert sends tombstone=false and the
+                // new HLC explicitly — otherwise encodeIfPresent omits them and the DB
+                // preserves any existing tombstone=true on the row.
+                var itemToCreate = item
+                if let metadata = try? operation.decodeCRDTMetadata() {
+                    itemToCreate.tombstone      = metadata.tombstone
+                    itemToCreate.hlcTimestamp   = metadata.hlc.timestamp
+                    itemToCreate.hlcCounter     = metadata.hlc.counter
+                    itemToCreate.hlcNodeId      = metadata.hlc.nodeId
+                    itemToCreate.lastModifiedBy = metadata.lastModifiedBy
+                }
+                _ = try await repository.createItem(itemToCreate)
             case .update:
-                try await repository.updateItem(item)
+                // Enrich with the CRDT metadata stored at queue time so that Supabase
+                // receives the new HLC — not the old HLC that was baked into the item
+                // snapshot when the operation was queued.  Mirrors the existing .create fix.
+                var itemToUpdate = item
+                if let metadata = try? operation.decodeCRDTMetadata() {
+                    itemToUpdate.hlcTimestamp   = metadata.hlc.timestamp
+                    itemToUpdate.hlcCounter     = metadata.hlc.counter
+                    itemToUpdate.hlcNodeId      = metadata.hlc.nodeId
+                    itemToUpdate.lastModifiedBy = metadata.lastModifiedBy
+                }
+                try await repository.updateItem(itemToUpdate)
             case .delete:
                 try await repository.deleteItem(id: item.id, listId: operation.listId)
             }
-            
+
             // Success - remove from queue and update local sync status
             operationQueue.markSuccess(operation.id)
-            
+
             if let uuid = UUID(uuidString: operation.itemId) {
                 if operation.type == .delete {
                     try? itemStore.purge(id: uuid)
@@ -364,56 +461,62 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                     try? itemStore.save()
                 }
             }
-            
+
+            if let monitorId {
+                syncMonitor?.endOperation(monitorId, success: true, latency: Date().timeIntervalSince(start))
+            }
+
             logVoid(params: (
                 action: "processOperation.success",
                 operationId: operation.id,
                 itemId: operation.itemId
             ))
-            
-            UserLog.Sync.operationCompleted(type: operation.type.rawValue)
-            
+
         } catch {
-            // Check if max retries will be exceeded BEFORE incrementing
-            let willExceedMaxRetries = operation.retryCount >= 19
-            
-            // Failure - schedule retry with exponential backoff
-            let backoff = exponentialBackoff(retryCount: operation.retryCount)
-            operationQueue.updateRetrySchedule(operation.id, error: error, backoff: backoff)
-            
-            // Update local sync status to failed if max retries exceeded
+            if let monitorId {
+                syncMonitor?.endOperation(monitorId, success: false, latency: Date().timeIntervalSince(start))
+            }
+
+            // retryCount after this failure = operation.retryCount + 1
+            let newRetryCount = operation.retryCount + 1
+            let willExceedMaxRetries = backoffCalculator.hasExceededMaxRetries(newRetryCount)
+
+            // Failure – schedule retry with exponential backoff + jitter.
+            let backoff = backoffCalculator.delay(for: operation.retryCount)
+            operationQueue.updateRetrySchedule(
+                operation.id,
+                error: error,
+                backoff: backoff,
+                maxRetries: backoffCalculator.maxRetries
+            )
+
+            // Mark local entity as failed once all retries are exhausted.
             if willExceedMaxRetries {
                 if let uuid = UUID(uuidString: operation.itemId),
                    let entity = try? itemStore.fetchItem(id: uuid) {
                     entity.setSyncStatus(.failed)
                     try? itemStore.save()
                 }
-                
-                // User-friendly error log after max retries
-                UserLog.Sync.failed(reason: "Maximale Wiederholungen erreicht")
+                if let failedItem = try? operation.decodeItemSnapshot() {
+                    UserLog.Sync.itemSyncFailed(
+                        name: failedItem.name,
+                        units: failedItem.units,
+                        measure: failedItem.measure
+                    )
+                } else {
+                    UserLog.Sync.failed(reason: "Synchronisierung endgültig fehlgeschlagen")
+                }
             }
-            
+
             logVoid(params: (
                 action: "processOperation.error",
                 operationId: operation.id,
                 itemId: operation.itemId,
-                retryCount: operation.retryCount + 1,
+                retryCount: newRetryCount,
                 backoff: backoff,
                 error: error.localizedDescription
             ))
         }
-    }
-    
-    /// Calculates exponential backoff delay
-    /// - Parameter retryCount: Number of retries so far
-    /// - Returns: Delay in seconds before next retry
-    private func exponentialBackoff(retryCount: Int) -> TimeInterval {
-        // Base: 2 seconds, doubles each time, capped at 5 minutes
-        let base: TimeInterval = 2.0
-        let maxDelay: TimeInterval = 300.0 // 5 minutes
-        
-        let delay = base * pow(2.0, Double(retryCount))
-        return min(delay, maxDelay)
     }
     
     // MARK: - Background Processing
@@ -435,6 +538,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     
     private func updatePendingCount() {
         pendingOperations = operationQueue.count
+        syncMonitor?.updateQueueDepth(operationQueue.count)
     }
     
     // MARK: - Lifecycle Management

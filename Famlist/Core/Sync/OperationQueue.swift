@@ -54,7 +54,6 @@ final class SyncOperationQueue {
                 type: operation.type.rawValue,
                 itemId: operation.itemId
             ))
-            UserLog.Sync.operationEnqueued()
         } catch {
             logVoid(params: (
                 action: "enqueueOperation.error",
@@ -145,8 +144,6 @@ final class SyncOperationQueue {
                 action: "removeOperation",
                 operationId: operationId
             ))
-            
-            UserLog.Sync.operationRemoved()
         } catch {
             logVoid(params: (
                 action: "removeOperation.error",
@@ -161,16 +158,17 @@ final class SyncOperationQueue {
     ///   - operationId: UUID of the operation
     ///   - error: The error that occurred
     ///   - backoff: Time interval to wait before next retry
-    func updateRetrySchedule(_ operationId: UUID, error: Error, backoff: TimeInterval) {
+    ///   - maxRetries: Maximum allowed retries before marking as permanently failed.
+    func updateRetrySchedule(_ operationId: UUID, error: Error, backoff: TimeInterval, maxRetries: Int = BackoffCalculator.default.maxRetries) {
         let descriptor = FetchDescriptor<SyncOperation>(
             predicate: #Predicate { $0.id == operationId }
         )
-        
+
         do {
             let operations = try context.fetch(descriptor)
             guard let operation = operations.first else { return }
-            
-            operation.recordFailure(error: error, backoff: backoff)
+
+            operation.recordFailure(error: error, backoff: backoff, maxRetries: maxRetries)
             try context.save()
             
             logVoid(params: (
@@ -244,6 +242,37 @@ final class SyncOperationQueue {
         }
     }
     
+    /// Resets a permanently-failed operation so it is eligible for retry.
+    /// - Parameter itemId: The item ID string whose failed operation should be reset.
+    func resetFailedOperation(itemId: String) {
+        let descriptor = FetchDescriptor<SyncOperation>(
+            predicate: #Predicate { $0.itemId == itemId && $0.hasFailed }
+        )
+
+        do {
+            let operations = try context.fetch(descriptor)
+            for operation in operations {
+                operation.hasFailed = false
+                operation.retryCount = 0
+                operation.nextRetryAt = nil
+                operation.lastErrorMessage = nil
+            }
+            try context.save()
+
+            logVoid(params: (
+                action: "resetFailedOperation",
+                itemId: itemId,
+                count: operations.count
+            ))
+        } catch {
+            logVoid(params: (
+                action: "resetFailedOperation.error",
+                itemId: itemId,
+                error: error.localizedDescription
+            ))
+        }
+    }
+
     /// Clears all failed operations (for manual cleanup)
     func clearFailed() {
         let descriptor = FetchDescriptor<SyncOperation>(

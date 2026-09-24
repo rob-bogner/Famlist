@@ -13,6 +13,8 @@
  - „Nicht verfügbar“ (Famlist-Ergänzung, im Design nicht gezeichnet): Inhalt auf 55 % und ein
    orangefarbener Chip in den Farben der Wisch-Aktion. Sonst steht hier die Marke, falls vorhanden.
  - Tippen aufs Bild öffnet das Produktbild-Sheet.
+ - Remote-Sync (FAM-XX): kurzes Aufleuchten, wenn der Artikel gerade von einem anderen Gerät kam.
+ - Sync endgültig fehlgeschlagen (FAM-23): Warn-Dreieck; Tippen fragt nach einem erneuten Versuch.
  - Die ganze Karte ist per contentShape treffbar (sonst erreicht ein Wisch von der freien Fläche die Geste nicht).
  - Bild und Abhak-Kreis sind bewusst keine SwiftUI-Buttons (swipeFriendlyTap): Ein Button hält die
    Berührung fest, dann ließe sich die Zeile nicht wischen, wenn der Daumen dort aufsetzt.
@@ -30,6 +32,12 @@ struct ItemCard: View {
     let item: ItemModel
     var onToggleChecked: () -> Void = {}
     var onTapImage: () -> Void = {}
+    /// Plays the one-shot glow for items just applied from Realtime / IncrementalSync.
+    var isRecentlySynced: Bool = false
+    /// Manual retry after a permanently failed sync; nil hides the warning action.
+    var onRetry: (() -> Void)? = nil
+
+    @State private var showRetryConfirmation = false
 
     private var dimmed: Bool { item.isChecked || item.isUnavailable }
 
@@ -51,6 +59,7 @@ struct ItemCard: View {
 
             Spacer(minLength: 0)
 
+            if item.isSyncFailed { syncFailedIcon }
             checkButton
         }
         .padding(15)                      // 1 border + 14 padding
@@ -61,6 +70,25 @@ struct ItemCard: View {
         // (auf dem Gerät per UI-Test nachgewiesen: Links-Wisch aus der Kartenmitte bewegte nichts).
         .contentShape(RR(24))
         .background(CSSBox(shape: RR(24), paint: t.card, border: 1, borderColor: t.cardBorder, shadows: t.cardShadow))
+        .remoteSyncHighlight(isActive: isRecentlySynced, cornerRadius: 24)
+        .confirmationDialog("Sync fehlgeschlagen", isPresented: $showRetryConfirmation, titleVisibility: .visible) {
+            Button("Erneut synchronisieren") { onRetry?() }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Der Artikel konnte nicht synchronisiert werden. Soll ein neuer Versuch gestartet werden?")
+        }
+    }
+
+    /// Warn-Dreieck bei endgültig fehlgeschlagenem Sync (wie zuvor in ListRowView).
+    private var syncFailedIcon: some View {
+        Image(systemName: "exclamationmark.triangle.fill")
+            .font(.system(size: 20, weight: .semibold))
+            .foregroundStyle(t.isDark ? Color.hex("#FFC08A") : Color.hex("#BD5F0E"))
+            .frame(width: 32, height: 44)
+            .contentShape(Rectangle())
+            .swipeFriendlyTap("Sync fehlgeschlagen. Tippen zum erneuten Synchronisieren.") {
+                if onRetry != nil { showRetryConfirmation = true }
+            }
     }
 
     private var detailRow: some View {

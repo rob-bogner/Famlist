@@ -16,7 +16,7 @@ import Foundation // Needed for UUID conversion between String and UUID represen
 
 /// Mapping helpers from ItemEntity (SwiftData) to ItemModel (shared model for UI/network).
 extension ItemEntity {
-    /// Builds an ItemModel snapshot from the SwiftData entity.
+    /// Builds an ItemModel snapshot from the SwiftData entity, including CRDT metadata.
     /// - Returns: A fully populated ItemModel instance.
     func toItemModel() -> ItemModel {
         ItemModel(
@@ -35,7 +35,14 @@ extension ItemEntity {
             listId: listId.uuidString,
             ownerPublicId: ownerPublicId,
             createdAt: createdAt,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            hlcTimestamp: hlcTimestamp,
+            hlcCounter: hlcCounter,
+            hlcNodeId: hlcNodeId,
+            tombstone: tombstone,
+            lastModifiedBy: lastModifiedBy,
+            isSyncFailed: syncStatus == .failed
         )
     }
 
@@ -46,9 +53,16 @@ extension ItemEntity {
     /// Updating such an entity would resurrect it in the UI and violate Offline-First delete semantics.
     /// The SyncEngine's queued `.delete` operation will call `purge(id:)` once the server confirms.
     ///
+    /// **Synced-tombstone guard (FAM-XX):** Items whose remote deletion has already been confirmed
+    /// (`tombstone == true && syncStatus == .synced`) must not be reactivated by a subsequent
+    /// local `upsert()` call — e.g. when re-adding an item whose deterministic UUID collides with
+    /// the still-persisted tombstone entity. Only an explicit `pendingRecovery` transition may
+    /// restore such an item.
+    ///
     /// - Parameter model: Source ItemModel typically fetched from Supabase.
     func apply(model: ItemModel) {
         guard syncStatus != .pendingDelete else { return }
+        guard !(tombstone == true && syncStatus == .synced) else { return }
 
         self.ownerPublicId = model.ownerPublicId
         self.imageData = model.imageData
@@ -119,7 +133,10 @@ extension ItemEntity {
             deletedAt: nil,
             list: listReference,
             syncStatus: .synced,
-            hlcTimestamp: model.hlcTimestamp ?? Int64(Date().timeIntervalSince1970 * 1000),
+            // Fallback epoch=0 is consistent with extractMetadataFromEntity's remote fallback.
+            // Using current time here would make a newly-inserted entity (hlcTimestamp==nil)
+            // appear causally newer than any remote HLC → CRDT always rejects remote updates (Bug 1).
+            hlcTimestamp: model.hlcTimestamp ?? 0,
             hlcCounter: model.hlcCounter ?? 0,
             hlcNodeId: model.hlcNodeId ?? "",
             tombstone: model.tombstone ?? false,

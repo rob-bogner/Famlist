@@ -70,6 +70,8 @@ final class MockListsRepository: ListsRepository {
 
     func addMember(listId: UUID, profileId: UUID) async throws {}
     func removeMember(listId: UUID, profileId: UUID) async throws {}
+    func fetchMembers(listId: UUID) async throws -> [ListMember] { [] }
+    func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> { AsyncStream { $0.finish() } }
 
     func fetchDefaultList(for ownerId: UUID) async throws -> ListModel {
         stubbedLists.first(where: { $0.isDefault }) ?? ListModel(

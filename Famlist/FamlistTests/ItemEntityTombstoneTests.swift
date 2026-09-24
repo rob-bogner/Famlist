@@ -10,7 +10,7 @@
    and `setSyncStatus(.synced)` never clears `deletedAt`.
 
  📝 Last Change:
- - Initial creation for FAM-69 regression coverage.
+ - FAM-68: Added test_toItemModel_includesCRDTFields (mapping gap fix).
  ------------------------------------------------------------------------
 */
 
@@ -146,6 +146,86 @@ final class ItemEntityTombstoneTests: XCTestCase {
         XCTAssertEqual(entity.name, "Milch Updated")
     }
 
+    // MARK: - FAM-XX: Synced-tombstone guard — Re-Add nach bestätigter Remote-Löschung
+
+    /// AC: Entity mit syncStatus=.synced + tombstone=true darf durch apply() NICHT reaktiviert werden.
+    func test_apply_syncedTombstone_doesNotReactivateItem() {
+        // Given: Item wurde remote gelöscht und Löschung ist lokal bestätigt
+        let deletionDate = Date(timeIntervalSinceNow: -60)
+        let entity = makeEntity(syncStatus: .synced)
+        entity.tombstone = true
+        entity.deletedAt = deletionDate
+        let originalName = entity.name
+
+        // When: Re-Add landet via deterministischer UUID auf derselben Entity
+        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
+        entity.apply(model: model)
+
+        // Then: Entity darf nicht reaktiviert werden
+        XCTAssertEqual(entity.deletedAt, deletionDate, "apply() darf deletedAt für synced+tombstone Entities nicht löschen")
+        XCTAssertEqual(entity.tombstone, true, "tombstone muss true bleiben")
+        XCTAssertEqual(entity.syncStatus, .synced, "syncStatus darf nicht verändert werden")
+        XCTAssertEqual(entity.name, originalName, "Felder dürfen nicht überschrieben werden")
+    }
+
+    /// AC: Mehrere apply()-Aufrufe reaktivieren eine synced-tombstone Entity nicht kumulativ.
+    func test_apply_syncedTombstone_multipleSnapshots_itemRemainsDeleted() {
+        // Given
+        let deletionDate = Date(timeIntervalSinceNow: -120)
+        let entity = makeEntity(syncStatus: .synced)
+        entity.tombstone = true
+        entity.deletedAt = deletionDate
+
+        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
+
+        // When: wiederholte upsert()-Aufrufe
+        entity.apply(model: model)
+        entity.apply(model: model)
+        entity.apply(model: model)
+
+        // Then: weiterhin gelöscht
+        XCTAssertNotNil(entity.deletedAt, "Entity muss nach mehrfachem apply() gelöscht bleiben")
+        XCTAssertEqual(entity.tombstone, true)
+        XCTAssertEqual(entity.syncStatus, .synced)
+    }
+
+    /// AC: Normales apply() auf aktive (nicht tombstoned) Entity bleibt weiterhin funktional.
+    func test_apply_activeSyncedEntity_updatesNormally() {
+        // Given: aktives Item ohne Tombstone
+        let entity = makeEntity(syncStatus: .synced)
+        entity.tombstone = false
+        entity.deletedAt = nil
+
+        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
+
+        // When
+        entity.apply(model: model)
+
+        // Then: Felder wurden aktualisiert
+        XCTAssertEqual(entity.name, "Milch Updated", "apply() muss bei aktiven Entities Felder aktualisieren")
+        XCTAssertNil(entity.deletedAt)
+        XCTAssertEqual(entity.syncStatus, .synced)
+    }
+
+    /// AC: Bestehender pendingDelete-Guard bleibt durch den neuen Guard unverändert wirksam.
+    func test_apply_pendingDelete_guardRemainsEffective_afterNewGuard() {
+        // Given: Item lokal zum Löschen vorgemerkt, Bestätigung vom Server noch ausstehend
+        let deletionDate = Date(timeIntervalSinceNow: -10)
+        let entity = makeEntity(syncStatus: .pendingDelete)
+        entity.tombstone = nil  // tombstone noch nicht gesetzt (nur lokal pending)
+        entity.deletedAt = deletionDate
+        let originalName = entity.name
+
+        // When: Realtime-Snapshot des noch-aktiven Server-Zustands trifft ein
+        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
+        entity.apply(model: model)
+
+        // Then: pendingDelete-Guard schützt weiterhin
+        XCTAssertEqual(entity.deletedAt, deletionDate, "pendingDelete-Guard muss weiterhin greifen")
+        XCTAssertEqual(entity.syncStatus, .pendingDelete)
+        XCTAssertEqual(entity.name, originalName)
+    }
+
     // MARK: - setSyncStatus boundary cases
 
     func test_setSyncStatus_pendingDelete_setsDeletion() {
@@ -166,5 +246,47 @@ final class ItemEntityTombstoneTests: XCTestCase {
 
         XCTAssertNil(entity.deletedAt, "pendingRecovery must clear deletedAt (explicit restore path)")
         XCTAssertEqual(entity.syncStatus, .pendingRecovery)
+    }
+
+    // MARK: - FAM-68: toItemModel() must include CRDT fields
+
+    func test_toItemModel_includesCRDTFields() {
+        // Given: entity with all CRDT fields populated
+        let entity = makeEntity()
+        entity.hlcTimestamp = 999_000
+        entity.hlcCounter = 3
+        entity.hlcNodeId = "device-abc"
+        entity.tombstone = true
+        entity.lastModifiedBy = "user-xyz"
+
+        // When
+        let model = entity.toItemModel()
+
+        // Then: all CRDT fields must round-trip through toItemModel()
+        XCTAssertEqual(model.hlcTimestamp, 999_000, "hlcTimestamp must be included in toItemModel()")
+        XCTAssertEqual(model.hlcCounter, 3, "hlcCounter must be included in toItemModel()")
+        XCTAssertEqual(model.hlcNodeId, "device-abc", "hlcNodeId must be included in toItemModel()")
+        XCTAssertEqual(model.tombstone, true, "tombstone must be included in toItemModel()")
+        XCTAssertEqual(model.lastModifiedBy, "user-xyz", "lastModifiedBy must be included in toItemModel()")
+    }
+
+    func test_toItemModel_nilCRDTFields_propagateAsNil() {
+        // Given: entity without CRDT fields (backward-compat scenario)
+        let entity = makeEntity()
+        entity.hlcTimestamp = nil
+        entity.hlcCounter = nil
+        entity.hlcNodeId = nil
+        entity.tombstone = nil
+        entity.lastModifiedBy = nil
+
+        // When
+        let model = entity.toItemModel()
+
+        // Then: nil fields must not be fabricated
+        XCTAssertNil(model.hlcTimestamp)
+        XCTAssertNil(model.hlcCounter)
+        XCTAssertNil(model.hlcNodeId)
+        XCTAssertNil(model.tombstone)
+        XCTAssertNil(model.lastModifiedBy)
     }
 }

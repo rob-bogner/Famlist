@@ -13,7 +13,7 @@
  🛠 Includes:
  - ShoppingListContent (Top-Bar, Suche, Fortschritt, Tabs, Abschnitte) + ListDock.
  - Sheet-Ebene: Liste 3 pt weichgezeichnet, Abdunkelung (scrim), Sheet von unten.
- - „Mehr“-Menü: Import, Alle abhaken/zurücksetzen, Lösch-Varianten, Profil, Abmelden.
+ - „Mehr“-Menü: Import, Alle abhaken/zurücksetzen, Lösch-Varianten, Mitglieder, Liste teilen, Profil, Abmelden.
  - Rückfragen (ListConfirmation) für Duplizieren und Löschen.
 
  🔰 Notes for Beginners:
@@ -44,6 +44,8 @@ struct ShoppingListView: View {
     @State private var showListsOverview = false
     @State private var showImport = false
     @State private var showProfile = false
+    @State private var showShareSheet = false
+    @State private var showMembersSheet = false
 
     var body: some View {
         let appearance = Appearance(colorScheme)
@@ -64,7 +66,20 @@ struct ShoppingListView: View {
         .sheet(isPresented: $showListsOverview) {
             ListsOverviewView()
                 .environmentObject(listViewModel)
+                .environmentObject(session)
                 .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareListView(list: listViewModel.defaultList,
+                          currentPublicId: session.currentProfile?.publicId ?? "")
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showMembersSheet) {
+            MembersView(list: listViewModel.defaultList)
+                .environmentObject(session)
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showImport) {
@@ -116,6 +131,7 @@ struct ShoppingListView: View {
                 .padding(.bottom, 68 + 28)       // Dock 68 + Luft, damit die letzte Karte frei liegt
             }
             .scrollIndicators(.hidden)
+            .refreshable { await listViewModel.pullToRefresh() }   // FAM-40
             .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
             ListDock(
                 t: t,
@@ -196,6 +212,17 @@ struct ShoppingListView: View {
             Label("Löschen", systemImage: "trash")
         }
         .disabled(listViewModel.items.isEmpty)
+        Divider()
+        if listViewModel.defaultList != nil {
+            Button { showMembersSheet = true } label: {
+                Label("Mitglieder", systemImage: "person.2")
+            }
+        }
+        if let list = listViewModel.defaultList, list.ownerId == session.currentProfile?.id {
+            Button { showShareSheet = true } label: {
+                Label("Liste teilen", systemImage: "person.badge.plus")
+            }
+        }
         Divider()
         Button { showProfile = true } label: {
             Label(String(localized: "menu.profile"), systemImage: "person.circle")
