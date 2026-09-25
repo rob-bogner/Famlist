@@ -62,3 +62,15 @@ struct OverlayStage<Overlay: View>: View {
         .ignoresSafeArea()
     }
 }
+
+#Preview("OverlayStage", traits: .fixedLayout(width: 390, height: 844)) {
+    OverlayStage(appearance: .light, dock: .sort) {
+        EmptyView()
+    }
+}
+
+#Preview("OverlayStage – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    OverlayStage(appearance: .dark, dock: .sort) {
+        EmptyView()
+    }
+}

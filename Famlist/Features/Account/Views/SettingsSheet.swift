@@ -47,59 +47,80 @@ struct SettingsSheet: View {
             DesignListScreen(appearance: appearance)
         } content: {
             ListAccountSheet(k: k, height: 790, title: "Einstellungen", onClose: onClose) {
-                profileCard(profile, t: t, k: k)
-                    .padding(.top, 18)
-
-                ListAccountSectionLabel(text: "Erscheinungsbild", t: t)
-                    .padding(.top, 22)
-                appearanceSegment(t: t, k: k)
-                    .padding(.top, 10)
-
-                ListAccountSectionLabel(text: "Liste", t: t)
-                    .padding(.top, 22)
-                SettingsGroup(t: t) {
-                    SettingsRow(t: t, title: "Preise anzeigen", titleColor: k.text,
-                                subtitle: "Auf Artikelkarten und in der Fortschrittskarte", hasTopLine: false) {
-                        ListAccountToggle(t: t, isOn: $showPrices, label: "Preise anzeigen")
+                // Scrollt, sobald der Inhalt nicht passt (iPhone SE, große iOS-Schrift). Vorher wurden die Zeilen
+                // zusammengeschoben und überlappten sich.
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        settingsContent(profile, t: t, k: k, shared: sharedBinding, invites: invitesBinding)
                     }
+                    .padding(.bottom, 8)
                 }
-                .padding(.top, 10)
-
-                ListAccountSectionLabel(text: "Benachrichtigungen", t: t)
-                    .padding(.top, 22)
-                SettingsGroup(t: t) {
-                    SettingsRow(t: t, title: "Änderungen an geteilten Listen", titleColor: k.text,
-                                subtitle: "Wenn jemand Artikel hinzufügt oder abhakt", hasTopLine: false) {
-                        ListAccountToggle(t: t, isOn: sharedBinding, label: "Änderungen an geteilten Listen")
-                    }
-                    SettingsRow(t: t, title: "Einladungen", titleColor: k.text,
-                                subtitle: "Wenn dich jemand zu einer Liste einlädt", hasTopLine: true) {
-                        ListAccountToggle(t: t, isOn: invitesBinding, label: "Einladungen")
-                    }
-                }
-                .padding(.top, 10)
-
-                ListAccountSectionLabel(text: "Konto", t: t)
-                    .padding(.top, 22)
-                SettingsGroup(t: t) {
-                    Button(action: { session.signOut() }) {
-                        SettingsRow(t: t, title: "Abmelden", titleColor: t.accentText, subtitle: nil, hasTopLine: false) {
-                            EmptyView()
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    Button(action: onDeleteAccount) {
-                        SettingsRow(t: t, title: "Konto löschen", titleColor: t.danger,
-                                    subtitle: "Alle deine Daten werden entfernt", hasTopLine: true) {
-                            EmptyView()
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.top, 10)
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
         .task { if session.avatarImage == nil { await session.loadAvatar() } }
+    }
+
+    @ViewBuilder
+    private func settingsContent(_ profile: Profile?, t: ListAccountTokens, k: SheetTheme,
+                                 shared sharedBinding: Binding<Bool>, invites invitesBinding: Binding<Bool>) -> some View {
+        profileCard(profile, t: t, k: k)
+            .padding(.top, 18)
+
+        ListAccountSectionLabel(text: "Erscheinungsbild", t: t)
+            .padding(.top, 22)
+        appearanceSegment(t: t, k: k)
+            .padding(.top, 10)
+
+        ListAccountSectionLabel(text: "Liste", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            SettingsRow(t: t, title: "Preise anzeigen", titleColor: k.text,
+                        subtitle: "Auf Artikelkarten und in der Fortschrittskarte", hasTopLine: false) {
+                ListAccountToggle(t: t, isOn: $showPrices, label: "Preise anzeigen")
+            }
+        }
+        .padding(.top, 10)
+
+        ListAccountSectionLabel(text: "Benachrichtigungen", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            SettingsRow(t: t, title: "Änderungen an geteilten Listen", titleColor: k.text,
+                        subtitle: "Wenn jemand Artikel hinzufügt oder abhakt", hasTopLine: false) {
+                ListAccountToggle(t: t, isOn: sharedBinding, label: "Änderungen an geteilten Listen")
+            }
+            SettingsRow(t: t, title: "Einladungen", titleColor: k.text,
+                        subtitle: "Wenn dich jemand zu einer Liste einlädt", hasTopLine: true) {
+                ListAccountToggle(t: t, isOn: invitesBinding, label: "Einladungen")
+            }
+        }
+        .padding(.top, 10)
+
+        accountSection(t: t)
+    }
+
+    /// Konto: Abmelden, Konto löschen.
+    @ViewBuilder
+    private func accountSection(t: ListAccountTokens) -> some View {
+        ListAccountSectionLabel(text: "Konto", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            Button(action: { session.signOut() }) {
+                SettingsRow(t: t, title: "Abmelden", titleColor: t.accentText, subtitle: nil, hasTopLine: false) {
+                    EmptyView()
+                }
+            }
+            .buttonStyle(.plain)
+            Button(action: onDeleteAccount) {
+                SettingsRow(t: t, title: "Konto löschen", titleColor: t.danger,
+                            subtitle: "Alle deine Daten werden entfernt", hasTopLine: true) {
+                    EmptyView()
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.top, 10)
     }
 
     /// Profilkarte: padding 14 + Rahmen 1 (border-box), Radius 22, gap 14
@@ -112,10 +133,12 @@ struct SettingsSheet: View {
                         .font(AppFont.outfit(17, 600))
                         .foregroundStyle(k.text)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                     Text(session.currentUserEmail ?? "")
                         .font(AppFont.dm(13, 400))
                         .foregroundStyle(k.sub)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -195,10 +218,12 @@ private struct SettingsRow<Trailing: View>: View {
                 Text(title)
                     .font(AppFont.dm(15, 500))
                     .foregroundStyle(titleColor)
+                    .fixedSize(horizontal: false, vertical: true)        // umbrechen statt abschneiden
                 if let subtitle {
                     Text(subtitle)
                         .font(AppFont.dm(12, 400))
                         .foregroundStyle(t.k.sub)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

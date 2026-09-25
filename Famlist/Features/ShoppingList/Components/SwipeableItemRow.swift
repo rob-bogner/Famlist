@@ -316,3 +316,13 @@ private struct UndoActionButton: View {
     }
     .padding(20)
 }
+
+#Preview("Dark") {
+    @Previewable @State var open: OpenSwipeRow? = OpenSwipeRow(id: "b", rest: .trailing)
+    VStack(spacing: 12) {
+        SwipeableItemRow(t: ListTheme(.dark), item: ItemModel(id: "b", name: "Butter", units: 1, measure: "pack"), openRow: $open)
+        SwipeableItemRow(t: ListTheme(.dark), item: ItemModel(id: "e", name: "Eier", units: 10, isChecked: true), openRow: $open)
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
+}

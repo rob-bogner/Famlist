@@ -88,3 +88,22 @@ private struct InnerShadowLayer<S: InsettableShape>: View {
         .clipShape(shape)
     }
 }
+
+#Preview("CSSBox") {
+    CSSBox(shape: RoundedRectangle(cornerRadius: 20, style: .continuous),
+           paint: .linear(160, [stop(.hex("#FFFFFF"), 0), stop(.hex("#E8F4F5"), 1)]),
+           border: 1, borderColor: .hex("#0FA3AE", 0.3),
+           shadows: [.drop(0, 8, 24, 0, .rgba(0, 0, 0, 0.12)), .inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.8))])
+        .frame(width: 200, height: 120)
+        .padding(40)
+}
+
+#Preview("CSSBox – Dark") {
+    CSSBox(shape: RoundedRectangle(cornerRadius: 20, style: .continuous),
+           paint: .linear(160, [stop(.hex("#1A2A2D"), 0), stop(.hex("#0F1C1E"), 1)]),
+           border: 1, borderColor: .hex("#1FC2CC", 0.3),
+           shadows: [.drop(0, 8, 24, 0, .rgba(0, 0, 0, 0.5)), .inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.08))])
+        .frame(width: 200, height: 120)
+        .padding(40)
+        .background(Color.hex("#0A1416"))
+}

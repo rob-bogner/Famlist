@@ -70,6 +70,7 @@ struct ProgressHero: View {
                         .font(AppFont.dm(13, 500))
                         .foregroundStyle(Color.rgba(255, 255, 255, 0.86))
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .fixedSize()
                         .padding(.top, 1)
                         .contentTransition(.numericText())

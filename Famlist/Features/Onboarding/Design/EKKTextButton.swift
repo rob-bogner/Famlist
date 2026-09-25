@@ -36,3 +36,14 @@ struct EKKTextButton: View {
         .buttonStyle(.plain)
     }
 }
+
+#Preview("EKKTextButton") {
+    EKKTextButton(title: "Später", color: SheetTheme(.light).accent)
+        .padding(20)
+}
+
+#Preview("EKKTextButton – Dark") {
+    EKKTextButton(title: "Später", color: SheetTheme(.dark).accent)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

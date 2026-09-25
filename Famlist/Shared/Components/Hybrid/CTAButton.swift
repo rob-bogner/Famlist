@@ -38,6 +38,7 @@ struct CTAButton: View {
                     .font(AppFont.dm(16, 600))
                     .foregroundStyle(k.ctaText)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
                 .padding(.horizontal, 24)
                 .frame(maxWidth: .infinity)

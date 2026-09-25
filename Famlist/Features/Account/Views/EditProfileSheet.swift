@@ -114,6 +114,7 @@ struct EditProfileSheet: View {
                             .font(AppFont.dm(16, 400))
                             .foregroundStyle(k.sub)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         SVGIcon(ListAccountIcon.lock, size: 18, color: k.sub, lineWidth: 2)
                             .accessibilityLabel("Nicht änderbar")

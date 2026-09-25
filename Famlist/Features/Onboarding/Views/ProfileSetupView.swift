@@ -43,6 +43,10 @@ struct ProfileSetupView: View {
         ZStack(alignment: .top) {
             EKKScreenBackground(t: t)
 
+            // Knopf unten, solange Platz ist; sonst (iPhone SE, große Schrift) scrollt der Screen,
+            // statt dass der Knopf das Namensfeld überdeckt.
+            GeometryReader { geo in
+            ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // Schritt-Anzeige
                 HStack(spacing: 0) {
@@ -88,7 +92,7 @@ struct ProfileSetupView: View {
                 }
                 .padding(.top, 14)
 
-                Spacer(minLength: 0)
+                Spacer(minLength: 24)
 
                 CTAButton(title: isSaving ? "Wird gespeichert …" : "Los geht’s", k: k,
                           isEnabled: check == .available && !isSaving, action: submit)
@@ -96,8 +100,12 @@ struct ProfileSetupView: View {
             .padding(.horizontal, 24)
             .padding(.top, 70)
             .padding(.bottom, 34)
+            .frame(minHeight: geo.size.height, alignment: .top)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+            }
             .offset(y: keyboard.height > 0 ? -min(keyboard.height, 200) : 0)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .animation(.easeOut(duration: 0.25), value: keyboard.height)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

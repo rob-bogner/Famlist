@@ -42,3 +42,14 @@ struct SheetHeader: View {
         }
     }
 }
+
+#Preview("SheetHeader") {
+    SheetHeader(title: "Artikel bearbeiten", k: SheetTheme(.light))
+        .padding(20)
+}
+
+#Preview("SheetHeader – Dark") {
+    SheetHeader(title: "Artikel bearbeiten", k: SheetTheme(.dark))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

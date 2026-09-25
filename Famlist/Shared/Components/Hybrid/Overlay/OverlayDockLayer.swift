@@ -33,3 +33,13 @@ struct OverlayDockLayer: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 }
+
+#Preview("OverlayDockLayer", traits: .fixedLayout(width: 390, height: 844)) {
+    OverlayDockLayer(appearance: .light, active: .sort)
+        .background(Color.hex("#F4F7F7"))
+}
+
+#Preview("OverlayDockLayer – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    OverlayDockLayer(appearance: .dark, active: .sort)
+        .background(Color.hex("#0A1416"))
+}

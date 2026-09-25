@@ -56,6 +56,7 @@ struct MenuOverlayScreen: View {
                         .font(AppFont.outfit(18, 600))
                         .foregroundStyle(k.text)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .accessibilityAddTraits(.isHeader)
                 }
                 .padding(EdgeInsets(top: 10, leading: 12, bottom: 8, trailing: 12))

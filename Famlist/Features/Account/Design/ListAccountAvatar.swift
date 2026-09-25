@@ -49,3 +49,14 @@ struct ListAccountAvatar: View {
                                shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.45))]))
     }
 }
+
+#Preview("ListAccountAvatar") {
+    ListAccountAvatar(t: ListAccountTokens(.light), initial: "R", size: 72, fontSize: 28)
+        .padding(20)
+}
+
+#Preview("ListAccountAvatar – Dark") {
+    ListAccountAvatar(t: ListAccountTokens(.dark), initial: "R", size: 72, fontSize: 28)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

@@ -582,3 +582,11 @@ private struct DesignListEmptyState: View {
         .frame(maxWidth: .infinity)
     }
 }
+
+#Preview("DesignListScreen", traits: .fixedLayout(width: 390, height: 844)) {
+    DesignListScreen(appearance: .light)
+}
+
+#Preview("DesignListScreen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    DesignListScreen(appearance: .dark)
+}

@@ -53,6 +53,7 @@ struct CategoryChipRow: View {
                     .font(AppFont.dm(15, isSelected ? 600 : 500))
                     .foregroundStyle(k.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
             .padding(.leading, 13)   // 1 border + 12 padding
             .padding(.trailing, 17)  // 1 border + 16 padding
@@ -82,4 +83,11 @@ struct CategoryChipRow: View {
     @Previewable @State var selection = "Milchprodukte"
     CategoryChipRow(k: SheetTheme(.light), selection: $selection)
         .padding(20)
+}
+
+#Preview("Dark") {
+    @Previewable @State var selection = "Milchprodukte"
+    CategoryChipRow(k: SheetTheme(.dark), selection: $selection)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

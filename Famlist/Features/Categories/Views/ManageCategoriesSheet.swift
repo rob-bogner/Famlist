@@ -143,6 +143,7 @@ struct ManageCategoriesSheet: View {
                     .font(AppFont.outfit(16, 600))
                     .foregroundStyle(k.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Text(c.isFallback ? "Standard · kann nicht gelöscht werden" : "Tippen zum Bearbeiten")
                     .font(AppFont.dm(12, 400))
                     .foregroundStyle(k.sub)

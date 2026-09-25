@@ -33,6 +33,7 @@ struct UndoToast: View {
             Text("\(count) Artikel gelöscht")
                 .font(AppFont.dm(15, 500))
                 .foregroundStyle(k.toastText)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: onUndo) {
                 HStack(spacing: 6) {
@@ -40,6 +41,7 @@ struct UndoToast: View {
                     Text("Rückgängig")
                         .font(AppFont.dm(15, 600))
                         .foregroundStyle(k.toastAccent)
+                        .fixedSize()                     // Knopf nie abschneiden; die Meldung links bricht um
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 40)

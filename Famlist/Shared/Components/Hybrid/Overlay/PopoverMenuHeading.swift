@@ -30,3 +30,16 @@ struct PopoverMenuHeading: View {
             .accessibilityAddTraits(.isHeader)
     }
 }
+
+#Preview("PopoverMenuHeading") {
+    PopoverMenuHeading(text: "Sortieren nach", k: OverlayTheme(.light))
+        .frame(width: 270)
+        .padding(20)
+}
+
+#Preview("PopoverMenuHeading – Dark") {
+    PopoverMenuHeading(text: "Sortieren nach", k: OverlayTheme(.dark))
+        .frame(width: 270)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

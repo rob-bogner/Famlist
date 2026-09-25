@@ -49,6 +49,7 @@ struct UnitPickerMenu: View {
                 .font(AppFont.dm(16, displayValue == nil ? 400 : 500))
                 .foregroundStyle(displayValue == nil ? k.sub : k.text)
                 .lineLimit(1)
+                .minimumScaleFactor(0.85)
             Spacer(minLength: 0)
             SVGIcon(Icon.chevronsUpDown, size: 16, color: k.sub, lineWidth: 2.2)
         }
@@ -65,4 +66,11 @@ struct UnitPickerMenu: View {
     @Previewable @State var measure = "pack"
     UnitPickerMenu(k: SheetTheme(.light), measure: $measure)
         .padding(20)
+}
+
+#Preview("Dark") {
+    @Previewable @State var measure = "pack"
+    UnitPickerMenu(k: SheetTheme(.dark), measure: $measure)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

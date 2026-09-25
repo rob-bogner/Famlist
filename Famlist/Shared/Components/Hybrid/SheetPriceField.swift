@@ -79,3 +79,10 @@ struct SheetPriceField: View {
     SheetPriceField(k: SheetTheme(.light), price: $price)
         .padding(20)
 }
+
+#Preview("Dark") {
+    @Previewable @State var price = "1.99"
+    SheetPriceField(k: SheetTheme(.dark), price: $price)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

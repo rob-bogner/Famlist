@@ -55,6 +55,7 @@ struct ItemCard: View {
                     .foregroundStyle(t.text)
                     .strikethrough(item.isChecked, color: t.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 detailRow
             }
             .opacity(dimmed ? 0.55 : 1)
@@ -83,9 +84,8 @@ struct ItemCard: View {
 
     /// Warn-Dreieck bei endgültig fehlgeschlagenem Sync (wie zuvor in ListRowView).
     private var syncFailedIcon: some View {
-        Image(systemName: "exclamationmark.triangle.fill")
-            .font(.system(size: 20, weight: .semibold))
-            .foregroundStyle(t.isDark ? Color.hex("#FFC08A") : Color.hex("#BD5F0E"))
+        // Dreieck aus dem Design-Paket (wie „Konto löschen?“) statt SF Symbol; Farben unverändert.
+        SVGIcon(ListAccountIcon.warning, size: 20, color: t.isDark ? .hex("#FFC08A") : .hex("#BD5F0E"), lineWidth: 2)
             .frame(width: 32, height: 44)
             .contentShape(Rectangle())
             .swipeFriendlyTap("Sync fehlgeschlagen. Tippen zum erneuten Synchronisieren.") {
@@ -137,6 +137,7 @@ struct ItemCard: View {
                     .font(AppFont.dm(13, 500))
                     .foregroundStyle(t.sub)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
         }
     }
@@ -169,4 +170,14 @@ struct ItemCard: View {
         ItemCard(t: ListTheme(.light), item: ItemModel(name: "Eier", units: 10, isChecked: true))
     }
     .padding(20)
+}
+
+#Preview("Dark") {
+    VStack(spacing: 12) {
+        ItemCard(t: ListTheme(.dark), item: ItemModel(name: "Butter", units: 1, measure: "pack", brand: "Kerrygold"))
+        ItemCard(t: ListTheme(.dark), item: ItemModel(name: "Milch", units: 2, measure: "l", isUnavailable: true))
+        ItemCard(t: ListTheme(.dark), item: ItemModel(name: "Eier", units: 10, isChecked: true))
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
 }

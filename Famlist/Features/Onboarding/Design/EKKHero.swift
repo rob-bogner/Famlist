@@ -58,3 +58,18 @@ struct EKKHero<Content: View>: View {
         .clipShape(shape)
     }
 }
+
+#Preview("EKKHero", traits: .fixedLayout(width: 390, height: 844)) {
+    VStack(spacing: 0) {
+        EKKHero(t: EKKTokens(.light), height: 360) { EmptyView() }
+        Spacer()
+    }
+}
+
+#Preview("EKKHero – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    VStack(spacing: 0) {
+        EKKHero(t: EKKTokens(.dark), height: 360) { EmptyView() }
+        Spacer()
+    }
+    .background(Color.hex("#0A1416"))
+}

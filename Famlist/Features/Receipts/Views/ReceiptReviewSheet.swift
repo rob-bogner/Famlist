@@ -211,3 +211,11 @@ struct ReceiptReviewSheet: View {
                                            "KOKOSM. 400ML 1,39 A", "FAIRGL.VM SCHOKO 3,49 A"]))
     return ReceiptReviewSheet(flow: flow, appearance: .light)
 }
+
+#Preview("Kassenzettel prüfen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    let flow = ReceiptFlowViewModel(listItemNames: ["Kerrygold, original irische Butter", "Soyamilch", "Kokosmilch"],
+                                    catalog: nil, priceBook: PriceBook(repository: nil))
+    flow.apply(ReceiptParser.parse(lines: ["EDEKA", "KERRYGOLD BUTTER 2,49 A", "ALPRO SOJA DRINK 2,29 A",
+                                           "KOKOSM. 400ML 1,39 A", "FAIRGL.VM SCHOKO 3,49 A"]))
+    return ReceiptReviewSheet(flow: flow, appearance: .dark)
+}

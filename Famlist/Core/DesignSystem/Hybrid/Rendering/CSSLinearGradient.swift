@@ -42,3 +42,16 @@ struct CSSLinearGradient: View {
         }
     }
 }
+
+#Preview("CSSLinearGradient") {
+    CSSLinearGradient(angle: 135, stops: [stop(.hex("#0FA3AE"), 0), stop(.hex("#FFFFFF"), 1)])
+        .frame(width: 240, height: 140)
+        .padding(20)
+}
+
+#Preview("CSSLinearGradient – Dark") {
+    CSSLinearGradient(angle: 135, stops: [stop(.hex("#1FC2CC"), 0), stop(.hex("#0A1416"), 1)])
+        .frame(width: 240, height: 140)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

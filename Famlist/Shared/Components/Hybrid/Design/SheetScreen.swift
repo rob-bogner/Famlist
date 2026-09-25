@@ -43,3 +43,19 @@ struct SheetScreen<Sheet: View>: View {
         }
     }
 }
+
+#Preview("SheetScreen", traits: .fixedLayout(width: 390, height: 844)) {
+    SheetScreen(appearance: .light, accentHex: nil) {
+        SheetSurface(k: SheetTheme(.light), height: 420) {
+            SheetHeader(title: "Beispiel", k: SheetTheme(.light)).padding(20)
+        }
+    }
+}
+
+#Preview("SheetScreen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    SheetScreen(appearance: .dark, accentHex: nil) {
+        SheetSurface(k: SheetTheme(.dark), height: 420) {
+            SheetHeader(title: "Beispiel", k: SheetTheme(.dark)).padding(20)
+        }
+    }
+}

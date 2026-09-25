@@ -32,3 +32,14 @@ struct OverlayCapsLabel: View {
             .textCase(.uppercase)
     }
 }
+
+#Preview("OverlayCapsLabel") {
+    OverlayCapsLabel(text: "Sortieren nach", color: OverlayTheme(.light).sub)
+        .padding(20)
+}
+
+#Preview("OverlayCapsLabel – Dark") {
+    OverlayCapsLabel(text: "Sortieren nach", color: OverlayTheme(.dark).sub)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

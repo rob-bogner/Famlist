@@ -66,3 +66,11 @@ struct FocusedSearchField: View {
     FocusedSearchField(k: SheetTheme(.light), text: $text, placeholder: "Artikel suchen …", focus: $focused)
         .padding(20)
 }
+
+#Preview("Dark") {
+    @Previewable @State var text = "Milch"
+    @Previewable @FocusState var focused: Bool
+    FocusedSearchField(k: SheetTheme(.dark), text: $text, placeholder: "Artikel suchen …", focus: $focused)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

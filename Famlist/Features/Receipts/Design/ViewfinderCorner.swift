@@ -29,3 +29,15 @@ struct ViewfinderCorner: View {
             .clipped()
     }
 }
+
+#Preview("ViewfinderCorner") {
+    ViewfinderCorner()
+        .padding(20)
+        .background(Color.hex("#5A6B6E"))
+}
+
+#Preview("ViewfinderCorner – Dark") {
+    ViewfinderCorner()
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

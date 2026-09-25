@@ -82,3 +82,10 @@ struct SheetQuantityStepper: View {
     SheetQuantityStepper(k: SheetTheme(.light), quantity: $quantity)
         .padding(20)
 }
+
+#Preview("Dark") {
+    @Previewable @State var quantity = 1
+    SheetQuantityStepper(k: SheetTheme(.dark), quantity: $quantity)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

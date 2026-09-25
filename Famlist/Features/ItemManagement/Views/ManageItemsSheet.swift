@@ -106,11 +106,13 @@ struct ManageItemsSheet: View {
                 .textCase(.uppercase)
                 .foregroundStyle(k.sub)
                 .lineLimit(1)
-            Spacer(minLength: 0)
+                .fixedSize()                          // Zähler nie kürzen
+            Spacer(minLength: 8)                      // XXL: Zähler und Hinweis stießen sonst aneinander
             Text(vm.errorMessage ?? "Tippen = bearbeiten · wischen = löschen")
                 .font(AppFont.dm(12, 400))
                 .foregroundStyle(vm.errorMessage == nil ? k.sub : .hex("#E5484D"))
                 .lineLimit(1)
+                .minimumScaleFactor(1 / AppFont.maxScale)
         }
         .padding(.horizontal, 4)
     }
@@ -139,6 +141,7 @@ struct ManageItemsSheet: View {
                 .font(AppFont.dm(14, on ? 600 : 500))
                 .foregroundStyle(on ? t.chipOnText : k.text)
                 .lineLimit(1)
+                .minimumScaleFactor(0.85)
                 .padding(.horizontal, 15)                           // 1 border + 14 padding
                 .frame(height: 36)
                 .background(CSSBox(shape: Pill, paint: on ? t.chipOnBg : .color(t.chipOffBg),
@@ -161,11 +164,13 @@ struct ManageItemsSheet: View {
                         .font(AppFont.outfit(16, 600))
                         .foregroundStyle(k.text)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                     Text(meta)
                         .font(AppFont.dm(13, 400))
                         .foregroundStyle(k.sub)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                 }
                 // SVG ohne flex-shrink: 0 → schrumpft mit (preserveAspectRatio meet, zentriert)

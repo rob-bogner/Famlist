@@ -29,3 +29,14 @@ struct ListAccountDesignCaret: View {
             .accessibilityHidden(true)
     }
 }
+
+#Preview("ListAccountDesignCaret") {
+    ListAccountDesignCaret(t: ListAccountTokens(.light))
+        .padding(20)
+}
+
+#Preview("ListAccountDesignCaret – Dark") {
+    ListAccountDesignCaret(t: ListAccountTokens(.dark))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

@@ -33,55 +33,82 @@ struct ShoppingDoneView: View {
     var onKeep: () -> Void = {}
     var onScan: () -> Void = {}
 
+    /// Kopfbereich: 420 wie im Design (844 hoch). Auf kleineren Geräten (iPhone SE, 667) niedriger, damit
+    /// Karten und Knöpfe darunter Platz haben – vorher lag der Knopf über der Hinweiskarte.
+    static func heroHeight(screenHeight: CGFloat) -> CGFloat {
+        min(420, max(280, screenHeight - 424))
+    }
+
     var body: some View {
         let k = SheetTheme(appearance)
         let t = EKKTokens(appearance)
-        let infoFont = AppFont.ui(.dmSans, 14, 400)
-        let totalText = total.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE")))
-
-        ZStack(alignment: .top) {
-            EKKScreenBackground(t: t)
-
-            EKKHero(t: t, height: 420) {
-                VStack(spacing: 14) {
-                    SVGIcon(Icon.check, size: 44, color: .white, lineWidth: 2.4)
-                        .frame(width: 94, height: 94)
-                        .background(EKKGlassBadge(shape: Circle(), size: 94))
-                        .accessibilityHidden(true)
-                    Text("Einkauf erledigt")
-                        .font(AppFont.outfit(32, 700))
-                        .foregroundStyle(Color.white)
-                        .accessibilityAddTraits(.isHeader)
-                    Text("\(listName) · \(Self.checkedText(checked: itemCount, total: totalCount ?? itemCount))")
-                        .font(AppFont.dm(15, 400))
-                        .foregroundStyle(Color.rgba(255, 255, 255, 0.9))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                EKKScreenBackground(t: t)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        hero(t: t, height: Self.heroHeight(screenHeight: geo.size.height))
+                        cards(k: k, t: t)
+                            .padding(.top, 24)
+                        Spacer(minLength: 24)
+                        buttons(k: k)
+                    }
+                    .frame(minHeight: geo.size.height)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.top, 30)
-            }
-
-            if hasReceipt {
-                receiptSummary(totalText: totalText, infoFont: infoFont, k: k, t: t)
-            } else {
-                scanOffer(infoFont: infoFont, k: k, t: t)
-            }
-
-            if hasReceipt {
-                VStack(spacing: 8) {
-                    CTAButton(title: "Abgehakte löschen & fertig", k: k, action: onFinish)
-                    EKKTextButton(title: "Liste behalten", color: k.accentText, action: onKeep)
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 34)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-            } else {
-                offerButtons(k: k)
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
+    }
+
+    private func hero(t: EKKTokens, height: CGFloat) -> some View {
+        EKKHero(t: t, height: height) {
+            VStack(spacing: 14) {
+                SVGIcon(Icon.check, size: 44, color: .white, lineWidth: 2.4)
+                    .frame(width: 94, height: 94)
+                    .background(EKKGlassBadge(shape: Circle(), size: 94))
+                    .accessibilityHidden(true)
+                Text("Einkauf erledigt")
+                    .font(AppFont.outfit(32, 700))
+                    .foregroundStyle(Color.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(1 / AppFont.maxScale)
+                    .accessibilityAddTraits(.isHeader)
+                Text("\(listName) · \(Self.checkedText(checked: itemCount, total: totalCount ?? itemCount))")
+                    .font(AppFont.dm(15, 400))
+                    .foregroundStyle(Color.rgba(255, 255, 255, 0.9))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.top, 30)
+        }
+    }
+
+    @ViewBuilder
+    private func cards(k: SheetTheme, t: EKKTokens) -> some View {
+        let infoFont = AppFont.ui(.dmSans, 14, 400)
+        if hasReceipt {
+            let totalText = total.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE")))
+            receiptSummary(totalText: totalText, infoFont: infoFont, k: k, t: t)
+        } else {
+            scanOffer(infoFont: infoFont, k: k, t: t)
+        }
+    }
+
+    @ViewBuilder
+    private func buttons(k: SheetTheme) -> some View {
+        if hasReceipt {
+            VStack(spacing: 8) {
+                CTAButton(title: "Abgehakte löschen & fertig", k: k, action: onFinish)
+                EKKTextButton(title: "Liste behalten", color: k.accentText, action: onKeep)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 34)
+        } else {
+            offerButtons(k: k)
+        }
     }
 
     /// Mit Kassenzettel (ShoppingDone.dc.html): Summe, gespeicherte Preise, Hinweis.
@@ -108,7 +135,6 @@ struct ShoppingDoneView: View {
                 .background(CSSBox(shape: RR(20), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
             }
             .padding(.horizontal, 20)
-            .padding(.top, 444)
     }
 
     /// Ohne Kassenzettel (ShoppingDoneScan.dc.html): Karte „Kassenzettel scannen?“ + Hinweis.
@@ -149,7 +175,6 @@ struct ShoppingDoneView: View {
             .background(CSSBox(shape: RR(20), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
         }
         .padding(.horizontal, 20)
-        .padding(.top, 444)
     }
 
     /// CTA „Kassenzettel scannen“ + zwei Textknöpfe nebeneinander.
@@ -165,7 +190,6 @@ struct ShoppingDoneView: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 34)
-        .frame(maxHeight: .infinity, alignment: .bottom)
     }
 
     /// Design-Text „alle 6 Artikel abgehakt“ nur, wenn wirklich alle abgehakt sind; sonst „2 von 6 Artikeln abgehakt“.
@@ -185,6 +209,7 @@ struct ShoppingDoneView: View {
                 .foregroundStyle(k.text)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
+                .minimumScaleFactor(0.85)
         }
         .padding(17)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

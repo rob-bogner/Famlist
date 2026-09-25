@@ -83,3 +83,15 @@ struct SheetTextField: View {
     }
     .padding(20)
 }
+
+#Preview("Dark") {
+    @Previewable @State var name = "Butter"
+    @Previewable @State var brand = ""
+    VStack(spacing: 8) {
+        SheetTextField(k: SheetTheme(.dark), text: $name, placeholder: "Name", height: 52)
+        SheetTextField(k: SheetTheme(.dark), text: $brand, placeholder: "Marke", weight: 400, isSecondary: true)
+        SheetTextField(k: SheetTheme(.dark), text: .constant(""), placeholder: "Name", error: "Bitte einen Namen eingeben")
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
+}

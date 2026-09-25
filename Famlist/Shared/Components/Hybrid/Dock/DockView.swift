@@ -243,7 +243,7 @@ private struct DockActionButton: View {
                         lineWidth: item.selected ? 2.2 : 1.9)
                 if item.selected {
                     Text(item.text)
-                        .font(AppFont.dm(13, 600))
+                        .font(AppFont.dm(13, 600, scaled: false))   // Pille hat feste Breite, auch auf dem SE
                         .tracking(-0.065)                  // -0.005em × 13
                         .foregroundStyle(item.color)
                         .lineLimit(1)
@@ -269,6 +269,11 @@ private struct DockActionButton: View {
         .accessibilityLabel(item.label)
         .accessibilityValue(item.disabled ? "Nicht verfügbar" : "")
         .accessibilityAddTraits(item.selected ? .isSelected : [])
+        // Große iOS-Schrift: langer Druck zeigt Symbol und Beschriftung groß (wie bei Tab-Leisten).
+        .accessibilityShowsLargeContentViewer {
+            SVGIcon(item.icon, size: 22, color: .primary, lineWidth: 1.9)
+            Text(item.label)
+        }
     }
 }
 
@@ -309,4 +314,16 @@ private struct DockFAB: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Neuer Artikel")
     }
+}
+
+#Preview("DockView") {
+    DockView(appearance: .light)
+        .padding(20)
+        .background(Color.hex("#F4F7F7"))
+}
+
+#Preview("DockView – Dark") {
+    DockView(appearance: .dark)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

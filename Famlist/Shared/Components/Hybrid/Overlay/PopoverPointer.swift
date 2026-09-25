@@ -45,3 +45,17 @@ private struct PointerBorderShape: Shape {
         return p
     }
 }
+
+#Preview("PopoverPointer") {
+    let k = OverlayTheme(.light)
+    PopoverPointer(fill: k.menuSolid, border: k.menuBorder)
+        .padding(20)
+        .background(Color.hex("#F4F7F7"))
+}
+
+#Preview("PopoverPointer – Dark") {
+    let k = OverlayTheme(.dark)
+    PopoverPointer(fill: k.menuSolid, border: k.menuBorder)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

@@ -87,3 +87,32 @@ struct RootView: View { // SwiftUI View declaration.
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
 }
+
+#Preview("Dark") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    let sessionVM = AppSessionViewModel(client: nil,
+                                        profiles: PreviewProfilesRepository(),
+                                        lists: PreviewListsRepository(),
+                                        listViewModel: listVM)
+    return RootView()
+        .environmentObject(sessionVM)
+        .environmentObject(listVM)
+        .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Authenticated – Dark") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    let sessionVM = AppSessionViewModel(client: nil,
+                                        profiles: PreviewProfilesRepository(),
+                                        lists: PreviewListsRepository(),
+                                        listViewModel: listVM)
+    sessionVM.isAuthenticated = true
+    return RootView()
+        .environmentObject(sessionVM)
+        .environmentObject(listVM)
+        .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
+        .preferredColorScheme(.dark)
+}

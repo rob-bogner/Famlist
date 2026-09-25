@@ -31,3 +31,16 @@ struct PopoverMenuDivider: View {
             .accessibilityHidden(true)
     }
 }
+
+#Preview("PopoverMenuDivider") {
+    PopoverMenuDivider(k: OverlayTheme(.light))
+        .frame(width: 270)
+        .padding(20)
+}
+
+#Preview("PopoverMenuDivider – Dark") {
+    PopoverMenuDivider(k: OverlayTheme(.dark))
+        .frame(width: 270)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

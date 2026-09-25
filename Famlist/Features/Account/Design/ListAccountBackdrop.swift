@@ -56,3 +56,23 @@ struct ListAccountBackdrop<Background: View, Content: View>: View {
         .ignoresSafeArea()
     }
 }
+
+#Preview("ListAccountBackdrop", traits: .fixedLayout(width: 390, height: 844)) {
+    ListAccountBackdrop(scrim: ListAccountTokens(.light).scrimSheet) {
+        Color.hex("#F4F7F7")
+    } content: {
+        ListAccountSheet(k: SheetTheme(.light), height: 320, title: "Beispiel") {
+            ListAccountSectionLabel(text: "Abschnitt", t: ListAccountTokens(.light))
+        }
+    }
+}
+
+#Preview("ListAccountBackdrop – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    ListAccountBackdrop(scrim: ListAccountTokens(.dark).scrimSheet) {
+        Color.hex("#0A1416")
+    } content: {
+        ListAccountSheet(k: SheetTheme(.dark), height: 320, title: "Beispiel") {
+            ListAccountSectionLabel(text: "Abschnitt", t: ListAccountTokens(.dark))
+        }
+    }
+}

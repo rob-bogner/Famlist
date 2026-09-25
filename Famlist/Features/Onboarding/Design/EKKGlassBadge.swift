@@ -31,3 +31,17 @@ struct EKKGlassBadge<S: InsettableShape>: View {
             .frame(width: size, height: size)
     }
 }
+
+#Preview("EKKGlassBadge") {
+    EKKGlassBadge(shape: Circle(), size: 94)
+        .frame(width: 94, height: 94)
+        .padding(20)
+        .background(SheetTheme(.light).accent)
+}
+
+#Preview("EKKGlassBadge – Dark") {
+    EKKGlassBadge(shape: Circle(), size: 94)
+        .frame(width: 94, height: 94)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

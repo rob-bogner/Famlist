@@ -106,6 +106,8 @@ struct BarcodeScanSheet: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 420)
+                // Auf kleinen Geräten (SE) liegt die Ergebniskarte über dem Hinweis und das Glas lässt ihn durchscheinen.
+                .opacity(product == nil ? 1 : 0)
 
             if let product {
                 resultCard(product, k: k, t: t)
@@ -219,5 +221,10 @@ extension ScannedProduct {
 
 #Preview("Barcode-Scanner", traits: .fixedLayout(width: 390, height: 844)) {
     BarcodeScanSheet(viewModel: BarcodeScanViewModel(catalog: nil, global: nil), appearance: .light,
+                     previewProduct: .designSample)
+}
+
+#Preview("Barcode-Scanner – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    BarcodeScanSheet(viewModel: BarcodeScanViewModel(catalog: nil, global: nil), appearance: .dark,
                      previewProduct: .designSample)
 }

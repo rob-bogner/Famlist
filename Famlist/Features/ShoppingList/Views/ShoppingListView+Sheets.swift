@@ -110,6 +110,8 @@ extension ShoppingListView {
                           onPriceChanged: { recordPrice(for: $0) })
         case .productImage(let item):
             ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
+        case .importClipboard:
+            ClipboardImportSheet(k: k, maxHeight: maxHeight, onClose: closeSheet)
         case .lists:
             MyListsSheet(k: k, maxHeight: maxHeight, onClose: closeSheet,
                          onCreate: { activeSheet = .createList },

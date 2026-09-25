@@ -70,6 +70,7 @@ struct GlassActionButton: View {
                 .font(AppFont.dm(12, 600))
                 .foregroundStyle(labelColor)
                 .lineLimit(1)
+                .minimumScaleFactor(0.85)
                 .fixedSize()           // white-space: nowrap – darf mittig über 76 pt hinausragen
         }
         .frame(width: 76, height: columnHeight)
@@ -83,4 +84,14 @@ struct GlassActionButton: View {
         GlassActionButton(style: .favorite, title: "Standard", icon: Icon.star, labelColor: .gray, columnHeight: 76) {}
     }
     .padding()
+}
+
+#Preview("Dark") {
+    HStack(spacing: 8) {
+        GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: SheetTheme(.dark).sub) {}
+        GlassActionButton(style: .edit, title: "Umbenennen", icon: Icon.pencil, labelColor: SheetTheme(.dark).sub, columnHeight: 76) {}
+        GlassActionButton(style: .favorite, title: "Standard", icon: Icon.star, labelColor: SheetTheme(.dark).sub, columnHeight: 76) {}
+    }
+    .padding()
+    .background(Color.hex("#0A1416"))
 }

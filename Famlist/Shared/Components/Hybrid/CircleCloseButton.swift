@@ -34,3 +34,14 @@ struct CircleCloseButton: View {
         .buttonStyle(.plain)
     }
 }
+
+#Preview("CircleCloseButton") {
+    CircleCloseButton(k: SheetTheme(.light), size: 36, iconSize: 18, lineWidth: 2.2)
+        .padding(20)
+}
+
+#Preview("CircleCloseButton – Dark") {
+    CircleCloseButton(k: SheetTheme(.dark), size: 36, iconSize: 18, lineWidth: 2.2)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

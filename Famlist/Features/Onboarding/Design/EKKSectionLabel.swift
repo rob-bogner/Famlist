@@ -33,3 +33,14 @@ struct EKKSectionLabel: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+#Preview("EKKSectionLabel") {
+    EKKSectionLabel(text: "Dein Profil", k: SheetTheme(.light))
+        .padding(20)
+}
+
+#Preview("EKKSectionLabel – Dark") {
+    EKKSectionLabel(text: "Dein Profil", k: SheetTheme(.dark))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

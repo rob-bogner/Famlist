@@ -57,3 +57,22 @@ struct ListAccountFocusedField<Leading: View>: View {
         }
     }
 }
+
+#Preview("ListAccountFocusedField") {
+    @Previewable @State var text = "Wocheneinkauf"
+    ListAccountFocusedField(t: ListAccountTokens(.light), text: $text, placeholder: "Listenname",
+                            a11yLabel: "Listenname") {
+        EmptyView()
+    }
+    .padding(20)
+}
+
+#Preview("ListAccountFocusedField – Dark") {
+    @Previewable @State var text = "Wocheneinkauf"
+    ListAccountFocusedField(t: ListAccountTokens(.dark), text: $text, placeholder: "Listenname",
+                            a11yLabel: "Listenname") {
+        EmptyView()
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
+}

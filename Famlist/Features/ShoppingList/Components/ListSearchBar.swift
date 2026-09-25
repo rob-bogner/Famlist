@@ -36,6 +36,7 @@ struct ListSearchBar: View {
                         .font(AppFont.dm(15, 400))
                         .foregroundStyle(t.text)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)                     // XXL: bis zur Designgröße 15 schrumpfen statt abschneiden
                     Spacer(minLength: 0)
                 }
                 .frame(maxHeight: .infinity)
@@ -65,4 +66,10 @@ struct ListSearchBar: View {
 #Preview {
     ListSearchBar(t: ListTheme(.light))
         .padding(20)
+}
+
+#Preview("Dark") {
+    ListSearchBar(t: ListTheme(.dark))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

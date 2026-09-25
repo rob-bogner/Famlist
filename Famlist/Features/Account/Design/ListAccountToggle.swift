@@ -47,3 +47,16 @@ struct ListAccountToggle: View {
         .accessibilityAddTraits(.isToggle)
     }
 }
+
+#Preview("ListAccountToggle") {
+    @Previewable @State var isOn = true
+    ListAccountToggle(t: ListAccountTokens(.light), isOn: $isOn, label: "Benachrichtigungen")
+        .padding(20)
+}
+
+#Preview("ListAccountToggle – Dark") {
+    @Previewable @State var isOn = true
+    ListAccountToggle(t: ListAccountTokens(.dark), isOn: $isOn, label: "Benachrichtigungen")
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

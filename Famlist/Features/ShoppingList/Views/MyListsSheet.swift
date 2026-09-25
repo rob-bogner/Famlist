@@ -125,3 +125,20 @@ struct MyListsSheet: View {
     .environmentObject(listVM)
     .environmentObject(session)
 }
+
+#Preview("Dark") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    listVM.allLists = [
+        ListModel(id: listVM.listId, ownerId: UUID(), title: "Wocheneinkauf", isDefault: true, createdAt: Date(), updatedAt: Date()),
+        ListModel(id: UUID(), ownerId: UUID(), title: "Drogerie", isDefault: false, createdAt: Date(), updatedAt: Date())
+    ]
+    let session = AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
+                                      lists: PreviewListsRepository(), listViewModel: listVM)
+    return ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        MyListsSheet(k: SheetTheme(.dark), maxHeight: 790, onClose: {})
+    }
+    .ignoresSafeArea()
+    .environmentObject(listVM)
+    .environmentObject(session)
+}

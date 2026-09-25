@@ -35,3 +35,18 @@ struct ListAccountFieldGroup<Field: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+#Preview("ListAccountFieldGroup") {
+    ListAccountFieldGroup(label: "Name", t: ListAccountTokens(.light)) {
+        Text("Wocheneinkauf")
+    }
+    .padding(20)
+}
+
+#Preview("ListAccountFieldGroup – Dark") {
+    ListAccountFieldGroup(label: "Name", t: ListAccountTokens(.dark)) {
+        Text("Wocheneinkauf").foregroundStyle(.white)
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
+}

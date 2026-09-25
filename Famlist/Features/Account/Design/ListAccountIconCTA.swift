@@ -57,3 +57,14 @@ struct ListAccountIconCTA: View {
         .contentShape(Pill)
     }
 }
+
+#Preview("ListAccountIconCTA") {
+    ListAccountIconCTA(k: SheetTheme(.light), icon: ListAccountIcon.share, title: "Link teilen")
+        .padding(20)
+}
+
+#Preview("ListAccountIconCTA – Dark") {
+    ListAccountIconCTA(k: SheetTheme(.dark), icon: ListAccountIcon.share, title: "Link teilen")
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

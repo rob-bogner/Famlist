@@ -35,15 +35,23 @@ struct SignInView: View {
     @State private var showTestAccounts = false
     #endif
 
-    /// Unterkante des Buttons „Weiter mit E-Mail“ im Design (top 432 + Label 20 + 12 + Feld 54 + 12 + CTA 56).
-    private let ctaBottom: CGFloat = 432 + 20 + 12 + 54 + 12 + 56
+    /// Hero-Höhe: 400 wie im Design (844 pt hohe Geräte); auf kleineren Geräten niedriger, mindestens 300.
+    private func heroHeight(screenHeight: CGFloat) -> CGFloat {
+        min(400, max(300, screenHeight - 444))
+    }
+
+    /// Unterkante des Buttons „Weiter mit E-Mail“ (Hero + 32 + Label 20 + 12 + Feld 54 + 12 + CTA 56).
+    private func ctaBottom(screenHeight: CGFloat) -> CGFloat {
+        heroHeight(screenHeight: screenHeight) + 32 + 20 + 12 + 54 + 12 + 56
+    }
 
     var body: some View {
         let appearance = Appearance(colorScheme)
         GeometryReader { geo in
             let screenHeight = geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom
-            let lift = keyboard.height > 0 ? max(0, ctaBottom - (screenHeight - keyboard.height - 16)) : 0
-            content(appearance)
+            let lift = keyboard.height > 0
+                ? max(0, ctaBottom(screenHeight: screenHeight) - (screenHeight - keyboard.height - 16)) : 0
+            content(appearance, screenHeight: screenHeight)
                 .offset(y: -lift)
                 .animation(.easeOut(duration: 0.25), value: keyboard.height)
                 .overlay(alignment: .bottom) { toastView(appearance, keyboardLift: keyboard.height) }
@@ -64,7 +72,10 @@ struct SignInView: View {
         #endif
     }
 
-    private func content(_ appearance: Appearance) -> some View {
+    /// Fließender Aufbau: Auf 844 pt hohen Geräten liegen Hero (400), Formular (ab 432) und Rechtstext
+    /// (40 über der Unterkante) genau wie im Design. Auf kleineren Geräten (iPhone SE) wird der Hero niedriger;
+    /// reicht der Platz trotzdem nicht (große Schrift), scrollt der Screen statt Inhalte zu überlagern.
+    private func content(_ appearance: Appearance, screenHeight: CGFloat) -> some View {
         let k = SheetTheme(appearance)
         let t = EKKTokens(appearance)
         let subtitleFont = AppFont.ui(.dmSans, 17, 400)
@@ -73,8 +84,10 @@ struct SignInView: View {
         return ZStack(alignment: .top) {
             EKKScreenBackground(t: t)
 
+            ScrollView {
+            VStack(spacing: 0) {
             // Hero
-            EKKHero(t: t, height: 400) {
+            EKKHero(t: t, height: heroHeight(screenHeight: screenHeight)) {
                 VStack(alignment: .leading, spacing: 18) {
                     SVGIcon(Icon.basket, size: 40, color: .white, lineWidth: 1.7)
                         .frame(width: 86, height: 86)
@@ -144,7 +157,9 @@ struct SignInView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 432)
+            .padding(.top, 32)
+
+            Spacer(minLength: 24)
 
             // Rechtstext
             (Text("Mit dem Fortfahren akzeptierst du die ")
@@ -160,7 +175,11 @@ struct SignInView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 36)
                 .padding(.bottom, 40)
-                .frame(maxHeight: .infinity, alignment: .bottom)
+            }
+            .frame(minHeight: screenHeight)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()

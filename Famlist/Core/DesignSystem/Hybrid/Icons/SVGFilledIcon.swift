@@ -45,3 +45,9 @@ struct SVGFilledIcon: View {
 #Preview {
     SVGFilledIcon(Icon.star, size: 48, color: .hex("#F5B521"), lineWidth: 1.5)
 }
+
+#Preview("SVGFilledIcon – Dark") {
+    SVGFilledIcon(Icon.star, size: 48, color: .hex("#F5B521"), lineWidth: 1.5)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

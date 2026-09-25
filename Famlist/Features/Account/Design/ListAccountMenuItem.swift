@@ -33,6 +33,7 @@ struct ListAccountMenuItem: View {
                     .font(AppFont.dm(15, 500))
                     .foregroundStyle(t.k.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
             .padding(.horizontal, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -41,4 +42,15 @@ struct ListAccountMenuItem: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+#Preview("ListAccountMenuItem") {
+    ListAccountMenuItem(t: ListAccountTokens(.light), icon: ListAccountIcon.copy, title: "Duplizieren", action: {})
+        .padding(20)
+}
+
+#Preview("ListAccountMenuItem – Dark") {
+    ListAccountMenuItem(t: ListAccountTokens(.dark), icon: ListAccountIcon.copy, title: "Duplizieren", action: {})
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

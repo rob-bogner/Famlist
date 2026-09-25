@@ -40,3 +40,23 @@ struct ListAccountSheet<Content: View>: View {
         }
     }
 }
+
+#Preview("ListAccountSheet", traits: .fixedLayout(width: 390, height: 844)) {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        ListAccountSheet(k: SheetTheme(.light), height: 360, title: "Liste erstellen") {
+            ListAccountSectionLabel(text: "Name", t: ListAccountTokens(.light))
+        }
+    }
+    .ignoresSafeArea()
+}
+
+#Preview("ListAccountSheet – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        ListAccountSheet(k: SheetTheme(.dark), height: 360, title: "Liste erstellen") {
+            ListAccountSectionLabel(text: "Name", t: ListAccountTokens(.dark))
+        }
+    }
+    .ignoresSafeArea()
+}

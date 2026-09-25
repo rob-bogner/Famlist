@@ -29,3 +29,14 @@ struct FieldLabel: View {
             .padding(.leading, 4)
     }
 }
+
+#Preview("FieldLabel") {
+    FieldLabel(text: "Menge", k: SheetTheme(.light))
+        .padding(20)
+}
+
+#Preview("FieldLabel – Dark") {
+    FieldLabel(text: "Menge", k: SheetTheme(.dark))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

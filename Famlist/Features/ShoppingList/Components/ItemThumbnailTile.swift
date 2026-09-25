@@ -44,3 +44,9 @@ struct ItemThumbnailTile: View {
     ItemThumbnailTile(t: ListTheme(.light), image: nil)
         .padding()
 }
+
+#Preview("Dark") {
+    ItemThumbnailTile(t: ListTheme(.dark), image: nil)
+        .padding()
+        .background(Color.hex("#0A1416"))
+}

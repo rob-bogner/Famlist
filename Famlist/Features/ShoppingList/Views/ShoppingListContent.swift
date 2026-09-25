@@ -196,3 +196,27 @@ private struct ReorderDropDelegate: DropDelegate {
         return true
     }
 }
+
+#Preview("ShoppingListContent", traits: .fixedLayout(width: 390, height: 844)) {
+    @Previewable @State var openRow: OpenSwipeRow?
+    ZStack {
+        ListBackground(t: ListTheme(.light))
+        ScrollView {
+            ShoppingListContent(t: ListTheme(.light), openRow: $openRow)
+                .padding(.horizontal, 20)
+        }
+    }
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}
+
+#Preview("ShoppingListContent – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    @Previewable @State var openRow: OpenSwipeRow?
+    ZStack {
+        ListBackground(t: ListTheme(.dark))
+        ScrollView {
+            ShoppingListContent(t: ListTheme(.dark), openRow: $openRow)
+                .padding(.horizontal, 20)
+        }
+    }
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}

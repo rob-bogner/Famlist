@@ -58,6 +58,7 @@ struct ProductImageSheet: View {
                             .font(AppFont.dm(14, 500))
                             .foregroundStyle(k.sub)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                             .padding(.top, 2)
                     }
                 }
@@ -108,6 +109,15 @@ private struct ProductImageTile: View {
     ZStack(alignment: .bottom) {
         Color.black.opacity(0.4)
         ProductImageSheet(item: ItemModel(name: "Butter", units: 1, measure: "pack"), k: SheetTheme(.light),
+                          maxHeight: 790, onClose: {})
+    }
+    .ignoresSafeArea()
+}
+
+#Preview("Dark") {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        ProductImageSheet(item: ItemModel(name: "Butter", units: 1, measure: "pack"), k: SheetTheme(.dark),
                           maxHeight: 790, onClose: {})
     }
     .ignoresSafeArea()

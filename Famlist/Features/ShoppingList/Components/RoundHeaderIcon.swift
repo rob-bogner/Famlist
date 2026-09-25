@@ -37,3 +37,12 @@ struct RoundHeaderIcon: View {
     }
     .padding()
 }
+
+#Preview("Dark") {
+    HStack(spacing: 10) {
+        RoundHeaderIcon(t: ListTheme(.dark), icon: Icon.viewToggle)
+        RoundHeaderIcon(t: ListTheme(.dark), icon: Icon.menu)
+    }
+    .padding()
+    .background(Color.hex("#0A1416"))
+}

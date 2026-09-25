@@ -163,6 +163,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                     .environmentObject(UITestFixture.session)
                     .environmentObject(UITestFixture.categoryStore)
                     .environmentObject(UITestFixture.priceBook)
+                    .appFontScaling()
             } else {
                 appRoot
             }
@@ -175,6 +176,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     /// Regular root view with all shared environment objects.
     private var appRoot: some View {
         RootView() // Root view deciding between AuthView and ShoppingListView.
+            .appFontScaling() // Schriften wachsen mit der iOS-Textgröße (begrenzt)
             .environmentObject(sessionViewModel) // Inject shared session VM for auth state.
             .environmentObject(listViewModel) // Inject shared list VM for list screens.
             .environmentObject(syncMonitor) // Inject sync monitor for status tracking

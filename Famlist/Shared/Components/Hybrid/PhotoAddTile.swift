@@ -76,3 +76,9 @@ struct PhotoAddTile: View {
     PhotoAddTile(k: SheetTheme(.light), image: .constant(nil))
         .padding(20)
 }
+
+#Preview("Dark") {
+    PhotoAddTile(k: SheetTheme(.dark), image: .constant(nil))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

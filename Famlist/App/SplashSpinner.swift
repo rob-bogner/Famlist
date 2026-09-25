@@ -43,3 +43,5 @@ struct SplashSpinner: View {
 }
 
 #Preview("Spinner") { SplashSpinner().padding().background(Color.black) }
+
+#Preview("Spinner – Dark") { SplashSpinner().padding().background(Color.hex("#0A1416")).preferredColorScheme(.dark) }

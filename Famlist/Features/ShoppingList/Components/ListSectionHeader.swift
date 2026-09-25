@@ -51,6 +51,7 @@ struct ListSectionHeader: View {
                     .font(AppFont.outfit(20, 600))
                     .foregroundStyle(t.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Text("\(count)")
                     .font(AppFont.dm(14, 600))
                     .foregroundStyle(t.sub)
@@ -101,4 +102,13 @@ struct ListSectionHeader: View {
         ListSectionHeader(t: ListTheme(.light), kind: .checked, count: 1)
     }
     .padding(20)
+}
+
+#Preview("Dark") {
+    VStack(spacing: 20) {
+        ListSectionHeader(t: ListTheme(.dark), kind: .category(CategoryDefinition.defaults[7]), count: 1)
+        ListSectionHeader(t: ListTheme(.dark), kind: .checked, count: 1)
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
 }

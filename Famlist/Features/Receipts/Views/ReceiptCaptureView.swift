@@ -44,77 +44,90 @@ struct ReceiptCaptureView: View {
                     .accessibilityHidden(true)
             }
 
-            // Obere Leiste
-            HStack(spacing: 0) {
-                glassButton(label: "Schließen", action: close) {
-                    SVGIcon(Icon.close, size: 20, color: .white, lineWidth: 2.2)
-                }
-                Spacer(minLength: 0)
-                Text("Kassenzettel")
-                    .font(AppFont.dm(14, 600))
-                    .foregroundStyle(Color.white)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 14)
-                    .background(RR(18).fill(Color.rgba(0, 0, 0, 0.35)))
-                    .accessibilityAddTraits(.isHeader)
-                Spacer(minLength: 0)
-                glassButton(label: torchOn ? "Licht aus" : "Licht an", action: toggleTorch) {
-                    SVGIcon(EKKIcon.flash, size: 20, color: .white, lineWidth: 2)
-                }
-                .opacity(cameraRunning ? 1 : 0.4)
-                .allowsHitTesting(cameraRunning)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 62)
-
-            if !cameraRunning {
-                Text("Kamera nicht verfügbar")
-                    .font(AppFont.dm(12, 400))
-                    .tracking(0.96)                                          // 0.08em × 12
-                    .textCase(.uppercase)
-                    .foregroundStyle(Color.rgba(255, 255, 255, 0.25))
+            // Senkrecht fließend statt fester Abstände: Bei 844 pt ergeben sich die Designwerte (Leiste 62,
+            // Sucher 140…610, Hinweis 630, Auslöser 48 über dem Rand). Auf dem iPhone SE wird nur der Sucher
+            // niedriger – vorher lagen seine Ecken über den Knöpfen und der Hinweis wurde abgeschnitten.
+            VStack(spacing: 0) {
+                topBar
+                    .padding(.top, 62)
+                viewfinder
+                    .padding(.top, 30)
+                    .layoutPriority(1)                                    // bekommt den Platz vor dem Abstand
+                Text("Ganzen Bon ins Bild · bei langen Bons in mehreren Teilen")
+                    .font(AppFont.dm(14, 400))
+                    .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
+                    .multilineTextAlignment(.center)
+                    .cssLineHeight(20.3, font: hintFont)                 // line-height 1.45
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, 330)
-                    .accessibilityHidden(true)
+                    .padding(.horizontal, 30)
+                    .padding(.top, 20)
+                Spacer(minLength: 16)
+                shutterRow
             }
-
-            // Sucher 250 × 470, horizontal mittig (left 70 bei 390)
-            ZStack {
-                RR(6)
-                    .fill(Color.rgba(255, 255, 255, 0.06))
-                    .overlay(RR(6).strokeBorder(Color.rgba(255, 255, 255, 0.3),
-                                                style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
-                    .padding(22)
-                ViewfinderCorner().frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                ViewfinderCorner().rotationEffect(.degrees(90))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                ViewfinderCorner().rotationEffect(.degrees(180))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                ViewfinderCorner().rotationEffect(.degrees(270))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-            }
-            .frame(width: 250, height: 470)
-            .padding(.top, 140)
-            .opacity(flash ? 0.3 : 1)
-            .accessibilityHidden(true)
-
-            Text("Ganzen Bon ins Bild · bei langen Bons in mehreren Teilen")
-                .font(AppFont.dm(14, 400))
-                .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
-                .multilineTextAlignment(.center)
-                .cssLineHeight(20.3, font: hintFont)                     // line-height 1.45
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 30)
-                .padding(.top, 630)
-
-            shutterRow
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
         .task { cameraRunning = await camera.start() }
         .onDisappear { camera.stop() }
         .onChange(of: picked) { _, items in importPicked(items) }
+    }
+
+    private var topBar: some View {
+        HStack(spacing: 0) {
+            glassButton(label: "Schließen", action: close) {
+                SVGIcon(Icon.close, size: 20, color: .white, lineWidth: 2.2)
+            }
+            Spacer(minLength: 0)
+            Text("Kassenzettel")
+                .font(AppFont.dm(14, 600))
+                .foregroundStyle(Color.white)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 14)
+                .background(RR(18).fill(Color.rgba(0, 0, 0, 0.35)))
+                .accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 0)
+            glassButton(label: torchOn ? "Licht aus" : "Licht an", action: toggleTorch) {
+                SVGIcon(EKKIcon.flash, size: 20, color: .white, lineWidth: 2)
+            }
+            .opacity(cameraRunning ? 1 : 0.4)
+            .allowsHitTesting(cameraRunning)
+        }
+        .padding(.horizontal, 20)
+    }
+
+    /// Sucher 250 breit, höchstens 470 hoch, horizontal mittig (left 70 bei 390).
+    private var viewfinder: some View {
+        ZStack {
+            RR(6)
+                .fill(Color.rgba(255, 255, 255, 0.06))
+                .overlay(RR(6).strokeBorder(Color.rgba(255, 255, 255, 0.3),
+                                            style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
+                .padding(22)
+            ViewfinderCorner().frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            ViewfinderCorner().rotationEffect(.degrees(90))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            ViewfinderCorner().rotationEffect(.degrees(180))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            ViewfinderCorner().rotationEffect(.degrees(270))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
+        .frame(width: 250)
+        .frame(maxHeight: 470)
+        .opacity(flash ? 0.3 : 1)
+        .accessibilityHidden(true)
+        .overlay(alignment: .top) {
+            if !cameraRunning {
+                Text("Kamera nicht verfügbar")
+                    .font(AppFont.dm(12, 400))
+                    .tracking(0.96)                                      // 0.08em × 12
+                    .textCase(.uppercase)
+                    .foregroundStyle(Color.rgba(255, 255, 255, 0.25))
+                    .fixedSize()
+                    .padding(.top, 190)                                  // Design: y 330 = Sucher 140 + 190
+                    .accessibilityHidden(true)
+            }
+        }
     }
 
     // Auslöser-Reihe: justify-content: space-around → 6 gleiche Halbabstände
@@ -160,7 +173,6 @@ struct ReceiptCaptureView: View {
         .frame(height: 80)
         .padding(.horizontal, 40)
         .padding(.bottom, 48)
-        .frame(maxHeight: .infinity, alignment: .bottom)
     }
 
     /// Glas-Kreis 48 (border-box): weiß .14, Rahmen 1 weiß .28.
@@ -216,4 +228,10 @@ struct ReceiptCaptureView: View {
 #Preview("Kassenzettel", traits: .fixedLayout(width: 390, height: 844)) {
     ReceiptCaptureView(flow: ReceiptFlowViewModel(listItemNames: [], catalog: nil,
                                                   priceBook: PriceBook(repository: nil)))
+}
+
+#Preview("Kassenzettel – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    ReceiptCaptureView(flow: ReceiptFlowViewModel(listItemNames: [], catalog: nil,
+                                                  priceBook: PriceBook(repository: nil)))
+        .preferredColorScheme(.dark)
 }

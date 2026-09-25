@@ -38,3 +38,14 @@ struct SVGIcon: View {
             .frame(width: size, height: size)
     }
 }
+
+#Preview("SVGIcon") {
+    SVGIcon(Icon.chevronDown, size: 48, color: .hex("#0FA3AE"), lineWidth: 2)
+        .padding(20)
+}
+
+#Preview("SVGIcon – Dark") {
+    SVGIcon(Icon.chevronDown, size: 48, color: .hex("#1FC2CC"), lineWidth: 2)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

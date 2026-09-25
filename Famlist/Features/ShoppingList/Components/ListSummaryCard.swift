@@ -40,6 +40,7 @@ struct ListSummaryCard: View {
                         .font(AppFont.outfit(17, 600))
                         .foregroundStyle(k.text)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                     if isFavorite {
                         SVGFilledIcon(Icon.star, size: 16, color: .hex("#F5B521"), lineWidth: 1.5)
                             .accessibilityLabel("Favorit")
@@ -123,4 +124,20 @@ struct ListSummaryCard: View {
                         itemCount: 4, isSelected: false, isShared: true)
     }
     .padding(20)
+}
+
+#Preview("Dark") {
+    let owner = UUID()
+    VStack(spacing: 10) {
+        ListSummaryCard(k: SheetTheme(.dark),
+                        list: ListModel(id: UUID(), ownerId: owner, title: "My List", isDefault: true,
+                                        createdAt: Date(), updatedAt: Date()),
+                        itemCount: 1, isSelected: true)
+        ListSummaryCard(k: SheetTheme(.dark),
+                        list: ListModel(id: UUID(), ownerId: owner, title: "Drogerie", isDefault: false,
+                                        createdAt: Date(), updatedAt: Date()),
+                        itemCount: 4, isSelected: false, isShared: true)
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
 }

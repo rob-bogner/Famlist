@@ -75,20 +75,30 @@ struct ItemSearchSheet: View {
     // MARK: - Empty State
 
     /// Leerzustand: Bereich ab y 150 im Sheet (9 pt unter dem Suchfeld), Höhe 255, Inhalt zentriert.
+    /// Ist über der Tastatur weniger Platz (iPhone SE), schrumpft der Bereich bis über den Knopf;
+    /// reicht er nicht für das Symbol, bleibt nur der Text. Vorher lag der Text hinter dem Knopf.
     private var emptyState: some View {
-        VStack(spacing: 14) {
-            SearchEmptyIcon(k: k)
-            Text("Suche nach einem Artikel oder lege einen neuen an.")
-                .font(AppFont.dm(15, 500))
-                .foregroundStyle(k.sub)
-                .multilineTextAlignment(.center)
-                .cssLineHeight(21, font: AppFont.ui(.dmSans, 15, 500))          // line-height 1.4
-                .frame(maxWidth: 240)
-                .fixedSize(horizontal: false, vertical: true)
+        ViewThatFits(in: .vertical) {
+            VStack(spacing: 14) {
+                SearchEmptyIcon(k: k)
+                emptyText
+            }
+            emptyText
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 255)
+        .frame(maxHeight: 255)
         .padding(.top, 9)
+        .padding(.bottom, 18 + 56 + bottomInset)                          // Fußleiste: Abstand + Knopf + Rand
+    }
+
+    private var emptyText: some View {
+        Text("Suche nach einem Artikel oder lege einen neuen an.")
+            .font(AppFont.dm(15, 500))
+            .foregroundStyle(k.sub)
+            .multilineTextAlignment(.center)
+            .cssLineHeight(21, font: AppFont.ui(.dmSans, 15, 500))          // line-height 1.4
+            .frame(maxWidth: 240)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - Results
@@ -190,6 +200,16 @@ private struct SearchEmptyIcon: View {
         Color.black.opacity(0.4)
         ItemSearchSheet(catalogRepository: PreviewItemCatalogRepository(), globalCatalogRepository: nil,
                         k: SheetTheme(.light), maxHeight: 790, keyboardHeight: 0, onClose: {}, onCreateNew: { _ in })
+    }
+    .ignoresSafeArea()
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}
+
+#Preview("Leer – Dark") {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        ItemSearchSheet(catalogRepository: PreviewItemCatalogRepository(), globalCatalogRepository: nil,
+                        k: SheetTheme(.dark), maxHeight: 790, keyboardHeight: 0, onClose: {}, onCreateNew: { _ in })
     }
     .ignoresSafeArea()
     .environmentObject(PreviewMocks.makeListViewModelWithSamples())

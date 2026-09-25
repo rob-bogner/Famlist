@@ -128,16 +128,21 @@ struct EditItemSheet: View {
                     Text("Preisverlauf")
                         .font(AppFont.dm(15, 600))
                         .foregroundStyle(k.accentText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(1 / AppFont.maxScale)     // XXL: bis zur Designgröße schrumpfen
                     Text(priceSubtitle)
                         .font(AppFont.dm(12, 400))
                         .foregroundStyle(k.sub)
+                        .lineLimit(1)
+                        .minimumScaleFactor(1 / AppFont.maxScale)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 SVGIcon(Icon.chevronRight, size: 16, color: k.sub, lineWidth: 2.2)
             }
             .padding(.horizontal, 15)                            // 1 Rahmen + 14 Padding
+            .padding(.vertical, 4)                               // wirkt nur bei großer iOS-Schrift
             .frame(maxWidth: .infinity)
-            .frame(height: 52)
+            .frame(minHeight: 52)
             .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
             .contentShape(RR(16))
         }
@@ -174,6 +179,16 @@ struct EditItemSheet: View {
         Color.black.opacity(0.4)
         EditItemSheet(item: ItemModel(name: "Butter", units: 1, measure: "pack", price: 2.49, brand: "Kerrygold"),
                       k: SheetTheme(.light), maxHeight: 790, keyboardHeight: 0, onClose: {})
+    }
+    .ignoresSafeArea()
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}
+
+#Preview("Dark") {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        EditItemSheet(item: ItemModel(name: "Butter", units: 1, measure: "pack", price: 2.49, brand: "Kerrygold"),
+                      k: SheetTheme(.dark), maxHeight: 790, keyboardHeight: 0, onClose: {})
     }
     .ignoresSafeArea()
     .environmentObject(PreviewMocks.makeListViewModelWithSamples())

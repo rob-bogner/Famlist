@@ -46,7 +46,6 @@ struct ShoppingListView: View {
     @State var copied: CopyResult?
     /// Restzeit-Balken des Rückgängig-Toasts (1 → 0 in 5 s).
     @State var undoRemaining: CGFloat = 1
-    @State var showImport = false
     /// Liste, deren Löschen gerade bestätigt werden soll (Listen-Optionen → „Liste löschen“).
     @State var listToDelete: ListModel?
     @State var isDeletingAccount = false
@@ -81,11 +80,6 @@ struct ShoppingListView: View {
         .ignoresSafeArea(.keyboard)
         .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: activeOverlay)
-        .sheet(isPresented: $showImport) {
-            ClipboardImportView()
-                .environmentObject(listViewModel)
-                .presentationDragIndicator(.visible)
-        }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active: listViewModel.handleAppDidBecomeActive()
