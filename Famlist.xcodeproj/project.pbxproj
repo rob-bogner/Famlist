@@ -279,6 +279,8 @@
 		EEB6606E2E7F381A006CB1EB /* AppSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6606A2E7F381A006CB1EB /* AppSessionViewModel.swift */; };
 		EEB6606F2E7F381A006CB1EB /* FamlistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6606B2E7F381A006CB1EB /* FamlistApp.swift */; };
 		EEB660702E7F381A006CB1EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6606C2E7F381A006CB1EB /* RootView.swift */; };
+		1DD7E6F4F7969530513ABC9B /* SplashSpinner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2555058FFD2FD94CC242A072 /* SplashSpinner.swift */; };
+		C293FB9C9F61D3035FFE704C /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67B92E9F8336DB005025F2C /* SplashView.swift */; };
 		EEB6607A2E7F37A9006CB1EB /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6607B2E7F37A9006CB1EB /* Profile.swift */; };
 		EEB6607C2E7F37A9006CB1EB /* List.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6607D2E7F37A9006CB1EB /* List.swift */; };
 		EEB6607E2E7F37A9006CB1EB /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB6607F2E7F37A9006CB1EB /* Category.swift */; };
@@ -635,6 +637,8 @@
 		EEB6606A2E7F381A006CB1EB /* AppSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSessionViewModel.swift; sourceTree = "<group>"; };
 		EEB6606B2E7F381A006CB1EB /* FamlistApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamlistApp.swift; sourceTree = "<group>"; };
 		EEB6606C2E7F381A006CB1EB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		2555058FFD2FD94CC242A072 /* SplashSpinner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashSpinner.swift; sourceTree = "<group>"; };
+		A67B92E9F8336DB005025F2C /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		EEB6607B2E7F37A9006CB1EB /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		EEB6607D2E7F37A9006CB1EB /* List.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = List.swift; sourceTree = "<group>"; };
 		EEB6607F2E7F37A9006CB1EB /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
@@ -1601,6 +1605,8 @@
 				EEB6606B2E7F381A006CB1EB /* FamlistApp.swift */,
 				4CC8802557D80DF9A57D1E96 /* UITestFixture.swift */,
 				EEB6606C2E7F381A006CB1EB /* RootView.swift */,
+				2555058FFD2FD94CC242A072 /* SplashSpinner.swift */,
+				A67B92E9F8336DB005025F2C /* SplashView.swift */,
 				F1C008653BEAF783ED7EFCDB /* AppSessionViewModel+Account.swift */,
 				4D90084A156545A44D05B127 /* AppSessionViewModel+Onboarding.swift */,
 				5EA69735CAAD66D218C66C03 /* InvitePreviewInfo.swift */,
@@ -1936,6 +1942,8 @@
 				EEB6606F2E7F381A006CB1EB /* FamlistApp.swift in Sources */,
 				7C82BD5173E5E7F17097813A /* UITestFixture.swift in Sources */,
 				EEB660702E7F381A006CB1EB /* RootView.swift in Sources */,
+				1DD7E6F4F7969530513ABC9B /* SplashSpinner.swift in Sources */,
+				C293FB9C9F61D3035FFE704C /* SplashView.swift in Sources */,
 				EEB6605D2E7F37A9006CB1EB /* DesignSystem.swift in Sources */,
 				43C511385CA47D5423404234 /* ItemCatalogRepository.swift in Sources */,
 				D8344B104C513BD50297A301 /* SupabaseItemCatalogRepository.swift in Sources */,
