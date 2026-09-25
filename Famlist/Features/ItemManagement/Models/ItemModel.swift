@@ -255,3 +255,16 @@ struct ItemModel: Identifiable, Hashable, Codable {
         )
     }
 }
+
+extension ItemModel {
+    /// Kopie mit anderer ID (die ID ist unveränderlich; neue Artikel bekommen ihre endgültige ID erst
+    /// beim Anlegen, siehe ItemIdentity).
+    func withId(_ newId: String) -> ItemModel {
+        ItemModel(id: newId, imageUrl: imageUrl, imageData: imageData, name: name, units: units, measure: measure,
+                  price: price, isChecked: isChecked, isUnavailable: isUnavailable, category: category,
+                  productDescription: productDescription, brand: brand, listId: listId, ownerPublicId: ownerPublicId,
+                  createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt, hlcTimestamp: hlcTimestamp,
+                  hlcCounter: hlcCounter, hlcNodeId: hlcNodeId, tombstone: tombstone, lastModifiedBy: lastModifiedBy,
+                  isSyncFailed: isSyncFailed)
+    }
+}

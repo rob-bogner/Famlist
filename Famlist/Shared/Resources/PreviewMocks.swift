@@ -59,10 +59,12 @@ struct PreviewMocks { // Namespace for preview data and factories.
         vm.defaultList = ListModel(id: listId, ownerId: owner, title: "Preview Default List", isDefault: true, createdAt: Date(), updatedAt: Date()) // Seed default list.
         // Seed items asynchronously so the stream delivers them to observers.
         Task {
-            for var item in sampleItems { // Copy each sample and assign the preview list id.
+            let requests = sampleItems.map { sample -> ItemUpsertRequest in
+                var item = sample
                 item.listId = listId.uuidString // Scope to our preview list.
-                _ = try? await repo.createItem(item) // Insert into in-memory store.
+                return ItemUpsertRequest(item: item, includeImage: true)
             }
+            _ = try? await repo.upsertItems(requests) // Insert into in-memory store.
         }
         return vm // Return immediately; items will flow in.
     }

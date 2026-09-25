@@ -71,6 +71,10 @@ final class SyncOperation: Identifiable {
     
     /// Error message from last failure (for debugging)
     var lastErrorMessage: String?
+
+    /// Foto mitsenden? false = unverändert, der Server behält sein Foto (spart bis zu 600 KB je Auftrag).
+    /// Standardwert nötig für die automatische SwiftData-Migration bestehender Warteschlangen.
+    var includesImage: Bool = true
     
     // MARK: - Computed Properties
     

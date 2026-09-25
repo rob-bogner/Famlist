@@ -11,7 +11,8 @@
    refreshItemsFromStore() to present the stale lower value in the UI.
 
  📝 Last Change:
- - FAM-XX: Initial creation.
+ - Schutz jetzt über die HLC (ItemSyncPolicy) statt über den Sync-Status: Die lokale Änderung ist neuer
+   (höhere HLC) und bleibt; eine NEUERE Remote-Änderung gewinnt dagegen (Audit 25.09.2026).
  ------------------------------------------------------------------------
 */
 
@@ -34,10 +35,7 @@ private final class StubItemsRepository: ItemsRepository {
 
     // Unused protocol stubs
     func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> { AsyncStream { _ in } }
-    func createItem(_ item: ItemModel) async throws -> ItemModel { item }
-    func updateItem(_ item: ItemModel) async throws {}
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {}
-    func deleteItem(id: String, listId: UUID) async throws {}
+    func upsertItems(_ requests: [ItemUpsertRequest]) async throws -> [ItemUpsertResult] { [] }
     func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] { [] }
 }
 
@@ -84,7 +82,8 @@ final class IncrementalSyncPendingGuardTests: XCTestCase {
 
     /// Inserts an entity into SwiftData with the given syncStatus and units.
     @discardableResult
-    private func insertEntity(id: UUID, units: Int, syncStatus: ItemEntity.SyncStatus) throws -> ItemEntity {
+    private func insertEntity(id: UUID, units: Int, syncStatus: ItemEntity.SyncStatus,
+                              hlcTimestamp: Int64 = 2_000) throws -> ItemEntity {
         let entity = ItemEntity(
             id: id,
             listId: listId,
@@ -98,7 +97,10 @@ final class IncrementalSyncPendingGuardTests: XCTestCase {
             category: nil,
             productDescription: nil,
             brand: nil,
-            syncStatus: syncStatus
+            syncStatus: syncStatus,
+            hlcTimestamp: hlcTimestamp,
+            hlcCounter: 0,
+            hlcNodeId: "local"
         )
         context.insert(entity)
         try context.save()
@@ -106,12 +108,16 @@ final class IncrementalSyncPendingGuardTests: XCTestCase {
     }
 
     /// Builds a delta ItemModel for the given id with the given units and a future updatedAt.
-    private func makeDeltaItem(id: UUID, units: Int) -> ItemModel {
+    /// Standard-HLC 1000 = älter als die lokale Zeile (2000): der typische veraltete Server-Stand.
+    private func makeDeltaItem(id: UUID, units: Int, hlcTimestamp: Int64 = 1_000) -> ItemModel {
         var item = ItemModel(
             id: id.uuidString,
             name: "Tee",
             units: units,
-            listId: listId.uuidString
+            listId: listId.uuidString,
+            hlcTimestamp: hlcTimestamp,
+            hlcCounter: 0,
+            hlcNodeId: "remote"
         )
         item.updatedAt = Date(timeIntervalSinceNow: 60)  // future → passes the since-filter
         return item
@@ -176,8 +182,8 @@ final class IncrementalSyncPendingGuardTests: XCTestCase {
         let itemId = UUID()
         try insertEntity(id: itemId, units: 1, syncStatus: .synced)
 
-        // Delta brings units=5 from another device
-        stub.deltaItems = [makeDeltaItem(id: itemId, units: 5)]
+        // Delta brings units=5 from another device (neuere HLC)
+        stub.deltaItems = [makeDeltaItem(id: itemId, units: 5, hlcTimestamp: 3_000)]
 
         // When
         await sut.runIncrementalSync()
@@ -207,5 +213,42 @@ final class IncrementalSyncPendingGuardTests: XCTestCase {
         // Then: published items must still have units=2
         XCTAssertEqual(sut.items.first?.units, 2,
                        "sut.items must reflect local units=2, not stale remote units=1")
+    }
+
+    // MARK: - AC 5: neuere Remote-Änderung gewinnt auch gegen eine ältere ausstehende lokale
+
+    /// Last-Writer-Wins wie auf dem Server: Die lokale Änderung (HLC 2000) ist älter als die des anderen
+    /// Geräts (HLC 3000). Die Remote-Zeile gewinnt, und die SyncEngine sendet die überholte Operation nicht mehr.
+    func test_runIncrementalSync_newerRemote_winsOverOlderPendingLocal() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 2, syncStatus: .pendingUpdate, hlcTimestamp: 2_000)
+        stub.deltaItems = [makeDeltaItem(id: itemId, units: 7, hlcTimestamp: 3_000)]
+
+        await sut.runIncrementalSync()
+
+        let entity = try XCTUnwrap(itemStore.fetchItem(id: itemId))
+        XCTAssertEqual(entity.units, 7)
+        XCTAssertEqual(entity.syncStatus, .synced)
+    }
+
+    // MARK: - AC 6: Löschmarkierung im Delta blendet aus, ohne die Zeile zu entfernen
+
+    func test_runIncrementalSync_remoteTombstone_hidesItem_andKeepsTombstone() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
+        var tomb = makeDeltaItem(id: itemId, units: 1, hlcTimestamp: 5_000)
+        tomb.tombstone = true
+        stub.deltaItems = [tomb]
+
+        await sut.runIncrementalSync()
+
+        XCTAssertTrue(sut.items.isEmpty)
+        let entity = try XCTUnwrap(itemStore.fetchItem(id: itemId), "Löschmarkierung bleibt lokal erhalten")
+        XCTAssertEqual(entity.tombstone, true)
+
+        // Ein später eintreffendes, ÄLTERES Update darf den Artikel nicht zurückholen.
+        stub.deltaItems = [makeDeltaItem(id: itemId, units: 9, hlcTimestamp: 4_000)]
+        await sut.runIncrementalSync()
+        XCTAssertTrue(sut.items.isEmpty)
     }
 }

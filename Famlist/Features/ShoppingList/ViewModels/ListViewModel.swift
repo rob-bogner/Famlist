@@ -179,6 +179,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Debounce task for bulk toggle operations to prevent rapid repeated calls.
     internal var toggleAllDebounceTask: Task<Void, Never>?
+
+    /// Laufender Delta-Abgleich; wird beim Listenwechsel abgebrochen.
+    internal var incrementalSyncTask: Task<Void, Never>?
+
+    /// Listen, für die in dieser Sitzung schon Fotos aus dem Artikelstamm übernommen wurden.
+    internal var backfilledListIDs: Set<UUID> = []
     
     /// Enumerates triggers that can resume realtime sync to aid logging and debugging.
     internal enum ResumeTrigger: String {
@@ -249,6 +255,17 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         self.syncEngine = syncEngine
         // Offline-First: nach jedem lokalen Schreiben sofort aus SwiftData neu lesen (nicht erst nach dem Netzwerk).
         syncEngine.setLocalWriteObserver { [weak self] in self?.refreshItemsFromStore() }
+        // Nutzer-Logs zum Sync entstehen hier im ViewModel (Projektregel), nicht in der SyncEngine.
+        syncEngine.setSyncEventObserver { event in
+            switch event {
+            case .started(let count):
+                if count > 0 { UserLog.Sync.syncing(itemCount: count) }
+            case .completed(let count, _):
+                if count > 0 { UserLog.Sync.completed(itemCount: count) }
+            case .itemFailed(let item):
+                UserLog.Sync.itemSyncFailed(name: item.name, units: item.units, measure: item.measure)
+            }
+        }
     }
 
     /// Injects the personal item catalog repository for smart search support.
@@ -280,9 +297,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         guard newId != self.listId else { return }
         commitPendingDeletion()              // offene Rückgängig-Löschung der alten Liste festschreiben
         observeTask?.cancel()
+        incrementalSyncTask?.cancel()
+        toggleAllDebounceTask?.cancel()
         self.listId = newId
         self.items = []
         recentlySyncedItemIDs = []
+        pendingBulkDeleteIDs = []
+        pendingAnimatedItemIDs = []
         // Reset pagination state for the new list (cursor is loaded from UserDefaults per listId in startObserving).
         currentCursor = PaginationCursor.load(listId: newId)
         hasMoreItems = true
@@ -296,8 +317,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         commitPendingDeletion()
         observeTask?.cancel()
         observeTask = nil
+        incrementalSyncTask?.cancel()
+        incrementalSyncTask = nil
+        toggleAllDebounceTask?.cancel()
+        toggleAllDebounceTask = nil
         membershipTask?.cancel()
         membershipTask = nil
+        pendingBulkDeleteIDs = []
+        pendingAnimatedItemIDs = []
+        backfilledListIDs = []
+        syncEngine?.resetForSignOut()                 // Warteschlange gehört zum abgemeldeten Konto
         items = []
         recentlySyncedItemIDs = []
         selectedItem = nil
@@ -331,31 +360,18 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
         // Duplikat-Check: existiert bereits ein ungehacktes Item mit gleichem Namen?
         if let existingIndex = items.firstIndex(where: {
-            CatalogOperation.key($0.name) == CatalogOperation.key(normalized.name) && !$0.isChecked
+            ItemIdentity.normalizedKey($0.name) == ItemIdentity.normalizedKey(normalized.name) && !$0.isChecked
         }) {
-            var incremented = items[existingIndex]
-            let oldUnits = incremented.units
-            incremented.units = oldUnits + 1
-            // Fehlende Angaben aus dem neu hinzugefügten Artikel übernehmen (z. B. Foto aus dem
-            // Artikelstamm). Vorhandene Werte bleiben unverändert.
-            incremented = ListViewModel.fillingMissingFields(of: incremented, from: normalized)
-            logVoid(params: (action: "addItem.increment", itemId: incremented.id, from: oldUnits,
-                             to: incremented.units, gotImage: items[existingIndex].imageData == nil && incremented.imageData != nil))
-            UserLog.Data.itemCountIncremented(
-                name: incremented.name,
-                from: oldUnits,
-                to: incremented.units,
-                measure: incremented.measure
-            )
-            // Optimistic update: immediately reflect the incremented count in the UI
-            // without waiting for the async SwiftData round-trip. The subsequent
-            // refreshItemsFromStore() (inside updateItem's Task) will confirm the value.
-            items[existingIndex] = incremented
-            updateItem(incremented, suppressUserLog: true)
+            incrementExisting(at: existingIndex, with: normalized)
             return
         }
 
-        // User-friendly log
+        // Endgültige ID sofort bestimmen – die sofort angezeigte Karte und der gespeicherte Artikel
+        // haben dieselbe ID (vorher: Zufalls-ID, später ersetzt → doppelte Einträge möglich).
+        if let listUUID = UUID(uuidString: normalized.listId ?? "") {
+            normalized = normalized.withId(ItemIdentity.newItemId(name: normalized.name, listId: listUUID, store: itemStore).uuidString)
+        }
+
         let displayName = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
         UserLog.Data.itemAdded(
             name: displayName.isEmpty ? "Artikel" : displayName,
@@ -363,33 +379,48 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             measure: normalized.measure
         )
 
-        // Save to personal item catalog (fire-and-forget; does not block list update).
-        // ownerPublicId is resolved by the repository from the active auth session,
-        // so we pass an empty placeholder here to avoid a nil-guard race condition.
-        if let catalogRepo = catalogRepository {
-            var catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
-            catalogEntry.barcode = barcode
-            Task {
-                do {
-                    try await catalogRepo.save(catalogEntry)
-                    logVoid(params: (action: "catalogSave.success", itemName: normalized.name))
-                } catch {
-                    logVoid(params: (action: "catalogSave.failed", itemName: normalized.name, error: (error as NSError).localizedDescription))
-                }
-            }
-        }
+        saveToCatalog(normalized, barcode: barcode)
 
-        // Optimistic UI add: show the item immediately without waiting for the
-        // Realtime echo or the async refreshItemsFromStore() round-trip.
-        // The subsequent refreshItemsFromStore() (inside the Task below) will replace
-        // this entry with the authoritative SwiftData entity (deterministic UUID).
-        items.append(normalized)
+        // Gerade weggewischt und noch im Rückgängig-Zeitraum? Dann erst die Löschung festschreiben und
+        // danach neu anlegen – beides in dieser Reihenfolge, damit das Anlegen die neuere HLC bekommt.
+        // Vorher verschwand der neu hinzugefügte Artikel nach 5 s wieder (Audit H2).
+        let pendingDeleteTask = pendingBulkDeleteIDs.contains(normalized.id) ? commitPendingDeletion() : nil
+
+        items.append(normalized)                 // Sofort sichtbar (Offline-First)
 
         guard let syncEngine else { return }
+        let toCreate = normalized
         Task {
-            await syncEngine.createItem(normalized)
-            // Refresh replaces the optimistic item with the canonical SwiftData entity.
-            await MainActor.run { self.refreshItemsFromStore() }
+            await pendingDeleteTask?.value
+            await syncEngine.createItem(toCreate)
+            self.refreshItemsFromStore()
+        }
+    }
+
+    /// Duplikat hinzugefügt: Menge des vorhandenen Artikels erhöhen und fehlende Angaben ergänzen.
+    private func incrementExisting(at index: Int, with added: ItemModel) {
+        var incremented = items[index]
+        let oldUnits = incremented.units
+        incremented.units = oldUnits + max(added.units, 1)
+        incremented = ListViewModel.fillingMissingFields(of: incremented, from: added)
+        logVoid(params: (action: "addItem.increment", itemId: incremented.id, from: oldUnits, to: incremented.units))
+        UserLog.Data.itemCountIncremented(name: incremented.name, from: oldUnits, to: incremented.units,
+                                          measure: incremented.measure)
+        items[index] = incremented
+        updateItem(incremented, suppressUserLog: true)
+    }
+
+    /// Artikelstamm im Hintergrund ergänzen (blockiert die Liste nicht).
+    private func saveToCatalog(_ item: ItemModel, barcode: String?) {
+        guard let catalogRepo = catalogRepository else { return }
+        var catalogEntry = ItemCatalogEntry.from(item: item, ownerPublicId: "")
+        catalogEntry.barcode = barcode
+        Task {
+            do {
+                try await catalogRepo.save(catalogEntry)
+            } catch {
+                logVoid(params: (action: "catalogSave.failed", itemName: item.name, error: (error as NSError).localizedDescription))
+            }
         }
     }
     
@@ -402,6 +433,14 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
+
+        // Umbenennen: Die ID hängt am Namen. Alten Artikel löschen, neuen anlegen (ADR-005) – sonst würde
+        // späteres Hinzufügen des alten Namens den umbenannten Artikel überschreiben (Audit H3).
+        if let old = currentItem(id: normalized.id),
+           ItemIdentity.normalizedKey(old.name) != ItemIdentity.normalizedKey(normalized.name) {
+            renameItem(from: old, to: normalized, updateCatalog: updateCatalog)
+            return
+        }
 
         logVoid(params: (
             action: "updateItem",
@@ -485,10 +524,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         items[index] = current
     }
 
-    /// Deletes an item by id within the current list.
-    /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
+    /// Deletes an item (tombstone via SyncEngine). Auch nie gesendete Artikel laufen über die Engine:
+    /// Die ersetzte Anlage-Operation fällt dabei weg, und die Löschung erreicht alle Geräte.
     func deleteItem(_ item: ItemModel) {
-        // User-friendly log — nur außerhalb Bulk-Delete, um N Einzellogs beim Bulk zu vermeiden
         if !isBulkDeleting {
             let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
             UserLog.Data.itemDeleted(
@@ -497,37 +535,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
                 measure: item.measure
             )
         }
-        
-        guard let uuid = UUID(uuidString: item.id) else {
-            markItemDeleted(item)
-            return
-        }
-        
-        guard let entity = try? itemStore.fetchItem(id: uuid) else {
-            markItemDeleted(item)
-            return
-        }
-        
-        // If item was never synced, just purge it locally without API call
-        if entity.syncStatus == .pendingCreate {
-            do {
-                try itemStore.purge(id: uuid)
-                refreshItemsFromStore()
-                return
-            } catch {
-                logVoid(params: (
-                    note: "deleteItem purge failed",
-                    error: (error as NSError).localizedDescription
-                ))
-                setError(error)
-                return
-            }
-        }
-        
+        items.removeAll { $0.id == item.id }
         guard let syncEngine else { return }
-        Task {
-            await syncEngine.deleteItem(item)
-        }
+        Task { await syncEngine.deleteItem(item) }
     }
     
     /// Re-queues a permanently-failed item for sync.
@@ -559,9 +569,39 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }
 
         pendingAnimatedItemIDs.insert(updatedItem.id)
-        updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true)
+        // Abhaken ändert den Artikelstamm nicht (vorher: alter Preis/Foto überschrieb den Stamm, Audit H7).
+        updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true, updateCatalog: false)
     }
     
+    /// Aktueller Stand eines Artikels: aus der Anzeige, sonst aus SwiftData.
+    internal func currentItem(id: String) -> ItemModel? {
+        if let shown = items.first(where: { $0.id == id }) { return shown }
+        guard let uuid = UUID(uuidString: id), let entity = (try? itemStore.fetchItem(id: uuid)) ?? nil,
+              entity.tombstone != true else { return nil }
+        return entity.toItemModel()
+    }
+
+    /// Umbenennen = alten Artikel löschen + unter der ID des neuen Namens anlegen.
+    /// Existiert der neue Name schon als eigener Artikel, bekommt der umbenannte eine eigene ID
+    /// (kein stilles Überschreiben des vorhandenen Artikels).
+    private func renameItem(from old: ItemModel, to edited: ItemModel, updateCatalog: Bool) {
+        guard let listUUID = UUID(uuidString: edited.listId ?? "") else { return }
+        let target = UUID.deterministicItemID(listId: listUUID, name: edited.name)
+        let targetEntity = (try? itemStore.fetchItem(id: target)) ?? nil
+        let targetIsLive = targetEntity != nil && targetEntity?.tombstone != true
+        let renamed = edited.withId((targetIsLive ? UUID() : target).uuidString)
+        logVoid(params: (action: "renameItem", from: old.id, to: renamed.id))
+        UserLog.Data.itemUpdated(name: renamed.name)
+        if updateCatalog { saveToCatalog(renamed, barcode: nil) }
+        if let index = items.firstIndex(where: { $0.id == old.id }) { items[index] = renamed }
+        guard let syncEngine else { return }
+        Task {
+            await syncEngine.deleteItem(old)
+            await syncEngine.updateItem(renamed)      // legt unter der neuen ID an
+            self.refreshItemsFromStore()
+        }
+    }
+
     // MARK: - Remote Sync Highlight
 
     /// Marks items as recently synced from a remote source and schedules their removal after 2 seconds.

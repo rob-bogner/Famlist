@@ -24,6 +24,7 @@
 #if DEBUG && targetEnvironment(simulator)
 import XCTest
 import Supabase
+import SwiftData
 @testable import Famlist
 
 /// Sitzungsspeicher im RAM – je Client eigener, damit zwei Konten parallel angemeldet bleiben.
@@ -33,6 +34,44 @@ private final class MemoryAuthStorage: AuthLocalStorage, @unchecked Sendable {
     func store(key: String, value: Data) throws { lock.withLock { values[key] = value } }
     func retrieve(key: String) throws -> Data? { lock.withLock { values[key] } }
     func remove(key: String) throws { _ = lock.withLock { values.removeValue(forKey: key) } }
+}
+
+/// Dünne Fassade um einen echten SupabaseClient – damit laufen die App-Klassen (Repository, Realtime-Manager,
+/// SyncEngine) unverändert gegen das echte Backend, je Konto mit eigenem Client.
+private final class LiveTestClient: SupabaseClienting {
+    let client: SupabaseClient
+    init(_ client: SupabaseClient) { self.client = client }
+    var auth: any AuthClienting { client.auth }
+    var realtime: RealtimeClientV2 { client.realtimeV2 }
+    func from(_ table: String) -> PostgrestQueryBuilder { client.from(table) }
+    func storageUpload(bucket: String, path: String, data: Data, contentType: String) async throws {}
+    func storageCreateSignedURL(bucket: String, path: String, expiresIn: Int) async throws -> String { "" }
+    func rpc(_ function: String) async throws { try await client.rpc(function).execute() }
+    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] {
+        try await client.rpc(function, params: params).execute().value
+    }
+    func rpcValue<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> R {
+        try await client.rpc(function, params: params).execute().value
+    }
+}
+
+/// Ein simuliertes Gerät: eigener SwiftData-Speicher, eigene Warteschlange, echte App-Klassen.
+@MainActor
+private final class LiveDevice {
+    let container = PersistenceController(inMemory: true).container
+    let store: SwiftDataItemStore
+    let repository: SupabaseItemsRepository
+    let engine: SyncEngine
+
+    init(client: SupabaseClient, node: String) {
+        store = SwiftDataItemStore(context: container.mainContext)
+        repository = SupabaseItemsRepository(client: LiveTestClient(client), itemStore: store)
+        engine = SyncEngine(repository: repository, itemStore: store,
+                            operationQueue: SyncOperationQueue(context: container.mainContext),
+                            hlcGenerator: HybridLogicalClockGenerator(nodeId: node))
+    }
+
+    func visible(_ listId: UUID) -> [ItemEntity] { (try? store.fetchItems(listId: listId)) ?? [] }
 }
 
 /// Sammelt Realtime-Ereignisse threadsicher, damit der Test darauf warten kann.
@@ -172,6 +211,88 @@ final class LiveRealtimeSharingTests: XCTestCase {
         } catch {
             XCTAssertEqual(InviteError.from(error), .invalidOrExpired)
         }
+    }
+
+    // MARK: - Echter App-Pfad: SyncEngine → RPC → Realtime → SwiftData des anderen Geräts
+
+    private func makeSharedList() async throws -> UUID {
+        let ownerId = try await owner.auth.session.user.id
+        struct NewList: Encodable { let id: UUID; let owner_id: UUID; let title: String; let is_default: Bool }
+        struct ListParam: Encodable, Sendable { let p_list_id: UUID }
+        struct TokenParam: Encodable, Sendable { let p_token: String }
+        struct TokenRow: Decodable { let token: String }
+        let newListId = UUID()
+        try await owner.from("lists")
+            .insert(NewList(id: newListId, owner_id: ownerId, title: "Livetest Pipeline", is_default: false)).execute()
+        listId = newListId
+        let tokens: [TokenRow] = try await owner.rpc("create_list_invite", params: ListParam(p_list_id: newListId)).execute().value
+        let _: UUID = try await member.rpc("accept_list_invite", params: TokenParam(p_token: XCTUnwrap(tokens.first?.token))).execute().value
+        return newListId
+    }
+
+    @MainActor
+    func test_appPipeline_changesOnOneDevice_reachOtherDevice_andConverge() async throws {
+        let list = try await makeSharedList()
+        let deviceA = LiveDevice(client: owner, node: "live-A")
+        let deviceB = LiveDevice(client: member, node: "live-B")
+
+        // B beobachtet die Liste über den echten Realtime-Manager der App.
+        let stream = deviceB.repository.observeItems(listId: list)
+        let observer = Task { for await _ in stream {} }
+        defer { observer.cancel() }
+        try await Task.sleep(nanoseconds: 2_000_000_000)          // Kanal-Anmeldung abwarten
+
+        // 1. Anlegen auf A → erscheint auf B
+        await deviceA.engine.createItem(ItemModel(name: "Livetest Milch", units: 1, listId: list.uuidString))
+        try await waitFor("Anlegen auf B") { await MainActor.run { deviceB.visible(list).map(\.name) == ["Livetest Milch"] } }
+
+        // 2. Menge ändern auf A → B zeigt 3
+        var milk = try XCTUnwrap(deviceA.visible(list).first).toItemModel()
+        milk.units = 3
+        await deviceA.engine.updateItem(milk)
+        try await waitFor("Menge 3 auf B") { await MainActor.run { deviceB.visible(list).first?.units == 3 } }
+
+        // 3. „Alle abhaken“ auf A (gebündelt) → alles abgehakt auf B
+        for name in ["Livetest Brot", "Livetest Käse"] {
+            await deviceA.engine.createItem(ItemModel(name: name, listId: list.uuidString))
+        }
+        try await waitFor("3 Artikel auf B") { await MainActor.run { deviceB.visible(list).count == 3 } }
+        let allChecked = deviceA.visible(list).map { entity -> ItemModel in
+            var m = entity.toItemModel(); m.isChecked = true; return m
+        }
+        await deviceA.engine.applyLocalChanges(allChecked)
+        try await waitFor("alle abgehakt auf B") {
+            await MainActor.run { deviceB.visible(list).count == 3 && deviceB.visible(list).allSatisfy(\.isChecked) }
+        }
+
+        // 4. Gleichzeitige Änderung auf beiden Geräten → beide landen beim selben (neueren) Stand
+        var onB = try XCTUnwrap(deviceB.visible(list).first { $0.name == "Livetest Milch" }).toItemModel()
+        onB.units = 5
+        await deviceB.engine.updateItem(onB)
+        var onA = try XCTUnwrap(deviceA.visible(list).first { $0.name == "Livetest Milch" }).toItemModel()
+        onA.units = 9                                              // später geschrieben → gewinnt
+        await deviceA.engine.updateItem(onA)
+        try await waitFor("Konvergenz auf 9") {
+            await MainActor.run {
+                deviceA.visible(list).first { $0.name == "Livetest Milch" }?.units == 9
+                    && deviceB.visible(list).first { $0.name == "Livetest Milch" }?.units == 9
+            }
+        }
+
+        // 5. Löschen auf B → verschwindet auf A (A beobachtet jetzt ebenfalls)
+        let streamA = deviceA.repository.observeItems(listId: list)
+        let observerA = Task { for await _ in streamA {} }
+        defer { observerA.cancel() }
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+        let toDelete = try XCTUnwrap(deviceB.visible(list).first { $0.name == "Livetest Brot" }).toItemModel()
+        await deviceB.engine.deleteItem(toDelete)
+        try await waitFor("Löschung auf A") {
+            await MainActor.run { !deviceA.visible(list).contains { $0.name == "Livetest Brot" } }
+        }
+
+        // 6. Warteschlangen leer, nichts fehlgeschlagen
+        XCTAssertEqual(deviceA.engine.pendingOperations, 0)
+        XCTAssertEqual(deviceB.engine.pendingOperations, 0)
     }
 }
 #endif

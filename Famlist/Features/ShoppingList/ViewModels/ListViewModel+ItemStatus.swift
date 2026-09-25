@@ -14,7 +14,7 @@
  - Die UI wird optimistisch sofort aktualisiert (wie bei toggleItemChecked).
 
  📝 Last Change:
- - Initial creation (Hybrid-Redesign).
+ - Kategorie abhaken: gebündelt über die SyncEngine, meldet „Einkauf erledigt“; kein Stamm-Update (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -34,7 +34,7 @@ extension ListViewModel {
         logVoid(params: (action: "toggleItemUnavailable", itemId: updated.id, isUnavailable: updated.isUnavailable))
         UserLog.Data.itemAvailabilityChanged(name: displayName(of: updated), isUnavailable: updated.isUnavailable)
 
-        updateItem(updated, trackPendingAnimation: true)
+        updateItem(updated, trackPendingAnimation: true, updateCatalog: false)
     }
 
     // MARK: - Check All in Category
@@ -47,15 +47,17 @@ extension ListViewModel {
         logVoid(params: (action: "checkAllItems.inCategory", category: categoryName, count: targets.count))
         UserLog.Data.categoryItemsChecked(category: categoryName, count: targets.count)
 
+        let wasComplete = isShoppingComplete
         let targetIDs = Set(targets.map(\.id))
         for index in items.indices where targetIDs.contains(items[index].id) {
             items[index].isChecked = true
         }
         items = ListViewModel.currentSortOrder.apply(to: items)
+        noteCheckChange(wasComplete: wasComplete)       // „Einkauf erledigt“ auch über den Kategorie-Kopf
 
-        for item in items where targetIDs.contains(item.id) {
-            updateItem(item, trackPendingAnimation: true)
-        }
+        let changed = items.filter { targetIDs.contains($0.id) }
+        guard let syncEngine else { return }
+        Task { await syncEngine.applyLocalChanges(changed) }
     }
 
     // MARK: - Helpers

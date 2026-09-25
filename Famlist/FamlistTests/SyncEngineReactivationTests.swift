@@ -5,50 +5,47 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Regression tests for FAM-XX: Re-Add Bug nach Tombstone-Deletion.
- - Covers two targeted fixes in SyncEngine:
-   1. processOperation(.create) must enrich the item snapshot with CRDT metadata
-      so tombstone=false and a valid HLC reach Supabase (not nil via encodeIfPresent).
-   2. storeLocally() must treat a re-add of a soft-deleted entity as pendingCreate
-      (clearing deletedAt) instead of pendingUpdate (leaving deletedAt set).
+ - Tests der SyncEngine (Audit 25.09.2026):
+   Offline-Betrieb, Fehlerklassen, Zusammenfassen der Warteschlange, Server-Antworten
+   (applied/stale/denied), Neu-Anlegen nach Löschen, Löschen nie gesendeter Artikel,
+   gebündeltes Senden, Foto nur bei Änderung, Umbenennen-Kollision, Abmelden.
 
  📝 Last Change:
- - FAM-XX: Initial creation.
+ - Neu geschrieben für die überarbeitete SyncEngine (ein Schreibweg, RPC upsert_items_lww).
  ------------------------------------------------------------------------
 */
 
 import XCTest
 import SwiftData
+import Supabase
 @testable import Famlist
 
 // MARK: - Spy Repository
 
-/// Captures items passed to createItem() / updateItem() without touching Supabase.
 @MainActor
 private final class SpyItemsRepository: ItemsRepository {
-
-    var createdItems: [ItemModel] = []
-    var updatedItems: [ItemModel] = []
-
-    func createItem(_ item: ItemModel) async throws -> ItemModel {
-        createdItems.append(item)
-        return item
+    /// Jeder Aufruf von upsertItems mit seinen Aufträgen.
+    var calls: [[ItemUpsertRequest]] = []
+    /// Nächster Fehler (wird einmal geworfen).
+    var nextError: Error?
+    /// Antwort je Auftrag; Standard: übernommen (Echo des Auftrags).
+    var responder: (ItemUpsertRequest) -> ItemUpsertResult = {
+        ItemUpsertResult(id: $0.item.id, status: .applied, item: $0.item, message: nil)
     }
 
-    func updateItem(_ item: ItemModel) async throws {
-        updatedItems.append(item)
+    var sentItems: [ItemModel] { calls.flatMap { $0.map(\.item) } }
+
+    func upsertItems(_ requests: [ItemUpsertRequest]) async throws -> [ItemUpsertResult] {
+        calls.append(requests)
+        if let error = nextError {
+            nextError = nil
+            throw error
+        }
+        return requests.map(responder)
     }
 
-    func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> {
-        AsyncStream { _ in }
-    }
-
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {}
-
-    func deleteItem(id: String, listId: UUID) async throws {}
-
+    func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> { AsyncStream { _ in } }
     func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] { [] }
-
     func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel] { [] }
 }
 
@@ -57,32 +54,34 @@ private final class SpyItemsRepository: ItemsRepository {
 @MainActor
 final class SyncEngineReactivationTests: XCTestCase {
 
-    // MARK: - Setup
-
     private var container: ModelContainer!
     private var context: ModelContext!
     private var spy: SpyItemsRepository!
     private var itemStore: SwiftDataItemStore!
+    private var queue: SyncOperationQueue!
     private var sut: SyncEngine!
+    private var online = true
+    private var events: [SyncEvent] = []
+    private let listId = UUID(uuidString: "DDDDDDDD-DDDD-DDDD-DDDD-DDDDDDDDDDDD")!
 
     override func setUp() async throws {
         container = PersistenceController(inMemory: true).container
         context = container.mainContext
         spy = SpyItemsRepository()
         itemStore = SwiftDataItemStore(context: context)
-        let queue = SyncOperationQueue(context: context)
-        sut = SyncEngine(
-            repository: spy,
-            itemStore: itemStore,
-            operationQueue: queue,
-            conflictResolver: ConflictResolver(),
-            hlcGenerator: HybridLogicalClockGenerator(nodeId: "test-node")
-        )
+        queue = SyncOperationQueue(context: context)
+        online = true
+        events = []
+        sut = SyncEngine(repository: spy, itemStore: itemStore, operationQueue: queue,
+                         hlcGenerator: HybridLogicalClockGenerator(nodeId: "test-node"),
+                         isOnline: { [unowned self] in self.online })
+        sut.setSyncEventObserver { [unowned self] in self.events.append($0) }
     }
 
     override func tearDown() async throws {
         sut = nil
         spy = nil
+        queue = nil
         itemStore = nil
         container = nil
         context = nil
@@ -90,309 +89,236 @@ final class SyncEngineReactivationTests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// Inserts a confirmed-tombstoned entity (simulates item that was deleted and sync'd).
+    private func item(_ name: String, units: Int = 1, image: String? = nil) -> ItemModel {
+        ItemModel(imageData: image, name: name, units: units, listId: listId.uuidString)
+    }
+
+    private func entity(named name: String) throws -> ItemEntity {
+        try XCTUnwrap(itemStore.fetchItem(id: UUID.deterministicItemID(listId: listId, name: name)))
+    }
+
     @discardableResult
-    private func insertTombstonedEntity(listId: UUID, name: String, hlcTimestamp: Int64 = 1_000) -> ItemEntity {
-        let itemId = UUID.deterministicItemID(listId: listId, name: name)
-        let entity = ItemEntity(
-            id: itemId,
-            listId: listId,
-            ownerPublicId: nil,
-            imageData: nil,
-            name: name,
-            units: 1,
-            measure: "l",
-            price: 0,
-            isChecked: false,
-            category: nil,
-            productDescription: nil,
-            brand: nil,
-            syncStatus: .synced
-        )
-        entity.tombstone = true
-        entity.deletedAt = Date(timeIntervalSinceNow: -60)
-        entity.hlcTimestamp = hlcTimestamp
-        entity.hlcCounter = 0
-        entity.hlcNodeId = "other-node"
-        context.insert(entity)
-        try? context.save()
+    private func insertTombstoned(_ name: String, hlcTimestamp: Int64) throws -> ItemEntity {
+        var model = item(name)
+        model = model.withId(UUID.deterministicItemID(listId: listId, name: name).uuidString)
+        model.hlcTimestamp = hlcTimestamp
+        model.hlcCounter = 0
+        model.hlcNodeId = "other-node"
+        model.tombstone = true
+        let entity = try itemStore.upsert(model: model)
+        try itemStore.save()
         return entity
     }
 
-    // MARK: - Fix 1: processOperation(.create) sends explicit tombstone=false
+    // MARK: - Anlegen
 
-    /// AC: A fresh createItem() must send tombstone=false (not nil) to the repository.
-    /// Without this fix tombstone=nil causes encodeIfPresent to omit the field, leaving
-    /// any existing DB tombstone=true intact after the Supabase upsert.
-    func test_createItem_sendsExplicitTombstoneFalse() async {
-        // Given: brand-new item from the UI (tombstone=nil)
-        let listId = UUID()
-        let item = ItemModel(name: "Milch", listId: listId.uuidString)
+    func test_createItem_sendsFullStateWithHLC_andMarksSynced() async throws {
+        await sut.createItem(item("Milch"))
 
-        // When
-        await sut.createItem(item)
-
-        // Then: repository must receive tombstone=false (not nil)
-        XCTAssertEqual(spy.createdItems.count, 1, "createItem must reach the repository")
-        XCTAssertEqual(spy.createdItems.first?.tombstone, false,
-                       "createItem must send tombstone=false — nil would leave an existing DB tombstone intact")
+        let sent = try XCTUnwrap(spy.sentItems.first)
+        XCTAssertEqual(sent.id, UUID.deterministicItemID(listId: listId, name: "Milch").uuidString)
+        XCTAssertEqual(sent.tombstone, false)
+        XCTAssertNotNil(sent.hlcTimestamp)
+        XCTAssertEqual(sent.hlcNodeId, "test-node")
+        XCTAssertEqual(try entity(named: "Milch").syncStatus, .synced)
+        XCTAssertEqual(queue.count, 0)
     }
 
-    /// AC: A fresh createItem() must send a valid HLC timestamp to the repository.
-    /// Without this the encodeIfPresent omits hlc_timestamp and the DB keeps the old
-    /// deletion HLC, which weakens the HLC-based conflict resolution.
-    func test_createItem_sendsValidHLCFromMetadata() async {
-        // Given: brand-new item (no prior HLC)
-        let listId = UUID()
-        let item = ItemModel(name: "Milch", listId: listId.uuidString)
+    func test_reAddAfterDeletion_usesNewerHLC_andIsVisible() async throws {
+        let future = Int64(Date().timeIntervalSince1970 * 1000) + 60_000   // Löschung von einem Gerät mit vorgehender Uhr
+        try insertTombstoned("Milch", hlcTimestamp: future)
 
-        // When
-        await sut.createItem(item)
+        await sut.createItem(item("Milch", units: 2))
 
-        // Then: all three HLC fields must be non-nil
-        guard let sent = spy.createdItems.first else {
-            return XCTFail("repository.createItem() was not called")
+        let sent = try XCTUnwrap(spy.sentItems.last)
+        XCTAssertEqual(sent.tombstone, false)
+        XCTAssertGreaterThan(sent.hlc, HybridLogicalClock(timestamp: future, counter: 0, nodeId: "other-node"))
+        XCTAssertEqual(try itemStore.fetchItems(listId: listId).map(\.units), [2])
+    }
+
+    func test_createItem_whenDeterministicIdHoldsRenamedItem_getsOwnId() async throws {
+        var renamed = item("Hafermilch")
+        renamed = renamed.withId(UUID.deterministicItemID(listId: listId, name: "Milch").uuidString)
+        try itemStore.upsert(model: renamed)
+        try itemStore.save()
+
+        await sut.createItem(item("Milch"))
+
+        let milch = try XCTUnwrap(spy.sentItems.last)
+        XCTAssertNotEqual(milch.id, renamed.id, "Hafermilch darf nicht überschrieben werden")
+        XCTAssertEqual(try itemStore.fetchItems(listId: listId).map(\.name).sorted(), ["Hafermilch", "Milch"])
+    }
+
+    // MARK: - Offline
+
+    func test_offline_nothingIsSent_andNothingFails() async throws {
+        online = false
+        await sut.createItem(item("Brot"))
+        await sut.resumeSync()
+
+        XCTAssertTrue(spy.calls.isEmpty)
+        XCTAssertEqual(queue.count, 1)
+        XCTAssertEqual(queue.failedCount, 0)
+        XCTAssertEqual(try entity(named: "Brot").syncStatus, .pendingCreate)
+        XCTAssertEqual(try itemStore.fetchItems(listId: listId).count, 1, "sofort sichtbar")
+
+        online = true
+        await sut.resumeSync()
+        XCTAssertEqual(spy.sentItems.map(\.name), ["Brot"])
+        XCTAssertEqual(queue.count, 0)
+    }
+
+    func test_connectionLost_doesNotCountAsFailure() async throws {
+        spy.nextError = URLError(.notConnectedToInternet)
+        await sut.createItem(item("Eier"))
+
+        XCTAssertEqual(queue.count, 1)
+        XCTAssertEqual(queue.failedCount, 0)
+        XCTAssertEqual(queue.peek().first?.retryCount, 0)
+
+        await sut.resumeSync()
+        XCTAssertEqual(queue.count, 0)
+        XCTAssertEqual(try entity(named: "Eier").syncStatus, .synced)
+    }
+
+    func test_transientServerError_neverGivesUp() async throws {
+        let response = HTTPURLResponse(url: URL(string: "https://x")!, statusCode: 503, httpVersion: nil, headerFields: nil)!
+        await sut.createItem(item("Käse"))              // erster Versuch klappt
+        for _ in 0..<10 {
+            spy.nextError = HTTPError(data: Data(), response: response)
+            await sut.updateItem(try entity(named: "Käse").toItemModel())
+            queue.resetRetryDelays()
         }
-        XCTAssertNotNil(sent.hlcTimestamp,  "hlcTimestamp must come from CRDT metadata, not be nil")
-        XCTAssertNotNil(sent.hlcCounter,    "hlcCounter must come from CRDT metadata, not be nil")
-        XCTAssertNotNil(sent.hlcNodeId,     "hlcNodeId must come from CRDT metadata, not be nil")
+        XCTAssertEqual(queue.failedCount, 0, "5xx ist vorübergehend: nie endgültig fehlgeschlagen")
+        await sut.resumeSync()
+        XCTAssertEqual(queue.count, 0)
     }
 
-    /// AC: Re-add of a tombstoned item sends tombstone=false (not nil, not true).
-    /// This is the primary fix for the Supabase upsert — the DB must overwrite
-    /// tombstone=true with tombstone=false on the conflicting row.
-    func test_reAdd_afterConfirmedDelete_sendsExplicitTombstoneFalseToRepository() async {
-        // Given: confirmed-tombstoned entity (simulates item that was deleted + sync confirmed)
-        let listId = UUID()
-        insertTombstonedEntity(listId: listId, name: "Milch", hlcTimestamp: 1_000)
+    // MARK: - Warteschlange zusammenfassen
 
-        // When: user re-adds the same item (deterministic UUID collides with tombstoned entity)
-        let item = ItemModel(name: "Milch", listId: listId.uuidString)
-        await sut.createItem(item)
+    func test_offlineEdits_areCoalesced_lastStateWins() async throws {
+        online = false
+        await sut.createItem(item("Äpfel", units: 1))
+        let created = try entity(named: "Äpfel").toItemModel()
+        var two = created; two.units = 2
+        await sut.updateItem(two)
+        var three = created; three.units = 3
+        await sut.updateItem(three)
 
-        // Then: repository must receive tombstone=false so the DB clears the tombstone
-        XCTAssertEqual(spy.createdItems.count, 1)
-        XCTAssertEqual(spy.createdItems.first?.tombstone, false,
-                       "Re-add must send tombstone=false — never nil or true — to clear the DB tombstone row")
+        XCTAssertEqual(queue.count, 1, "höchstens eine Operation je Artikel")
+        online = true
+        await sut.resumeSync()
+        XCTAssertEqual(spy.sentItems.map(\.units), [3])
     }
 
-    /// AC: Re-add sends a newer HLC than the tombstone's HLC.
-    func test_reAdd_sendsNewerHLCThanTombstone() async {
-        // Given: tombstone with old HLC (timestamp=1000)
-        let listId = UUID()
-        insertTombstonedEntity(listId: listId, name: "Milch", hlcTimestamp: 1_000)
+    func test_createThenDeleteOffline_sendsOnlyTombstone() async throws {
+        online = false
+        await sut.createItem(item("Brot"))
+        await sut.deleteItem(try entity(named: "Brot").toItemModel())
+        XCTAssertEqual(queue.count, 1)
+        XCTAssertTrue(try itemStore.fetchItems(listId: listId).isEmpty)
 
-        // When
-        let item = ItemModel(name: "Milch", listId: listId.uuidString)
-        await sut.createItem(item)
+        online = true
+        await sut.resumeSync()
+        XCTAssertEqual(spy.sentItems.count, 1)
+        XCTAssertEqual(spy.sentItems.first?.tombstone, true, "Anlage wird nicht mehr gesendet, nur die Löschung")
+    }
 
-        // Then: sent HLC must be newer than the tombstone's HLC (ensures local wins in conflict resolution)
-        guard let sentTimestamp = spy.createdItems.first?.hlcTimestamp else {
-            return XCTFail("hlcTimestamp must not be nil in the sent item")
+    func test_overtakenOperation_isDroppedWithoutSending() async throws {
+        online = false
+        await sut.createItem(item("Tee", units: 2))
+        let local = try entity(named: "Tee").toItemModel()
+        var newerRemote = local
+        newerRemote.units = 7
+        newerRemote.hlcTimestamp = (local.hlcTimestamp ?? 0) + 10_000
+        newerRemote.hlcNodeId = "other"
+        XCTAssertEqual(try itemStore.mergeRemote(newerRemote), .applied)
+
+        online = true
+        await sut.resumeSync()
+        XCTAssertTrue(spy.calls.isEmpty, "überholte Operation wird nicht gesendet")
+        XCTAssertEqual(queue.count, 0)
+        XCTAssertEqual(try entity(named: "Tee").units, 7)
+    }
+
+    // MARK: - Server-Antworten
+
+    func test_staleResponse_appliesNewerServerRow() async throws {
+        spy.responder = { request in
+            var server = request.item
+            server.units = 42
+            server.hlcTimestamp = (request.item.hlcTimestamp ?? 0) + 5_000
+            server.hlcNodeId = "other"
+            return ItemUpsertResult(id: request.item.id, status: .stale, item: server, message: nil)
         }
-        XCTAssertGreaterThan(sentTimestamp, 1_000,
-                             "New HLC must be newer than the tombstone HLC so applyRemoteTombstone local-wins if needed")
+        await sut.createItem(item("Butter"))
+
+        XCTAssertEqual(try entity(named: "Butter").units, 42)
+        XCTAssertEqual(try entity(named: "Butter").syncStatus, .synced)
+        XCTAssertEqual(queue.count, 0)
     }
 
-    // MARK: - Fix 2: storeLocally() reactivation — deletedAt cleared, item visible
+    func test_deniedResponse_marksFailed_andEmitsEvent() async throws {
+        spy.responder = { ItemUpsertResult(id: $0.item.id, status: .denied, item: nil, message: nil) }
+        await sut.createItem(item("Salz"))
 
-    /// AC: After re-adding a confirmed-tombstoned item, deletedAt must be nil.
-    /// Without this fix storeLocally() sets .pendingUpdate which does not clear deletedAt,
-    /// leaving the item invisible in the UI even though it was re-added.
-    func test_reAdd_afterConfirmedDelete_clearsDeletedAt() async {
-        // Given: confirmed-tombstoned entity
-        let listId = UUID()
-        let itemId = UUID.deterministicItemID(listId: listId, name: "Milch")
-        insertTombstonedEntity(listId: listId, name: "Milch")
+        XCTAssertEqual(try entity(named: "Salz").syncStatus, .failed)
+        XCTAssertEqual(queue.failedCount, 1)
+        XCTAssertTrue(events.contains { if case .itemFailed(let i) = $0 { return i.name == "Salz" } else { return false } })
+    }
 
-        // When
-        let item = ItemModel(name: "Milch", listId: listId.uuidString)
-        await sut.createItem(item)
+    func test_retryItem_resendsFailedItem() async throws {
+        spy.responder = { ItemUpsertResult(id: $0.item.id, status: .denied, item: nil, message: nil) }
+        await sut.createItem(item("Salz"))
+        spy.responder = { ItemUpsertResult(id: $0.item.id, status: .applied, item: $0.item, message: nil) }
 
-        // Then: deletedAt must be nil — item is visible
-        guard let entity = try? itemStore.fetchItem(id: itemId) else {
-            return XCTFail("Entity must still exist after re-add")
+        await sut.retryItem(try entity(named: "Salz").toItemModel())
+
+        XCTAssertEqual(try entity(named: "Salz").syncStatus, .synced)
+        XCTAssertEqual(queue.failedCount, 0)
+    }
+
+    // MARK: - Gebündelt, Foto
+
+    func test_applyLocalChanges_sendsOneBatch() async throws {
+        online = false
+        for name in ["A", "B", "C"] { await sut.createItem(item(name)) }
+        online = true
+        await sut.resumeSync()
+        spy.calls = []
+
+        let checked = try itemStore.fetchItems(listId: listId).map { entity -> ItemModel in
+            var m = entity.toItemModel(); m.isChecked = true; return m
         }
-        XCTAssertNil(entity.deletedAt,
-                     "deletedAt must be nil after re-add — otherwise the item stays invisible in the UI")
+        await sut.applyLocalChanges(checked)
+
+        XCTAssertEqual(spy.calls.count, 1, "ein Server-Aufruf für alle")
+        XCTAssertEqual(spy.calls.first?.count, 3)
+        XCTAssertTrue(try itemStore.fetchItems(listId: listId).allSatisfy { $0.isChecked && $0.syncStatus == .synced })
     }
 
-    /// AC: After re-adding a confirmed-tombstoned item, tombstone must be false on the entity.
-    func test_reAdd_afterConfirmedDelete_setsTombstoneFalseLocally() async {
-        // Given
-        let listId = UUID()
-        let itemId = UUID.deterministicItemID(listId: listId, name: "Milch")
-        insertTombstonedEntity(listId: listId, name: "Milch")
+    func test_imageIsSentOnlyWhenChanged() async throws {
+        await sut.createItem(item("Foto", image: "abc"))
+        XCTAssertEqual(spy.calls.last?.first?.includeImage, true)
 
-        // When
-        let item = ItemModel(name: "Milch", listId: listId.uuidString)
-        await sut.createItem(item)
+        var edit = try entity(named: "Foto").toItemModel()
+        edit.units = 2
+        await sut.updateItem(edit)
+        XCTAssertEqual(spy.calls.last?.first?.includeImage, false)
 
-        // Then
-        guard let entity = try? itemStore.fetchItem(id: itemId) else {
-            return XCTFail("Entity must still exist after re-add")
-        }
-        XCTAssertEqual(entity.tombstone, false,
-                       "tombstone must be false on the local entity after re-add")
+        edit.imageData = "xyz"
+        await sut.updateItem(edit)
+        XCTAssertEqual(spy.calls.last?.first?.includeImage, true)
     }
 
-    // MARK: - Fix 3: processOperation(.update) sends new HLC from metadata
+    // MARK: - Abmelden
 
-    /// AC: updateItem() must send a new HLC timestamp to the repository — not the old
-    /// HLC that was baked into the item snapshot when the operation was queued.
-    /// Without this fix Supabase stores an outdated HLC which can cause cross-device
-    /// conflict resolution to mis-fire (old HLC loses against the tombstone HLC it should beat).
-    func test_updateItem_sendsNewHLCFromMetadata() async {
-        // Given: existing entity with a known old HLC
-        let listId = UUID()
-        let entity = ItemEntity(
-            id: UUID(),
-            listId: listId,
-            ownerPublicId: nil,
-            imageData: nil,
-            name: "Tee",
-            units: 1,
-            measure: "pkg",
-            price: 0,
-            isChecked: false,
-            category: nil,
-            productDescription: nil,
-            brand: nil,
-            syncStatus: .synced
-        )
-        let oldTimestamp: Int64 = 1_000
-        entity.hlcTimestamp = oldTimestamp
-        entity.hlcCounter   = 0
-        entity.hlcNodeId    = "old-node"
-        context.insert(entity)
-        try? context.save()
-
-        // When: updateItem() is called (simulates duplicate-add increment)
-        var updatedItem = ItemModel(
-            id: entity.id.uuidString,
-            name: "Tee",
-            units: 2,
-            listId: listId.uuidString
-        )
-        updatedItem.hlcTimestamp = oldTimestamp  // item carries old HLC at queue time
-        await sut.updateItem(updatedItem)
-
-        // Then: repository must receive a timestamp strictly newer than the old HLC
-        guard let sent = spy.updatedItems.first else {
-            return XCTFail("repository.updateItem() was not called")
-        }
-        XCTAssertNotNil(sent.hlcTimestamp,  "hlcTimestamp must not be nil in the sent item")
-        XCTAssertNotNil(sent.hlcCounter,    "hlcCounter must not be nil in the sent item")
-        XCTAssertNotNil(sent.hlcNodeId,     "hlcNodeId must not be nil in the sent item")
-        XCTAssertGreaterThan(sent.hlcTimestamp ?? 0, oldTimestamp,
-                             "updateItem() must send a new HLC — not the stale HLC from the queued snapshot")
-    }
-
-    /// AC: updateItem() sends units=2 (correct field value) to the repository.
-    func test_updateItem_sendsCorrectFieldValues() async {
-        // Given: existing entity
-        let listId = UUID()
-        let entity = ItemEntity(
-            id: UUID(),
-            listId: listId,
-            ownerPublicId: nil,
-            imageData: nil,
-            name: "Tee",
-            units: 1,
-            measure: "pkg",
-            price: 0,
-            isChecked: false,
-            category: nil,
-            productDescription: nil,
-            brand: nil,
-            syncStatus: .synced
-        )
-        entity.hlcTimestamp = 1_000
-        entity.hlcCounter   = 0
-        entity.hlcNodeId    = "old-node"
-        context.insert(entity)
-        try? context.save()
-
-        // When
-        let updatedItem = ItemModel(id: entity.id.uuidString, name: "Tee", units: 2, listId: listId.uuidString)
-        await sut.updateItem(updatedItem)
-
-        // Then: name and units must match what was passed in
-        XCTAssertEqual(spy.updatedItems.first?.name,  "Tee")
-        XCTAssertEqual(spy.updatedItems.first?.units, 2)
-    }
-
-    // MARK: - Normal create path — unaffected by fixes
-
-    /// AC: A normal createItem() with no prior deletion still reaches the repository.
-    func test_createItem_normalNew_reachesRepository() async {
-        // Given: no prior entity
-        let listId = UUID()
-        let item = ItemModel(name: "Butter", listId: listId.uuidString)
-
-        // When
-        await sut.createItem(item)
-
-        // Then
-        XCTAssertEqual(spy.createdItems.count, 1, "Normal createItem must reach the repository")
-        XCTAssertEqual(spy.createdItems.first?.name, "Butter")
-    }
-
-    /// AC: A normal createItem() does not accidentally set deletedAt on the new entity.
-    func test_createItem_normalNew_doesNotSetDeletedAt() async {
-        // Given: no prior entity
-        let listId = UUID()
-        let item = ItemModel(name: "Butter", listId: listId.uuidString)
-        let deterministicId = UUID.deterministicItemID(listId: listId, name: "Butter")
-
-        // When
-        await sut.createItem(item)
-
-        // Then
-        guard let entity = try? itemStore.fetchItem(id: deterministicId) else {
-            return XCTFail("Entity must be created")
-        }
-        XCTAssertNil(entity.deletedAt, "Normal createItem must not set deletedAt")
-    }
-
-    // MARK: - Offline-First: lokale Anzeige vor dem Netzwerk
-
-    /// AC: Der Beobachter für lokale Schreibvorgänge feuert, BEVOR das Repository (Netzwerk) aufgerufen wird.
-    func test_localWriteObserver_firesBeforeRemotePush() async {
-        let spy = self.spy!
-        var pushesWhenObserved: [Int] = []
-        sut.setLocalWriteObserver { pushesWhenObserved.append(spy.createdItems.count) }
-
-        await sut.createItem(ItemModel(name: "Milch", listId: UUID().uuidString))
-
-        XCTAssertEqual(pushesWhenObserved.first, 0, "UI-Aktualisierung vor dem Senden")
-        XCTAssertEqual(spy.createdItems.count, 1)
-    }
-
-    // MARK: - Bearbeiten ohne lokalen Datensatz
-
-    /// Früher kehrte updateItem() still zurück, wenn der Artikel lokal fehlte – der Preis ging verloren.
-    func test_updateItem_missingEntity_storesPriceLocally() async throws {
-        let listId = UUID()
-        let item = ItemModel(id: UUID().uuidString, name: "Milch", price: 1.49, listId: listId.uuidString)
-
-        await sut.updateItem(item)
-
-        let stored = try itemStore.fetchItem(id: UUID(uuidString: item.id)!)
-        XCTAssertEqual(stored?.price ?? 0, 1.49, accuracy: 0.0001)
-        XCTAssertNotNil(stored?.hlcTimestamp)
-    }
-
-    /// Normalfall: Preis eines vorhandenen Artikels ändern.
-    func test_updateItem_existingEntity_updatesPrice() async throws {
-        let listId = UUID()
-        await sut.createItem(ItemModel(name: "Milch", listId: listId.uuidString))
-        let id = UUID.deterministicItemID(listId: listId, name: "Milch")
-        var edited = try XCTUnwrap(try itemStore.fetchItem(id: id)).toItemModel()
-        edited.price = 1.49
-
-        await sut.updateItem(edited)
-
-        XCTAssertEqual(try itemStore.fetchItem(id: id)?.price ?? 0, 1.49, accuracy: 0.0001)
+    func test_resetForSignOut_clearsQueue() async throws {
+        online = false
+        await sut.createItem(item("Privat"))
+        XCTAssertEqual(queue.count, 1)
+        sut.resetForSignOut()
+        XCTAssertEqual(queue.count, 0)
+        XCTAssertEqual(queue.failedCount, 0)
     }
 }

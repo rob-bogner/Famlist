@@ -18,11 +18,11 @@
 
  🔰 Notes for Beginners:
  - SwiftData provides offline-first capability by mirroring remote state locally.
- - Merge strategy ensures unsynced local changes aren't overwritten by remote snapshots.
- - Tombstones (soft deletes) allow syncing deletes to the server before purging locally.
+ - Remote-Zeilen gleicht SwiftDataItemStore.mergeRemote per HLC ab (ItemSyncPolicy).
+ - Löschmarkierungen bleiben lokal erhalten (ausgeblendet über deletedAt).
 
  📝 Last Change:
- - Extracted from ListViewModel.swift to follow one-type-per-file rule and reduce file size.
+ - Toter Merge-/Tombstone-Code entfernt; Zeitmarke je Liste (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -82,84 +82,6 @@ extension ListViewModel {
         }
     }
     
-    /// Persists a remote snapshot into SwiftData so offline mode mirrors the latest server state.
-    /// FAM-79: Purge logic removed. Only upserts are performed.
-    /// Items are deleted exclusively via applyRemoteTombstone() / applyRemoteTombstoneModel().
-    internal func persistRemoteSnapshot(_ snapshot: [ItemModel]) {
-        do {
-            for model in snapshot {
-                try itemStore.upsert(model: model)
-            }
-            try itemStore.save()
-        } catch {
-            logVoid(params: (
-                note: "persistRemoteSnapshot",
-                error: (error as NSError).localizedDescription
-            ))
-        }
-    }
-    
-    /// Merges the latest remote snapshot with unsynced local mutations to provide a consistent view.
-    /// Sortiert das Ergebnis stets nach currentSortOrder, damit Remote-Snapshots die UI-Reihenfolge nicht resetten.
-    internal func mergeRemoteSnapshot(_ snapshot: [ItemModel]) -> [ItemModel] {
-        let strategy = ItemMergeStrategy(
-            currentItems: items,
-            localStore: itemStore,
-            listId: listId
-        )
-        let merged = strategy.merge(snapshot)
-        return ListViewModel.currentSortOrder.apply(to: merged)
-    }
-    
-    /// Stores a pending change locally and refreshes the published items, keeping offline UI in sync.
-    internal func storePendingChange(for item: ItemModel, status: ItemEntity.SyncStatus) {
-        do {
-            let entity = try itemStore.upsert(model: item)
-            entity.setSyncStatus(status)
-            try itemStore.save()
-            refreshItemsFromStore()
-        } catch {
-            logVoid(params: (
-                note: "storePendingChange",
-                error: (error as NSError).localizedDescription
-            ))
-        }
-    }
-    
-    /// Marks an item as deleted in the local store while keeping a tombstone for later sync.
-    internal func markItemDeleted(_ item: ItemModel) {
-        guard let uuid = UUID(uuidString: item.id) else { return }
-        do {
-            try itemStore.delete(id: uuid)
-            refreshItemsFromStore()
-        } catch {
-            logVoid(params: (
-                note: "markItemDeleted",
-                error: (error as NSError).localizedDescription
-            ))
-        }
-    }
-    
-    /// Updates the sync status for an item when a remote operation finishes or fails.
-    internal func updateSyncStatus(for itemId: String, status: ItemEntity.SyncStatus) {
-        guard let uuid = UUID(uuidString: itemId) else { return }
-        do {
-            if let entity = try itemStore.fetchItem(id: uuid) {
-                entity.setSyncStatus(status)
-                if status == .failed {
-                    entity.deletedAt = nil // Restore visibility when a delete failed.
-                }
-                try itemStore.save()
-                refreshItemsFromStore()
-            }
-        } catch {
-            logVoid(params: (
-                note: "updateSyncStatus",
-                error: (error as NSError).localizedDescription
-            ))
-        }
-    }
-    
     /// Returns ALL items for the current list from SwiftData, including soft-deleted ones.
     /// Used by `ImportMergeService` to make correct merge decisions (create / reactivate / update).
     internal func fetchAllLocalItems() -> [ItemModel] {
@@ -192,68 +114,30 @@ extension ListViewModel {
         }
     }
     
-    // MARK: - Tombstone (FAM-41)
-
-    /// Applies a remote tombstone for `item` directly in SwiftData (used by IncrementalSync delta).
-    /// Uses HLC-aware conflict resolution: remote tombstone wins unless local HLC is strictly higher.
-    internal func applyRemoteTombstoneModel(_ item: ItemModel) {
-        guard let uuid = UUID(uuidString: item.id),
-              let entity = try? itemStore.fetchItem(id: uuid) else { return }
-
-        switch entity.syncStatus {
-        case .synced, .pendingDelete, .failed, .pendingRecovery:
-            try? itemStore.purge(id: uuid)
-            logVoid(params: (action: "applyRemoteTombstoneModel.purge", itemId: item.id))
-
-        case .pendingCreate, .pendingUpdate:
-            let remoteHlcTimestamp = item.hlcTimestamp ?? 0
-            let remoteHlcCounter = item.hlcCounter ?? 0
-            let remoteHLC = HybridLogicalClock(
-                timestamp: remoteHlcTimestamp,
-                counter: remoteHlcCounter,
-                nodeId: item.hlcNodeId ?? ""
-            )
-            let localHLC = HybridLogicalClock(
-                timestamp: entity.hlcTimestamp ?? 0,
-                counter: entity.hlcCounter ?? 0,
-                nodeId: entity.hlcNodeId ?? ""
-            )
-            // Remote tombstone wins if remote >= local (tie → delete wins).
-            if !(localHLC > remoteHLC) {
-                try? itemStore.purge(id: uuid)
-                logVoid(params: (action: "applyRemoteTombstoneModel.purge", itemId: item.id, reason: "remoteHlcWins"))
-            } else {
-                logVoid(params: (action: "applyRemoteTombstoneModel.localWins", itemId: item.id))
-            }
-        }
-    }
-
     // MARK: - lastSyncTimestamp (FAM-41)
 
-    /// Loads the high-water mark timestamp for the current list from UserDefaults.
-    /// Returns Date.distantPast when no timestamp is stored (triggers a full delta-fetch on first run).
-    internal func loadLastSyncTimestamp() -> Date {
-        let key = lastSyncTimestampKey
-        guard let iso = UserDefaults.standard.string(forKey: key),
-              let date = ISO8601DateFormatter().date(from: iso) else {
+    /// Zeitmarke des letzten Delta-Abgleichs einer Liste (Date.distantPast = alles holen).
+    internal func loadLastSyncTimestamp(for list: UUID? = nil) -> Date {
+        guard let iso = UserDefaults.standard.string(forKey: lastSyncTimestampKey(list ?? listId)),
+              let date = PaginationCursor.postgrestFormatter.date(from: iso) ?? ISO8601DateFormatter().date(from: iso) else {
             return Date.distantPast
         }
         return date
     }
 
-    /// Persists the high-water mark timestamp for the current list to UserDefaults.
-    internal func saveLastSyncTimestamp(_ date: Date) {
-        let iso = ISO8601DateFormatter().string(from: date)
-        UserDefaults.standard.set(iso, forKey: lastSyncTimestampKey)
+    /// Speichert die Zeitmarke mit Millisekunden (vorher: ganze Sekunden → Zeilen wurden doppelt geholt).
+    internal func saveLastSyncTimestamp(_ date: Date, for list: UUID? = nil) {
+        UserDefaults.standard.set(PaginationCursor.postgrestFormatter.string(from: date),
+                                  forKey: lastSyncTimestampKey(list ?? listId))
     }
 
     /// Clears the persisted last-sync timestamp for the current list.
     internal func clearLastSyncTimestamp() {
-        UserDefaults.standard.removeObject(forKey: lastSyncTimestampKey)
+        UserDefaults.standard.removeObject(forKey: lastSyncTimestampKey(listId))
     }
 
-    private var lastSyncTimestampKey: String {
-        "fam24_last_sync_ts_\(listId.uuidString)"
+    private func lastSyncTimestampKey(_ list: UUID) -> String {
+        "fam24_last_sync_ts_\(list.uuidString)"
     }
 
     // MARK: - Default List Caching

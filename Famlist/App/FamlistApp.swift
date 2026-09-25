@@ -56,9 +56,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
 
         if let config = SupabaseConfigLoader.load(), // Try to load Supabase secrets from bundle.
            let client = AppSupabaseClient(config: config) { // Initialize the Supabase client if configured.
-            // Initialize CRDT components
-            let conflictResolver = ConflictResolver()
-            let hlcGenerator = HybridLogicalClockGenerator()
+            // HLC-Uhr mit gespeicherter Geräte-ID und letztem Stand (über Neustarts monoton).
+            let hlcGenerator = HybridLogicalClockGenerator(defaults: .standard)
             
             // Sync orchestrator serialises PageLoader and Realtime event processing (FAM-79).
             let syncOrchestrator = SyncOrchestrator()
@@ -67,7 +66,6 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             let itemsRepo = SupabaseItemsRepository(
                 client: client,
                 itemStore: itemStore,
-                conflictResolver: conflictResolver,
                 syncOrchestrator: syncOrchestrator
             )
             let profilesRepo = SupabaseProfilesRepository(client: client)
@@ -81,9 +79,9 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 repository: itemsRepo,
                 itemStore: itemStore,
                 operationQueue: operationQueue,
-                conflictResolver: conflictResolver,
                 hlcGenerator: hlcGenerator,
-                syncMonitor: syncMonitor
+                syncMonitor: syncMonitor,
+                isOnline: { ConnectivityMonitor.shared.isOnline }
             )
             
             // Create list VM without starting observation; it will start after auth completes.

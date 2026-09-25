@@ -38,6 +38,7 @@ final class PreviewSyncEngine: SyncEngineProtocol {
     // MARK: - Dependencies
 
     private let repository: ItemsRepository
+    private let clock = HybridLogicalClockGenerator(nodeId: "preview")
 
     // MARK: - Init
 
@@ -49,18 +50,11 @@ final class PreviewSyncEngine: SyncEngineProtocol {
 
     // MARK: - SyncEngineProtocol
 
-    func createItem(_ item: ItemModel) async {
-        _ = try? await repository.createItem(item)
-    }
-
-    func updateItem(_ item: ItemModel) async {
-        try? await repository.updateItem(item)
-    }
-
-    func deleteItem(_ item: ItemModel) async {
-        guard let listIdStr = item.listId, let listUUID = UUID(uuidString: listIdStr) else { return }
-        try? await repository.deleteItem(id: item.id, listId: listUUID)
-    }
+    func createItem(_ item: ItemModel) async { await send([item], tombstone: false) }
+    func updateItem(_ item: ItemModel) async { await send([item], tombstone: false) }
+    func deleteItem(_ item: ItemModel) async { await send([item], tombstone: true) }
+    func deleteItems(_ items: [ItemModel]) async { await send(items, tombstone: true) }
+    func applyLocalChanges(_ items: [ItemModel]) async { await send(items, tombstone: false) }
 
     /// No-op: preview mode has no operation queue to flush.
     func resumeSync() async {}
@@ -70,4 +64,18 @@ final class PreviewSyncEngine: SyncEngineProtocol {
 
     /// No-op: preview mode has no operation queue for bulk imports.
     func applyBulkItems(_ targets: [ImportTarget]) async {}
+
+    /// Direkt an das In-Memory-Repository, mit neuer HLC (gleiche Regel wie die echte Engine).
+    private func send(_ items: [ItemModel], tombstone: Bool) async {
+        let requests = items.map { item -> ItemUpsertRequest in
+            var stamped = item
+            let hlc = clock.tick()
+            stamped.hlcTimestamp = hlc.timestamp
+            stamped.hlcCounter = hlc.counter
+            stamped.hlcNodeId = hlc.nodeId
+            stamped.tombstone = tombstone
+            return ItemUpsertRequest(item: stamped, includeImage: true)
+        }
+        _ = try? await repository.upsertItems(requests)
+    }
 }

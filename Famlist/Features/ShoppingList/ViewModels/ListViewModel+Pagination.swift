@@ -50,11 +50,11 @@ extension ListViewModel {
                 try await pageLoader.loadNextPage(listId: listId, cursor: currentCursor)
             }
 
-            // Upsert fetched items into SwiftData (no purge per FAM-79).
+            // Per HLC abgleichen: ausstehende lokale Änderungen bleiben erhalten (Audit M2).
             for item in items {
-                _ = try? itemStore.upsert(model: item)
+                try itemStore.mergeRemote(item)
             }
-            try? itemStore.save()
+            try itemStore.save()
 
             // Advance cursor (T1 rule first).
             if let newCursor {

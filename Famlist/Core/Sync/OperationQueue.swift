@@ -2,24 +2,26 @@
  OperationQueue.swift
  Famlist
  Created on: 22.11.2025
- Last updated on: 22.11.2025
+ Last updated on: 25.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Manages persistent queue of sync operations using SwiftData.
- 
+ - Dauerhafte Warteschlange der Sync-Operationen (SwiftData).
+
  🛠 Includes:
- - enqueue/dequeue operations
- - Retry scheduling with exponential backoff
- - Query methods for operation status
- 
+ - enqueue mit Zusammenfassen: pro Artikel höchstens EINE wartende Operation (die neueste).
+ - Stapel-Entnahme (dequeueBatch) für das gebündelte Senden über die RPC upsert_items_lww.
+ - Vorübergehende Fehler (offline, 5xx) ohne Versuchszähler; dauerhafte Fehler markieren „fehlgeschlagen“.
+
  🔰 Notes for Beginners:
- - Operations persist across app restarts
- - Failed operations stay in queue for automatic retry
- - Queue processes operations in FIFO order (oldest first)
- 
+ - Jede Operation trägt den VOLLEN Stand des Artikels (inkl. Löschmarkierung und HLC). Deshalb reicht
+   die neueste: Zwischenstände müssen nicht einzeln zum Server.
+ - „In Arbeit“ (inFlight): Diese Operation ist gerade unterwegs. Eine neue Änderung desselben Artikels
+   ersetzt sie nicht, sondern wartet dahinter. Sonst ginge die neue Änderung beim Erfolg der alten verloren.
+ - Die Reihenfolge pro Artikel ist damit garantiert: Es ist nie mehr als eine Operation je Artikel unterwegs.
+
  📝 Last Change:
- - Initial implementation for CRDT-based sync architecture
+ - Zusammenfassen, Stapel, In-Arbeit-Schutz, Fehlerklassen (Audit 25.09.2026, K2/H1/H2).
  ------------------------------------------------------------------------
 */
 
@@ -29,273 +31,214 @@ import SwiftData
 /// Manages a persistent queue of sync operations backed by SwiftData
 @MainActor
 final class SyncOperationQueue {
-    
+
     // MARK: - Dependencies
-    
+
     private let context: ModelContext
-    
+
+    /// Operationen, die gerade gesendet werden (nur im Speicher; nach einem Neustart ist nichts unterwegs).
+    private(set) var inFlight: Set<UUID> = []
+
     // MARK: - Initialization
-    
+
     init(context: ModelContext) {
         self.context = context
     }
-    
-    // MARK: - Queue Operations
-    
-    /// Adds a new operation to the queue
-    /// - Parameter operation: The sync operation to enqueue
+
+    // MARK: - Enqueue
+
+    /// Reiht eine Operation ein und ersetzt dabei wartende (nicht laufende) Operationen desselben Artikels.
     func enqueue(_ operation: SyncOperation) {
+        for existing in fetch(itemId: operation.itemId) where !inFlight.contains(existing.id) {
+            context.delete(existing)
+        }
         context.insert(operation)
-        do {
-            try context.save()
-            logVoid(params: (
-                action: "enqueueOperation",
-                operationId: operation.id,
-                type: operation.type.rawValue,
-                itemId: operation.itemId
-            ))
-        } catch {
-            logVoid(params: (
-                action: "enqueueOperation.error",
-                error: error.localizedDescription
-            ))
-        }
+        saveOrLog("enqueueOperation", operationId: operation.id)
     }
-    
-    /// Gets the next operation ready for processing (FIFO, considering retry delays)
-    /// - Returns: Next operation to process, or nil if queue is empty or all operations are scheduled for later
+
+    // MARK: - Dequeue
+
+    /// Nächste sendebereite Operation (älteste zuerst), deren Artikel nicht gerade unterwegs ist.
     func dequeue() -> SyncOperation? {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { operation in
-                !operation.hasFailed
-            },
-            sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)]
-        )
-        
-        do {
-            let operations = try context.fetch(descriptor)
-            
-            // Find first operation ready for retry
-            return operations.first { $0.isReadyForRetry }
-        } catch {
-            logVoid(params: (
-                action: "dequeueOperation.error",
-                error: error.localizedDescription
-            ))
-            return nil
-        }
+        dequeueBatch(limit: 1).first
     }
-    
-    /// Gets all pending operations (for monitoring/debugging)
-    /// - Returns: Array of all operations in queue
-    func peek() -> [SyncOperation] {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)]
-        )
-        
-        do {
-            return try context.fetch(descriptor)
-        } catch {
-            logVoid(params: (
-                action: "peekQueue.error",
-                error: error.localizedDescription
-            ))
-            return []
-        }
-    }
-    
-    /// Gets pending operations for a specific list
-    /// - Parameter listId: UUID of the list
-    /// - Returns: Operations affecting that list
-    func operations(for listId: UUID) -> [SyncOperation] {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { operation in
-                operation.listId == listId && !operation.hasFailed
-            },
-            sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)]
-        )
-        
-        do {
-            return try context.fetch(descriptor)
-        } catch {
-            logVoid(params: (
-                action: "operationsForList.error",
-                error: error.localizedDescription
-            ))
-            return []
-        }
-    }
-    
-    /// Removes an operation from the queue (after successful completion)
-    /// - Parameter operationId: UUID of the operation to remove
-    func remove(_ operationId: UUID) {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { $0.id == operationId }
-        )
-        
-        do {
-            let operations = try context.fetch(descriptor)
-            for operation in operations {
-                context.delete(operation)
-            }
-            try context.save()
-            
-            logVoid(params: (
-                action: "removeOperation",
-                operationId: operationId
-            ))
-        } catch {
-            logVoid(params: (
-                action: "removeOperation.error",
-                operationId: operationId,
-                error: error.localizedDescription
-            ))
-        }
-    }
-    
-    /// Updates retry schedule for an operation after a failure
-    /// - Parameters:
-    ///   - operationId: UUID of the operation
-    ///   - error: The error that occurred
-    ///   - backoff: Time interval to wait before next retry
-    ///   - maxRetries: Maximum allowed retries before marking as permanently failed.
-    func updateRetrySchedule(_ operationId: UUID, error: Error, backoff: TimeInterval, maxRetries: Int = BackoffCalculator.default.maxRetries) {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { $0.id == operationId }
-        )
 
-        do {
-            let operations = try context.fetch(descriptor)
-            guard let operation = operations.first else { return }
-
-            operation.recordFailure(error: error, backoff: backoff, maxRetries: maxRetries)
-            try context.save()
-            
-            logVoid(params: (
-                action: "updateRetrySchedule",
-                operationId: operationId,
-                retryCount: operation.retryCount,
-                nextRetryAt: operation.nextRetryAt?.description ?? "nil",
-                hasFailed: operation.hasFailed
-            ))
-        } catch {
-            logVoid(params: (
-                action: "updateRetrySchedule.error",
-                operationId: operationId,
-                error: error.localizedDescription
-            ))
+    /// Bis zu `limit` sendebereite Operationen, höchstens eine je Artikel, und markiert sie als „in Arbeit“.
+    func dequeueBatch(limit: Int) -> [SyncOperation] {
+        let busyItems = Set(fetchAll().filter { inFlight.contains($0.id) }.map(\.itemId))
+        var seen = busyItems
+        var batch: [SyncOperation] = []
+        for operation in fetchPending() where operation.isReadyForRetry && !inFlight.contains(operation.id) {
+            guard !seen.contains(operation.itemId) else { continue }
+            seen.insert(operation.itemId)
+            batch.append(operation)
+            if batch.count == limit { break }
         }
+        batch.forEach { inFlight.insert($0.id) }
+        return batch
     }
-    
-    /// Marks an operation as successfully completed
-    /// - Parameter operationId: UUID of the operation
+
+    // MARK: - Completion
+
+    /// Erfolg: Operation entfernen.
     func markSuccess(_ operationId: UUID) {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { $0.id == operationId }
-        )
-        
-        do {
-            let operations = try context.fetch(descriptor)
-            guard let operation = operations.first else { return }
-            
-            operation.markSuccess()
-            try context.save()
-            
-            // Remove from queue after success
-            remove(operationId)
-        } catch {
-            logVoid(params: (
-                action: "markSuccess.error",
-                operationId: operationId,
-                error: error.localizedDescription
-            ))
-        }
+        inFlight.remove(operationId)
+        remove(operationId)
     }
-    
-    // MARK: - Queue Status
-    
-    /// Returns the number of pending operations
+
+    /// Vorübergehender Fehler (offline, Zeitüberschreitung, 5xx): später erneut, ohne Versuchszähler.
+    func deferOperation(_ operationId: UUID, until date: Date, error: Error) {
+        inFlight.remove(operationId)
+        guard let operation = fetch(id: operationId) else { return }
+        operation.nextRetryAt = date
+        operation.lastAttemptAt = Date()
+        operation.lastErrorMessage = error.localizedDescription
+        saveOrLog("deferOperation", operationId: operationId)
+    }
+
+    /// Fehler mit Versuchszähler und Wartezeit. Nach `maxRetries` gilt die Operation als fehlgeschlagen.
+    func updateRetrySchedule(_ operationId: UUID, error: Error, backoff: TimeInterval,
+                             maxRetries: Int = BackoffCalculator.default.maxRetries) {
+        inFlight.remove(operationId)
+        guard let operation = fetch(id: operationId) else { return }
+        operation.recordFailure(error: error, backoff: backoff, maxRetries: maxRetries)
+        saveOrLog("updateRetrySchedule", operationId: operationId)
+    }
+
+    /// Dauerhafter Fehler (kein Zugriff, ungültige Daten): sofort „fehlgeschlagen“.
+    func markFailed(_ operationId: UUID, message: String) {
+        inFlight.remove(operationId)
+        guard let operation = fetch(id: operationId) else { return }
+        operation.hasFailed = true
+        operation.nextRetryAt = nil
+        operation.lastAttemptAt = Date()
+        operation.lastErrorMessage = message
+        saveOrLog("markFailed", operationId: operationId)
+    }
+
+    /// Gibt eine unterwegs abgebrochene Operation wieder frei (z. B. nach Abbruch des Durchlaufs).
+    func release(_ operationId: UUID) {
+        inFlight.remove(operationId)
+    }
+
+    // MARK: - Queries
+
+    /// Gibt es für den Artikel noch eine Operation (wartend oder unterwegs, nicht fehlgeschlagen)?
+    func hasPendingOperation(itemId: String) -> Bool {
+        fetch(itemId: itemId).contains { !$0.hasFailed }
+    }
+
+    /// All operations (for monitoring/debugging), oldest first.
+    func peek() -> [SyncOperation] {
+        fetchAll()
+    }
+
+    /// Pending operations for a specific list.
+    func operations(for listId: UUID) -> [SyncOperation] {
+        fetchPending().filter { $0.listId == listId }
+    }
+
+    /// Number of pending (not failed) operations.
     var count: Int {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { !$0.hasFailed }
-        )
-        
-        do {
-            let operations = try context.fetch(descriptor)
-            return operations.count
-        } catch {
-            return 0
-        }
+        (try? context.fetchCount(FetchDescriptor<SyncOperation>(predicate: #Predicate { !$0.hasFailed }))) ?? 0
     }
-    
-    /// Returns the number of failed operations
+
+    /// Number of permanently failed operations.
     var failedCount: Int {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { $0.hasFailed }
-        )
-        
-        do {
-            let operations = try context.fetch(descriptor)
-            return operations.count
-        } catch {
-            return 0
-        }
+        (try? context.fetchCount(FetchDescriptor<SyncOperation>(predicate: #Predicate { $0.hasFailed }))) ?? 0
     }
-    
+
+    /// Frühester Zeitpunkt, zu dem eine wartende Operation wieder sendebereit ist (nil = keine wartet).
+    var nextRetryDate: Date? {
+        fetchPending().compactMap { $0.isReadyForRetry ? Date.distantPast : $0.nextRetryAt }.min()
+    }
+
+    // MARK: - Removal
+
+    /// Removes an operation from the queue.
+    func remove(_ operationId: UUID) {
+        inFlight.remove(operationId)
+        guard let operation = fetch(id: operationId) else { return }
+        context.delete(operation)
+        saveOrLog("removeOperation", operationId: operationId)
+    }
+
+    /// Entfernt wartende Operationen eines Artikels (z. B. weil eine neuere Remote-Änderung gewonnen hat).
+    func dropPendingOperations(itemId: String) {
+        let stale = fetch(itemId: itemId).filter { !inFlight.contains($0.id) }
+        guard !stale.isEmpty else { return }
+        stale.forEach { context.delete($0) }
+        saveOrLog("dropPendingOperations", operationId: nil)
+    }
+
     /// Resets a permanently-failed operation so it is eligible for retry.
-    /// - Parameter itemId: The item ID string whose failed operation should be reset.
     func resetFailedOperation(itemId: String) {
-        let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { $0.itemId == itemId && $0.hasFailed }
-        )
-
-        do {
-            let operations = try context.fetch(descriptor)
-            for operation in operations {
-                operation.hasFailed = false
-                operation.retryCount = 0
-                operation.nextRetryAt = nil
-                operation.lastErrorMessage = nil
-            }
-            try context.save()
-
-            logVoid(params: (
-                action: "resetFailedOperation",
-                itemId: itemId,
-                count: operations.count
-            ))
-        } catch {
-            logVoid(params: (
-                action: "resetFailedOperation.error",
-                itemId: itemId,
-                error: error.localizedDescription
-            ))
+        let failed = fetch(itemId: itemId).filter(\.hasFailed)
+        for operation in failed {
+            operation.hasFailed = false
+            operation.retryCount = 0
+            operation.nextRetryAt = nil
+            operation.lastErrorMessage = nil
         }
+        saveOrLog("resetFailedOperation", operationId: nil)
     }
 
-    /// Clears all failed operations (for manual cleanup)
+    /// Setzt alle Wartezeiten zurück (Verbindung ist wieder da): alles sofort sendebereit.
+    func resetRetryDelays() {
+        let waiting = fetchPending().filter { $0.nextRetryAt != nil }
+        guard !waiting.isEmpty else { return }
+        waiting.forEach { $0.nextRetryAt = nil }
+        saveOrLog("resetRetryDelays", operationId: nil)
+    }
+
+    /// Clears all failed operations (for manual cleanup).
     func clearFailed() {
+        let failed = (try? context.fetch(FetchDescriptor<SyncOperation>(predicate: #Predicate { $0.hasFailed }))) ?? []
+        failed.forEach { context.delete($0) }
+        saveOrLog("clearFailedOperations", operationId: nil)
+    }
+
+    /// Entfernt ALLE Operationen (Abmelden: nichts darf ins nächste Konto gelangen).
+    func removeAll() {
+        inFlight.removeAll()
+        fetchAll().forEach { context.delete($0) }
+        saveOrLog("removeAllOperations", operationId: nil)
+    }
+
+    // MARK: - Private
+
+    private func fetchAll() -> [SyncOperation] {
+        let descriptor = FetchDescriptor<SyncOperation>(sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)])
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
+    private func fetchPending() -> [SyncOperation] {
         let descriptor = FetchDescriptor<SyncOperation>(
-            predicate: #Predicate { $0.hasFailed }
+            predicate: #Predicate { !$0.hasFailed },
+            sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)]
         )
-        
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
+    private func fetch(id: UUID) -> SyncOperation? {
+        let descriptor = FetchDescriptor<SyncOperation>(predicate: #Predicate { $0.id == id })
+        return try? context.fetch(descriptor).first
+    }
+
+    private func fetch(itemId: String) -> [SyncOperation] {
+        let descriptor = FetchDescriptor<SyncOperation>(
+            predicate: #Predicate { $0.itemId == itemId },
+            sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)]
+        )
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
+    private func saveOrLog(_ action: String, operationId: UUID?) {
         do {
-            let operations = try context.fetch(descriptor)
-            for operation in operations {
-                context.delete(operation)
-            }
-            try context.save()
-            
-            logVoid(params: (
-                action: "clearFailedOperations",
-                count: operations.count
-            ))
+            if context.hasChanges { try context.save() }
         } catch {
-            logVoid(params: (
-                action: "clearFailedOperations.error",
-                error: error.localizedDescription
-            ))
+            logVoid(params: (action: "\(action).error", operationId: operationId?.uuidString ?? "-",
+                             error: error.localizedDescription))
         }
     }
 }
-

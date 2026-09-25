@@ -18,7 +18,7 @@
  - Sortierung wird optimistisch auf dem UI angewendet
  
  📝 Last Change:
- - Bulk Toggle und Sortier-Aktionen ausgelagert aus ListViewModel
+ - „Alle abhaken“ und Massenlöschen laufen gebündelt über die SyncEngine (Audit 25.09.2026, K3).
  ------------------------------------------------------------------------
  */
 
@@ -134,51 +134,13 @@ extension ListViewModel {
         }
         noteCheckChange(wasComplete: wasComplete)
         
-        // Convert String IDs to UUIDs once
-        let uuidsToUpdate = itemIDsToUpdate.compactMap { UUID(uuidString: $0) }
-        
-        // 2. SWIFTDATA BATCH-UPDATE (single save at end)
-        do {
-            try itemStore.batchUpdateCheckedStatus(ids: uuidsToUpdate, isChecked: targetState)
-        } catch {
-            logVoid(params: (
-                note: "toggleAllItems SwiftData batch error",
-                itemCount: uuidsToUpdate.count,
-                error: (error as NSError).localizedDescription
-            ))
-        }
-        
-        // 3. SERVER-SYNC (BATCH-UPDATE für minimale Overhead)
-        // Erstelle ItemModels auf MainActor bevor wir in Background-Task gehen
-        var itemModels: [ItemModel] = []
-        for uuid in uuidsToUpdate {
-            if let entity = try? itemStore.fetchItem(id: uuid) {
-                itemModels.append(entity.toItemModel())
-            }
-        }
-        
-        // Capture dependencies for background task
-        let repository = self.repository
-        let currentListId = self.listId
-        
-        // Nutze Batch-Update um nur EINEN fetchAndYield-Call zu machen
-        // Das Repository handled die Suppression von Realtime-Fetches intern
-        do {
-            try await repository.batchUpdateItems(itemModels, listId: currentListId)
-        } catch {
-            logVoid(params: (
-                action: "toggleAllItems.batchSync.error",
-                itemCount: itemModels.count,
-                error: (error as NSError).localizedDescription
-            ))
-        }
-        
-        logVoid(params: (
-            action: "toggleAllItems.completed",
-            itemCount: uuidsToUpdate.count
-        ))
-        
-        UserLog.Sync.completed(itemCount: uuidsToUpdate.count)
+        // 2. Lokal speichern, einreihen und gebündelt senden – über die SyncEngine mit neuer HLC.
+        // Vorher: direkter Server-Aufruf ohne HLC und ohne Warteschlange → offline verloren, und die
+        // Artikel blieben für immer „wartet auf Sync“ (übernahmen keine Änderungen der Familie mehr).
+        let changed = items.filter { itemIDsToUpdate.contains($0.id) }
+        await syncEngine?.applyLocalChanges(changed)
+
+        logVoid(params: (action: "toggleAllItems.completed", itemCount: changed.count))
     }
     
     // MARK: - Bulk Delete
@@ -207,19 +169,7 @@ extension ListViewModel {
         isLoadingNextPage = false
         consecutiveEmptyPages = 0
 
-        // Tombstone all items locally in a single batch commit, then queue remote ops.
-        // isBulkDeleting suppresses per-item refreshItemsFromStore() inside the loop.
-        isBulkDeleting = true
-        snapshot.forEach { deleteItem($0) }
-        isBulkDeleting = false
-
-        // Single consolidated UI refresh from SwiftData. Items are now soft-deleted
-        // (deletedAt set by setSyncStatus(.pendingDelete)), so fetchItems(includeDeleted:false)
-        // excludes them. This also clears pendingBulkDeleteIDs via intersection.
-        refreshItemsFromStore()
-
-        // Gate off — stream handler and pagination can resume.
-        isBulkMutationActive = false
+        deleteInOneBatch(snapshot)
     }
 
     /// Löscht alle abgehakten Artikel der aktuellen Liste.
@@ -232,11 +182,7 @@ extension ListViewModel {
         isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { !$0.isChecked }
-        isBulkDeleting = true
-        toDelete.forEach { deleteItem($0) }
-        isBulkDeleting = false
-        refreshItemsFromStore()
-        isBulkMutationActive = false
+        deleteInOneBatch(toDelete)
     }
 
     /// Löscht alle nicht abgehakten Artikel der aktuellen Liste.
@@ -249,11 +195,20 @@ extension ListViewModel {
         isBulkMutationActive = true
         pendingBulkDeleteIDs.formUnion(toDelete.map { $0.id })
         items = items.filter { $0.isChecked }
-        isBulkDeleting = true
-        toDelete.forEach { deleteItem($0) }
-        isBulkDeleting = false
-        refreshItemsFromStore()
-        isBulkMutationActive = false
+        deleteInOneBatch(toDelete)
+    }
+
+    /// Löschmarkierungen für mehrere Artikel in EINEM Speichervorgang und einem Sende-Durchlauf.
+    internal func deleteInOneBatch(_ targets: [ItemModel]) {
+        guard let syncEngine else {
+            isBulkMutationActive = false
+            return
+        }
+        Task {
+            await syncEngine.deleteItems(targets)
+            self.isBulkMutationActive = false
+            self.refreshItemsFromStore()
+        }
     }
 
     // MARK: - Bulk Import

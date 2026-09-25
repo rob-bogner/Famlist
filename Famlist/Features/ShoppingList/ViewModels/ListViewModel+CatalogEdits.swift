@@ -17,7 +17,7 @@
  - Nur die geöffnete Liste: Andere Listen sind nicht geladen.
 
  📝 Last Change:
- - Fotos aus dem Artikelstamm in Listenartikel ohne Foto übernehmen; fehlende Angaben beim Hinzufügen ergänzen.
+ - Foto-Übernahme einmal je Liste, nur für bestätigte Artikel, gebündelt über die SyncEngine (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -81,24 +81,28 @@ extension ListViewModel {
     }
 
     /// Listenartikel ohne Foto bekommen das Foto aus dem Artikelstamm (gleicher Name).
-    /// Läuft beim Öffnen einer Liste; offline aus dem lokalen Stamm-Zwischenspeicher.
+    /// Einmal pro Liste und App-Sitzung, direkt nach dem Delta-Abgleich, nur für bestätigte Artikel ohne
+    /// wartende eigene Änderung – und mit dem frisch gelesenen Stand, damit keine gerade eingetroffene
+    /// Änderung eines Familienmitglieds überschrieben wird (Audit M5).
     func backfillImagesFromCatalog() async {
-        guard let catalogRepository, items.contains(where: { Self.isBlank($0.imageData) }) else { return }
-        guard let entries = try? await catalogRepository.fetchAll() else { return }
+        let targetList = listId
+        guard !backfilledListIDs.contains(targetList), let catalogRepository,
+              items.contains(where: { Self.isBlank($0.imageData) }) else { return }
+        guard let entries = try? await catalogRepository.fetchAll(), targetList == listId else { return }
+        backfilledListIDs.insert(targetList)
         let images = Dictionary(entries.compactMap { entry -> (String, String)? in
             guard let data = entry.imageData, !Self.isBlank(data) else { return nil }
             return (CatalogOperation.key(entry.name), data)
         }, uniquingKeysWith: { first, _ in first })
-        var filled = 0
-        for item in items where Self.isBlank(item.imageData) {
-            guard let data = images[CatalogOperation.key(item.name)] else { continue }
-            var updated = item
+        let updates: [ItemModel] = ((try? itemStore.fetchItems(listId: targetList)) ?? []).compactMap { entity in
+            guard entity.syncStatus == .synced, Self.isBlank(entity.imageData),
+                  let data = images[CatalogOperation.key(entity.name)] else { return nil }
+            var updated = entity.toItemModel()
             updated.imageData = data
-            updateItem(updated, suppressUserLog: true, updateCatalog: false)
-            filled += 1
+            return updated
         }
-        if filled > 0 {
-            logVoid(params: (action: "backfillImagesFromCatalog", listId: listId, filled: filled))
-        }
+        guard !updates.isEmpty, let syncEngine else { return }
+        await syncEngine.applyLocalChanges(updates)
+        logVoid(params: (action: "backfillImagesFromCatalog", listId: targetList, filled: updates.count))
     }
 }

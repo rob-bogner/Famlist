@@ -93,34 +93,30 @@ final class ItemAvailabilityTests: XCTestCase {
         XCTAssertFalse(entity.isUnavailable)
     }
 
-    // MARK: - Conflict Resolution
+    // MARK: - Conflict Resolution (Last-Writer-Wins über die ganze Zeile, ItemSyncPolicy)
 
-    func test_resolveFieldLevel_newerRemoteIsUnavailableWins() {
-        let local = makeItem("Butter", isUnavailable: false)
+    private var itemStore: SwiftDataItemStore { SwiftDataItemStore(context: modelContext) }
+
+    func test_mergeRemote_newerRemoteIsUnavailableWins() throws {
+        var local = makeItem("Butter", isUnavailable: false)
+        local.hlcTimestamp = 1000; local.hlcCounter = 0; local.hlcNodeId = "a"
+        try itemStore.upsert(model: local)
         var remote = local
         remote.isUnavailable = true
-        var localFields = FieldLevelCRDT()
-        localFields.updateField("isUnavailable", hlc: HybridLogicalClock(timestamp: 1000, counter: 0, nodeId: "a"), modifiedBy: "a")
-        var remoteFields = FieldLevelCRDT()
-        remoteFields.updateField("isUnavailable", hlc: HybridLogicalClock(timestamp: 2000, counter: 0, nodeId: "b"), modifiedBy: "b")
-
-        let result = ConflictResolver().resolveFieldLevel(local: local, remote: remote,
-                                                          localFields: localFields, remoteFields: remoteFields)
-        XCTAssertTrue(result.item.isUnavailable)
+        remote.hlcTimestamp = 2000; remote.hlcNodeId = "b"
+        XCTAssertEqual(try itemStore.mergeRemote(remote), .applied)
+        XCTAssertTrue(try XCTUnwrap(itemStore.fetchItem(id: XCTUnwrap(UUID(uuidString: local.id)))).isUnavailable)
     }
 
-    func test_resolveFieldLevel_olderRemoteIsUnavailableLoses() {
-        let local = makeItem("Butter", isUnavailable: false)
+    func test_mergeRemote_olderRemoteIsUnavailableLoses() throws {
+        var local = makeItem("Butter", isUnavailable: false)
+        local.hlcTimestamp = 3000; local.hlcCounter = 0; local.hlcNodeId = "a"
+        try itemStore.upsert(model: local)
         var remote = local
         remote.isUnavailable = true
-        var localFields = FieldLevelCRDT()
-        localFields.updateField("isUnavailable", hlc: HybridLogicalClock(timestamp: 3000, counter: 0, nodeId: "a"), modifiedBy: "a")
-        var remoteFields = FieldLevelCRDT()
-        remoteFields.updateField("isUnavailable", hlc: HybridLogicalClock(timestamp: 2000, counter: 0, nodeId: "b"), modifiedBy: "b")
-
-        let result = ConflictResolver().resolveFieldLevel(local: local, remote: remote,
-                                                          localFields: localFields, remoteFields: remoteFields)
-        XCTAssertFalse(result.item.isUnavailable)
+        remote.hlcTimestamp = 2000; remote.hlcNodeId = "b"
+        XCTAssertEqual(try itemStore.mergeRemote(remote), .ignored)
+        XCTAssertFalse(try XCTUnwrap(itemStore.fetchItem(id: XCTUnwrap(UUID(uuidString: local.id)))).isUnavailable)
     }
 
     // MARK: - ListViewModel

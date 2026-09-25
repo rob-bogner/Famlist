@@ -17,11 +17,21 @@
  - PreviewSyncEngine provides an in-memory implementation for previews/tests.
 
  📝 Last Change:
- - Initial creation (FAM-66): extracted from SyncEngine to enable protocol-based DI.
+ - Gebündelte Änderungen, Sync-Ereignisse, Abmelden (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
 import Foundation
+
+// MARK: - Events
+
+/// Ereignisse der SyncEngine für das ViewModel (dort entstehen die Nutzer-Logs, Projektregel).
+enum SyncEvent: Equatable {
+    case started(itemCount: Int)
+    case completed(itemCount: Int, remaining: Int)
+    /// Ein Artikel konnte dauerhaft nicht gespeichert werden (kein Zugriff, ungültige Daten).
+    case itemFailed(ItemModel)
+}
 
 // MARK: - Protocol
 
@@ -36,8 +46,14 @@ protocol SyncEngineProtocol: AnyObject {
     /// Updates an item locally and queues the change for remote sync.
     func updateItem(_ item: ItemModel) async
 
-    /// Soft-deletes an item locally and queues the deletion for remote sync.
+    /// Marks an item as deleted (tombstone) locally and queues the change.
     func deleteItem(_ item: ItemModel) async
+
+    /// Löscht mehrere Artikel in einem Speichervorgang und einem Sende-Durchlauf.
+    func deleteItems(_ items: [ItemModel]) async
+
+    /// Mehrere Änderungen in einem Speichervorgang und einem Sende-Durchlauf (z. B. „Alle abhaken“).
+    func applyLocalChanges(_ items: [ItemModel]) async
 
     /// Processes any pending queue entries (called on connectivity restore).
     func resumeSync() async
@@ -45,16 +61,36 @@ protocol SyncEngineProtocol: AnyObject {
     /// Resets a permanently-failed item and re-queues it for sync.
     func retryItem(_ item: ItemModel) async
 
-    /// Applies a batch of merged import targets atomically:
-    /// one local write + one queue operation per target, single save(), no per-item processQueue().
+    /// Import: one local write + one queue operation per target, single save(), no immediate send.
     func applyBulkItems(_ targets: [ImportTarget]) async
 
+    /// Abmelden: Warteschlange leeren.
+    func resetForSignOut()
+
+    /// App im Hintergrund: Sende-Timer anhalten.
+    func pause()
+
+    /// App wieder aktiv: Timer starten, alte Löschmarkierungen aufräumen, sofort senden.
+    func resume()
+
     /// Offline-First: wird direkt nach jedem lokalen Schreiben (SwiftData) aufgerufen – VOR der Netzwerk-Queue.
-    /// ListViewModel aktualisiert damit die Anzeige sofort.
     func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void)
+
+    /// Sync-Ereignisse für Nutzer-Logs im ViewModel.
+    func setSyncEventObserver(_ observer: @escaping @MainActor (SyncEvent) -> Void)
 }
 
 extension SyncEngineProtocol {
     /// Standard: kein Beobachter (Previews, Test-Spies).
     func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void) {}
+    func setSyncEventObserver(_ observer: @escaping @MainActor (SyncEvent) -> Void) {}
+    func resetForSignOut() {}
+    func pause() {}
+    func resume() {}
+    func deleteItems(_ items: [ItemModel]) async {
+        for item in items { await deleteItem(item) }
+    }
+    func applyLocalChanges(_ items: [ItemModel]) async {
+        for item in items { await updateItem(item) }
+    }
 }

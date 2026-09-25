@@ -2,324 +2,122 @@
  SupabaseItemsRepository+CRUD.swift
  Famlist
  Created on: 15.03.2026
+ Last updated on: 25.09.2026
 
- 📄 CRUD extension for SupabaseItemsRepository (extracted FAM-67).
- 📝 Single ItemRow struct used for both upsert and update – eliminates
-    payload duplication (FAM-73).
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+ - Einziger Schreibweg für Artikel: RPC upsert_items_lww (Migration 015).
 
- CHANGELOG:
- - 24.09.2026: is_unavailable in ItemRow („Nicht verfügbar“-Status).
-               Setzt Migration 005_add_item_is_unavailable.sql voraus.
- - 16.03.2026: FAM-72 – MeasureCanonicalizer.canonicalize() in createItem,
-               updateItem, batchUpdateItems (Defense in depth).
- - 16.03.2026: FAM-73 – ItemUpdatePayload entfernt; ItemRow für alle Writes
-               genutzt. Custom encode(to:) schützt CRDT-Felder via encodeIfPresent.
+ 🔰 Notes for Beginners:
+ - Jeder Auftrag trägt den vollen Artikelstand samt HLC und Löschmarkierung. Der Server übernimmt ihn
+   nur, wenn er neuer ist, und antwortet je Artikel mit applied/stale/denied/invalid plus gültiger Zeile.
+ - Das Foto (`imagedata`) wird nur mitgeschickt, wenn es sich geändert hat (`includeImage`).
+   Fehlt der Schlüssel, behält der Server sein Foto.
+ - Aufträge werden in Stapeln zu höchstens 200 gesendet (Server-Grenze).
+
+ 📝 Last Change:
+ - createItem/updateItem/batchUpdateItems/deleteItem durch upsertItems ersetzt (Audit 25.09.2026).
+   Vorher wurde blind überschrieben: Die zuletzt ankommende Änderung gewann, nicht die neueste.
+ ------------------------------------------------------------------------
 */
 
 import Foundation
 import Supabase
 
-// MARK: - Private Row Types
+// MARK: - RPC Payloads
 
-/// Single Codable payload used for both upsert (createItem) and update operations.
-///
-/// **Encoding rules (FAM-73):**
-/// - Regular mutable fields (imageData, category, etc.) use `encode` so that an explicit nil
-///   clears the column — intentional user action (e.g. removing a photo).
-/// - CRDT fields use `encodeIfPresent` to never accidentally overwrite existing metadata with null.
-/// - Identity fields (id, listId) are always encoded; including them in UPDATE payloads is safe
-///   in PostgREST because the WHERE filter matches the same values.
-/// Minimal payload for tombstone-setting a single item (FAM-24 canonical delete).
-private struct TombstonePayload: Encodable {
-    let tombstone = true
-    let updatedAt: String
-
-    enum CodingKeys: String, CodingKey {
-        case tombstone
-        case updatedAt = "updated_at"
-    }
-
-    /// Creates a payload with the current UTC timestamp in ISO8601 format.
-    static func now() -> TombstonePayload {
-        TombstonePayload(updatedAt: PaginationCursor.postgrestFormatter.string(from: Date()))
-    }
-}
-
-private struct ItemRow: Encodable {
-    let id: UUID
-    let listId: UUID
-    let ownerPublicId: String?
-    let imageData: String?
-    let name: String
-    let units: Int
-    let measure: String
-    let price: Double
-    let isChecked: Bool
-    let isUnavailable: Bool
-    let category: String?
-    let productDescription: String?
-    let brand: String?
-    let hlcTimestamp: Int64?
-    let hlcCounter: Int?
-    let hlcNodeId: String?
-    let tombstone: Bool?
-    let lastModifiedBy: String?
+/// Ein Artikel im Format, das upsert_items_lww erwartet (Spaltennamen der Tabelle items).
+private struct UpsertRow: Encodable {
+    let item: ItemModel
+    let includeImage: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
         case listId = "list_id"
         case ownerPublicId = "ownerpublicid"
         case imageData = "imagedata"
-        case name, units, measure, price, isChecked, category
+        case name, units, measure, price, isChecked, category, brand, tombstone
         case isUnavailable = "is_unavailable"
         case productDescription = "productdescription"
-        case brand
         case hlcTimestamp = "hlc_timestamp"
         case hlcCounter = "hlc_counter"
         case hlcNodeId = "hlc_node_id"
-        case tombstone
         case lastModifiedBy = "last_modified_by"
     }
 
     func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(listId, forKey: .listId)
-        try container.encodeIfPresent(ownerPublicId, forKey: .ownerPublicId)
-        try container.encode(imageData, forKey: .imageData)
-        try container.encode(name, forKey: .name)
-        try container.encode(units, forKey: .units)
-        try container.encode(measure, forKey: .measure)
-        try container.encode(price, forKey: .price)
-        try container.encode(isChecked, forKey: .isChecked)
-        try container.encode(isUnavailable, forKey: .isUnavailable)
-        try container.encode(category, forKey: .category)
-        try container.encode(productDescription, forKey: .productDescription)
-        try container.encode(brand, forKey: .brand)
-        try container.encodeIfPresent(hlcTimestamp, forKey: .hlcTimestamp)
-        try container.encodeIfPresent(hlcCounter, forKey: .hlcCounter)
-        try container.encodeIfPresent(hlcNodeId, forKey: .hlcNodeId)
-        try container.encodeIfPresent(tombstone, forKey: .tombstone)
-        try container.encodeIfPresent(lastModifiedBy, forKey: .lastModifiedBy)
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(item.id, forKey: .id)
+        try c.encode(item.listId, forKey: .listId)
+        try c.encodeIfPresent(item.ownerPublicId, forKey: .ownerPublicId)
+        if includeImage { try c.encode(item.imageData, forKey: .imageData) }   // explizites null = Foto entfernt
+        try c.encode(item.name, forKey: .name)
+        try c.encode(item.units, forKey: .units)
+        try c.encode(MeasureCanonicalizer.canonicalize(item.measure), forKey: .measure)
+        try c.encode(item.price, forKey: .price)
+        try c.encode(item.isChecked, forKey: .isChecked)
+        try c.encode(item.isUnavailable, forKey: .isUnavailable)
+        try c.encode(item.category, forKey: .category)
+        try c.encode(item.productDescription, forKey: .productDescription)
+        try c.encode(item.brand, forKey: .brand)
+        try c.encode(item.tombstone ?? false, forKey: .tombstone)
+        try c.encode(item.hlcTimestamp ?? 0, forKey: .hlcTimestamp)
+        try c.encode(item.hlcCounter ?? 0, forKey: .hlcCounter)
+        try c.encode(item.hlcNodeId ?? "", forKey: .hlcNodeId)
+        try c.encodeIfPresent(item.lastModifiedBy, forKey: .lastModifiedBy)
     }
 }
 
-// MARK: - CRUD Extension
+private struct UpsertParams: Encodable, Sendable {
+    let p_items: [UpsertRow]
+}
+
+extension UpsertRow: @unchecked Sendable {}
+
+/// Eine Zeile der RPC-Antwort.
+private struct UpsertResponseRow: Decodable {
+    let id: UUID?
+    let status: String
+    let item: AnyJSON?
+}
+
+// MARK: - Write Extension
 
 extension SupabaseItemsRepository {
 
-    func createItem(_ item: ItemModel) async throws -> ItemModel {
-        let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID()
-        // FAM-72: Defense in depth – normalize measure regardless of caller
-        let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
-        let row = ItemRow(
-            id: UUID(uuidString: item.id) ?? UUID(),
-            listId: listUUID,
-            ownerPublicId: item.ownerPublicId,
-            imageData: item.imageData,
-            name: item.name,
-            units: item.units,
-            measure: canonicalMeasure,
-            price: item.price,
-            isChecked: item.isChecked,
-            isUnavailable: item.isUnavailable,
-            category: item.category,
-            productDescription: item.productDescription,
-            brand: item.brand,
-            hlcTimestamp: item.hlcTimestamp,
-            hlcCounter: item.hlcCounter,
-            hlcNodeId: item.hlcNodeId,
-            tombstone: item.tombstone,
-            lastModifiedBy: item.lastModifiedBy
-        )
-        // Upsert instead of insert: if the UUID already exists on the server (concurrent
-        // creation on another device), the DB accepts the last writer's payload at the
-        // storage layer. The HLC embedded in the row ensures that the subsequent Realtime
-        // event is correctly arbitrated by ConflictResolver on every observing device.
-        _ = try await client.from("items").upsert(row, onConflict: "id").execute()
-        // FAM-24: No fetchAndYield() here. Local state was already written via storeLocally().
-        // Realtime INSERT event will trigger granular processing via RealtimeEventProcessor.
-        let model = ItemModel(
-            id: row.id.uuidString,
-            imageUrl: item.imageUrl,
-            imageData: item.imageData,
-            name: item.name,
-            units: item.units,
-            measure: canonicalMeasure,
-            price: item.price,
-            isChecked: item.isChecked,
-            isUnavailable: item.isUnavailable,
-            category: item.category,
-            productDescription: item.productDescription,
-            brand: item.brand,
-            listId: listUUID.uuidString,
-            ownerPublicId: item.ownerPublicId,
-            hlcTimestamp: item.hlcTimestamp,
-            hlcCounter: item.hlcCounter,
-            hlcNodeId: item.hlcNodeId,
-            tombstone: item.tombstone,
-            lastModifiedBy: item.lastModifiedBy
-        )
-        let result = logResult(params: (itemId: model.id, listId: listUUID), result: model)
-        return result
-    }
+    /// Server-Grenze der RPC upsert_items_lww.
+    static let upsertBatchLimit = 200
 
-    func updateItem(_ item: ItemModel) async throws {
-        guard let listIdString = item.listId else {
-            throw NSError(
-                domain: "SupabaseItemsRepository",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Item update requires valid listId"]
-            )
+    func upsertItems(_ requests: [ItemUpsertRequest]) async throws -> [ItemUpsertResult] {
+        guard !requests.isEmpty else { return [] }
+        var results: [ItemUpsertResult] = []
+        var start = 0
+        while start < requests.count {
+            let chunk = Array(requests[start..<min(start + Self.upsertBatchLimit, requests.count)])
+            let params = UpsertParams(p_items: chunk.map { UpsertRow(item: $0.item, includeImage: $0.includeImage) })
+            let rows: [UpsertResponseRow] = try await client.rpcRows("upsert_items_lww", params: params)
+            results += rows.map(Self.result(from:))
+            start += Self.upsertBatchLimit
         }
-        let listId = UUID(uuidString: listIdString) ?? UUID()
-        // FAM-72: Defense in depth – normalize measure regardless of caller
-        let canonicalMeasure = MeasureCanonicalizer.canonicalize(item.measure)
-        let payload = ItemRow(
-            id: UUID(uuidString: item.id) ?? UUID(),
-            listId: listId,
-            ownerPublicId: item.ownerPublicId,
-            imageData: item.imageData,
-            name: item.name,
-            units: item.units,
-            measure: canonicalMeasure,
-            price: item.price,
-            isChecked: item.isChecked,
-            isUnavailable: item.isUnavailable,
-            category: item.category,
-            productDescription: item.productDescription,
-            brand: item.brand,
-            hlcTimestamp: item.hlcTimestamp,
-            hlcCounter: item.hlcCounter,
-            hlcNodeId: item.hlcNodeId,
-            tombstone: item.tombstone,
-            lastModifiedBy: item.lastModifiedBy
-        )
-        _ = try await client
-            .from("items")
-            .update(payload)
-            .eq("id", value: item.id)
-            .eq("list_id", value: listIdString)
-            .execute()
-        // FAM-24: No fetchAndYield() here. Local state was already written via storeLocally().
-        // Realtime UPDATE event will trigger granular processing via RealtimeEventProcessor.
-        logVoid(params: (itemId: item.id, listId: listId))
+        logVoid(params: (action: "upsertItems", count: requests.count,
+                         applied: results.filter { $0.status == .applied }.count,
+                         stale: results.filter { $0.status == .stale }.count,
+                         rejected: results.filter { $0.status == .denied || $0.status == .invalid }.count))
+        return results
     }
 
-    /// Batch-updates items in parallel using the event-counter strategy.
-    /// Gate lock suppresses Realtime fetches; timeout provides fallback; final fetch ensures consistency.
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws {
-        guard !items.isEmpty else { return }
-
-        logVoid(params: (action: "batchUpdateItems.start", itemCount: items.count, listId: listId))
-
-        // Acquire lock: suppress Realtime fetches during batch and set event counter.
-        gate.acquireLock(expecting: items.count)
-        logVoid(params: (action: "batchUpdateItems.suppressionEnabled", expectedEvents: items.count, listId: listId))
-
-        do {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                for item in items {
-                    group.addTask {
-                        guard let listIdForItem = item.listId,
-                              let listUUID = UUID(uuidString: listIdForItem) else {
-                            throw NSError(
-                                domain: "SupabaseItemsRepository",
-                                code: 2,
-                                userInfo: [NSLocalizedDescriptionKey: "Missing list_id"]
-                            )
-                        }
-                        // FAM-72: Defense in depth – normalize measure regardless of caller
-                        let payload = ItemRow(
-                            id: UUID(uuidString: item.id) ?? UUID(),
-                            listId: listUUID,
-                            ownerPublicId: item.ownerPublicId,
-                            imageData: item.imageData,
-                            name: item.name,
-                            units: item.units,
-                            measure: MeasureCanonicalizer.canonicalize(item.measure),
-                            price: item.price,
-                            isChecked: item.isChecked,
-                            isUnavailable: item.isUnavailable,
-                            category: item.category,
-                            productDescription: item.productDescription,
-                            brand: item.brand,
-                            hlcTimestamp: item.hlcTimestamp,
-                            hlcCounter: item.hlcCounter,
-                            hlcNodeId: item.hlcNodeId,
-                            tombstone: item.tombstone,
-                            lastModifiedBy: item.lastModifiedBy
-                        )
-                        _ = try await self.client
-                            .from("items")
-                            .update(payload)
-                            .eq("id", value: item.id)
-                            .eq("list_id", value: listUUID.uuidString)
-                            .execute()
-                    }
-                }
-                try await group.waitForAll()
+    private static func result(from row: UpsertResponseRow) -> ItemUpsertResult {
+        let status = ItemUpsertResult.Status(rawValue: row.status) ?? .invalid
+        var model: ItemModel?
+        var message: String?
+        if let json = row.item, let object = json.objectValue {
+            if status == .invalid {
+                message = object["error"]?.stringValue
+            } else if let data = try? JSONEncoder().encode(json),
+                      let decoded = try? JSONDecoder().decode(SupabaseItemRow.self, from: data) {
+                model = decoded.toItemModel()
             }
-
-            // Start timeout task: releases lock if Realtime events don't arrive in time.
-            let timeoutTask = Task { @MainActor [weak self] in
-                guard let self else { return }
-                try? await Task.sleep(nanoseconds: UInt64(gate.eventCounterTimeout * 1_000_000_000))
-                if gate.isSuppressing {
-                    let remaining = gate.expectedEvents
-                    gate.releaseLock()
-                    logVoid(params: (
-                        action: "batchUpdateItems.suppressionDisabled.timeout",
-                        reason: "Timeout reached with \(remaining) events still pending",
-                        listId: listId
-                    ))
-                }
-            }
-
-            // Poll until gate is released (by event counter) or timeout fires.
-            let startTime = Date()
-            while gate.isSuppressing {
-                try? await Task.sleep(nanoseconds: 50_000_000) // 50 ms
-                if Date().timeIntervalSince(startTime) > gate.eventCounterTimeout + 0.5 { break }
-            }
-
-            timeoutTask.cancel()
-
-            // Ensure lock is released (may already be released by counter or timeout).
-            if gate.isSuppressing {
-                gate.releaseLock()
-                logVoid(params: (action: "batchUpdateItems.suppressionDisabled.manual", listId: listId))
-            }
-
-            // FAM-24: No fetchAndYield() here. Realtime UPDATE events will trigger
-            // granular processing via RealtimeEventProcessor for each item.
-
-        } catch {
-            // Release lock on error to restore Realtime processing.
-            gate.releaseLock()
-            logVoid(params: (
-                action: "batchUpdateItems.suppressionDisabled.error",
-                listId: listId,
-                error: error.localizedDescription
-            ))
-            throw error
         }
-
-        logVoid(params: (action: "batchUpdateItems.completed", itemCount: items.count, listId: listId))
-    }
-
-    /// Deletes an item by setting tombstone=true (soft delete per FAM-24 architecture).
-    /// The Realtime UPDATE event (tombstone=true) triggers applyRemoteTombstone() on all observers.
-    /// Physical row purge is a server-side retention concern, not a client operation.
-    func deleteItem(id: String, listId: UUID) async throws {
-        _ = try await client
-            .from("items")
-            .update(TombstonePayload.now())
-            .eq("id", value: id)
-            .eq("list_id", value: listId.uuidString)
-            .execute()
-        // FAM-24: No fetchAndYield() here. Realtime UPDATE(tombstone=true) event
-        // will trigger applyRemoteTombstone() via RealtimeEventProcessor.
-        logVoid(params: (id: id, listId: listId))
+        return ItemUpsertResult(id: row.id?.uuidString ?? "", status: status, item: model, message: message)
     }
 }

@@ -29,131 +29,77 @@ import SwiftData
 @MainActor
 final class MultiDeviceSyncIntegrationTests: XCTestCase {
     
-    func testConcurrentModifications_shouldResolveConsistently() async {
-        // Simulate two devices modifying the same item
-        let resolver = ConflictResolver()
-        
-        // Device 1 modifies at T+100ms
-        let device1HLC = HybridLogicalClock(timestamp: 1100, counter: 0, nodeId: "device1")
-        let device1Item = ItemModel(id: "item1", name: "Device1", units: 2)
-        let device1Meta = CRDTMetadata(hlc: device1HLC, tombstone: false, lastModifiedBy: "device1")
-        
-        // Device 2 modifies at T+200ms
-        let device2HLC = HybridLogicalClock(timestamp: 1200, counter: 0, nodeId: "device2")
-        let device2Item = ItemModel(id: "item1", name: "Device2", units: 3)
-        let device2Meta = CRDTMetadata(hlc: device2HLC, tombstone: false, lastModifiedBy: "device2")
-        
-        // Device 1 receives Device 2's update
-        let (resolved1, _) = resolver.resolve(
-            local: device1Item,
-            remote: device2Item,
-            localMeta: device1Meta,
-            remoteMeta: device2Meta
-        )
-        
-        // Device 2 receives Device 1's update
-        let (resolved2, _) = resolver.resolve(
-            local: device2Item,
-            remote: device1Item,
-            localMeta: device2Meta,
-            remoteMeta: device1Meta
-        )
-        
-        // Both devices should converge to same state (Device 2 wins)
-        XCTAssertEqual(resolved1.name, "Device2")
-        XCTAssertEqual(resolved2.name, "Device2")
-        XCTAssertEqual(resolved1.units, 3)
-        XCTAssertEqual(resolved2.units, 3)
+    /// Wendet `rows` in beliebiger Reihenfolge auf einen frischen Speicher an (= ein Gerät) und liefert den Endstand.
+    private func converge(_ rows: [ItemModel]) throws -> ItemEntity? {
+        let container = try ModelContainer(for: Schema([ItemEntity.self, ListEntity.self]),
+                                           configurations: [ModelConfiguration(isStoredInMemoryOnly: true)])
+        let store = SwiftDataItemStore(context: ModelContext(container))
+        for row in rows { try store.mergeRemote(row) }
+        try store.save()
+        return try store.fetchItem(id: XCTUnwrap(UUID(uuidString: rows[0].id)))
     }
-    
-    func testDeletionDuringModification_tombstoneWins() async {
-        let resolver = ConflictResolver()
-        
-        // Device 1 modifies item
-        let device1HLC = HybridLogicalClock(timestamp: 1100, counter: 0, nodeId: "device1")
-        let device1Item = ItemModel(id: "item1", name: "Modified")
-        let device1Meta = CRDTMetadata(hlc: device1HLC, tombstone: false, lastModifiedBy: "device1")
-        
-        // Device 2 deletes item (earlier timestamp but tombstone)
-        let device2HLC = HybridLogicalClock(timestamp: 1000, counter: 0, nodeId: "device2")
-        let device2Item = ItemModel(id: "item1", name: "Deleted")
-        let device2Meta = CRDTMetadata(hlc: device2HLC, tombstone: true, lastModifiedBy: "device2")
-        
-        let (_, resolvedMeta) = resolver.resolve(
-            local: device1Item,
-            remote: device2Item,
-            localMeta: device1Meta,
-            remoteMeta: device2Meta
-        )
-        
-        // Tombstone should win despite older timestamp
-        XCTAssertTrue(resolvedMeta.tombstone)
+
+    private func row(_ id: UUID, name: String, units: Int = 1, ts: Int64, counter: Int = 0, node: String,
+                     tombstone: Bool = false) -> ItemModel {
+        ItemModel(id: id.uuidString, name: name, units: units, listId: UUID().uuidString,
+                  hlcTimestamp: ts, hlcCounter: counter, hlcNodeId: node, tombstone: tombstone)
     }
-    
+
+    func testConcurrentModifications_shouldResolveConsistently() throws {
+        let id = UUID()
+        let d1 = row(id, name: "Device1", units: 2, ts: 1100, node: "device1")
+        let d2 = row(id, name: "Device2", units: 3, ts: 1200, node: "device2")
+        let a = try XCTUnwrap(converge([d1, d2]))
+        let b = try XCTUnwrap(converge([d2, d1]))
+        XCTAssertEqual(a.name, "Device2")
+        XCTAssertEqual(b.name, "Device2")
+        XCTAssertEqual(a.units, 3)
+        XCTAssertEqual(b.units, 3)
+    }
+
+    /// Last-Writer-Wins wie auf dem Server (Trigger items_lww_guard): Eine ÄLTERE Löschung verliert gegen
+    /// eine neuere Änderung; eine NEUERE Löschung gewinnt. Beide Geräte landen beim selben Stand.
+    func testDeletionAndModification_newerWins_onEveryDevice() throws {
+        let id = UUID()
+        let modified = row(id, name: "Geändert", ts: 1100, node: "device1")
+        let olderDelete = row(id, name: "Geändert", ts: 1000, node: "device2", tombstone: true)
+        XCTAssertEqual(try converge([modified, olderDelete])?.tombstone, false)
+        XCTAssertEqual(try converge([olderDelete, modified])?.tombstone, false)
+
+        let newerDelete = row(id, name: "Geändert", ts: 1200, node: "device2", tombstone: true)
+        XCTAssertEqual(try converge([modified, newerDelete])?.tombstone, true)
+        XCTAssertEqual(try converge([newerDelete, modified])?.tombstone, true)
+    }
+
     func testHLCClockSkew_shouldMaintainCausality() async {
-        // Simulate device with clock 5 minutes ahead
         let generator1 = HybridLogicalClockGenerator(nodeId: "device1")
         let generator2 = HybridLogicalClockGenerator(nodeId: "device2")
-        
-        // Device 1 creates event
         let clock1 = generator1.tick()
-        
-        // Device 2 receives and creates new event (even if physical clock is behind)
         let clock2 = generator2.receive(clock1)
         let clock3 = generator2.tick()
-        
-        // Causal ordering should be maintained
         XCTAssertTrue(clock1 < clock2)
-        XCTAssertTrue(clock2 < clock3 || clock2 == clock3)
+        XCTAssertTrue(clock2 < clock3)
     }
-    
-    func testRapidConcurrentUpdates_shouldConverge() async {
-        let resolver = ConflictResolver()
-        
-        var items: [ItemModel] = []
-        var metas: [CRDTMetadata] = []
-        
-        // Simulate 5 devices making rapid updates
-        for i in 0..<5 {
-            let hlc = HybridLogicalClock(
-                timestamp: 1000 + Int64(i * 100),
-                counter: i,
-                nodeId: "device\(i)"
-            )
-            let item = ItemModel(id: "item1", name: "Device\(i)", units: i)
-            let meta = CRDTMetadata(hlc: hlc, tombstone: false, lastModifiedBy: "device\(i)")
-            
-            items.append(item)
-            metas.append(meta)
+
+    func testRapidConcurrentUpdates_shouldConvergeInAnyOrder() throws {
+        let id = UUID()
+        let rows = (0..<5).map { i in
+            row(id, name: "Device\(i)", units: i, ts: 1000 + Int64(i * 100), counter: i, node: "device\(i)")
         }
-        
-        // Each device resolves against all others
-        var finalStates: [ItemModel] = []
-        
-        for deviceIndex in 0..<5 {
-            var currentItem = items[deviceIndex]
-            var currentMeta = metas[deviceIndex]
-            
-            for otherIndex in 0..<5 where otherIndex != deviceIndex {
-                let (resolved, resolvedMeta) = resolver.resolve(
-                    local: currentItem,
-                    remote: items[otherIndex],
-                    localMeta: currentMeta,
-                    remoteMeta: metas[otherIndex]
-                )
-                currentItem = resolved
-                currentMeta = resolvedMeta
-            }
-            
-            finalStates.append(currentItem)
+        let orders = [rows, rows.reversed(), [rows[2], rows[0], rows[4], rows[1], rows[3]]]
+        let results = try orders.map { try XCTUnwrap(converge($0)) }
+        for result in results {
+            XCTAssertEqual(result.name, "Device4")
+            XCTAssertEqual(result.units, 4)
         }
-        
-        // All devices should converge to the same state
-        let firstFinal = finalStates[0]
-        for finalState in finalStates {
-            XCTAssertEqual(finalState.name, firstFinal.name)
-            XCTAssertEqual(finalState.units, firstFinal.units)
-        }
+    }
+
+    func testSameTimestampAndCounter_nodeIdDecides_deterministically() throws {
+        let id = UUID()
+        let a = row(id, name: "A", ts: 1000, node: "a-node")
+        let b = row(id, name: "B", ts: 1000, node: "b-node")
+        XCTAssertEqual(try converge([a, b])?.name, "B")
+        XCTAssertEqual(try converge([b, a])?.name, "B")
     }
 
     // MARK: - RC-1 Regression: Bool-Parsing für Realtime-Events (extractBool AnyJSON-Fallback)
@@ -172,7 +118,7 @@ final class MultiDeviceSyncIntegrationTests: XCTestCase {
         _container = try ModelContainer(for: schema, configurations: [config])
         let ctx = ModelContext(_container)
         _itemStore = SwiftDataItemStore(context: ctx)
-        _processor = RealtimeEventProcessor(conflictResolver: ConflictResolver(), itemStore: _itemStore)
+        _processor = RealtimeEventProcessor(itemStore: _itemStore)
     }
 
     override func tearDown() async throws {

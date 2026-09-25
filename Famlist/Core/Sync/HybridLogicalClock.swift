@@ -19,7 +19,7 @@
  - Critical for CRDT conflict resolution in distributed systems
  
  📝 Last Change:
- - Initial implementation for CRDT-based sync architecture
+ - Geräte-ID und letzter Stand bleiben über Neustarts erhalten; observe() für fremde HLCs (Audit 25.09.2026).
  ------------------------------------------------------------------------
 */
 
@@ -84,21 +84,55 @@ extension HybridLogicalClock: Comparable {
 final class HybridLogicalClockGenerator {
     
     /// Last generated HLC to ensure monotonicity
-    private var lastHLC: HybridLogicalClock
+    private var lastHLC: HybridLogicalClock {
+        didSet { persist() }
+    }
     
     /// Unique identifier for this device/node
     let nodeId: String
+
+    /// Speicher für Geräte-ID und letzten Stand (nil = nur im Speicher, z. B. in Tests).
+    private let defaults: UserDefaults?
+    private static let nodeIdKey = "famlist.hlc.nodeId"
+    private static let lastTimestampKey = "famlist.hlc.lastTimestamp"
+    private static let lastCounterKey = "famlist.hlc.lastCounter"
     
     // MARK: - Initialization
     
-    /// Creates a new HLC generator with a unique node identifier
-    /// - Parameter nodeId: Unique device/user identifier (defaults to random UUID)
-    init(nodeId: String? = nil) {
-        // Use provided nodeId or generate a random UUID
-        // Note: UIDevice.identifierForVendor requires MainActor, so we default to UUID
-        self.nodeId = nodeId ?? UUID().uuidString
+    /// Creates a new HLC generator.
+    /// - Parameters:
+    ///   - nodeId: Fester Knoten (Tests). Ohne Angabe: aus `defaults` bzw. neu erzeugt.
+    ///   - defaults: Speichert Geräte-ID und letzten Stand über App-Neustarts hinweg. Ohne diesen
+    ///     Speicher bekam das Gerät bei jedem Start eine neue ID, und eine nachgehende Uhr konnte
+    ///     neue eigene Änderungen älter aussehen lassen als frühere (Audit 25.09.2026).
+    init(nodeId: String? = nil, defaults: UserDefaults? = nil) {
+        self.defaults = defaults
+        let storedNode = defaults?.string(forKey: Self.nodeIdKey)
+        let resolvedNode = nodeId ?? storedNode ?? UUID().uuidString
+        self.nodeId = resolvedNode
+        if nodeId == nil, storedNode == nil { defaults?.set(resolvedNode, forKey: Self.nodeIdKey) }
+
         let now = Self.currentTimestamp()
-        self.lastHLC = HybridLogicalClock(timestamp: now, counter: 0, nodeId: self.nodeId)
+        let storedTs = (defaults?.object(forKey: Self.lastTimestampKey) as? NSNumber)?.int64Value ?? 0
+        let storedCounter = defaults?.integer(forKey: Self.lastCounterKey) ?? 0
+        self.lastHLC = storedTs >= now
+            ? HybridLogicalClock(timestamp: storedTs, counter: storedCounter, nodeId: resolvedNode)
+            : HybridLogicalClock(timestamp: now, counter: 0, nodeId: resolvedNode)
+    }
+
+    /// Nimmt eine fremde HLC zur Kenntnis (Realtime, Delta-Sync, Server-Antwort), ohne selbst ein
+    /// Ereignis zu erzeugen. Danach ist jede neue lokale HLC größer als alles bisher Gesehene.
+    func observe(_ remote: HybridLogicalClock) {
+        if remote.timestamp > lastHLC.timestamp
+            || (remote.timestamp == lastHLC.timestamp && remote.counter > lastHLC.counter) {
+            lastHLC = HybridLogicalClock(timestamp: remote.timestamp, counter: remote.counter, nodeId: nodeId)
+        }
+    }
+
+    private func persist() {
+        guard let defaults else { return }
+        defaults.set(NSNumber(value: lastHLC.timestamp), forKey: Self.lastTimestampKey)
+        defaults.set(lastHLC.counter, forKey: Self.lastCounterKey)
     }
     
     // MARK: - Clock Generation

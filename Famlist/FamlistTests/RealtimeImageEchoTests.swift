@@ -32,7 +32,7 @@ final class RealtimeImageEchoTests: XCTestCase {
         let container = try ModelContainer(for: ItemEntity.self, ListEntity.self, SyncOperation.self,
                                            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         store = SwiftDataItemStore(context: ModelContext(container))
-        sut = RealtimeEventProcessor(conflictResolver: ConflictResolver(), itemStore: store)
+        sut = RealtimeEventProcessor(itemStore: store)
         let entity = try store.upsert(model: ItemModel(id: itemId.uuidString, imageData: "FOTO", name: "Milch",
                                                        units: 4, measure: "pack", listId: listId.uuidString))
         entity.hlcTimestamp = 1_000

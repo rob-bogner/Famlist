@@ -17,7 +17,7 @@
  - AsyncStream publishes live updates; SwiftUI lists update automatically when data changes.
 
  📝 Last Change:
- - Standardized header and expanded inline comments; no functional changes.
+ - Einzelne Schreibmethoden durch upsertItems (HLC-geprüft, gebündelt) ersetzt (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -34,24 +34,10 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     /// - Parameter listId: The list UUID to scope items to.
     /// - Returns: An AsyncStream emitting arrays of ItemModel whenever the underlying data changes.
     func observeItems(listId: UUID) -> AsyncStream<[ItemModel]> // Stream of live item snapshots.
-    /// Create a new item; may upload image to storage and store URL in DB.
-    /// - Parameter item: The item to create.
-    /// - Returns: The created item (possibly with server-set fields filled).
-    func createItem(_ item: ItemModel) async throws -> ItemModel // Async create operation.
-    /// Update an existing item.
-    /// - Parameter item: The full item to persist (identified by its id).
-    func updateItem(_ item: ItemModel) async throws // Async update operation.
-    /// Batch update multiple items (optimized for bulk operations).
-    /// - Parameters:
-    ///   - items: Array of items to update.
-    ///   - listId: The list that the items belong to.
-    /// - Note: Only triggers a single fetch after all updates complete.
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws // Async batch update operation.
-    /// Delete an item by id within list.
-    /// - Parameters:
-    ///   - id: The item identifier to delete.
-    ///   - listId: The list that the item belongs to (used to scope deletion and updates in streams).
-    func deleteItem(id: String, listId: UUID) async throws // Async delete operation.
+    /// Schreibt Artikel (Anlegen, Ändern, Löschmarkierung) mit HLC-Prüfung auf dem Server
+    /// (RPC upsert_items_lww, Migration 015). Höchstens 200 Aufträge pro Aufruf.
+    /// Einziger Schreibweg für Artikel – alle Änderungen laufen über die SyncEngine hierher.
+    func upsertItems(_ requests: [ItemUpsertRequest]) async throws -> [ItemUpsertResult]
 
     // MARK: - Pagination & Incremental Sync (FAM-79 / FAM-41)
 
@@ -104,62 +90,35 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
         }
     }
 
-    /// Inserts a new item into the in-memory storage and broadcasts the change.
-    /// - Parameter item: The item to create.
-    /// - Returns: The item as stored (listId may be injected if missing).
-    func createItem(_ item: ItemModel) async throws -> ItemModel { // Mimics async behavior for parity with real repo.
-        let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID() // Resolve list UUID from item's listId string or fallback to a random one.
-        var arr = storage[listUUID] ?? [] // Fetch current items for list or start with empty array.
-        var new = item // Make a mutable copy to set listId if needed.
-        if new.listId == nil { new.listId = listUUID.uuidString } // Ensure item carries the list id for future updates.
-        arr.append(new) // Append to list items.
-        storage[listUUID] = arr // Save back into storage.
-        broadcast(listUUID) // Notify observers about the change.
-        return new // Return the stored item.
-    }
-
-    /// Updates an existing item in storage and notifies observers.
-    /// - Parameter item: The full replacement item to store (matched by id).
-    func updateItem(_ item: ItemModel) async throws { // Async signature for symmetry with real repo.
-        let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID() // Determine which list this item belongs to.
-        guard var arr = storage[listUUID] else { return } // If list has no items recorded yet, nothing to update.
-        if let idx = arr.firstIndex(where: { $0.id == item.id }) { // Find the index of the item by id.
-            arr[idx] = item // Replace the existing item with the updated one.
-        }
-        storage[listUUID] = arr // Persist updated array back to storage.
-        broadcast(listUUID) // Notify observers so UI refreshes.
-    }
-    
-    /// Batch updates multiple items in storage and notifies observers once.
-    /// - Parameters:
-    ///   - items: Array of items to update.
-    ///   - listId: The list that the items belong to.
-    func batchUpdateItems(_ items: [ItemModel], listId: UUID) async throws { // Batch update for efficiency.
-        guard var arr = storage[listId] else { return } // If list has no items recorded yet, nothing to update.
-        for item in items { // Update each item in the batch.
-            if let idx = arr.firstIndex(where: { $0.id == item.id }) { // Find the index of the item by id.
-                arr[idx] = item // Replace the existing item with the updated one.
+    /// Übernimmt Aufträge nach derselben Regel wie der Server (neuere HLC gewinnt).
+    func upsertItems(_ requests: [ItemUpsertRequest]) async throws -> [ItemUpsertResult] {
+        var touched = Set<UUID>()
+        let results = requests.map { request -> ItemUpsertResult in
+            let item = request.item
+            let listUUID = UUID(uuidString: item.listId ?? "") ?? UUID()
+            touched.insert(listUUID)
+            var arr = storage[listUUID] ?? []
+            if let idx = arr.firstIndex(where: { $0.id == item.id }) {
+                guard arr[idx].hlc < item.hlc else {
+                    return ItemUpsertResult(id: item.id, status: .stale, item: arr[idx], message: nil)
+                }
+                var stored = item
+                if !request.includeImage { stored.imageData = arr[idx].imageData }
+                arr[idx] = stored
+            } else {
+                arr.append(item)
             }
+            storage[listUUID] = arr
+            return ItemUpsertResult(id: item.id, status: .applied, item: item, message: nil)
         }
-        storage[listId] = arr // Persist updated array back to storage once.
-        broadcast(listId) // Notify observers so UI refreshes (single notification).
-    }
-
-    /// Deletes an item by id from the specified list and broadcasts the new snapshot.
-    /// - Parameters:
-    ///   - id: The identifier of the item to remove.
-    ///   - listId: The list to remove the item from.
-    func deleteItem(id: String, listId: UUID) async throws { // Async signature to match protocol.
-        guard var arr = storage[listId] else { return } // If nothing stored for this list, nothing to delete.
-        arr.removeAll { $0.id == id } // Remove any item whose id matches.
-        storage[listId] = arr // Save updated array back to storage.
-        broadcast(listId) // Notify all observers of this list.
+        touched.forEach(broadcast)
+        return results
     }
 
     /// Sends the current array of items for a list to all active observers.
     /// - Parameter listId: The list whose snapshot should be emitted.
     private func broadcast(_ listId: UUID) { // Helper to yield new values to all saved continuations.
-        let arr = storage[listId] ?? [] // Read current items or use empty array.
+        let arr = (storage[listId] ?? []).filter { $0.tombstone != true } // Löschmarkierte Artikel nicht zeigen.
         continuations[listId]?.values.forEach { $0.yield(arr) } // Yield the array to each subscriber's continuation.
     }
 
