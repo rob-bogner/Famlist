@@ -52,7 +52,7 @@ struct RootView: View { // SwiftUI View declaration.
         .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
         .animation(.easeInOut(duration: 0.3), value: session.isRestoringSession)
         .animation(.easeInOut(duration: 0.3), value: session.needsProfileSetup)
-        .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.listId)
+        .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.token)
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
         }

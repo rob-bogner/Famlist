@@ -132,6 +132,8 @@ protocol SupabaseClienting { // Protocol to hide concrete Supabase types from th
     func storageRemove(bucket: String, paths: [String]) async throws
     /// Ruft eine Postgres-Funktion mit Parametern auf und dekodiert die Zeilen.
     func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R]
+    /// Ruft eine Postgres-Funktion mit Parametern auf, die einen einzelnen Wert liefert (z. B. uuid, boolean).
+    func rpcValue<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> R
 }
 
 extension SupabaseClienting {
@@ -139,6 +141,9 @@ extension SupabaseClienting {
     func rpc(_ function: String) async throws {}
     func storageRemove(bucket: String, paths: [String]) async throws {}
     func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] { [] }
+    func rpcValue<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> R {
+        throw PostgrestError(message: "rpcValue(\(function)) not available in this client")
+    }
 }
 
 final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around SupabaseClient conforming to our facade.
@@ -207,6 +212,10 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
     }
 
     func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] {
+        try await client.rpc(function, params: params).execute().value
+    }
+
+    func rpcValue<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> R {
         try await client.rpc(function, params: params).execute().value
     }
 

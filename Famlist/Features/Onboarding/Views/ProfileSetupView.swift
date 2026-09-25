@@ -123,9 +123,11 @@ struct ProfileSetupView: View {
 
     /// Foto: 112 + 2 × 1,5 Rahmen (content-box) = 115, gestrichelt; mit Foto das Bild im Kreis.
     private func photoButton(k: SheetTheme, t: EKKTokens) -> some View {
-        PhotosPicker(selection: $photo, matching: .images) {
+        // Vor dem Label lesen: Das Label-Closure von PhotosPicker ist nicht an den Main Actor gebunden.
+        let avatar = session.avatarImage
+        return PhotosPicker(selection: $photo, matching: .images) {
             Group {
-                if let image = session.avatarImage {
+                if let image = avatar {
                     Image(uiImage: image).resizable().scaledToFill()
                         .frame(width: 115, height: 115)
                         .clipShape(Circle())

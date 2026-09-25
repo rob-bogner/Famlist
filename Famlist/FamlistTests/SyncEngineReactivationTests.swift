@@ -91,6 +91,7 @@ final class SyncEngineReactivationTests: XCTestCase {
     // MARK: - Helpers
 
     /// Inserts a confirmed-tombstoned entity (simulates item that was deleted and sync'd).
+    @discardableResult
     private func insertTombstonedEntity(listId: UUID, name: String, hlcTimestamp: Int64 = 1_000) -> ItemEntity {
         let itemId = UUID.deterministicItemID(listId: listId, name: name)
         let entity = ItemEntity(

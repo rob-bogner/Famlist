@@ -57,6 +57,19 @@ struct ShareMembersSheet: View {
                 .scrollBounceBehavior(.basedOnSize)
             }
         }
+        .overlay(alignment: .bottom) {
+            if let message = vm.errorMessage {
+                StatusToast(text: message, isError: true, appearance: appearance)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .task(id: message) {
+                        try? await Task.sleep(nanoseconds: 4_000_000_000)
+                        withAnimation { vm.errorMessage = nil }
+                    }
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: vm.errorMessage)
         .task { await vm.load() }
     }
 
@@ -135,7 +148,8 @@ struct ShareMembersSheet: View {
             .padding(.top, 24)
 
         VStack(spacing: 10) {
-            ListAccountIconCTA(k: k, icon: ListAccountIcon.share, title: "Einladungslink teilen", shareURL: vm.inviteURL)
+            ListAccountIconCTA(k: k, icon: ListAccountIcon.share, title: "Einladungslink teilen",
+                               action: { Task { await vm.ensureInviteURL() } }, shareURL: vm.inviteURL)
 
             // Sekundär: 52 hoch, Radius 26, Rahmen 1, field, accentText 15/600, Icon 18, gap 10
             Button(action: copyLink) {
@@ -208,7 +222,10 @@ struct ShareMembersSheet: View {
     // MARK: - Actions
 
     private func copyLink() {
-        guard let url = vm.inviteURL else { return }
+        guard let url = vm.inviteURL else {
+            Task { await vm.ensureInviteURL() }
+            return
+        }
         UIPasteboard.general.string = url.absoluteString
         UserLog.Data.inviteLinkCopied(listName: vm.list.title)
         flash($copiedLink)

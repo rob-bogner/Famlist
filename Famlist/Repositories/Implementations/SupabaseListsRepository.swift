@@ -226,18 +226,6 @@ final class SupabaseListsRepository: ListsRepository {
         logVoid(params: (listId: listId, ownerId: ownerId))
     }
 
-    func addMember(listId: UUID, profileId: UUID) async throws {
-        struct LM: Codable {
-            let list_id: UUID
-            let profile_id: UUID
-        }
-        _ = try await client
-            .from("list_members")
-            .insert(LM(list_id: listId, profile_id: profileId))
-            .execute()
-        logVoid(params: (listId: listId, profileId: profileId))
-    }
-
     func removeMember(listId: UUID, profileId: UUID) async throws {
         _ = try await client
             .from("list_members")
@@ -248,31 +236,23 @@ final class SupabaseListsRepository: ListsRepository {
         logVoid(params: (listId: listId, profileId: profileId))
     }
 
+    /// „Du wurdest aus einer Liste entfernt“ kommt als privater Broadcast an `user:<id>`
+    /// (Trigger on_list_member_removed, Migration 014). Postgres Changes auf list_members
+    /// gingen nicht: DELETE-Events lassen sich dort nicht filtern und erreichten alle Nutzer.
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> {
         AsyncStream { [weak self] continuation in
             guard let self else { continuation.finish(); return }
 
-            let channelId = "private:list_members:\(userId.uuidString)"
-            let channel = client.realtime.channel(channelId)
-
-            let deletions = channel.postgresChange(
-                DeleteAction.self,
-                schema: "public",
-                table: "list_members",
-                filter: .eq("profile_id", value: userId.uuidString)
-            )
+            let channel = client.realtime.channel("user:\(userId.uuidString.lowercased())") {
+                $0.isPrivate = true
+            }
+            let removals = channel.broadcastStream(event: "member_removed")
 
             let task = Task {
                 do {
                     try await channel.subscribeWithError()
-                    for await deletion in deletions {
-                        // PK (list_id, profile_id) ist immer im oldRecord enthalten
-                        if let raw = deletion.oldRecord["list_id"],
-                           let listIdString: String = {
-                               let s = String(describing: raw)
-                               return s == "<null>" ? nil : s.replacingOccurrences(of: "AnyJSON.", with: "")
-                           }(),
-                           let listId = UUID(uuidString: listIdString) {
+                    for await message in removals {
+                        if let listId = Self.listId(fromBroadcast: message) {
                             continuation.yield(listId)
                         }
                     }
@@ -290,57 +270,71 @@ final class SupabaseListsRepository: ListsRepository {
         }
     }
 
+    /// Liest `list_id` aus einer Broadcast-Nachricht. realtime.send liefert
+    /// `{"event": …, "payload": {"list_id": …}}`; zur Sicherheit wird auch die oberste Ebene geprüft.
+    static func listId(fromBroadcast message: JSONObject) -> UUID? {
+        let inner = message["payload"]?.objectValue ?? message
+        guard let raw = inner["list_id"]?.stringValue else { return nil }
+        return UUID(uuidString: raw)
+    }
+
     func fetchMembers(listId: UUID) async throws -> [ListMember] {
-        // 1. Hole profile_ids + added_at aus list_members
-        struct MemberRow: Codable {
-            let profile_id: UUID
-            let added_at: Date
-        }
-        let memberRows: [MemberRow] = try await client
-            .from("list_members")
-            .select("profile_id, added_at")
-            .eq("list_id", value: listId.uuidString)
-            .execute()
-            .value
-
-        guard !memberRows.isEmpty else { return [] }
-
-        // 2. Hole Profil-Daten für alle profile_ids
-        // Kein PostgREST-Join möglich (kein FK profile_id → profiles.id) → zwei Queries
-        struct ProfileRow: Codable {
-            let id: UUID
+        // Ein Join über den Fremdschlüssel list_members.profile_id → profiles.id.
+        struct ProfileRow: Decodable {
             let public_id: String?
             let username: String?
             let full_name: String?
         }
-        let profileIds = memberRows.map { $0.profile_id.uuidString }
-        let profileRows: [ProfileRow] = try await client
-            .from("profiles")
-            .select("id, public_id, username, full_name")
-            .in("id", values: profileIds)
+        struct MemberRow: Decodable {
+            let profile_id: UUID
+            let added_at: Date
+            let profiles: ProfileRow?
+        }
+        let rows: [MemberRow] = try await client
+            .from("list_members")
+            .select("profile_id, added_at, profiles(public_id, username, full_name)")
+            .eq("list_id", value: listId.uuidString)
+            .order("added_at", ascending: true)
             .execute()
             .value
 
-        // 3. Join in Memory
-        let profileMap = Dictionary(uniqueKeysWithValues: profileRows.map { ($0.id, $0) })
-        let result = memberRows.compactMap { member -> ListMember? in
-            guard let profile = profileMap[member.profile_id] else { return nil }
-            return ListMember(
-                id: member.profile_id,
-                publicId: profile.public_id ?? "",
-                username: profile.username,
-                fullName: profile.full_name,
-                addedAt: member.added_at
+        let result = rows.map { row in
+            ListMember(
+                id: row.profile_id,
+                publicId: row.profiles?.public_id ?? "",
+                username: row.profiles?.username,
+                fullName: row.profiles?.full_name,
+                addedAt: row.added_at
             )
         }
         return logResult(params: (listId: listId, count: result.count), result: result)
     }
 
-    // MARK: - Einladung (Phase 5)
+    // MARK: - Einladung (Migration 014)
 
-    func invitePreview(listId: UUID) async throws -> InvitePreviewRow? {
+    func createInvite(listId: UUID) async throws -> String {
         struct Params: Encodable, Sendable { let p_list_id: UUID }
-        let rows: [InvitePreviewRow] = try await client.rpcRows("invite_preview", params: Params(p_list_id: listId))
+        struct Row: Decodable { let token: String }
+        let rows: [Row] = try await client.rpcRows("create_list_invite", params: Params(p_list_id: listId))
+        guard let token = rows.first?.token else { throw InviteError.unavailable }
+        logVoid(params: (action: "createInvite", listId: listId))
+        return token
+    }
+
+    func invitePreview(token: String) async throws -> InvitePreviewRow? {
+        struct Params: Encodable, Sendable { let p_token: String }
+        let rows: [InvitePreviewRow] = try await client.rpcRows("invite_preview_by_token", params: Params(p_token: token))
         return rows.first
+    }
+
+    func acceptInvite(token: String) async throws -> UUID {
+        struct Params: Encodable, Sendable { let p_token: String }
+        do {
+            let listId: UUID = try await client.rpcValue("accept_list_invite", params: Params(p_token: token))
+            logVoid(params: (action: "acceptInvite", listId: listId))
+            return listId
+        } catch {
+            throw InviteError.from(error) ?? error
+        }
     }
 }

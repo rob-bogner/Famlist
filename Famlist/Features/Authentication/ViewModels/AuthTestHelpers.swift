@@ -19,7 +19,8 @@
  - Never ship these credentials in production builds.
 
  📝 Last Change:
- - Extracted from AuthView.swift to improve file organization.
+ - Passwörter nicht mehr im Quelltext, sondern aus der lokalen Secrets.plist (Audit 25.09.2026;
+   alte Passwörter waren im öffentlichen Repo und wurden live ersetzt).
  ------------------------------------------------------------------------
  */
 
@@ -35,12 +36,11 @@ enum SimulatorAuthHelper {
         case tester = "tester@grocerygenius.app"
         case demo = "demo@grocerygenius.app"
         
+        /// Passwort aus der lokalen, nicht versionierten `Secrets.plist` im Projektordner
+        /// (Schlüssel TEST_PASSWORD_DEVELOPER / _TESTER / _DEMO). Leer, wenn die Datei fehlt.
+        /// Der Simulator darf Dateien des Macs lesen; der Pfad wird aus `#filePath` abgeleitet.
         var password: String {
-            switch self {
-            case .developer: return "DevTest123!"
-            case .tester: return "TestUser456!"
-            case .demo: return "DemoPass789!"
-            }
+            SimulatorAuthHelper.localSecrets["TEST_PASSWORD_\(description.uppercased())"] as? String ?? ""
         }
         
         var description: String {
@@ -52,6 +52,14 @@ enum SimulatorAuthHelper {
         }
     }
     
+    /// Projektordner/Secrets.plist, fünf Ebenen über dieser Datei.
+    static let localSecrets: [String: Any] = {
+        var url = URL(fileURLWithPath: #filePath)
+        for _ in 0..<5 { url.deleteLastPathComponent() }
+        let file = url.appendingPathComponent("Secrets.plist")
+        return (NSDictionary(contentsOf: file) as? [String: Any]) ?? [:]
+    }()
+
     static func getCredentials(for account: TestAccount) -> (email: String, password: String) {
         return (email: account.rawValue, password: account.password)
     }

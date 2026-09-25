@@ -25,6 +25,7 @@ struct AcceptInviteView: View {
     @Environment(\.colorScheme) private var colorScheme
     let invite: AppSessionViewModel.InvitePayload
     @State private var isAccepting = false
+    @State private var errorToast: String?
 
     var body: some View {
         let appearance = Appearance(colorScheme)
@@ -32,7 +33,7 @@ struct AcceptInviteView: View {
         let t = EKKTokens(appearance)
         let bodyFont = AppFont.ui(.dmSans, 14, 400)
         let info = session.invitePreview
-        let inviterName = info?.inviterName ?? invite.inviterPublicId
+        let inviterName = info?.inviterName ?? "Jemand"
         let listName = info?.listName ?? invite.listTitle
 
         ZStack(alignment: .top) {
@@ -96,8 +97,17 @@ struct AcceptInviteView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
+        .overlay(alignment: .bottom) {
+            if let errorToast {
+                StatusToast(text: errorToast, isError: true, appearance: appearance)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .onChange(of: session.errorMessage) { _, message in showError(message) }
         .task {
-            if session.invitePreview?.listId != invite.listId { await session.loadInvitePreview(invite) }
+            if session.invitePreview?.token != invite.token { await session.loadInvitePreview(invite) }
         }
     }
 
@@ -111,7 +121,20 @@ struct AcceptInviteView: View {
             .background(Pill.fill(t.chip))
     }
 
+    private func showError(_ message: String?) {
+        guard let message else { return }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { errorToast = message }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            if errorToast == message {
+                withAnimation { errorToast = nil }
+                session.errorMessage = nil
+            }
+        }
+    }
+
     private func accept() {
+        session.errorMessage = nil
         isAccepting = true
         Task {
             await session.acceptInviteAndOpen(invite)
@@ -121,11 +144,11 @@ struct AcceptInviteView: View {
 }
 
 #Preview("Einladung annehmen", traits: .fixedLayout(width: 390, height: 844)) {
-    AcceptInviteView(invite: .init(listId: UUID(), listTitle: "Edeka", inviterPublicId: "Rob"))
+    AcceptInviteView(invite: .init(token: "preview", listTitle: "Edeka"))
         .environmentObject(PreviewMocks.makeAppSessionViewModel())
 }
 
 #Preview("Einladung annehmen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
-    AcceptInviteView(invite: .init(listId: UUID(), listTitle: "Edeka", inviterPublicId: "Rob"))
+    AcceptInviteView(invite: .init(token: "preview", listTitle: "Edeka"))
         .environmentObject(PreviewMocks.makeAppSessionViewModel()).preferredColorScheme(.dark)
 }

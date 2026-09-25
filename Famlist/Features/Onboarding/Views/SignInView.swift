@@ -169,22 +169,10 @@ struct SignInView: View {
     @ViewBuilder
     private func toastView(_ appearance: Appearance, keyboardLift: CGFloat) -> some View {
         if let toast {
-            let k = OverlayTheme(appearance)
-            GlassToast(k: k, height: 60, radius: 22, leading: 10, trailing: 16) {
-                SVGIcon(toastIsError ? EKKIcon.alert : Icon.check, size: 20,
-                        color: toastIsError ? .hex("#FF8A80") : k.toastAccent, lineWidth: 2.4)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(toastIsError ? Color.rgba(229, 72, 77, 0.22) : k.okBg))
-                Text(toast)
-                    .font(AppFont.dm(14, 600))
-                    .foregroundStyle(k.toastText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, keyboardLift > 0 ? keyboardLift + 12 : 100)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-            .accessibilityElement(children: .combine)
+            StatusToast(text: toast, isError: toastIsError, appearance: appearance)
+                .padding(.horizontal, 20)
+                .padding(.bottom, keyboardLift > 0 ? keyboardLift + 12 : 100)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
 

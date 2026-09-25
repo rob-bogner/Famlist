@@ -27,11 +27,6 @@ protocol ProfilesRepository {
     /// - Throws: AuthError.unauthenticated if no user is logged in.
     func myProfile() async throws -> Profile
     
-    /// Look up profile by public id.
-    /// - Parameter publicId: The public identifier to search for.
-    /// - Returns: Matching profile or nil if not found.
-    func profileByPublicId(_ publicId: String) async throws -> Profile?
-
     /// Profil über die ID (z. B. Eigentümer einer geteilten Liste).
     func profile(id: UUID) async throws -> Profile?
 

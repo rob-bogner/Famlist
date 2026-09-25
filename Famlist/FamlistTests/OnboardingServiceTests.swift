@@ -188,8 +188,4 @@ final class MockProfilesRepository: ProfilesRepository {
             updatedAt: nil
         )
     }
-
-    func profileByPublicId(_ publicId: String) async throws -> Profile? {
-        nil
-    }
 }

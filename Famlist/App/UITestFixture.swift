@@ -74,12 +74,12 @@ enum UITestFixture {
         case "profileSetup": ProfileSetupView()
         case "acceptInvite":
             let _ = setDesignInvitePreview()
-            AcceptInviteView(invite: .init(listId: designInviteId, listTitle: "Edeka", inviterPublicId: "Rob"))
+            AcceptInviteView(invite: .init(token: designInviteToken, listTitle: "Edeka"))
         default: ShoppingListView()
         }
     }
 
-    private static let designInviteId = UUID()
+    private static let designInviteToken = "design-invite"
 
     /// Rauschbild 1200 × 1200 als JPEG → Base64 (groß wie ein Kamerafoto im Artikelstamm).
     private static var largeImageBase64: String {
@@ -105,9 +105,9 @@ enum UITestFixture {
 
     /// Beispielwerte aus AcceptInvite.dc.html, bevor der Screen erscheint.
     private static func setDesignInvitePreview() {
-        guard session.invitePreview?.listId != designInviteId else { return }
-        session.invitePreview = InvitePreviewInfo(listId: designInviteId, inviterName: "Rob", listName: "Edeka",
-                                                  itemCount: 4, memberCount: 1)
+        guard session.invitePreview?.token != designInviteToken else { return }
+        session.invitePreview = InvitePreviewInfo(token: designInviteToken, listId: UUID(), inviterName: "Rob",
+                                                  listName: "Edeka", itemCount: 4, memberCount: 1)
     }
 
     /// Owner of "My List" and "Drogerie"; "WG-Einkauf" belongs to someone else (shared list).

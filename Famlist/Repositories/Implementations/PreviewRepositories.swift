@@ -48,7 +48,6 @@ final class PreviewProfilesRepository: ProfilesRepository { // Used by previews 
     } // Replace stored profile.
     
     func myProfile() async throws -> Profile { profile } // Return the stored profile.
-    func profileByPublicId(_ publicId: String) async throws -> Profile? { profile.publicId == publicId ? profile : nil } // Match on public id.
 }
 
 /// Preview implementation of ListsRepository with an in-memory list array.
@@ -62,7 +61,6 @@ final class PreviewListsRepository: ListsRepository { // Simple data source for 
         let l = List(id: UUID(), owner_id: owner, title: title, is_default: false, created_at: nil, updated_at: nil) // Build list.
         lists.append(l); return l // Store and return.
     }
-    func addMember(listId: UUID, profileId: UUID) async throws {} // No-op in previews.
     func removeMember(listId: UUID, profileId: UUID) async throws {} // No-op in previews.
     func fetchMembers(listId: UUID) async throws -> [ListMember] { [] } // No-op in previews.
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> { AsyncStream { $0.finish() } } // No-op in previews.

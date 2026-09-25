@@ -29,7 +29,6 @@ private final class StubProfiles: ProfilesRepository {
     init(me: Profile) { self.me = me }
     func upsertProfile(authUserId: UUID, publicId: String) async throws {}
     func myProfile() async throws -> Profile { me }
-    func profileByPublicId(_ publicId: String) async throws -> Profile? { nil }
     func profile(id: UUID) async throws -> Profile? { owner?.id == id ? owner : nil }
     func isUsernameAvailable(_ username: String) async throws -> Bool { !takenNames.contains(username.lowercased()) }
     func setFavoriteList(_ listId: UUID?) async throws {
@@ -44,7 +43,6 @@ private final class StubLists: ListsRepository {
     func ensureDefaultListExists(for owner: UUID) async throws -> List { throw URLError(.unknown) }
     func observeLists(for owner: UUID) -> AsyncStream<[List]> { AsyncStream { $0.finish() } }
     func createList(for owner: UUID, title: String) async throws -> List { throw URLError(.unknown) }
-    func addMember(listId: UUID, profileId: UUID) async throws {}
     func removeMember(listId: UUID, profileId: UUID) async throws { removed.append((listId, profileId)) }
     func fetchMembers(listId: UUID) async throws -> [ListMember] { members }
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> { AsyncStream { $0.finish() } }
@@ -53,6 +51,12 @@ private final class StubLists: ListsRepository {
     func renameList(listId: UUID, title: String) async throws -> ListModel { throw URLError(.unknown) }
     func deleteList(listId: UUID) async throws {}
     func setDefaultList(listId: UUID, ownerId: UUID) async throws {}
+    /// nil = offline (createInvite wirft).
+    var inviteToken: String?
+    func createInvite(listId: UUID) async throws -> String {
+        guard let inviteToken else { throw URLError(.notConnectedToInternet) }
+        return inviteToken
+    }
 }
 
 @MainActor
@@ -140,15 +144,25 @@ final class AccountAndSharingTests: XCTestCase {
 
     // MARK: - Einladungslink
 
-    func test_inviteLink_formatAndEncoding() throws {
-        let id = UUID()
-        let url = try XCTUnwrap(InviteLink.url(listId: id, listTitle: "Edeka & Co", inviterPublicId: "rob123"))
-        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        XCTAssertEqual(url.scheme, "famlist")
-        XCTAssertEqual(url.host, "invite")
-        XCTAssertEqual(items.first { $0.name == "listId" }?.value, id.uuidString)
-        XCTAssertEqual(items.first { $0.name == "listTitle" }?.value, "Edeka & Co")
-        XCTAssertEqual(items.first { $0.name == "inviterPublicId" }?.value, "rob123")
+    func test_shareMembers_loadsInviteLinkWithServerToken() async {
+        let lists = StubLists()
+        lists.inviteToken = "tok_123"
+        let vm = ShareMembersViewModel(list: list("My List", owner: meId), me: me, lists: lists, profiles: nil)
+        await vm.load()
+        let url = try? XCTUnwrap(vm.inviteURL)
+        let items = url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false)?.queryItems } ?? []
+        XCTAssertEqual(items.first { $0.name == "token" }?.value, "tok_123")
+        XCTAssertNil(items.first { $0.name == "listId" })
+    }
+
+    func test_shareMembers_offline_noLink_retryShowsMessage() async {
+        let lists = StubLists()
+        let vm = ShareMembersViewModel(list: list("My List", owner: meId), me: me, lists: lists, profiles: nil)
+        await vm.load()
+        XCTAssertNil(vm.inviteURL)
+        XCTAssertNil(vm.errorMessage, "Beim Öffnen offline kein Fehler-Toast")
+        await vm.ensureInviteURL()
+        XCTAssertEqual(vm.errorMessage, InviteError.unavailable.errorDescription)
     }
 
     // MARK: - Mitglieder & Teilen

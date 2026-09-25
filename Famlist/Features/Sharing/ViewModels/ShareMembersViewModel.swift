@@ -12,7 +12,7 @@
  - Man selbst erscheint als „Name (Du)“ wie im Design („Rob (Du)“).
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 4). Ersetzt MembersView und ShareListView.
+ - Einladungslink mit Token vom Server statt Listen-ID (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -23,6 +23,8 @@ final class ShareMembersViewModel: ObservableObject {
     @Published private(set) var members: [ShareMember] = []
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
+    /// Einladungslink mit Token (Migration 014). nil, bis der Server ihn geliefert hat (offline: bleibt nil).
+    @Published private(set) var inviteURL: URL?
 
     let list: ListModel
     private let me: Profile?
@@ -39,14 +41,10 @@ final class ShareMembersViewModel: ObservableObject {
 
     var isOwner: Bool { list.ownerId == me?.id }
 
-    var inviteURL: URL? {
-        guard let me else { return nil }
-        return InviteLink.url(listId: list.id, listTitle: list.title, inviterPublicId: me.publicId)
-    }
-
     func load() async {
         isLoading = true
         defer { isLoading = false }
+        await loadInviteURL(reportErrors: false)
         var rows: [ShareMember] = []
         if isOwner {
             rows.append(ShareMember(id: list.ownerId, name: "\(me?.displayName ?? "Du") (Du)", role: "Besitzer",
@@ -81,6 +79,24 @@ final class ShareMembersViewModel: ObservableObject {
                 members = previous
                 errorMessage = "„\(member.name)“ konnte nicht entfernt werden."
             }
+        }
+    }
+
+    /// Tippt der Nutzer auf „teilen“/„kopieren“, bevor der Link da ist (z. B. offline beim Öffnen):
+    /// erneut versuchen und bei Fehlschlag einen Hinweis zeigen.
+    func ensureInviteURL() async {
+        await loadInviteURL(reportErrors: true)
+    }
+
+    /// Holt den Einladungs-Token beim Server. Ohne Verbindung bleibt der Link aus.
+    private func loadInviteURL(reportErrors: Bool) async {
+        guard inviteURL == nil, let lists else { return }
+        do {
+            let token = try await lists.createInvite(listId: list.id)
+            inviteURL = InviteLink.url(token: token, listTitle: list.title)
+        } catch {
+            logVoid(params: (action: "loadInviteURL.error", error: (error as NSError).localizedDescription))
+            if reportErrors { errorMessage = InviteError.unavailable.errorDescription }
         }
     }
 

@@ -55,11 +55,11 @@ final class AppSessionViewModel: ObservableObject {
     // MARK: - Invite Handling
 
     /// Payload aus einem Einladungs-Deep-Link.
-    struct InvitePayload: Identifiable {
-        var id: UUID { listId }
-        let listId: UUID
-        let listTitle: String       // Aus URL-Parameter (nur zur Anzeige)
-        let inviterPublicId: String
+    /// Einladung aus dem Link `famlist://invite?token=…&listTitle=…` (Migration 014).
+    struct InvitePayload: Identifiable, Equatable {
+        var id: String { token }
+        let token: String
+        let listTitle: String       // Aus URL-Parameter (nur zur Anzeige, bis die Vorschau geladen ist)
     }
 
     /// Wird gesetzt, wenn ein Invite-Link geöffnet wird und der Nutzer eingeloggt ist.
@@ -338,20 +338,17 @@ final class AppSessionViewModel: ObservableObject {
     /// Handles an incoming deep link URL (invite or Supabase magic-link).
     /// - Parameter url: The URL opened by the system.
     func handleOpenURL(_ url: URL) {
-        // Invite: famlist://invite?listId=X&inviterPublicId=Y&listTitle=Z
+        // Invite: famlist://invite?token=T&listTitle=Z
         if url.scheme == "famlist", url.host == "invite" {
             let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
-            guard
-                let listIdStr = q?.first(where: { $0.name == "listId" })?.value,
-                let listId = UUID(uuidString: listIdStr),
-                let inviterPublicId = q?.first(where: { $0.name == "inviterPublicId" })?.value
-            else {
+            guard let token = q?.first(where: { $0.name == "token" })?.value, !token.isEmpty else {
+                // Alte Links im Format ?listId=… sind seit Migration 014 ungültig.
                 logVoid(params: ["action": "handleOpenURL.invite.invalidParams"])
+                errorMessage = InviteError.invalidOrExpired.errorDescription
                 return
             }
             let listTitle = q?.first(where: { $0.name == "listTitle" })?.value ?? ""
-            let invite = InvitePayload(listId: listId, listTitle: listTitle,
-                                       inviterPublicId: inviterPublicId)
+            let invite = InvitePayload(token: token, listTitle: listTitle)
             if isAuthenticated { pendingInvite = invite }
             else { pendingInviteStorage = invite }
             return
@@ -369,53 +366,6 @@ final class AppSessionViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Accept Invite
-
-    /// Trägt den aktuellen Nutzer als Mitglied der eingeladenen Liste ein.
-    func acceptInvite(_ invite: InvitePayload) {
-        guard let profile = currentProfile else { return }
-
-        // Guard: Nutzer ist bereits Owner dieser Liste
-        guard !listViewModel.allLists.contains(where: {
-            $0.id == invite.listId && $0.ownerId == profile.id
-        }) else {
-            logVoid(params: (action: "acceptInvite.alreadyOwner", listId: invite.listId))
-            pendingInvite = nil
-            return
-        }
-
-        // Guard: Nutzer ist bereits Mitglied (Liste ist schon in allLists)
-        guard !listViewModel.allLists.contains(where: { $0.id == invite.listId }) else {
-            logVoid(params: (action: "acceptInvite.alreadyMember", listId: invite.listId))
-            pendingInvite = nil
-            listViewModel.loadAllLists(ownerId: profile.id)
-            return
-        }
-
-        Task {
-            do {
-                try await lists.addMember(listId: invite.listId, profileId: profile.id)
-                await MainActor.run {
-                    pendingInvite = nil
-                    listViewModel.loadAllLists(ownerId: profile.id)
-                    UserLog.Data.listJoined()
-                }
-            } catch {
-                await MainActor.run {
-                    pendingInvite = nil
-                    // Unique-Constraint-Verletzung (bereits Mitglied) ist kein Fehler
-                    if (error as NSError).code == 23505 {
-                        listViewModel.loadAllLists(ownerId: profile.id)
-                    } else {
-                        errorMessage = error.localizedDescription
-                        logVoid(params: (action: "acceptInvite.error",
-                                         error: (error as NSError).localizedDescription))
-                    }
-                }
-            }
-        }
-    }
-    
     // MARK: - Sign Out
     
     /// Signs the user out from Supabase and clears local state.
