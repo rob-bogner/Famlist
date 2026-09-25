@@ -92,6 +92,7 @@ extension ListViewModel {
         // Step 3: Incremental sync — runs concurrently with the Realtime subscription.
         Task { [weak self] in
             await self?.runIncrementalSync()
+            await self?.backfillImagesFromCatalog()   // Fotos aus dem Artikelstamm nachtragen
         }
     }
 
@@ -128,9 +129,17 @@ extension ListViewModel {
                     let hasPendingLocalChange: Bool = {
                         guard let uuid = itemUUID,
                               let entity = try? itemStore.fetchItem(id: uuid) else { return false }
-                        return entity.syncStatus == .pendingUpdate || entity.syncStatus == .pendingCreate
+                        if entity.syncStatus != .synced { return true }   // pending/failed: lokal noch nicht bestätigt
+                        // Lokal neuer (HLC)? Dann ist die Server-Zeile veraltet (z. B. Menge 1 statt 2).
+                        let local = HybridLogicalClock(timestamp: entity.hlcTimestamp ?? 0, counter: entity.hlcCounter ?? 0,
+                                                       nodeId: entity.hlcNodeId ?? "")
+                        let remote = HybridLogicalClock(timestamp: item.hlcTimestamp ?? 0, counter: item.hlcCounter ?? 0,
+                                                        nodeId: item.hlcNodeId ?? "")
+                        return local > remote
                     }()
-                    if !hasPendingLocalChange {
+                    if hasPendingLocalChange {
+                        logVoid(params: (action: "runIncrementalSync.skipStale", itemId: item.id, remoteUnits: item.units))
+                    } else {
                         _ = try? itemStore.upsert(model: item)
                         if !suppressHighlight {
                             highlightIDs.insert(item.id)

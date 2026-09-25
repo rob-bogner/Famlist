@@ -5,16 +5,16 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - UI-Tests für das Sheet „Meine Listen“ (MyListsSheet / SwipeableListCard) auf der In-Memory-Liste.
+ - UI-Tests für „Meine Listen“ und die Listen-Optionen (langer Druck) auf der In-Memory-Liste.
 
  🔰 Notes for Beginners:
  - Fixture (-uiTestFixture): „My List“ (aktiv, Standard, eigene), „Drogerie“ (eigene), „WG-Einkauf“ (geteilt).
- - Erwartete Wischwege: eigene Liste links 172 pt (Löschen + Umbenennen), geteilte 88 pt (nur Umbenennen),
-   rechts 96 pt („Standard“, nur eigene Liste, die noch nicht Standard ist).
- - Speichern (Anlegen, Umbenennen, Standard) prüfen die Unit-Tests; die Fixture hat kein Listen-Repository.
+ - Redesign „Hybrid“ (24.09.2026): keine Wischaktionen mehr auf Listenkarten; alle Listen-Aktionen gibt es
+   nur in den Listen-Optionen (SPEC §3.6).
+ - Speichern (Anlegen, Umbenennen, Favorit) prüfen die Unit-Tests; die Fixture hat kein Listen-Repository.
 
  📝 Last Change:
- - Initial creation („Meine Listen“ im Hybrid-Design).
+ - Auf langen Druck und Listen-Optionen umgestellt (Handoff 24.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -37,10 +37,10 @@ final class ListsUITests: XCTestCase {
     private func card(_ name: String) -> XCUIElement { app.buttons["\(name) öffnen"] }
     private var activeCard: XCUIElement { app.buttons["My List, aktive Liste"] }
 
-    private func drag(_ element: XCUIElement, dx: CGFloat, velocity: CGFloat = 600) {
+    private func drag(_ element: XCUIElement, dx: CGFloat) {
         let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: dx, dy: 0)),
-                    withVelocity: XCUIGestureVelocity(velocity), thenHoldForDuration: 0.05)
+                    withVelocity: XCUIGestureVelocity(600), thenHoldForDuration: 0.05)
         Thread.sleep(forTimeInterval: 1.0)
     }
 
@@ -50,41 +50,45 @@ final class ListsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Neue Liste erstellen"].exists)
     }
 
-    func test_B_ownList_leftSwipe_revealsDeleteAndRename() {
-        let rest = card("Drogerie").frame.minX
-        drag(card("Drogerie"), dx: -200)
-        XCTAssertEqual(card("Drogerie").frame.minX, rest - 172, accuracy: 4)
-    }
-
-    func test_C_sharedList_leftSwipe_revealsRenameOnly() {
-        let rest = card("WG-Einkauf").frame.minX
-        drag(card("WG-Einkauf"), dx: -150)
-        XCTAssertEqual(card("WG-Einkauf").frame.minX, rest - 88, accuracy: 4)
-    }
-
-    func test_D_ownList_rightSwipe_revealsStandard() {
-        let rest = card("Drogerie").frame.minX
-        drag(card("Drogerie"), dx: 110, velocity: 500)
-        XCTAssertEqual(card("Drogerie").frame.minX, rest + 96, accuracy: 4)
-    }
-
-    func test_E_defaultList_rightSwipe_staysClosed() {
-        let rest = activeCard.frame.minX
-        drag(activeCard, dx: 150)
-        XCTAssertEqual(activeCard.frame.minX, rest, accuracy: 2)
-    }
-
-    func test_F_leftFullSwipe_doesNotDelete() {
-        drag(card("Drogerie"), dx: -330, velocity: 800)
-        XCTAssertTrue(card("Drogerie").exists)
-        XCTAssertFalse(app.staticTexts["„Drogerie“ löschen?"].exists, "no delete confirmation")
-    }
-
-    func test_G_longPress_showsContextMenu() {
-        card("Drogerie").press(forDuration: 1.2)
+    func test_B_ownList_longPress_showsAllOptions() {
+        card("Drogerie").press(forDuration: 0.8)
         XCTAssertTrue(app.buttons["Umbenennen"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.buttons["Als Standard setzen"].exists)
-        XCTAssertTrue(app.buttons["Löschen"].exists)
+        XCTAssertTrue(app.buttons["Duplizieren"].exists)
+        XCTAssertTrue(app.buttons["Als Favorit markieren"].exists)
+        XCTAssertTrue(app.buttons["Mitglieder & Teilen"].exists)
+        XCTAssertTrue(app.staticTexts["Liste löschen"].exists)
+    }
+
+    func test_C_sharedList_longPress_offersLeave() {
+        card("WG-Einkauf").press(forDuration: 0.8)
+        XCTAssertTrue(app.staticTexts["Liste verlassen"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.staticTexts["Liste löschen"].exists)
+    }
+
+    func test_D_activeFavorite_showsRemoveFavorite() {
+        activeCard.press(forDuration: 0.8)
+        XCTAssertTrue(app.buttons["Favorit entfernen"].waitForExistence(timeout: 3))
+    }
+
+    func test_E_swipe_hasNoActions() {
+        drag(card("Drogerie"), dx: -200)
+        XCTAssertFalse(app.buttons["Löschen"].exists)
+        XCTAssertFalse(app.buttons["Umbenennen"].exists)
+    }
+
+    func test_F_tapOutsideOptions_returnsToLists() {
+        card("Drogerie").press(forDuration: 0.8)
+        XCTAssertTrue(app.buttons["Duplizieren"].waitForExistence(timeout: 3))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9)).tap()
+        XCTAssertTrue(app.buttons["Neue Liste erstellen"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["Duplizieren"].exists)
+    }
+
+    func test_G_membersOption_opensShareSheet() {
+        card("Drogerie").press(forDuration: 0.8)
+        app.buttons["Mitglieder & Teilen"].tap()
+        XCTAssertTrue(app.staticTexts["Mitglieder & Teilen"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Link kopieren"].exists)
     }
 
     func test_H_tap_switchesListAndCloses() {
@@ -93,9 +97,10 @@ final class ListsUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Neue Liste erstellen"].exists)
     }
 
-    func test_I_createButton_opensNameSheet() {
+    func test_I_createButton_opensCreateSheet() {
         app.buttons["Neue Liste erstellen"].tap()
         XCTAssertTrue(app.staticTexts["Neue Liste"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Als Favorit"].exists)
         XCTAssertTrue(app.textFields.firstMatch.exists)
     }
 }

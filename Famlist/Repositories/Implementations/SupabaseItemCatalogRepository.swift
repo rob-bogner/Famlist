@@ -41,6 +41,9 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
         self.client = client
     }
 
+    /// Security: nur die Spalten, die die UI braucht.
+    private static let columns = "id,owner_public_id,name,brand,category,product_description,measure,price,image_data,barcode"
+
     // MARK: - ItemCatalogRepository
 
     /// Searches the item_catalog table for entries whose name_lower contains the query.
@@ -49,7 +52,7 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
         // Security: restrict returned columns to only what the UI needs
         let results: [ItemCatalogEntry] = try await client
             .from("item_catalog")
-            .select("id,owner_public_id,name,brand,category,product_description,measure,price,image_data")
+            .select(Self.columns)
             .ilike("name_lower", pattern: "%\(query.lowercased())%")
             .order("name_lower", ascending: true)
             .limit(5)
@@ -70,5 +73,81 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
             .from("item_catalog")
             .upsert(catalogEntry, onConflict: "owner_public_id,name_lower")
             .execute()
+    }
+
+    /// Alle Einträge des Nutzers (RLS begrenzt auf owner_public_id = auth.uid()).
+    func fetchAll() async throws -> [ItemCatalogEntry] {
+        try await client
+            .from("item_catalog")
+            .select(Self.columns)
+            .order("name_lower", ascending: true)
+            .execute()
+            .value
+    }
+
+    /// Ändert einen Eintrag über seine ID; owner_public_id bleibt unverändert (RLS).
+    func update(_ entry: ItemCatalogEntry) async throws {
+        try await client
+            .from("item_catalog")
+            .update(CatalogUpdate(entry))
+            .eq("id", value: entry.id)
+            .execute()
+    }
+
+    func delete(id: String) async throws {
+        try await client
+            .from("item_catalog")
+            .delete()
+            .eq("id", value: id)
+            .execute()
+    }
+
+    func find(barcode: String) async throws -> ItemCatalogEntry? {
+        let rows: [ItemCatalogEntry] = try await client
+            .from("item_catalog")
+            .select(Self.columns)
+            .eq("barcode", value: barcode)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first
+    }
+}
+
+/// Änderbare Spalten eines Katalog-Eintrags (ohne id / owner_public_id).
+private struct CatalogUpdate: Encodable {
+    let name: String
+    let brand: String?
+    let category: String?
+    let productDescription: String?
+    let measure: String
+    let price: Double
+    let imageData: String?
+
+    init(_ entry: ItemCatalogEntry) {
+        name = entry.name
+        brand = entry.brand
+        category = entry.category
+        productDescription = entry.productDescription
+        measure = entry.measure
+        price = entry.price
+        imageData = entry.imageData
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case name, brand, category, measure, price
+        case productDescription = "product_description"
+        case imageData = "image_data"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(name, forKey: .name)
+        try c.encode(brand, forKey: .brand)                       // explizit null → Feld leeren
+        try c.encode(category, forKey: .category)
+        try c.encode(productDescription, forKey: .productDescription)
+        try c.encode(measure, forKey: .measure)
+        try c.encode(price, forKey: .price)
+        try c.encode(imageData, forKey: .imageData)
     }
 }

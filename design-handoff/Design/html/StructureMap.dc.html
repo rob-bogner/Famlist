@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Zielstruktur Famlist</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif;background:#F6F9F9}
+</style>
+</helmet>
+<div style="width: 1760px; height: 1320px; box-sizing: border-box; padding: 56px 64px; background: #F6F9F9; color: #0F2528; font-family: 'DM Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 36px">
+
+<div style="display: flex; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #0B6C75">Schritt 1 · Zur Abstimmung</span>
+<h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 44px; font-weight: 700; letter-spacing: -0.02em">Zielstruktur Famlist</h1>
+</div>
+<div style="display: flex; gap: 12px">
+<sc-for list="{{legend}}" as="l" hint-placeholder-count="3">
+<span style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 18px; background: {{l.bg}}; border: 1.5px {{l.line}} {{l.border}}; color: {{l.text}}; font-size: 14px; font-weight: 600">{{l.label}} · {{l.count}}</span>
+</sc-for>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 16px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="7">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 14px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E3ECED">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 0 4px 6px 4px; border-bottom: 1px solid #EDF2F2">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: #5F7579">{{g.letter}}</span>
+<span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600">{{g.title}}</span>
+</div>
+<sc-for list="{{g.items}}" as="it" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 14px; background: {{it.bg}}; border: 1.5px {{it.line}} {{it.border}}">
+<span style="font-size: 14px; font-weight: 600; color: #0F2528; line-height: 1.3">{{it.name}}</span>
+<span style="font-size: 12px; font-weight: 600; color: {{it.text}}">{{it.label}}</span>
+<sc-if value="{{it.hasNote}}" hint-placeholder-val="{{ false }}">
+<span style="font-size: 12px; color: #4E6468; line-height: 1.35">{{it.note}}</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 600">Kern-Workflows</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px">
+<sc-for list="{{flows}}" as="f" hint-placeholder-count="8">
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E3ECED">
+<span style="width: 30px; height: 30px; border-radius: 10px; background: #0B6C75; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0">{{f.n}}</span>
+<span style="width: 150px; font-size: 14px; font-weight: 700; flex-shrink: 0">{{f.title}}</span>
+<span style="font-size: 14px; color: #33494D; line-height: 1.4">{{f.steps}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":1320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const S = {
+      done: { label: 'Fertig', bg: '#E8F6F7', border: '#0FA3AE', text: '#0B6C75', line: 'solid' },
+      adjust: { label: 'Anpassen', bg: '#FFF6E6', border: '#D99A2B', text: '#8A5A00', line: 'solid' },
+      neu: { label: 'Neu', bg: '#F1F2FF', border: '#6570E8', text: '#3A43B5', line: 'dashed' }
+    };
+    const it = (name, s, note) => Object.assign({ name, note: note || '', hasNote: !!note }, S[s]);
+    const groups = [
+      { letter: 'A', title: 'Einstieg', items: [
+        it('Anmelden / Registrieren', 'neu'),
+        it('Profil anlegen', 'neu', 'Benutzername erst nach Eingabe prüfen'),
+        it('Einladung annehmen', 'neu', 'Aus dem Einladungslink'),
+        it('Leere Liste', 'neu', 'Erster Artikel, erste Liste')
+      ] },
+      { letter: 'B', title: 'Liste', items: [
+        it('Liste · Alle / Offen / Erledigt', 'adjust', '„Ansicht wechseln“ raus, Live-Gesamtkosten, Avatar „wer hat was“'),
+        it('Abgehakt · Zurück', 'done'),
+        it('Wisch-Aktionen', 'done'),
+        it('Kontext-Menü (☰)', 'neu', 'Mitglieder & Teilen (aktuelle Liste), Artikel verwalten, Kategorien, Einstellungen'),
+        it('Artikel löschen · Auswahl', 'neu', 'Nur abgehakte oder alle, mit Rückgängig')
+      ] },
+      { letter: 'C', title: 'Artikel', items: [
+        it('Suchen · leer / Treffer', 'done'),
+        it('Neuer Artikel', 'done'),
+        it('Artikel bearbeiten', 'adjust', 'Link zum Preisverlauf'),
+        it('Produktbild', 'done'),
+        it('Artikel verwalten', 'neu', 'Alle gespeicherten Artikel: bearbeiten, Foto ändern, löschen'),
+        it('Barcode-Scanner', 'neu'),
+        it('Preisverlauf', 'neu', 'Preise pro Artikel und Laden über die Zeit')
+      ] },
+      { letter: 'D', title: 'Listen & Teilen', items: [
+        it('Meine Listen', 'done', 'Wechseln, erstellen'),
+        it('Listen-Optionen', 'done', 'Einziger Ort für Umbenennen, Duplizieren, Teilen, Favorit, Löschen/Verlassen'),
+        it('Liste erstellen', 'neu'),
+        it('Mitglieder & Teilen', 'neu', 'Ersetzt „Liste teilen“, „Mitglieder“ und die ID im Profil')
+      ] },
+      { letter: 'E', title: 'Kassenzettel', items: [
+        it('Kassenzettel fotografieren', 'neu'),
+        it('Erkennung prüfen', 'neu', 'Erkannte Artikel und Preise bestätigen und der Liste zuordnen'),
+        it('Einkauf abgeschlossen', 'neu', 'Summe, gespeicherte Preise')
+      ] },
+      { letter: 'F', title: 'Kategorien', items: [
+        it('Kategorien verwalten', 'neu', 'Anlegen, umbenennen, Reihenfolge = Ladenweg'),
+        it('Kategorie bearbeiten', 'neu', 'Name und Icon')
+      ] },
+      { letter: 'G', title: 'Konto', items: [
+        it('Profil bearbeiten', 'done', 'Nur über Einstellungen erreichbar'),
+        it('Einstellungen', 'neu', 'Erscheinungsbild, Benachrichtigungen, Abmelden'),
+        it('Konto löschen', 'neu', 'Pflicht für den App Store')
+      ] }
+    ];
+    const all = groups.reduce((a, g) => a.concat(g.items), []);
+    const count = (k) => all.filter((x) => x.label === S[k].label).length;
+    const legend = ['done', 'adjust', 'neu'].map((k) => Object.assign({ count: count(k) }, S[k]));
+    const flows = [
+      { n: '1', title: 'Artikel hinzufügen', steps: 'Suchfeld → Treffer → „+“  ·  Plus-Button → direkt „Neuer Artikel“' },
+      { n: '2', title: 'Per Barcode', steps: 'Suche → Scan-Button → Barcode-Scanner → Treffer oder Neuer Artikel (vorausgefüllt)' },
+      { n: '3', title: 'Einkaufen', steps: 'Liste → abhaken → Gesamtkosten laufen live mit → Rückgängig per „Zurück“' },
+      { n: '4', title: 'Kassenzettel', steps: 'Einkauf fertig → Kassenzettel fotografieren → Erkennung prüfen → Preise gespeichert → Preisverlauf' },
+      { n: '5', title: 'Teilen', steps: '☰ → Mitglieder & Teilen → Einladungslink teilen oder kopieren' },
+      { n: '6', title: 'Einladung', steps: 'Link öffnen → Anmelden → Profil anlegen → Einladung annehmen → geteilte Liste' },
+      { n: '7', title: 'Listen', steps: 'Titel „Edeka ⌄“ → Meine Listen → wechseln · erstellen  ·  langer Druck → Listen-Optionen' },
+      { n: '8', title: 'Konto', steps: '☰ → Einstellungen → Profil · Abmelden · Konto löschen (mit Bestätigung)' }
+    ];
+    return { groups, legend, flows };
+  }
+}
+</script>
+</body>
+</html>

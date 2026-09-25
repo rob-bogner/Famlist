@@ -48,4 +48,13 @@ protocol SyncEngineProtocol: AnyObject {
     /// Applies a batch of merged import targets atomically:
     /// one local write + one queue operation per target, single save(), no per-item processQueue().
     func applyBulkItems(_ targets: [ImportTarget]) async
+
+    /// Offline-First: wird direkt nach jedem lokalen Schreiben (SwiftData) aufgerufen – VOR der Netzwerk-Queue.
+    /// ListViewModel aktualisiert damit die Anzeige sofort.
+    func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void)
+}
+
+extension SyncEngineProtocol {
+    /// Standard: kein Beobachter (Previews, Test-Spies).
+    func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void) {}
 }

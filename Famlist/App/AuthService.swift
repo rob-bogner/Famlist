@@ -54,6 +54,15 @@ final class AuthService {
         logVoid(params: (email: email, redirectTo: redirect.absoluteString))
     }
     
+    /// Sign in with Apple: tauscht das ID-Token von Apple gegen eine Supabase-Sitzung.
+    /// - Parameters:
+    ///   - idToken: `identityToken` aus ASAuthorizationAppleIDCredential (UTF-8).
+    ///   - nonce: Der UNGEHASHTE Nonce; Apple bekam dessen SHA-256.
+    func signInWithApple(idToken: String, nonce: String) async throws {
+        _ = try await client.auth.signInWithIdToken(credentials: .init(provider: .apple, idToken: idToken, nonce: nonce))
+        logVoid(params: ["provider": "apple"])
+    }
+
     /// Signs in with email and password - works in simulator unlike magic links.
     /// - Parameters:
     ///   - email: The user's email address.

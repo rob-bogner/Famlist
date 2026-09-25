@@ -40,12 +40,12 @@ extension ListViewModel {
     // MARK: - Check All in Category
 
     /// Checks every open item of the given category ("Alle abhaken" in the section header).
-    func checkAllItems(in category: ItemCategory) {
-        let targets = uncheckedItems.filter { ItemCategory.from($0.category) == category }
+    func checkAllItems(in categoryName: String) {
+        let targets = uncheckedItems.filter { CategoryResolver.name(for: $0.category, in: categoryOrder) == categoryName }
         guard !targets.isEmpty else { return }
 
-        logVoid(params: (action: "checkAllItems.inCategory", category: category.rawValue, count: targets.count))
-        UserLog.Data.categoryItemsChecked(category: category.rawValue, count: targets.count)
+        logVoid(params: (action: "checkAllItems.inCategory", category: categoryName, count: targets.count))
+        UserLog.Data.categoryItemsChecked(category: categoryName, count: targets.count)
 
         let targetIDs = Set(targets.map(\.id))
         for index in items.indices where targetIDs.contains(items[index].id) {

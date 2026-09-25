@@ -31,14 +31,30 @@ struct EditItemSheet: View {
     let maxHeight: CGFloat
     let keyboardHeight: CGFloat
     let onClose: () -> Void
+    /// Eigene Speicher-Aktion (Artikel verwalten → Artikelstamm). nil = Listenartikel aktualisieren.
+    var onSave: ((ItemModel) -> Void)?
+    /// Link „Preisverlauf“ neben dem Preis (EditItem.dc.html). nil = kein Link.
+    var onPriceHistory: (() -> Void)?
+    /// Liefert die Unterzeile des Links („zuletzt 2,49 €“); läuft im Hintergrund, blockiert nichts.
+    var lastPriceText: (() async -> String?)?
+    /// Preis wurde beim Speichern geändert (> 0) → Preispunkt für den Verlauf anlegen. nil = nichts tun.
+    var onPriceChanged: ((ItemModel) -> Void)?
+    @State private var priceSubtitle = "Preise & Läden"
 
-    init(item: ItemModel, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat, onClose: @escaping () -> Void) {
+    init(item: ItemModel, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat,
+         onClose: @escaping () -> Void, onSave: ((ItemModel) -> Void)? = nil,
+         onPriceHistory: (() -> Void)? = nil, lastPriceText: (() async -> String?)? = nil,
+         onPriceChanged: ((ItemModel) -> Void)? = nil) {
         _formVM = StateObject(wrappedValue: ItemFormViewModel(item: item))
         self.item = item
         self.k = k
         self.maxHeight = maxHeight
         self.keyboardHeight = keyboardHeight
         self.onClose = onClose
+        self.onSave = onSave
+        self.onPriceHistory = onPriceHistory
+        self.lastPriceText = lastPriceText
+        self.onPriceChanged = onPriceChanged
     }
 
     private var bottomInset: CGFloat { keyboardHeight > 0 ? keyboardHeight + 14 : 34 }
@@ -82,7 +98,7 @@ struct EditItemSheet: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 FieldLabel(text: "Kategorie", k: k)
-                CategoryChipRow(k: k, selection: $formVM.category)
+                CategoryChipRow(k: k, selection: $formVM.category, categories: listViewModel.categoryOrder)
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -95,8 +111,41 @@ struct EditItemSheet: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 FieldLabel(text: "Preis", k: k)
-                SheetPriceField(k: k, price: $formVM.price, hasError: formVM.priceError != nil)
+                HStack(spacing: 10) {
+                    SheetPriceField(k: k, price: $formVM.price, hasError: formVM.priceError != nil)
+                    if let onPriceHistory { priceHistoryLink(action: onPriceHistory) }
+                }
             }
+        }
+    }
+
+    /// Link-Taste 52 hoch, Radius 16, field-Fläche: Trend-Icon, „Preisverlauf“ + Unterzeile, Chevron.
+    private func priceHistoryLink(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                SVGIcon(EKKIcon.trend, size: 20, color: k.accentText, lineWidth: 1.9)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Preisverlauf")
+                        .font(AppFont.dm(15, 600))
+                        .foregroundStyle(k.accentText)
+                    Text(priceSubtitle)
+                        .font(AppFont.dm(12, 400))
+                        .foregroundStyle(k.sub)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                SVGIcon(Icon.chevronRight, size: 16, color: k.sub, lineWidth: 2.2)
+            }
+            .padding(.horizontal, 15)                            // 1 Rahmen + 14 Padding
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+            .contentShape(RR(16))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Preisverlauf anzeigen")
+        .accessibilityValue(priceSubtitle)
+        .task {
+            if let lastPriceText, let text = await lastPriceText() { priceSubtitle = text }
         }
     }
 
@@ -108,7 +157,14 @@ struct EditItemSheet: View {
         formVM.validateAll()
         guard formVM.isValid else { return }
         let updated = formVM.toItemModel(existingId: item.id, listId: item.listId, ownerPublicId: item.ownerPublicId)
-        listViewModel.updateItem(updated)
+        logVoid(params: (action: "editItem.save", itemId: item.id, formPrice: formVM.price,
+                         oldPrice: item.price, newPrice: updated.price))
+        if updated.price > 0, abs(updated.price - item.price) > 0.0001 { onPriceChanged?(updated) }
+        if let onSave {
+            onSave(updated)
+        } else {
+            listViewModel.updateItem(updated)
+        }
         onClose()
     }
 }

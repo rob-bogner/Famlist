@@ -98,6 +98,31 @@ struct UserLog {
             log("👤 Benutzerprofil wird geladen...")
         }
 
+        /// Profil gespeichert (Benutzername / Name)
+        static func profileUpdated(username: String) {
+            log("👤 Profil gespeichert: @\(username)")
+        }
+
+        /// Profilfoto geändert
+        static func avatarUpdated() {
+            log("👤 Profilfoto aktualisiert")
+        }
+
+        /// Konto gelöscht (alle Daten entfernt)
+        static func accountDeleted() {
+            log("🗑️ Konto und alle Daten gelöscht")
+        }
+
+        /// Anmeldelink per E-Mail verschickt
+        static func magicLinkSent(email: String) {
+            log("✉️ Anmeldelink an \(email) gesendet")
+        }
+
+        /// Mit Apple angemeldet
+        static func appleSignIn() {
+            log("🍎 Mit Apple angemeldet")
+        }
+
         static func profileLoaded(publicId: String? = nil) {
             if let publicId = publicId {
                 log("✅ Benutzerprofil geladen (ID: \(publicId))")
@@ -279,6 +304,46 @@ struct UserLog {
             log("🗑️ Alle \(count) Artikel entfernt")
         }
 
+        /// Artikel aus dem Dock gelöscht, 5 s lang rückgängig machbar
+        static func itemsDeletedWithUndo(count: Int) {
+            log("🗑️ \(count) Artikel gelöscht (Rückgängig möglich)")
+        }
+
+        /// Löschung per „Rückgängig“ zurückgenommen
+        static func deletionUndone(count: Int) {
+            log("↩️ \(count) Artikel wiederhergestellt")
+        }
+
+        /// Liste in die Zwischenablage kopiert
+        static func listCopied(title: String, count: Int) {
+            log("📋 „\(title)“ kopiert (\(count) Artikel)")
+        }
+
+        /// Artikel aus dem Artikelstamm gelöscht (Artikel verwalten)
+        static func catalogItemDeleted(name: String) {
+            log("🗂️ „\(name)“ aus gespeicherten Artikeln entfernt")
+        }
+
+        /// Artikel im Artikelstamm geändert (Artikel verwalten)
+        static func catalogItemUpdated(name: String) {
+            log("🗂️ „\(name)“ gespeichert")
+        }
+
+        /// Barcode erkannt und Artikel gefunden
+        static func barcodeRecognized(name: String) {
+            log("📷 Barcode erkannt: „\(name)“")
+        }
+
+        /// Barcode unbekannt → Neuer Artikel
+        static func barcodeUnknown(code: String) {
+            log("📷 Unbekannter Barcode \(code) – neuer Artikel wird angelegt")
+        }
+
+        /// Sortierung der Liste geändert
+        static func sortChanged(to order: String) {
+            log("↕️ Sortierung: \(order)")
+        }
+
         /// Abgehakte Artikel entfernt
         /// ≤5 → Namen aufführen als Bullet-Liste, >5 → Anzahl
         static func checkedItemsDeleted(items: [(name: String, units: Int, measure: String)]) {
@@ -340,6 +405,11 @@ struct UserLog {
             log("✅ Alle \(count) Artikel als erledigt markiert")
         }
 
+        /// Letzter offener Artikel abgehakt → Einkauf erledigt
+        static func shoppingCompleted(list: String, count: Int) {
+            log("🛒 Einkauf „\(list)“ erledigt – alle \(count) Artikel abgehakt")
+        }
+
         static func allItemsUnchecked(count: Int) {
             log("⬜️ Alle \(count) Artikel zurückgesetzt")
         }
@@ -356,6 +426,26 @@ struct UserLog {
             log("✅ \(count) Kategorien geladen")
         }
 
+        /// Preise aus dem Kassenzettel gespeichert
+        static func pricesSaved(count: Int) {
+            log("🧾 \(count) Preise gespeichert")
+        }
+
+        /// Kassenzettel erkannt
+        static func receiptRecognized(lines: Int, store: String?) {
+            log("🧾 Kassenzettel erkannt: \(lines) Positionen\(store.map { " bei \($0)" } ?? "")")
+        }
+
+        /// Kategorie umbenannt / Icon geändert
+        static func categoryUpdated(name: String) {
+            log("🏷️ Kategorie „\(name)“ gespeichert")
+        }
+
+        /// Kategorie gelöscht (Artikel wandern nach „Sonstiges“)
+        static func categoryDeleted(name: String) {
+            log("🏷️ Kategorie „\(name)“ gelöscht – Artikel stehen jetzt unter „Sonstiges“")
+        }
+
         static func categoryCreated(name: String) {
             log("➕ Kategorie erstellt: \(name)")
         }
@@ -366,6 +456,21 @@ struct UserLog {
 
         static func listRenamed(oldName: String, newName: String) {
             log("✏️ Liste '\(oldName)' umbenannt zu '\(newName)'")
+        }
+
+        /// Mitglied aus einer Liste entfernt
+        static func memberRemoved(name: String) {
+            log("👥 \(name) aus der Liste entfernt")
+        }
+
+        /// Einladungslink kopiert
+        static func inviteLinkCopied(listName: String) {
+            log("🔗 Einladungslink für „\(listName)“ kopiert")
+        }
+
+        /// Geteilte Liste verlassen
+        static func listLeft(name: String) {
+            log("🚪 Liste „\(name)“ verlassen")
         }
 
         static func listDeleted(name: String) {

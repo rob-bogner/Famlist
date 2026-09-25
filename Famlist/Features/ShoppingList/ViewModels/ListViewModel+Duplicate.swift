@@ -26,15 +26,24 @@ extension ListViewModel {
 
     /// Duplicates the active list including all items and switches to the copy.
     func duplicateActiveList() {
-        guard let repo = listsRepository, let source = defaultList else { return }
-        let sourceItems = items
+        guard let source = defaultList else { return }
+        duplicateList(source, ownerId: source.ownerId)
+    }
+
+    /// Listen-Optionen „Duplizieren“: kopiert eine beliebige Liste samt Artikeln (alle offen) und wechselt dorthin.
+    /// - Parameter ownerId: Besitzer der Kopie (der aktuelle Nutzer – auch wenn die Quelle geteilt ist).
+    func duplicateList(_ source: ListModel, ownerId: UUID) {
+        guard let repo = listsRepository else { return }
+        let sourceItems = source.id == listId
+            ? items
+            : ((try? itemStore.fetchItems(listId: source.id))?.map { $0.toItemModel() } ?? [])
         let newTitle = "\(source.title) (Kopie)"
-        logVoid(params: (action: "duplicateActiveList", sourceId: source.id, itemCount: sourceItems.count))
+        logVoid(params: (action: "duplicateList", sourceId: source.id, itemCount: sourceItems.count))
 
         Task { [weak self] in
             guard let self else { return }
             do {
-                let row = try await repo.createList(for: source.ownerId, title: newTitle)
+                let row = try await repo.createList(for: ownerId, title: newTitle)
                 let copy = ListModel(
                     id: row.id, ownerId: row.owner_id, title: row.title,
                     isDefault: row.is_default,
@@ -46,10 +55,10 @@ extension ListViewModel {
                 UserLog.Data.listDuplicated(name: source.title, newName: copy.title, itemCount: sourceItems.count)
                 switchToList(copy)
                 await copyItems(sourceItems, into: copy.id)
-                logVoid(params: (action: "duplicateActiveList.success", newListId: copy.id))
+                logVoid(params: (action: "duplicateList.success", newListId: copy.id))
             } catch {
                 setError(error)
-                logVoid(params: (action: "duplicateActiveList.error", error: (error as NSError).localizedDescription))
+                logVoid(params: (action: "duplicateList.error", error: (error as NSError).localizedDescription))
             }
         }
     }

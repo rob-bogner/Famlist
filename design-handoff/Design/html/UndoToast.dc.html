@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gelöscht – Rückgängig</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" state="empty" hint-size="390px,844px"></dc-import>
+</div>
+
+<div role="status" aria-live="polite" style="position: absolute; left: 20px; right: 20px; bottom: 114px; height: 56px; box-sizing: border-box; padding: 0 8px 0 16px; border-radius: 20px; background: {{k.toast}}; border: 1px solid {{k.toastBorder}}; box-shadow: {{k.toastShadow}}; backdrop-filter: blur(24px) saturate(160%); display: flex; align-items: center; gap: 12px; overflow: hidden">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 11.2a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8L17.5 7M10 11v5M14 11v5"></path></svg>
+<span style="flex-grow: 1; font-size: 15px; font-weight: 500; color: #FFFFFF">1 Artikel gelöscht</span>
+<button style="height: 40px; padding: 0 14px; border: 0; border-radius: 14px; background: {{k.undoBg}}; color: {{k.undo}}; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{k.undo}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg>
+Rückgängig
+</button>
+<!-- Restzeit: blendet nach 5 s aus -->
+<div style="position: absolute; left: 0; bottom: 0; height: 3px; width: 62%; background: {{k.timer}}"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const k = dark ? {
+      toast: 'rgba(30,48,52,0.95)', toastBorder: 'rgba(255,255,255,0.12)', toastShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 16px 32px -14px rgba(0,0,0,0.8)',
+      icon: 'rgba(255,255,255,0.75)', undo: light, undoBg: rgba(accent, 0.16), timer: rgba(accent, 0.8)
+    } : {
+      toast: 'rgba(15,27,29,0.94)', toastBorder: 'rgba(255,255,255,0.1)', toastShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 32px -14px rgba(12,30,33,0.5)',
+      icon: 'rgba(255,255,255,0.75)', undo: light, undoBg: rgba(accent, 0.18), timer: rgba(accent, 0.9)
+    };
+    return { k, theme, accent };
+  }
+}
+</script>
+</body>
+</html>

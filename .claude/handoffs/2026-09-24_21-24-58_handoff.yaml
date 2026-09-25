@@ -1,0 +1,189 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-24T21:24:58+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: redesign-hybrid
+    head: 5f5174d
+    head_subject: 'FEAT(categories): Kategorien verwalten mit Ladenweg'
+    uncommitted_changes: true
+summary: |
+  Redesign „Hybrid“ (design-handoff/, One-Shot-Prompt aus ~/Downloads/Famlist-Design-Handoff) ist in den
+  Phasen 0–6 umgesetzt und je Phase committet auf Branch redesign-hybrid (77deb95, 4ab6882, 0343e29,
+  aa22cd8, bde932a, 5f5174d). Letzter voller Testlauf: 461 bestanden, 0 fehlgeschlagen.
+  Phase 7 (Kassenzettel und Preise) ist halb fertig: Dateien geschrieben, aber NICHT im Xcode-Projekt,
+  nicht gebaut, nicht getestet, nicht committet. Migrationen 008–012 sind auf Supabase angewandt.
+  Stand 5f5174d ist auf Roberts iPhone 16 Pro Max installiert (21:10). Nichts gepusht.
+goal: |
+  Alle Screens aus design-handoff/SPEC.md pixelgenau nach design-handoff/MyListUI übernehmen und die
+  fehlenden Funktionen bauen (Phasen 0–7 laut design-handoff/PROMPT.md und design-handoff/PLAN.md).
+  Robert-Vorgaben: „One Shot all phases“; ☰-Menü mit 6 Einträgen (plus Kassenzettel scannen, Import);
+  Anmeldung nur Magic Link + Sign in with Apple; keine Universal Links (Deep Link famlist://).
+  Fertig, wenn Phase 7 gebaut, getestet, gegen Design/png verglichen, in PLAN.md abgehakt und committet ist.
+current_state: |
+  Geprüft (git status 21:24): HEAD 5f5174d; untracked: Famlist/Features/Receipts/**,
+  Repositories/{Protocols,Implementations}/*PricePoints*, FamlistTests/ReceiptParserTests.swift,
+  FamlistTests/ReceiptFlowTests.swift, migrations/012_price_points.sql.
+  Geprüft: voller Testplan auf 5f5174d-Stand 461 passed / 0 failed; Device-Build + devicectl install ok,
+  Entitlement com.apple.developer.applesignin im signierten App-Bundle vorhanden.
+  Geprüft per SQL: price_points mit RLS (3 Policies), FK profile_id ON DELETE CASCADE.
+  Ungeprüft: die Phase-7-Dateien kompilieren (nie gebaut); die Parser-Tests laufen grün.
+completed_work:
+  - |
+    Phase 0/1: PLAN.md (Bestandsaufnahme, Mapping, Entscheidungen, Abweichungen §9), Dock, Overlays,
+    hybridHosted/hybridSheetMaxHeight, DesignListScreen (77deb95).
+  - |
+    Phase 2: Dock-Logik, ☰-Overlay, Sortieren pro Liste (+Manuell), Kopieren, Löschen mit Rückgängig (4ab6882).
+  - |
+    Phase 3: Artikel verwalten, Barcode-Scanner (VisionKit), eine Trefferliste, Migration 008 (0343e29).
+  - |
+    Phase 4: Listen-Optionen, Neue Liste, Mitglieder & Teilen, Einstellungen, Profil, Konto löschen,
+    Migration 009 (aa22cd8).
+  - |
+    Phase 5: SignInView (Magic Link, Apple), ProfileSetupView, AcceptInviteView, Migration 010 (bde932a).
+  - |
+    Phase 6: CategoryStore, Kategorien verwalten/bearbeiten, Migration 011; Favorit- und Kategorie-
+    Schreibaufträge serialisiert (Race gefunden durch Tests) (5f5174d).
+decisions:
+  - decision: |
+      Referenz-Screens laufen in der App mit hybridHosted=true (kein Beispiel-Hintergrund); Blur/Scrim vom Host.
+    rationale: |
+      Referenzcode 1:1 übernehmbar; Details PLAN.md §4 Punkt 12.
+  - decision: |
+      Manuelle Reihenfolge lokal (ManualOrderStore), Favorit in profiles.favorite_list_id,
+      Preise pro Nutzer mit store_name als Text (keine stores-Tabelle).
+    rationale: |
+      Weniger Sync-Konflikte bzw. einfacher; in PLAN.md §3/§9 dokumentiert.
+files:
+  - path: Famlist/Features/Receipts
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Phase 7: ReceiptParser, ReceiptItemMatcher, PriceStatistics, ReceiptTextRecognizer, ReceiptCamera,
+      PriceBook, ReceiptFlowViewModel, PriceHistoryViewModel, 4 Screens. Nicht in pbxproj.
+  - path: Famlist/Repositories/Protocols/PricePointsRepository.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Protokoll + InMemoryPricePointsRepository; Supabase-Umsetzung in Implementations/.
+  - path: Famlist/FamlistTests/ReceiptParserTests.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      4 Beispiel-Bons, Zuordnung, Statistik. Dazu ReceiptFlowTests.swift. Nie ausgeführt.
+  - path: migrations/012_price_points.sql
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Auf Supabase bereits angewandt; Datei noch nicht committet.
+  - path: design-handoff/PLAN.md
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet in 5f5174d; Phase 7 dort mit offenen Schritten 1–4 beschrieben.
+checks:
+  - method: |
+      Voller Testplan (Unit + UI) auf Stand 5f5174d.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF'
+    result: passed
+    detail: |
+      461 bestanden, 0 fehlgeschlagen (ca. 20:59).
+  - method: |
+      Build und Tests der Phase-7-Dateien.
+    command: null
+    result: not_run
+    detail: |
+      Dateien sind nicht im Xcode-Projekt eingetragen.
+  - method: |
+      Gerätetest durch Robert (Scanner, Apple-Login, Profilfoto, langer Druck, Ziehen).
+    command: null
+    result: not_run
+    detail: |
+      App am 24.09.2026 ~21:10 installiert; Rückmeldung fehlt.
+commands:
+  - command: |
+      ruby <scratchpad>/xadd.rb Famlist <dateien…>   # bzw. FamlistTests; --remove zum Entfernen
+    purpose: |
+      Neue Dateien in pbxproj eintragen (xcodeproj-Gem). Scratchpad ist flüchtig; Skript ggf. neu schreiben:
+      Gruppen nach Ordnern anlegen, target.source_build_phase.add_file_reference.
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'platform=iOS,id=00008140-000A64A201F1801C' -derivedDataPath <dd> -allowProvisioningUpdates && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <dd>/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone.
+  - command: |
+      xcrun simctl launch F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF com.roxo.famlist -uiTestFixture -designFixture -designSheet <name>
+    purpose: |
+      DEBUG-Pixelabgleich: Screen direkt öffnen (designSheet/designOverlay/designScreen, siehe ShoppingListView+DesignLaunch.swift, UITestFixture.swift).
+open_items:
+  - |
+    Phase 7 Schritte 1–4 laut design-handoff/PLAN.md (Chart-Parameter, PriceBook in FamlistApp,
+    Sheet-Fälle + ☰ „Kassenzettel scannen“ + onPriceHistory, eintragen/bauen/testen/Screenshots/commit).
+  - |
+    Robert: Apple-Provider im Supabase-Dashboard; URLs für Nutzungsbedingungen/Datenschutz; Push-Versand fehlt.
+  - |
+    Branch redesign-hybrid nicht gepusht; Merge nach main nur auf Roberts Wunsch.
+next_steps:
+  - step: |
+      Phase 7 fertigstellen (PLAN.md, Abschnitt Fortschritt → Phase 7, Punkte 1–4), danach voller Testplan und Commit.
+    why: |
+      Letzte offene Phase des Prompts; Code liegt schon, fehlt nur Einbindung und Prüfung.
+  - step: |
+      Robert nach Gerätetest fragen und ggf. auf dem Gerät gefundene Probleme beheben.
+    why: |
+      Kamera, Apple-Login und Gesten sind im Simulator nicht prüfbar.
+waiting_on:
+  - what: |
+      Gerätetest-Rückmeldung zum installierten Stand 5f5174d.
+    who: Robert
+    since: '2026-09-24'
+    detail: |
+      Beim ersten Start erscheint „Profil anlegen“ (Benutzername fehlt); Kategorien werden einmalig angelegt.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer/Entwickler; testet auf iPhone 16 Pro Max.
+    contact: null
+risks:
+  - type: assumption
+    detail: |
+      Ungeprüft: Phase-7-Code kompiliert und ReceiptParserTests sind grün. Prüfbar durch Eintragen und Testlauf.
+  - type: assumption
+    detail: |
+      Ungeprüft: Sign in with Apple funktioniert end-to-end (Supabase-Provider nicht geprüft). Prüfbar auf dem Gerät.
+  - type: risk
+    detail: |
+      Bestehende Konten ohne Benutzernamen landen einmalig auf „Profil anlegen“ (gewollt, aber sichtbar).
+resources:
+  - type: file
+    ref: design-handoff/PLAN.md
+    detail: |
+      Plan, Entscheidungen, Prüfstände je Phase (§8a), Abweichungen (§9), offene Phase-7-Schritte.
+  - type: file
+    ref: design-handoff/MyListUI/Screens/ReceiptScreens.swift
+    detail: |
+      Referenz für ReceiptCapture/Review/ShoppingDone; PriceHistory in ItemExtraScreens.swift.
+  - type: file
+    ref: .remember/today-2026-09-24.md
+    detail: |
+      Kurzprotokoll; Eintrag 20:54 „blocked crash“ ist überholt (behoben, danach 170/170 und 461 grün).
+next_session_prompt: |
+  Famlist (/Users/robertbogner/GitPrivate/Famlist), Branch redesign-hybrid, HEAD 5f5174d, nicht gepusht.
+  Redesign „Hybrid“ Phasen 0–6 sind committet und getestet (461/0). Lies design-handoff/PLAN.md und das
+  jüngste Handoff unter .claude/handoffs/. Setze Phase 7 fort: die untracked Dateien unter
+  Famlist/Features/Receipts, Repositories/*PricePoints* und FamlistTests/Receipt*Tests.swift existieren,
+  sind aber nicht im Xcode-Projekt. Schritte 1–4 aus PLAN.md (Chart mit echten Werten, PriceBook in
+  FamlistApp, ActiveListSheet-Fälle + ☰ „Kassenzettel scannen“ + Preisverlauf aus Artikel verwalten,
+  eintragen/bauen/testen/Screenshots gegen design-handoff/Design/png/, PLAN abhaken, committen mit
+  migrations/012). Frag Robert nach seinem Gerätetest des installierten Stands.

@@ -335,5 +335,12 @@ final class SupabaseListsRepository: ListsRepository {
         }
         return logResult(params: (listId: listId, count: result.count), result: result)
     }
-}
 
+    // MARK: - Einladung (Phase 5)
+
+    func invitePreview(listId: UUID) async throws -> InvitePreviewRow? {
+        struct Params: Encodable, Sendable { let p_list_id: UUID }
+        let rows: [InvitePreviewRow] = try await client.rpcRows("invite_preview", params: Params(p_list_id: listId))
+        return rows.first
+    }
+}

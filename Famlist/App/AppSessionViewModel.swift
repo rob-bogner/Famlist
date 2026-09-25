@@ -38,6 +38,14 @@ final class AppSessionViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var isRestoringSession: Bool = false
     @Published var currentProfile: Profile? = nil
+    /// Adresse, an die zuletzt ein Anmeldelink ging (Toast „Wir haben dir einen Link geschickt“).
+    @Published var magicLinkSentTo: String? = nil
+    /// Vorschau der offenen Einladung (Name des Einladenden, Liste, Zahlen) für „Einladung annehmen“.
+    @Published var invitePreview: InvitePreviewInfo? = nil
+    /// Letzter Schreibauftrag für den Favoriten; neue Aufträge warten darauf (Reihenfolge beim Server = Tipp-Reihenfolge).
+    internal var favoriteWriteTask: Task<Void, Never>? = nil
+    /// Profilfoto des angemeldeten Nutzers (aus dem privaten Bucket `avatars`, per signiertem Link geladen).
+    @Published var avatarImage: UIImage? = nil
     
     /// Current user's email address (if authenticated)
     var currentUserEmail: String? {
@@ -57,7 +65,7 @@ final class AppSessionViewModel: ObservableObject {
     /// Wird gesetzt, wenn ein Invite-Link geöffnet wird und der Nutzer eingeloggt ist.
     @Published var pendingInvite: InvitePayload? = nil
     /// Zwischenspeicher für Invites, die vor dem Login ankommen.
-    private var pendingInviteStorage: InvitePayload? = nil
+    internal var pendingInviteStorage: InvitePayload? = nil
 
     // MARK: - Lightweight Toasts
 
@@ -88,7 +96,7 @@ final class AppSessionViewModel: ObservableObject {
     internal let onboardingService: OnboardingService?
     internal let profiles: ProfilesRepository
     internal let lists: ListsRepository
-    private let listViewModel: ListViewModel
+    internal let listViewModel: ListViewModel
     
     // MARK: - Lifecycle
     
@@ -301,7 +309,7 @@ final class AppSessionViewModel: ObservableObject {
             }
 
             await markPhase(.defaultList)
-            let defaultList = try await lists.fetchDefaultList(for: me.id)
+            let defaultList = try await startList(for: me)
             listViewModel.configure(listsRepository: lists)
             // Membership-Observation starten — muss nach configure(listsRepository:) aufgerufen
             // werden, damit listsRepository gesetzt ist, sonst startet die Observation nicht (RC-5).

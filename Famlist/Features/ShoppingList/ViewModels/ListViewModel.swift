@@ -64,6 +64,28 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Active tab filter ("Alle · Offen · Erledigt"). Display-only state, never persisted or synced.
     @Published var itemFilter: ItemFilter = .all
 
+    /// Sortier-Einstellung der aktiven Liste (Dock „Sortieren“), lokal pro Liste gespeichert.
+    @Published var sortSettings: ListSortSettings = .default
+
+    /// Kategorien des Nutzers in Ladenweg-Reihenfolge (CategoryStore); steuert „Nach Kategorie“.
+    @Published var categoryOrder: [CategoryDefinition] = CategoryDefinition.defaults
+
+    /// Manuelle Reihenfolge der aktiven Liste (Artikel-IDs), lokal pro Liste gespeichert.
+    @Published var manualOrder: [String] = []
+
+    /// Mitglieder der aktiven Liste ohne Eigentümer (für ☰ „Mitglieder & Teilen“ und das Teilen-Sheet).
+    @Published var activeListMembers: [ListMember] = []
+
+    /// Gelöschte Artikel, die noch per „Rückgängig“ zurückgeholt werden können (Toast, 5 s).
+    @Published var pendingDeletion: PendingItemDeletion?
+
+    /// Neue ID, sobald der Nutzer den letzten offenen Artikel abhakt (→ „Einkauf erledigt“ anbieten).
+    /// Nur Nutzeraktionen setzen sie – kein Listenwechsel, kein Realtime-Update anderer Mitglieder.
+    @Published var shoppingCompletedEvent: UUID?
+
+    /// Läuft ab, sobald der Rückgängig-Toast ausgeblendet wird; schreibt dann die Löschung.
+    internal var pendingDeletionTask: Task<Void, Never>?
+
     // MARK: - Pagination State (FAM-40)
 
     /// True when more remote pages might be available for the current list.
@@ -91,7 +113,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     internal var syncEngine: (any SyncEngineProtocol)?
     
     /// Current list context; switching replaces the observed stream of items.
-    private(set) var listId: UUID
+    private(set) var listId: UUID {
+        didSet { loadListPreferences() }
+    }
     
     /// Optional ListsRepository used to resolve default list (injected post-init to keep compatibility).
     internal var listsRepository: ListsRepository?
@@ -182,6 +206,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         self.repository = repository // Store the data source implementation.
         self.itemStore = itemStore
         self.listStore = listStore
+        loadListPreferences()
         if startImmediately {
             startObserving() // Begin listening for item updates only when requested.
         }
@@ -222,6 +247,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Pass `SyncEngine` in production, `PreviewSyncEngine` in previews.
     func configure(syncEngine: any SyncEngineProtocol) {
         self.syncEngine = syncEngine
+        // Offline-First: nach jedem lokalen Schreiben sofort aus SwiftData neu lesen (nicht erst nach dem Netzwerk).
+        syncEngine.setLocalWriteObserver { [weak self] in self?.refreshItemsFromStore() }
     }
 
     /// Injects the personal item catalog repository for smart search support.
@@ -251,6 +278,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Switches the active list; cancels current observation and starts a new one for the new list id.
     func switchList(to newId: UUID) {
         guard newId != self.listId else { return }
+        commitPendingDeletion()              // offene Rückgängig-Löschung der alten Liste festschreiben
         observeTask?.cancel()
         self.listId = newId
         self.items = []
@@ -265,6 +293,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Clears view model state in response to sign-out.
     func clearForSignOut() {
+        commitPendingDeletion()
         observeTask?.cancel()
         observeTask = nil
         membershipTask?.cancel()
@@ -280,6 +309,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         // Reset pagination state and clear persisted cursor/timestamp.
         PaginationCursor.clear(listId: listId)
         clearLastSyncTimestamp()
+        (catalogRepository as? OfflineItemCatalogRepository)?.clearLocalData()   // Artikelstamm des Kontos
         currentCursor = nil
         hasMoreItems = true
         isLoadingNextPage = false
@@ -293,18 +323,24 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     // MARK: - CRUD Operations
     
     /// Adds a new item after normalizing fields (e.g., measure, listId).
-    func addItem(_ item: ItemModel) {
+    /// - Parameter barcode: EAN/UPC aus dem Barcode-Scanner; wird im Artikelstamm gemerkt.
+    func addItem(_ item: ItemModel, barcode: String? = nil) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
 
         // Duplikat-Check: existiert bereits ein ungehacktes Item mit gleichem Namen?
         if let existingIndex = items.firstIndex(where: {
-            $0.name.lowercased() == normalized.name.lowercased() && !$0.isChecked
+            CatalogOperation.key($0.name) == CatalogOperation.key(normalized.name) && !$0.isChecked
         }) {
             var incremented = items[existingIndex]
             let oldUnits = incremented.units
             incremented.units = oldUnits + 1
+            // Fehlende Angaben aus dem neu hinzugefügten Artikel übernehmen (z. B. Foto aus dem
+            // Artikelstamm). Vorhandene Werte bleiben unverändert.
+            incremented = ListViewModel.fillingMissingFields(of: incremented, from: normalized)
+            logVoid(params: (action: "addItem.increment", itemId: incremented.id, from: oldUnits,
+                             to: incremented.units, gotImage: items[existingIndex].imageData == nil && incremented.imageData != nil))
             UserLog.Data.itemCountIncremented(
                 name: incremented.name,
                 from: oldUnits,
@@ -331,7 +367,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         // ownerPublicId is resolved by the repository from the active auth session,
         // so we pass an empty placeholder here to avoid a nil-guard race condition.
         if let catalogRepo = catalogRepository {
-            let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
+            var catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
+            catalogEntry.barcode = barcode
             Task {
                 do {
                     try await catalogRepo.save(catalogEntry)
@@ -359,7 +396,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Updates an existing item after normalizing fields.
     /// - Parameter suppressUserLog: Pass `true` when the caller has already logged the action
     ///   (e.g. `toggleItemChecked`, increment path in `addItem`) to avoid duplicate logs.
-    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false, suppressUserLog: Bool = false) {
+    /// - Parameter updateCatalog: false, wenn die Änderung aus dem Artikelstamm kommt (dort schon gespeichert).
+    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false, suppressUserLog: Bool = false,
+                    updateCatalog: Bool = true) {
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
@@ -389,7 +428,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }
 
         // Update personal item catalog (fire-and-forget; keeps catalog in sync with edits)
-        if let catalogRepo = catalogRepository {
+        if updateCatalog, let catalogRepo = catalogRepository {
             let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
             Task {
                 do {
@@ -400,6 +439,11 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
                 }
             }
         }
+
+        // Offline-First: Bearbeitung sofort in `items` sichtbar machen. Vorher kam die Änderung erst
+        // nach `syncEngine.updateItem` (inkl. Netzwerk-Queue) über refreshItemsFromStore an – bei langsamer
+        // oder fehlender Verbindung zeigte „Artikel bearbeiten“ deshalb weiter den alten Preis (0,00).
+        applyLocalEdit(normalized)
 
         // Track animation state if requested.
         if trackPendingAnimation {
@@ -424,6 +468,23 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }
     }
     
+    /// Übernimmt die bearbeitbaren Felder sofort in `items`; CRDT-/Sync-Felder bleiben unverändert.
+    private func applyLocalEdit(_ edited: ItemModel) {
+        guard let index = items.firstIndex(where: { $0.id == edited.id }) else { return }
+        var current = items[index]
+        current.name = edited.name
+        current.units = edited.units
+        current.measure = edited.measure
+        current.price = edited.price
+        current.isChecked = edited.isChecked
+        current.isUnavailable = edited.isUnavailable
+        current.category = edited.category
+        current.productDescription = edited.productDescription
+        current.brand = edited.brand
+        current.imageData = edited.imageData
+        items[index] = current
+    }
+
     /// Deletes an item by id within the current list.
     /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
@@ -478,6 +539,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
     func toggleItemChecked(_ item: ItemModel) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        let wasComplete = isShoppingComplete
+        defer { noteCheckChange(wasComplete: wasComplete) }
 
         // Optimistic update: toggle in-place, then re-sort according to currentSortOrder.
         // This prevents "double jump" and keeps the order consistent with any remote snapshots.

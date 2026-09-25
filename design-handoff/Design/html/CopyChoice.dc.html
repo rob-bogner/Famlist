@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>In Zwischenablage kopieren</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif; color: {{k.text}}">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" state="default" hint-size="390px,844px"></dc-import>
+</div>
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: {{k.scrim}}; backdrop-filter: blur(2px)"></div>
+<!-- Dock liegt über der Abdunkelung, aktiver Knopf markiert -->
+<div style="position: absolute; left: 20px; bottom: 34px; width: 350px; height: 64px">
+<dc-import name="Dock" theme="{{theme}}" accent="{{accent}}" active="copy" pill="open" hint-size="350px,64px"></dc-import>
+</div>
+<div role="menu" aria-label="In Zwischenablage kopieren" style="position: absolute; left: 20px; bottom: 108px; width: 270px; box-sizing: border-box; padding: 6px; border-radius: 24px; background: {{k.menu}}; border: 1px solid {{k.menuBorder}}; box-shadow: {{k.menuShadow}}; backdrop-filter: blur(24px) saturate(160%); display: flex; flex-direction: column">
+<span style="padding: 10px 12px 6px 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: {{k.sub}}">In Zwischenablage kopieren</span>
+<button role="menuitemradio" aria-checked="false" style="min-height: 56px; box-sizing: border-box; padding: 8px 12px; border: 0; border-radius: 16px; background: {{k.hi}}; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; color: {{k.text}}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.accentText}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6a1 1 0 0 1 1 1V6a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1zM16 5h1.5A1.5 1.5 0 0 1 19 6.5v13a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5v-13A1.5 1.5 0 0 1 6.5 5H8"></path></svg>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 600">Offene Artikel</span><span style="font-size: 12px; color: {{k.sub}}">Was noch gekauft werden muss</span></span>
+<span style="font-size: 13px; font-weight: 600; color: {{k.sub}}">1</span>
+</button>
+<button role="menuitemradio" aria-checked="false" style="min-height: 56px; box-sizing: border-box; padding: 8px 12px; border: 0; border-radius: 16px; background: transparent; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; color: {{k.text}}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.accentText}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 7 17l-5-5M22 10l-7.5 7.5L13 16"></path></svg>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 500">Alle Artikel</span><span style="font-size: 12px; color: {{k.sub}}">Inklusive abgehakter</span></span>
+<span style="font-size: 13px; font-weight: 600; color: {{k.sub}}">1</span>
+</button>
+<div style="height: 1px; margin: 4px 10px; background: {{k.line}}"></div>
+<div style="margin: 4px 6px 6px 6px; padding: 10px 12px; border-radius: 14px; background: {{k.field}}; border: 1px solid {{k.fieldBorder}}; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: {{k.sub}}">Vorschau</span><span style="font-size: 14px; line-height: 1.45; white-space: pre-line">My List
+• Butter · 1 Packung</span></div>
+<!-- Zeiger zum Knopf -->
+<div style="position: absolute; left: 155.67px; bottom: -7px; width: 14px; height: 14px; transform: rotate(45deg); background: {{k.menuSolid}}; border-right: 1px solid {{k.menuBorder}}; border-bottom: 1px solid {{k.menuBorder}}"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const k = dark ? {
+      text: '#EAF5F6', sub: '#93ADB1', scrim: 'rgba(0,0,0,0.45)', line: 'rgba(255,255,255,0.08)',
+      menu: 'rgba(20,34,37,0.96)', menuSolid: '#142225', menuBorder: 'rgba(255,255,255,0.1)', menuShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 48px -16px rgba(0,0,0,0.8)',
+      accentText: light, hi: rgba(accent, 0.14), field: 'rgba(255,255,255,0.05)', fieldBorder: 'rgba(255,255,255,0.08)',
+      danger: '#FF7A7E', dangerSoft: 'rgba(255,122,126,0.1)', toggleOn: 'linear-gradient(180deg, ' + light + ', ' + accent + ')',
+      toast: 'rgba(30,48,52,0.95)', toastBorder: 'rgba(255,255,255,0.12)', toastShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 16px 32px -14px rgba(0,0,0,0.8)',
+      okBg: rgba(accent, 0.18)
+    } : {
+      text: '#0F2528', sub: '#5F7579', scrim: 'rgba(8,24,27,0.18)', line: '#EDF1F2',
+      menu: 'rgba(255,255,255,0.97)', menuSolid: '#FFFFFF', menuBorder: 'rgba(15,37,40,0.08)', menuShadow: '0 24px 48px -16px rgba(12,40,44,0.35)',
+      accentText: deep, hi: rgba(accent, 0.08), field: '#F4F7F7', fieldBorder: '#E6EDEE',
+      danger: '#C8363B', dangerSoft: 'rgba(200,54,59,0.07)', toggleOn: 'linear-gradient(180deg, ' + accent + ', ' + deep + ')',
+      toast: 'rgba(15,27,29,0.94)', toastBorder: 'rgba(255,255,255,0.1)', toastShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 32px -14px rgba(12,30,33,0.5)',
+      okBg: rgba(accent, 0.22)
+    };
+    return { k, theme, accent, light };
+  }
+}
+</script>
+</body>
+</html>

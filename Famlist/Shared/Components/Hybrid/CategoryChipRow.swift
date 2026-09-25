@@ -8,7 +8,7 @@
  - Kategorie-Chips der Hybrid-Sheets: Höhe 42, Pille, Abstand 8, horizontal scrollbar bis zur Sheet-Kante.
 
  🔰 Notes for Beginners:
- - Zeigt alle ItemCategory-Werte in Supermarkt-Reihenfolge (das Design zeigt nur drei Beispiele).
+ - Zeigt die Kategorien des Nutzers in Ladenweg-Reihenfolge (das Design zeigt nur drei Beispiele).
  - Gewählter Chip: Rahmen 1,5 in Akzent + Akzent-Tönung. Das Design zeigt keinen gewählten Zustand;
    die Werte folgen dem fokussierten Feld (ring / ringSoft).
  - Erneutes Tippen auf den gewählten Chip hebt die Auswahl auf (wie bisher im CategoryPickerRow).
@@ -26,11 +26,13 @@ struct CategoryChipRow: View {
     let k: SheetTheme
     /// Rohwert der Kategorie wie im ItemFormViewModel ("" = keine Auswahl).
     @Binding var selection: String
+    /// Kategorien des Nutzers in Ladenweg-Reihenfolge (Kategorien verwalten).
+    var categories: [CategoryDefinition] = CategoryDefinition.defaults
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(ItemCategory.displayOrder) { category in
+                ForEach(categories) { category in
                     chip(for: category)
                 }
             }
@@ -42,12 +44,12 @@ struct CategoryChipRow: View {
         .frame(height: 42)
     }
 
-    private func chip(for category: ItemCategory) -> some View {
-        let isSelected = selection == category.rawValue
+    private func chip(for category: CategoryDefinition) -> some View {
+        let isSelected = selection == category.name
         return Button(action: { toggle(category) }) {
             HStack(spacing: 8) {
                 SVGIcon(category.svgIcon, size: 18, color: k.accentText, lineWidth: 1.9)
-                Text(category.rawValue)
+                Text(category.name)
                     .font(AppFont.dm(15, isSelected ? 600 : 500))
                     .foregroundStyle(k.text)
                     .lineLimit(1)
@@ -62,15 +64,15 @@ struct CategoryChipRow: View {
             .fixedSize()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Kategorie \(category.rawValue)")
+        .accessibilityLabel("Kategorie \(category.name)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    private func toggle(_ category: ItemCategory) {
-        if selection == category.rawValue {
+    private func toggle(_ category: CategoryDefinition) {
+        if selection == category.name {
             selection = ""
         } else {
-            selection = category.rawValue
+            selection = category.name
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
     }

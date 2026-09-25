@@ -6,12 +6,13 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Fortschritts-Karte (Glas-Karte): Padding 18, Radius 28, Inhalt 16 auseinander:
-   Icon-Reihe mit Prozentzahl → Balken 10 → Chips „n offen“ / „n erledigt“.
+   Icon-Reihe mit Prozentzahl → Balken 10 (ohne Chips, Handoff 24.09.2026).
 
  🔰 Notes for Beginners:
  - Das Design zeigt nur 0 % (Punkt am Anfang) und 100 % (voller Balken).
    Zwischenwerte füllen den Balken anteilig mit demselben Verlauf.
- - „1 von 1 Artikel“ / „0 von 3 Artikeln“: Singular nur bei genau einem Artikel insgesamt.
+ - Texte wie im Design: „0 von 0 Artikeln“, „0 von 1 Artikeln“, „1 von 1 Artikel“.
+   Singular nur, wenn genau ein Artikel da ist und er erledigt ist.
 
  📝 Last Change:
  - Aus ListScreen des Design-Pakets MyListUI übernommen, an echte Zahlen angebunden.
@@ -25,6 +26,8 @@ struct ProgressHero: View {
     let t: ListTheme
     let checked: Int
     let total: Int
+    /// Summe Preis × Menge; nil blendet die Zeile aus (Einstellung „Preise anzeigen“ aus).
+    var totalPrice: Double? = nil
 
     private var fraction: Double { total == 0 ? 0 : Double(checked) / Double(total) }
     private var percent: Int { Int((fraction * 100).rounded()) }
@@ -33,16 +36,13 @@ struct ProgressHero: View {
         VStack(alignment: .leading, spacing: 16) {
             headerRow
             ProgressTrack(fraction: fraction)
-            HStack(spacing: 8) {
-                HeroChip(text: "\(total - checked) offen")
-                HeroChip(text: "\(checked) erledigt")
-            }
         }
         .padding(18)
         .background { decoration }
         .background(CSSBox(shape: RR(28), paint: t.heroBg, shadows: t.heroShadow))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Fortschritt: \(checked) von \(total) Artikeln erledigt, \(percent) Prozent")
+        .accessibilityLabel("Fortschritt: \(checked) von \(total) Artikeln erledigt, \(percent) Prozent"
+                            + (totalPrice.map { ", \(PriceDisplaySetting.euro($0)) gesamt" } ?? ""))
     }
 
     private var headerRow: some View {
@@ -61,9 +61,19 @@ struct ProgressHero: View {
                 Text("Fortschritt")
                     .font(AppFont.dm(13, 600))
                     .foregroundStyle(Color.rgba(255, 255, 255, 0.86))
-                Text("\(checked) von \(total) \(total == 1 ? "Artikel" : "Artikeln")")
+                Text("\(checked) von \(total) \(checked == 1 && total == 1 ? "Artikel" : "Artikeln")")
                     .font(AppFont.dm(16, 600))
                     .foregroundStyle(Color.white)
+                if let totalPrice {
+                    // Hybrid.dc.html: margin-top 1, DM Sans 13/500, weiß 0,86
+                    Text("\(PriceDisplaySetting.euro(totalPrice)) gesamt")
+                        .font(AppFont.dm(13, 500))
+                        .foregroundStyle(Color.rgba(255, 255, 255, 0.86))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.top, 1)
+                        .contentTransition(.numericText())
+                }
             }
 
             Spacer(minLength: 0)
@@ -126,6 +136,8 @@ private struct ProgressTrack: View {
                         .background(CSSBox(shape: Circle(), paint: .color(.white),
                                            shadows: [.drop(0, 0, 10, 3, .rgba(255, 255, 255, 0.75))]))
                         .padding(.leading, 1)
+                        .padding(.top, 1)                  // left 1, top 1, 8 × 8
+                        .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -140,21 +152,5 @@ private struct ProgressTrack: View {
     }
 }
 
-/// Glas-Chip unter dem Balken („1 offen“ / „0 erledigt“).
-private struct HeroChip: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(AppFont.dm(13, 600))
-            .foregroundStyle(Color.white)
-            .padding(.vertical, 7)     // 6 padding + 1 border (content-box)
-            .padding(.horizontal, 13)  // 12 padding + 1 border
-            .background(CSSBox(shape: Pill, paint: .color(.rgba(255, 255, 255, 0.18)),
-                               border: 1, borderColor: .rgba(255, 255, 255, 0.32),
-                               shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.4))]))
-    }
-}
-
 #Preview("0 %") { ProgressHero(t: ListTheme(.light), checked: 0, total: 1).padding(20) }
-#Preview("60 % Dark") { ProgressHero(t: ListTheme(.dark), checked: 3, total: 5).padding(20).background(Color.hex("#071012")) }
+#Preview("60 % Dark") { ProgressHero(t: ListTheme(.dark), checked: 3, total: 5, totalPrice: 12.47).padding(20).background(Color.hex("#071012")) }

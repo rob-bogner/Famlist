@@ -27,27 +27,34 @@ import SwiftUI // Import SwiftUI to define views.
 struct RootView: View { // SwiftUI View declaration.
     @EnvironmentObject var session: AppSessionViewModel // Session VM controlling auth status.
     @EnvironmentObject var listViewModel: ListViewModel // List VM used by ShoppingListView subtree.
+    /// Einstellungen → Erscheinungsbild (System / Hell / Dunkel), gilt app-weit.
+    @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
 
     var body: some View { // Root view body.
         Group { // Conditional container to switch views without rebuilding hierarchy unnecessarily.
             if session.isRestoringSession { // If session is restoring, show a loading indicator.
-                ProgressView() // Show a spinner while restoring session.
+                SplashView() // Splash „Tomaten“: identisch mit dem Launch Screen + Spinner.
                     .accessibilityLabel(Text(String(localized: "auth.session.restoring"))) // Accessibility label for loading.
+                    .transition(.opacity)
             } else if session.isAuthenticated { // If authenticated and not restoring, show the main app UI.
-                ShoppingListView() // Main list UI.
-                    .environmentObject(listViewModel) // Ensure list VM is available to descendants.
+                if session.needsProfileSetup {
+                    ProfileSetupView() // Schritt 2 von 2: Benutzername fehlt noch.
+                } else if let invite = session.pendingInvite {
+                    AcceptInviteView(invite: invite) // Einladungslink: annehmen oder ablehnen.
+                } else {
+                    ShoppingListView() // Main list UI.
+                        .environmentObject(listViewModel) // Ensure list VM is available to descendants.
+                }
             } else { // Not authenticated and not restoring -> present sign-in form.
-                AuthView() // Email magic-link sign-in screen.
+                SignInView() // E-Mail-Anmeldelink oder „Mit Apple anmelden“.
             }
         }
+        .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
+        .animation(.easeInOut(duration: 0.3), value: session.isRestoringSession)
+        .animation(.easeInOut(duration: 0.3), value: session.needsProfileSetup)
+        .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.listId)
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
-        }
-        .sheet(item: $session.pendingInvite) { invite in
-            InviteAcceptView(invite: invite)
-                .environmentObject(session)
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
         }
     }
 }
@@ -62,6 +69,8 @@ struct RootView: View { // SwiftUI View declaration.
     return RootView() // Render RootView for preview.
         .environmentObject(sessionVM) // Inject session VM.
         .environmentObject(listVM) // Inject list VM.
+        .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
 }
 
 #Preview("Authenticated") {
@@ -75,4 +84,6 @@ struct RootView: View { // SwiftUI View declaration.
     return RootView() // Render RootView for preview.
         .environmentObject(sessionVM) // Inject session VM.
         .environmentObject(listVM) // Inject list VM.
+        .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
 }

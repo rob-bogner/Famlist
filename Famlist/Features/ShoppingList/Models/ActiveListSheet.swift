@@ -13,7 +13,7 @@
  - Die Werte tragen nur Wert-Typen (ItemModel), keine SwiftData-Modelle.
 
  📝 Last Change:
- - Sheets „Meine Listen“ und Listen-Name ergänzt.
+ - Kassenzettel (Aufnehmen, Prüfen, Einkauf erledigt) und Preisverlauf ergänzt (Phase 7).
  ------------------------------------------------------------------------
  */
 
@@ -22,20 +22,91 @@ import Foundation
 /// The Hybrid sheet currently presented above the shopping list.
 enum ActiveListSheet: Equatable, Identifiable {
     case search
-    case newItem(initialName: String)
+    case newItem(initialName: String, barcode: String? = nil)
+    /// Barcode-Scanner (Vollbild, Kamera).
+    case barcode
+    /// Artikel verwalten (Artikelstamm).
+    case manageItems
+    /// Artikel des Artikelstamms bearbeiten (aus „Artikel verwalten“).
+    case editCatalog(ItemCatalogEntry)
     case edit(ItemModel)
     case productImage(ItemModel)
     case lists
     case listName(ListNameMode)
+    /// Neue Liste (mit „Als Favorit“).
+    case createList
+    /// Listen-Optionen (langer Druck in „Meine Listen“); liegt über „Meine Listen“.
+    case listOptions(ListModel)
+    /// Mitglieder & Teilen einer Liste.
+    case shareMembers(ListModel)
+    case settings
+    case editProfile
+    /// „Konto löschen?“; liegt über den Einstellungen.
+    case deleteAccount
+    /// Kategorien verwalten (Ladenweg).
+    case manageCategories
+    /// Kategorie bearbeiten (nil = neue Kategorie); liegt über „Kategorien verwalten“.
+    case editCategory(CategoryDefinition?)
+    /// Kassenzettel aufnehmen (Vollbild, Kamera).
+    case receiptCapture
+    /// Kassenzettel prüfen (Zuordnung, „Preise speichern“).
+    case receiptReview
+    /// Einkauf erledigt (Vollbild).
+    case shoppingDone
+    /// Preisverlauf eines Artikels; liegt über „Artikel verwalten“.
+    case priceHistory(ItemCatalogEntry)
+    /// Preisverlauf eines Listenartikels; liegt über „Artikel bearbeiten“ (Link neben dem Preis).
+    case itemPriceHistory(ItemModel)
+    /// Einkauf erledigt, noch ohne Kassenzettel (erscheint, sobald alles abgehakt ist).
+    case shoppingDoneOffer
 
     var id: String {
         switch self {
         case .search: return "search"
         case .newItem: return "newItem"
+        case .barcode: return "barcode"
+        case .manageItems: return "manageItems"
+        case .editCatalog(let entry): return "editCatalog-\(entry.id)"
         case .edit(let item): return "edit-\(item.id)"
         case .productImage(let item): return "image-\(item.id)"
         case .lists: return "lists"
         case .listName: return "listName"
+        case .createList: return "createList"
+        case .listOptions(let list): return "listOptions-\(list.id)"
+        case .shareMembers(let list): return "shareMembers-\(list.id)"
+        case .settings: return "settings"
+        case .editProfile: return "editProfile"
+        case .deleteAccount: return "deleteAccount"
+        case .manageCategories: return "manageCategories"
+        case .editCategory(let category): return "editCategory-\(category?.id.uuidString ?? "new")"
+        case .receiptCapture: return "receiptCapture"
+        case .receiptReview: return "receiptReview"
+        case .shoppingDone: return "shoppingDone"
+        case .priceHistory(let entry): return "priceHistory-\(entry.id)"
+        case .itemPriceHistory(let item): return "itemPriceHistory-\(item.id)"
+        case .shoppingDoneOffer: return "shoppingDoneOffer"
+        }
+    }
+}
+
+extension ActiveListSheet {
+    /// Sheet, das weichgezeichnet UNTER diesem liegt (Design: ListOptions/CreateList über MyLists, DeleteAccount über Settings).
+    var baseSheet: ActiveListSheet? {
+        switch self {
+        case .listOptions, .createList, .listName: return .lists
+        case .deleteAccount: return .settings
+        case .editCategory: return .manageCategories
+        case .priceHistory: return .manageItems
+        case .itemPriceHistory(let item): return .edit(item)
+        default: return nil
+        }
+    }
+
+    /// Unterliegende Sheets als Menü/Dialog (skaliert ein) statt als Sheet von unten.
+    var isPopup: Bool {
+        switch self {
+        case .listOptions, .deleteAccount: return true
+        default: return false
         }
     }
 }

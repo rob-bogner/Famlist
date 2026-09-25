@@ -5,18 +5,15 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Hybrid-Sheet „Meine Listen“ (Listenverwaltung), Designhöhe 790:
-   Titelzeile → 20 → „n Listen“ 13/600 in Großbuchstaben → 10 → Listen-Karten (Abstand 10)
-   → Button „Neue Liste erstellen“ unten 34.
+ - Hybrid-Sheet „Meine Listen“ (Designhöhe 790): Anzahl, Listen-Karten, „Neue Liste erstellen“.
 
  🔰 Notes for Beginners:
- - Tippen auf eine Karte wechselt die Liste und schließt das Sheet.
- - Umbenennen / Löschen / Als Standard setzen: Wischen oder lange drücken (SwipeableListCard).
- - Löschen und Standard setzen nur für eigene Listen; Löschen immer mit Rückfrage.
- - Offline-First: alle Änderungen laufen über ListViewModel, nie direkt ans Repository.
+ - Vorlage: MyListsScreen in design-handoff/MyListUI/Screens/MyListsScreen.swift (MyLists.dc.html).
+ - Tippen wechselt die Liste. Langer Druck öffnet die Listen-Optionen (Umbenennen, Duplizieren,
+   Favorit, Mitglieder & Teilen, Löschen/Verlassen). Alle Listen-Aktionen gibt es NUR dort (SPEC §3.6).
 
  📝 Last Change:
- - Ersetzt ListsOverviewView (System-Sheet) durch das Design aus MyListUI 2 („MyListsScreen“).
+ - Wischaktionen und Kontextmenü entfernt, langer Druck → Listen-Optionen (Handoff 24.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -31,10 +28,7 @@ struct MyListsSheet: View {
     let maxHeight: CGFloat
     let onClose: () -> Void
     var onCreate: () -> Void = {}
-    var onRename: (ListModel) -> Void = { _ in }
-
-    @State private var openRow: OpenSwipeRow?
-    @State private var listToDelete: ListModel?
+    var onOptions: (ListModel) -> Void = { _ in }
 
     private var lists: [ListModel] { listViewModel.allLists }
     private var currentUserId: UUID? { session.currentProfile?.id }
@@ -58,13 +52,6 @@ struct MyListsSheet: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 34)
             }
-        }
-        .confirmationDialog(deleteTitle, isPresented: deleteBinding, titleVisibility: .visible,
-                            presenting: listToDelete) { list in
-            Button("Löschen", role: .destructive) { delete(list) }
-            Button("Abbrechen", role: .cancel) {}
-        } message: { _ in
-            Text("Die Liste und alle ihre Artikel werden gelöscht.")
         }
         .onAppear(perform: loadLists)
     }
@@ -91,27 +78,24 @@ struct MyListsSheet: View {
 
     private func card(for list: ListModel) -> some View {
         let isOwner = list.ownerId == currentUserId
-        return SwipeableListCard(
-            k: k, list: list,
-            itemCount: listViewModel.listItemCounts[list.id] ?? 0,
-            isSelected: list.id == listViewModel.listId,
-            isOwner: isOwner,
-            isShared: currentUserId != nil && !isOwner,
-            openRow: $openRow,
-            onSelect: { select(list) },
-            onRename: { onRename(list) },
-            onDelete: { listToDelete = list },
-            onSetDefault: { listViewModel.setDefaultList(list) }
-        )
+        let isActive = list.id == listViewModel.listId
+        return ListSummaryCard(k: k, list: list,
+                               itemCount: listViewModel.listItemCounts[list.id] ?? 0,
+                               isSelected: isActive,
+                               isShared: currentUserId != nil && !isOwner,
+                               isFavorite: session.isFavorite(list))
+            .onTapGesture { select(list) }
+            .onLongPressGesture(minimumDuration: 0.45) {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                onOptions(list)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(isActive ? "\(list.title), aktive Liste" : "\(list.title) öffnen")
+            .accessibilityAction(named: "Listen-Optionen") { onOptions(list) }
     }
 
     // MARK: - Actions
-
-    private var deleteTitle: String { "„\(listToDelete?.title ?? "")“ löschen?" }
-
-    private var deleteBinding: Binding<Bool> {
-        Binding(get: { listToDelete != nil }, set: { if !$0 { listToDelete = nil } })
-    }
 
     private func loadLists() {
         if let ownerId = currentUserId ?? listViewModel.defaultList?.ownerId {
@@ -122,13 +106,6 @@ struct MyListsSheet: View {
     private func select(_ list: ListModel) {
         if list.id != listViewModel.listId { listViewModel.switchToList(list) }
         onClose()
-    }
-
-    private func delete(_ list: ListModel) {
-        let wasActive = list.id == listViewModel.listId
-        withAnimation(.easeInOut(duration: 0.3)) { listViewModel.deleteList(list) }
-        listToDelete = nil
-        if wasActive { onClose() }
     }
 }
 

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kontext-Menü</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif; color: {{k.text}}">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" hint-size="390px,844px"></dc-import>
+</div>
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: {{k.scrim}}; backdrop-filter: blur(2px)"></div>
+
+<!-- aktiver Menü-Knopf bleibt über der Abdunkelung sichtbar -->
+<div style="position: absolute; right: 20px; top: 62px; width: 44px; height: 44px; box-sizing: border-box; border-radius: 50%; background: {{k.btn}}; border: 1.5px solid {{k.btnRing}}; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.accentText}}" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</div>
+
+<nav aria-label="Listen-Menü" style="position: absolute; right: 20px; top: 116px; width: 286px; box-sizing: border-box; padding: 6px; border-radius: 24px; background: {{k.menu}}; border: 1px solid {{k.menuBorder}}; box-shadow: {{k.menuShadow}}; backdrop-filter: blur(24px) saturate(160%); display: flex; flex-direction: column">
+<div style="padding: 10px 12px 8px 12px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: {{k.sub}}">Aktuelle Liste</span>
+<span style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600">My List</span>
+</div>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+<div style="height: 1px; margin: 4px 10px; background: {{k.line}}"></div>
+<sc-for list="{{g.items}}" as="it" hint-placeholder-count="2">
+<button style="height: 48px; box-sizing: border-box; padding: 0 12px; border: 0; border-radius: 16px; background: {{it.rowBg}}; display: flex; align-items: center; gap: 12px; cursor: pointer; color: {{it.color}}; text-align: left">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{it.iconColor}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{it.icon}}"></path></svg>
+<span style="flex-grow: 1; font-size: 15px; font-weight: 500">{{it.label}}</span>
+<span style="font-size: 13px; font-weight: 500; color: {{k.sub}}">{{it.meta}}</span>
+</button>
+</sc-for>
+</sc-for>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const k = dark ? {
+      text: '#EAF5F6', sub: '#93ADB1', scrim: 'rgba(0,0,0,0.45)', line: 'rgba(255,255,255,0.08)',
+      menu: 'rgba(20,34,37,0.94)', menuBorder: 'rgba(255,255,255,0.1)', menuShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 48px -16px rgba(0,0,0,0.8)',
+      btn: 'rgba(20,34,37,0.94)', btnRing: rgba(accent, 0.6), accentText: light, danger: '#FF7A7E', hi: rgba(accent, 0.14)
+    } : {
+      text: '#0F2528', sub: '#5F7579', scrim: 'rgba(8,24,27,0.18)', line: '#EDF1F2',
+      menu: 'rgba(255,255,255,0.95)', menuBorder: 'rgba(15,37,40,0.08)', menuShadow: '0 24px 48px -16px rgba(12,40,44,0.35)',
+      btn: '#FFFFFF', btnRing: rgba(accent, 0.55), accentText: deep, danger: '#C8363B', hi: rgba(accent, 0.08)
+    };
+    const row = (label, icon, meta, opts) => {
+      const o = opts || {};
+      return {
+        label, icon, meta: meta || '',
+        color: o.danger ? k.danger : k.text,
+        iconColor: o.danger ? k.danger : k.accentText,
+        rowBg: o.highlight ? k.hi : 'transparent'
+      };
+    };
+    const groups = [
+      { items: [
+        row('Mitglieder & Teilen', 'M12.5 8a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zM2.5 19c1-3 3.5-4.5 6.5-4.5s5.5 1.5 6.5 4.5M19.5 9a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM16 14.6c2.6.2 4.6 1.6 5.5 4.4', '1', { highlight: true })
+      ] },
+      { items: [
+        row('Artikel verwalten', 'M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9'),
+        row('Kategorien verwalten', 'M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM8 7.2v1.6')
+      ] },
+      { items: [
+        row('Einstellungen', 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1')
+      ] }
+    ];
+    return { k, groups, theme, accent };
+  }
+}
+</script>
+</body>
+</html>

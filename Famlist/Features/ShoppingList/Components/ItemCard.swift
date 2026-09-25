@@ -38,6 +38,8 @@ struct ItemCard: View {
     var onRetry: (() -> Void)? = nil
 
     @State private var showRetryConfirmation = false
+    /// Einstellungen → Liste → „Preise anzeigen“.
+    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
 
     private var dimmed: Bool { item.isChecked || item.isUnavailable }
 
@@ -100,6 +102,22 @@ struct ItemCard: View {
                 .padding(.horizontal, 11)
                 .background(CSSBox(shape: Pill, paint: .color(t.chipBg), shadows: t.chipInset))
                 .fixedSize()
+            if showPrices && item.price > 0 {
+                // Hybrid.dc.html: Gesamtpreis Outfit 15/600 t.text, 10 neben dem Mengen-Chip (8 + 2);
+                // dahinter Einzelpreis „je 1,49 €“ DM Sans 12/500 t.sub, Abstand 6.
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(PriceDisplaySetting.euro(PriceDisplaySetting.lineTotal(item)))
+                        .font(AppFont.outfit(15, 600))
+                        .foregroundStyle(t.text)
+                    Text("je \(PriceDisplaySetting.euro(item.price))")
+                        .font(AppFont.dm(12, 500))
+                        .foregroundStyle(t.sub)
+                }
+                .padding(.leading, 2)
+                .fixedSize()
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Gesamt \(PriceDisplaySetting.euro(PriceDisplaySetting.lineTotal(item))), je \(PriceDisplaySetting.euro(item.price))")
+            }
             if item.isUnavailable {
                 Text("Nicht verfügbar")
                     .font(AppFont.dm(13, 600))

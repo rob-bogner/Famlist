@@ -26,6 +26,9 @@ import SwiftUI
 @MainActor
 enum UITestFixture {
     static let isActive = ProcessInfo.processInfo.arguments.contains("-uiTestFixture")
+    private static let args = ProcessInfo.processInfo.arguments
+    /// `-designFixture`: Beispieldaten exakt wie in den Design-Artboards (für den Pixel-Abgleich).
+    static let designMode = args.contains("-designFixture")
 
     static let listVM: ListViewModel = {
         let repo = PreviewItemsRepository()
@@ -34,6 +37,7 @@ enum UITestFixture {
                                itemStore: SwiftDataItemStore(context: container.mainContext),
                                listStore: SwiftDataListStore(context: container.mainContext))
         vm.configure(syncEngine: PreviewSyncEngine(repository: repo))
+        vm.configure(catalogRepository: PreviewItemCatalogRepository())
         let active = ListModel(id: vm.listId, ownerId: ownerId, title: "My List", isDefault: true,
                                createdAt: Date(), updatedAt: Date())
         vm.defaultList = active
@@ -42,12 +46,69 @@ enum UITestFixture {
                                  createdAt: Date(), updatedAt: Date()),
                        ListModel(id: UUID(), ownerId: UUID(), title: "WG-Einkauf", isDefault: false,
                                  createdAt: Date(), updatedAt: Date())]
-        for (name, category) in sampleItems {
-            vm.addItem(ItemModel(name: name, units: 1, category: category.rawValue, listId: vm.listId.uuidString))
+        if designMode {
+            // Design-Abgleich (Hybrid.dc.html): genau ein Artikel „Butter · 1 Packung“ in Milchprodukte.
+            // -designEmpty: leere Liste, -designChecked: Butter abgehakt.
+            if !args.contains("-designEmpty") {
+                vm.addItem(ItemModel(name: "Butter", units: 1, measure: "pack", isChecked: args.contains("-designChecked"),
+                                     category: ItemCategory.sonstiges.rawValue, listId: vm.listId.uuidString))
+            }
+        } else {
+            for (name, category) in sampleItems {
+                // `-fixtureLargeImage`: „Brot“ mit großem Foto (~600 KB Base64 wie auf dem Gerät).
+                let image = name == "Brot" && args.contains("-fixtureLargeImage") ? largeImageBase64 : nil
+                vm.addItem(ItemModel(imageData: image, name: name, units: 1, category: category.rawValue,
+                                     listId: vm.listId.uuidString))
+            }
         }
         vm.listItemCounts = Dictionary(uniqueKeysWithValues: vm.allLists.map { ($0.id, $0.id == vm.listId ? sampleItems.count : 2) })
         return vm
     }()
+
+    /// Startscreen der Fixture. `-designScreen signIn|profileSetup|acceptInvite` zeigt einen Einstiegs-Screen
+    /// statt der Liste (Pixel-Abgleich gegen design-handoff/Design/png).
+    @ViewBuilder
+    static var rootView: some View {
+        switch UserDefaults.standard.string(forKey: "designScreen") {
+        case "signIn": SignInView()
+        case "profileSetup": ProfileSetupView()
+        case "acceptInvite":
+            let _ = setDesignInvitePreview()
+            AcceptInviteView(invite: .init(listId: designInviteId, listTitle: "Edeka", inviterPublicId: "Rob"))
+        default: ShoppingListView()
+        }
+    }
+
+    private static let designInviteId = UUID()
+
+    /// Rauschbild 1200 × 1200 als JPEG → Base64 (groß wie ein Kamerafoto im Artikelstamm).
+    private static var largeImageBase64: String {
+        let size = CGSize(width: 1200, height: 1200)
+        let image = UIGraphicsImageRenderer(size: size).image { ctx in
+            for y in stride(from: 0, to: 1200, by: 6) {
+                for x in stride(from: 0, to: 1200, by: 6) {
+                    UIColor(hue: CGFloat((x * 7 + y * 13) % 360) / 360, saturation: 0.6, brightness: 0.9, alpha: 1).setFill()
+                    ctx.fill(CGRect(x: x, y: y, width: 6, height: 6))
+                }
+            }
+        }
+        return image.jpegData(compressionQuality: 0.9)?.base64EncodedString() ?? ""
+    }
+
+    /// Kategorien im Speicher (Standard-Kategorien, kein Supabase).
+    static let categoryStore = CategoryStore(repository: InMemoryCategoryDefinitionsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
+
+    /// Preise im Speicher; im Design-Modus die Werte aus PriceHistory.dc.html („Butter“, Mär … Sep).
+    static let priceBook: PriceBook = designMode
+        ? .designSample
+        : PriceBook(repository: InMemoryPricePointsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
+
+    /// Beispielwerte aus AcceptInvite.dc.html, bevor der Screen erscheint.
+    private static func setDesignInvitePreview() {
+        guard session.invitePreview?.listId != designInviteId else { return }
+        session.invitePreview = InvitePreviewInfo(listId: designInviteId, inviterName: "Rob", listName: "Edeka",
+                                                  itemCount: 4, memberCount: 1)
+    }
 
     /// Owner of "My List" and "Drogerie"; "WG-Einkauf" belongs to someone else (shared list).
     private static let ownerId = UUID()

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kassenzettel fotografieren</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button,input{font-family:inherit}
+input::placeholder{color:inherit;opacity:0.75}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 40%, #2B3A3C 0%, #121A1B 70%, #0A0F10 100%); font-family: 'DM Sans', system-ui, sans-serif; color: {{k.text}}">
+<div style="position: absolute; left: 20px; right: 20px; top: 62px; display: flex; align-items: center; justify-content: space-between">
+<button aria-label="Schließen" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+<span style="padding: 8px 14px; border-radius: 18px; background: rgba(0,0,0,0.35); color: #FFFFFF; font-size: 14px; font-weight: 600">Kassenzettel</span>
+<button aria-label="Licht" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg></button>
+</div>
+<span style="position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25)">Kamerabild</span><div style="position: absolute; left: 70px; top: 140px; width: 250px; height: 470px">
+<span style="position: absolute; width: 34px; height: 34px; border-color: #FFFFFF; border-style: solid; left: 0; top: 0; border-width: 4px 0 0 4px; border-top-left-radius: 18px"></span>
+<span style="position: absolute; width: 34px; height: 34px; border-color: #FFFFFF; border-style: solid; right: 0; top: 0; border-width: 4px 4px 0 0; border-top-right-radius: 18px"></span>
+<span style="position: absolute; width: 34px; height: 34px; border-color: #FFFFFF; border-style: solid; left: 0; bottom: 0; border-width: 0 0 4px 4px; border-bottom-left-radius: 18px"></span>
+<span style="position: absolute; width: 34px; height: 34px; border-color: #FFFFFF; border-style: solid; right: 0; bottom: 0; border-width: 0 4px 4px 0; border-bottom-right-radius: 18px"></span>
+<div style="position: absolute; left: 22px; top: 22px; right: 22px; bottom: 22px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px dashed rgba(255,255,255,0.3)"></div>
+</div>
+<span style="position: absolute; left: 30px; right: 30px; top: 630px; text-align: center; font-size: 14px; line-height: 1.45; color: rgba(255,255,255,0.85)">Ganzen Bon ins Bild · bei langen Bons in mehreren Teilen</span>
+<div style="position: absolute; left: 0; right: 0; bottom: 48px; display: flex; align-items: center; justify-content: space-around; padding: 0 40px">
+<button aria-label="Aus Fotos wählen" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 16l4.5-4.5 4 4 3-3L20 17"></path><path d="M16 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"></path></svg></button>
+<button aria-label="Foto aufnehmen" style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.9); background: transparent; padding: 5px; box-sizing: border-box; cursor: pointer"><span style="display: block; width: 100%; height: 100%; border-radius: 50%; background: #FFFFFF"></span></button>
+<button aria-label="Seiten" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer ; color: #FFFFFF; font-size: 14px; font-weight: 700">0</button>
+</div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const k = dark ? {
+      sheet: 'linear-gradient(180deg, #102022 0%, #0A1416 100%)', sheetBorder: 'rgba(255,255,255,0.08)', sheetShadow: '0 -24px 50px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+      text: '#EAF5F6', sub: '#93ADB1', close: 'rgba(255,255,255,0.08)', icon: '#D3E6E8', grabber: 'rgba(255,255,255,0.18)', scrim: 'rgba(0,0,0,0)',
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', cardBorder: 'rgba(255,255,255,0.08)', cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px -14px rgba(0,0,0,0.7)',
+      field: 'rgba(255,255,255,0.05)', fieldBorder: 'rgba(255,255,255,0.09)', fieldFocus: 'rgba(255,255,255,0.06)', ring: rgba(accent, 0.7), ringSoft: rgba(accent, 0.12),
+      line: 'rgba(255,255,255,0.08)', accentText: light, danger: '#FF7A7E', dangerSoft: 'rgba(255,122,126,0.12)',
+      toggleOn: 'linear-gradient(180deg, ' + light + ', ' + accent + ')', toggleOff: 'rgba(255,255,255,0.14)',
+      segBg: 'rgba(255,255,255,0.06)', segOn: 'rgba(255,255,255,0.14)', segOnText: '#FFFFFF',
+      menu: 'rgba(20,34,37,0.97)', menuBorder: 'rgba(255,255,255,0.1)', menuShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 48px -16px rgba(0,0,0,0.8)',
+      tile: 'linear-gradient(150deg, ' + rgba(accent, 0.24) + ', ' + rgba(accent, 0.06) + ')', dashed: rgba(accent, 0.45), appleBg: '#FFFFFF', appleText: '#000000', ok: '#4FD1A1', chip: rgba(accent, 0.16), ringBase: '#132426', warn: '#F2B24C', warnBorder: 'rgba(242,178,76,0.5)', okSoft: 'rgba(79,209,161,0.14)', dotFill: '#0A1416', areaFill: rgba(accent, 0.16)
+    } : {
+      sheet: '#FFFFFF', sheetBorder: 'rgba(255,255,255,0)', sheetShadow: '0 -20px 40px -20px rgba(8,30,33,0.35)',
+      text: '#0F2528', sub: '#5F7579', close: '#F1F5F5', icon: '#1E3A3E', grabber: '#D5DEDF', scrim: 'rgba(0,0,0,0)',
+      card: '#FFFFFF', cardBorder: '#EDF2F2', cardShadow: '0 1px 2px rgba(12,40,44,0.05), 0 10px 22px -14px rgba(12,40,44,0.22)',
+      field: '#F4F7F7', fieldBorder: '#E6EDEE', fieldFocus: '#FFFFFF', ring: rgba(accent, 0.75), ringSoft: rgba(accent, 0.12),
+      line: '#EDF1F2', accentText: deep, danger: '#C8363B', dangerSoft: 'rgba(200,54,59,0.08)',
+      toggleOn: 'linear-gradient(180deg, ' + accent + ', ' + deep + ')', toggleOff: '#DCE5E6',
+      segBg: '#F1F5F5', segOn: '#FFFFFF', segOnText: '#0F2528',
+      menu: 'rgba(255,255,255,0.97)', menuBorder: 'rgba(15,37,40,0.08)', menuShadow: '0 24px 48px -16px rgba(12,40,44,0.35)',
+      tile: 'linear-gradient(150deg, #F4F8F8, #E2ECED)', dashed: rgba(accent, 0.45), appleBg: '#000000', appleText: '#FFFFFF', ok: '#1F8A5B', chip: rgba(accent, 0.1), ringBase: '#FFFFFF', warn: '#B7791F', warnBorder: 'rgba(183,121,31,0.45)', okSoft: 'rgba(31,138,91,0.1)', dotFill: '#FFFFFF', areaFill: rgba(accent, 0.12)
+    };
+    const cta = dark
+      ? { bg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', text: '#04262A', shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 20px -12px ' + rgba(accent, 0.6) }
+      : { bg: 'linear-gradient(180deg, ' + accent + ' 0%, ' + deep + ' 100%)', text: '#FFFFFF', shadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 6px rgba(0,30,34,0.2), 0 14px 26px -12px ' + rgba(accent, 0.8) };
+    const bg = dark ? 'radial-gradient(120% 60% at 50% 100%, ' + rgba(accent, 0.1) + ', rgba(0,0,0,0) 60%), #071012' : '#FFFFFF';
+    const heroBg = 'linear-gradient(150deg, ' + light + ' 0%, ' + accent + ' 42%, ' + (dark ? mix(accent, 0, 0.6) : deep) + ' 100%)';
+    return { k, cta, theme, accent, bg, heroBg, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
+  }
+}
+</script>
+</body>
+</html>

@@ -31,9 +31,13 @@ struct NewItemSheet: View {
     let maxHeight: CGFloat
     let keyboardHeight: CGFloat
     let onClose: () -> Void
+    /// Unbekannter Barcode aus dem Scanner: wird mit dem neuen Artikel im Artikelstamm gespeichert.
+    let barcode: String?
 
-    init(initialName: String, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat, onClose: @escaping () -> Void) {
+    init(initialName: String, barcode: String? = nil, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat,
+         onClose: @escaping () -> Void) {
         _formVM = StateObject(wrappedValue: ItemFormViewModel(initialName: initialName))
+        self.barcode = barcode
         self.k = k
         self.maxHeight = maxHeight
         self.keyboardHeight = keyboardHeight
@@ -89,7 +93,7 @@ struct NewItemSheet: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 FieldLabel(text: "Kategorie", k: k)
-                CategoryChipRow(k: k, selection: $formVM.category)
+                CategoryChipRow(k: k, selection: $formVM.category, categories: listViewModel.categoryOrder)
             }
         }
     }
@@ -103,7 +107,7 @@ struct NewItemSheet: View {
         attemptedSubmit = true
         formVM.validateAll()
         guard formVM.isValid else { return }
-        listViewModel.addItem(formVM.toItemModel())
+        listViewModel.addItem(formVM.toItemModel(), barcode: barcode)
         onClose()
     }
 }

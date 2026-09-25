@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>My List – Hybrid</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button,input{font-family:inherit}
+input::placeholder{color:inherit;opacity:1}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif; background: {{t.bg}}; color: {{t.text}}">
+
+<sc-if value="{{dark}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: -120px; top: 360px; width: 320px; height: 320px; border-radius: 50%; background: {{glowA}}; filter: blur(70px); pointer-events: none"></div>
+<div style="position: absolute; right: -140px; top: 560px; width: 300px; height: 300px; border-radius: 50%; background: rgba(90,120,255,0.14); filter: blur(80px); pointer-events: none"></div>
+</sc-if>
+
+<div style="position: relative; padding: 62px 20px 0 20px; display: flex; flex-direction: column; gap: 18px">
+
+<!-- top row -->
+<div style="display: flex; align-items: center; justify-content: space-between">
+<button aria-label="Liste wechseln" style="border: 0; background: transparent; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; cursor: pointer; color: {{t.text}}">
+<span style="display: flex; align-items: center; gap: 6px; font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -0.02em">My List<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.sub}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></span>
+</button>
+<div style="display: flex; gap: 10px">
+<button aria-label="Mehr" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid {{t.roundBorder}}; background: {{t.round}}; box-shadow: {{t.roundShadow}}; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.icon}}" stroke-width="1.9" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+</button>
+</div>
+</div>
+
+<!-- search -->
+<label style="height: 52px; box-sizing: border-box; padding: 0 8px 0 18px; border-radius: 26px; background: {{t.search}}; border: 1px solid {{t.searchBorder}}; box-shadow: {{t.searchShadow}}; display: flex; align-items: center; gap: 12px; color: {{t.sub}}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.sub}}" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4 4"></path></svg>
+<input type="text" aria-label="Artikel suchen oder hinzufügen" placeholder="Artikel suchen oder hinzufügen" style="flex-grow: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: 15px; color: {{t.text}}">
+<span style="width: 38px; height: 38px; border-radius: 50%; background: {{t.scanBg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{accentText}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M8 9v6M11 9v6M14 9v6M17 9v6"></path></svg>
+</span>
+</label>
+
+<!-- progress hero (glass) -->
+<div style="position: relative; padding: 18px; border-radius: 28px; background: {{heroBg}}; box-shadow: {{heroShadow}}; overflow: hidden; display: flex; flex-direction: column; gap: 16px">
+<div style="position: absolute; left: -70px; top: -110px; width: 300px; height: 220px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,0.45), rgba(255,255,255,0)); pointer-events: none"></div>
+<div style="position: absolute; right: -50px; bottom: -80px; width: 200px; height: 200px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.16); pointer-events: none"></div>
+<div style="position: absolute; left: 0; right: 0; top: 0; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.7), rgba(255,255,255,0)); pointer-events: none"></div>
+<div style="position: relative; display: flex; align-items: center; gap: 14px">
+<div style="width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(160deg, rgba(255,255,255,0.4), rgba(255,255,255,0.14)); border: 1px solid rgba(255,255,255,0.45); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 18px -6px rgba(0,30,34,0.45); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-1.6 8.2a2 2 0 0 1-2 1.8H6.6a2 2 0 0 1-2-1.8L3 10z"></path><path d="M8 10l3-6M16 10l-3-6M9 14v3M12 14v3M15 14v3"></path></svg>
+</div>
+<div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
+<span style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.86)">Fortschritt</span>
+<span style="font-size: 16px; font-weight: 600; color: #ffffff">{{p.label}}</span>
+</div>
+<span style="font-family: 'Outfit', sans-serif; font-size: 34px; font-weight: 600; color: #ffffff; letter-spacing: -0.03em; text-shadow: 0 2px 12px rgba(0,30,34,0.25)">{{p.pct}}<span style="font-size: 17px; opacity: 0.8"> %</span></span>
+</div>
+<div style="position: relative; height: 10px; border-radius: 999px; background: rgba(0,35,40,0.3); box-shadow: inset 0 1px 3px rgba(0,25,28,0.5), 0 1px 0 rgba(255,255,255,0.25)">
+<sc-if value="{{checked}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, rgba(255,255,255,0.75), #ffffff); box-shadow: 0 0 12px 2px rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,40,45,0.15)"></div>
+</sc-if>
+<sc-if value="{{unchecked}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 1px; top: 1px; width: 8px; height: 8px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 10px 3px rgba(255,255,255,0.75)"></div>
+</sc-if>
+</div>
+</div>
+
+<!-- tabs -->
+<div role="tablist" style="display: flex; gap: 26px; border-bottom: 1px solid {{t.line}}; padding: 0 4px">
+<button role="tab" aria-selected="true" style="position: relative; border: 0; background: transparent; padding: 10px 0 12px 0; font-size: 15px; font-weight: 600; color: {{accentText}}; cursor: pointer">Alle<span style="position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: {{accent}}; box-shadow: 0 0 12px {{accentGlow}}"></span></button>
+<button role="tab" aria-selected="false" style="border: 0; background: transparent; padding: 10px 0 12px 0; font-size: 15px; font-weight: 500; color: {{t.sub}}; cursor: pointer">Offen</button>
+<button role="tab" aria-selected="false" style="border: 0; background: transparent; padding: 10px 0 12px 0; font-size: 15px; font-weight: 500; color: {{t.sub}}; cursor: pointer">Erledigt</button>
+</div>
+
+<sc-if value="{{hasItems}}" hint-placeholder-val="{{ true }}">
+<!-- section -->
+<sc-if value="{{checked}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; margin-top: -2px; min-height: 38px">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 30px; height: 30px; border-radius: 10px; background: {{t.search}}; border: 1px solid {{t.searchBorder}}; box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{t.sub}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</div>
+<h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 600; color: {{t.sub}}">Abgehakte Artikel</h2>
+<span style="font-size: 14px; font-weight: 600; color: {{t.sub}}">1</span>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{unchecked}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; justify-content: space-between; margin-top: -2px">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 30px; height: 30px; border-radius: 10px; background: {{chipGrad}}; box-shadow: {{chipShadow}}; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="8" cy="8" r="1.4"></circle></svg>
+</div>
+<h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 600; color: {{t.text}}">Sonstiges</h2>
+<span style="font-size: 14px; font-weight: 600; color: {{t.sub}}">1</span>
+</div>
+<button style="border: 0; background: transparent; padding: 10px 0 10px 10px; display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; color: {{accentText}}; cursor: pointer">Alle abhaken<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{accentText}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+</sc-if>
+
+<!-- item card + swipe actions -->
+<div style="position: relative; margin-top: -6px; height: 94px">
+<sc-if value="{{checked}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; right: 0; top: 0; width: 76px; height: 94px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+<button aria-label="Zurück auf die Liste" style="position: relative; width: 56px; height: 56px; border-radius: 50%; border: 0; padding: 0; background: radial-gradient(circle at 32% 24%, #FFE38A 0%, #F5B521 55%, #C98A06 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -3px 8px rgba(120,70,0,0.25), 0 10px 20px -8px rgba(201,138,6,0.7); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden">
+<span style="position: absolute; left: 10px; right: 10px; top: 3px; height: 20px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0)); pointer-events: none"></span>
+<svg style="position: relative" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A3300" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg>
+</button>
+<span style="font-size: 12px; font-weight: 600; color: {{t.sub}}">Zurück</span>
+</div>
+</sc-if>
+<sc-if value="{{swipe}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; right: 0; top: 0; height: 94px; display: flex; align-items: center; gap: 8px">
+<sc-for list="{{actions}}" as="a" hint-placeholder-count="3">
+<div style="width: 76px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<button aria-label="{{a.label}}" style="position: relative; width: 64px; height: 52px; border-radius: 20px; border: 0; padding: 0; background: {{a.bg}}; box-shadow: {{a.shadow}}; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden">
+<span style="position: absolute; left: 8px; right: 8px; top: 2px; height: 20px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0)); pointer-events: none"></span>
+<svg style="position: relative" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="{{a.icon}}"></path></svg>
+</button>
+<span style="font-size: 12px; font-weight: 600; color: {{t.sub}}; white-space: nowrap">{{a.label}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<div style="position: absolute; left: {{cardLeft}}; top: 0; width: 350px; height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; overflow: hidden">
+<div style="position: relative; width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{itemOpacity}}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; align-items: flex-start; opacity: {{itemOpacity}}">
+<span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}; text-decoration: {{strike}}">Butter</span>
+<span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}">1 Packung</span>
+</div>
+<sc-if value="{{checked}}" hint-placeholder-val="{{ false }}">
+<button aria-label="Butter ist abgehakt" style="position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; background: {{fabBg}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 14px -6px {{accentGlow}}; padding: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</button>
+</sc-if>
+<sc-if value="{{unchecked}}" hint-placeholder-val="{{ true }}">
+<button aria-label="Butter abhaken" style="width: 44px; height: 44px; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}; padding: 0; cursor: pointer; flex-shrink: 0"></button>
+</sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<div style="margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 72px; height: 72px; border-radius: 24px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center">
+<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-1.6 8.2a2 2 0 0 1-2 1.8H6.6a2 2 0 0 1-2-1.8L3 10z"></path><path d="M8 10l3-6M16 10l-3-6"></path></svg>
+</div>
+<span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">Die Liste ist leer</span>
+<span style="max-width: 250px; font-size: 14px; line-height: 1.45; color: {{t.sub}}">Füge Artikel über die Suche oder das Plus hinzu.</span>
+</div>
+</sc-if>
+</div>
+
+<!-- Dock: eigene Komponente (Dock.dc.html) -->
+<div style="position: absolute; left: 20px; bottom: 34px; width: 350px; height: 64px">
+<dc-import name="Dock" theme="{{theme}}" accent="{{accent}}" pill="{{pillState}}" active="none" hint-size="350px,64px"></dc-import>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","empty"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const dark = (this.props.theme ?? 'light') === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const deeper = mix(accent, 0, 0.6);
+
+    const t = dark ? {
+      bg: 'radial-gradient(120% 60% at 50% 100%, ' + rgba(accent, 0.1) + ', rgba(0,0,0,0) 60%), #071012',
+      text: '#EAF5F6', sub: '#93ADB1', icon: '#D3E6E8', line: 'rgba(255,255,255,0.08)',
+      round: 'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04))', roundBorder: 'rgba(255,255,255,0.1)', roundShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 20px -8px rgba(0,0,0,0.7)',
+      search: 'rgba(255,255,255,0.05)', searchBorder: 'rgba(255,255,255,0.08)', searchShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)', scanBg: rgba(accent, 0.16),
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))', cardBorder: 'rgba(255,255,255,0.09)',
+      cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 18px 36px -12px rgba(0,0,0,0.7)',
+      thumb: 'linear-gradient(150deg, ' + rgba(accent, 0.22) + ', ' + rgba(accent, 0.06) + ')', thumbShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -8px 16px rgba(0,0,0,0.25)', thumbIcon: light,
+      chipBg: rgba(accent, 0.16), chipInset: 'inset 0 0 0 1px ' + rgba(accent, 0.3),
+      checkRing: rgba(accent, 0.55), checkBg: 'rgba(0,0,0,0.25)', checkShadow: 'inset 0 2px 4px rgba(0,0,0,0.5), 0 0 14px ' + rgba(accent, 0.25),
+      nav: 'rgba(22,36,39,0.78)', navBorder: 'rgba(255,255,255,0.1)', navShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 44px -12px rgba(0,0,0,0.85)',
+      navActive: 'linear-gradient(180deg, ' + rgba(accent, 0.55) + ', ' + rgba(accent, 0.22) + ')', navActiveBorder: 'rgba(255,255,255,0.28)', navActiveText: '#FFFFFF', navActiveShadow: 'inset 0 -1px 0 rgba(0,0,0,0.2), 0 0 18px ' + rgba(accent, 0.35),
+      navIcon: '#D3E6E8'
+    } : {
+      bg: '#FFFFFF',
+      text: '#0F2528', sub: '#5F7579', icon: '#1E3A3E', line: '#EDF1F2',
+      round: '#FFFFFF', roundBorder: '#E7EEEF', roundShadow: '0 1px 2px rgba(12,40,44,0.05), 0 8px 18px -8px rgba(12,40,44,0.18)',
+      search: '#F4F7F7', searchBorder: '#EAF0F0', searchShadow: 'inset 0 1px 2px rgba(12,40,44,0.04)', scanBg: '#FFFFFF',
+      card: '#FFFFFF', cardBorder: '#EDF2F2',
+      cardShadow: '0 1px 2px rgba(12,40,44,0.05), 0 14px 32px -14px rgba(12,40,44,0.22)',
+      thumb: 'linear-gradient(150deg, #F2F7F7, #E4EEEF)', thumbShadow: 'inset 0 1px 0 #ffffff, inset 0 -4px 10px rgba(12,40,44,0.05)', thumbIcon: '#7D9498',
+      chipBg: rgba(accent, 0.1), chipInset: 'inset 0 0 0 1px ' + rgba(accent, 0.16),
+      checkRing: '#CFDCDE', checkBg: '#FFFFFF', checkShadow: 'inset 0 2px 3px rgba(12,40,44,0.08)',
+      nav: 'rgba(15,27,29,0.84)', navBorder: 'rgba(255,255,255,0.1)', navShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 36px -12px rgba(12,30,33,0.5)',
+      navActive: 'linear-gradient(180deg, ' + rgba(accent, 0.55) + ', ' + rgba(accent, 0.22) + ')', navActiveBorder: 'rgba(255,255,255,0.28)', navActiveText: '#FFFFFF', navActiveShadow: 'inset 0 -1px 0 rgba(0,0,0,0.2), 0 0 18px ' + rgba(accent, 0.35),
+      navIcon: '#D3E6E8'
+    };
+
+    const state = this.props.state ?? 'default';
+    const checked = state === 'checked';
+    const swipe = state === 'swipe';
+    const glass = (c1, c2, c3, glow) => ({
+      bg: 'radial-gradient(circle at 32% 20%, ' + c1 + ' 0%, ' + c2 + ' 55%, ' + c3 + ' 100%)',
+      shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -3px 8px rgba(0,0,0,0.18), 0 10px 20px -8px ' + glow
+    });
+    const actions = [
+      Object.assign({ label: 'Löschen', icon: 'M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 11.2a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8L17.5 7' }, glass('#FF8A80', '#E5484D', '#B4232A', 'rgba(229,72,77,0.6)')),
+      Object.assign({ label: 'Bearbeiten', icon: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4' }, glass('#8DB8FF', '#3B7BF6', '#1F4FC0', 'rgba(59,123,246,0.6)')),
+      Object.assign({ label: 'Nicht verfügbar', icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12h8' }, glass('#FFC08A', '#F08A2C', '#BD5F0E', 'rgba(240,138,44,0.6)'))
+    ];
+
+    return {
+      t, dark, theme: dark ? 'dark' : 'light', pillState: state === 'empty' ? 'empty' : (checked ? 'allDone' : 'open'),
+      checked, unchecked: !checked, swipe, actions,
+      cardLeft: swipe ? '-256px' : (checked ? '-86px' : '0px'),
+      itemOpacity: checked ? '0.55' : '1',
+      strike: checked ? 'line-through' : 'none',
+      empty: state === 'empty', hasItems: state !== 'empty',
+      p: state === 'empty'
+        ? { label: '0 von 0 Artikeln', pct: '0', open: '', done: '' }
+        : checked
+        ? { label: '1 von 1 Artikel', pct: '100', open: '0 offen', done: '1 erledigt' }
+        : { label: '0 von 1 Artikeln', pct: '0', open: '1 offen', done: '0 erledigt' },
+      accent,
+      accentText: dark ? light : deep,
+      accentGlow: rgba(accent, 0.6),
+      glowA: rgba(accent, 0.22),
+      heroBg: 'linear-gradient(150deg, ' + light + ' 0%, ' + accent + ' 42%, ' + (dark ? deeper : deep) + ' 100%)',
+      heroShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,30,34,0.2), 0 22px 40px -16px ' + rgba(accent, dark ? 0.6 : 0.65),
+      chipGrad: 'linear-gradient(150deg, ' + light + ', ' + deep + ')',
+      chipShadow: 'inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 14px -4px ' + rgba(accent, 0.6),
+      fabBg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      fabShadow: dark
+        ? 'inset 0 -4px 10px rgba(0,30,34,0.3), 0 12px 22px -10px ' + rgba(accent, 0.55) + ', 0 0 14px ' + rgba(accent, 0.18)
+        : 'inset 0 -4px 10px rgba(0,30,34,0.3), 0 16px 28px -8px ' + rgba(accent, 0.75) + ', 0 0 36px ' + rgba(accent, 0.35)
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -85,6 +85,13 @@ protocol GlobalProductCatalogRepository {
     /// Searches the global catalog for products whose names contain the query.
     /// Returns at most 5 results. Safe to call while offline – callers should handle errors gracefully.
     func search(query: String) async throws -> [GlobalProductEntry]
+
+    /// Produkt zu einem EAN/UPC-Code (Barcode-Scanner); nil, wenn der Code unbekannt ist.
+    func product(code: String) async throws -> GlobalProductEntry?
+}
+
+extension GlobalProductCatalogRepository {
+    func product(code: String) async throws -> GlobalProductEntry? { nil }
 }
 
 // MARK: - Preview / In-Memory Implementation
