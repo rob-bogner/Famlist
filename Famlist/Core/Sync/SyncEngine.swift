@@ -62,6 +62,9 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     private let isOnline: @MainActor () -> Bool
     /// Hochladen der Fotos vor dem Senden (nil = keine Fotos hochladen, z. B. in Tests).
     private let imageStorage: ImageStorage?
+    /// Existiert die Liste schon auf dem Server? Artikel offline angelegter Listen warten, bis die
+    /// Liste angelegt ist (OfflineListsRepository.isListReady) – sonst lehnt der Server sie ab.
+    private let isListReady: @MainActor (UUID) -> Bool
 
     // MARK: - State
 
@@ -80,7 +83,8 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         backoffCalculator: BackoffCalculator = .default,
         syncMonitor: SyncMonitor? = nil,
         imageStorage: ImageStorage? = nil,
-        isOnline: @escaping @MainActor () -> Bool = { true }
+        isOnline: @escaping @MainActor () -> Bool = { true },
+        isListReady: @escaping @MainActor (UUID) -> Bool = { _ in true }
     ) {
         self.repository = repository
         self.itemStore = itemStore
@@ -90,6 +94,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         self.syncMonitor = syncMonitor
         self.imageStorage = imageStorage
         self.isOnline = isOnline
+        self.isListReady = isListReady
         startQueueProcessing()
         updatePendingCount()
     }
@@ -288,6 +293,11 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 operationQueue.markSuccess(operation.id)
                 continue
             }
+            if !isListReady(operation.listId) {
+                operationQueue.deferOperation(operation.id, until: Date().addingTimeInterval(Self.offlineRetryDelay),
+                                              error: SyncEngineError.listNotYetCreated)
+                continue
+            }
             if operation.includesImage {
                 do {
                     snapshot.imagePath = try await uploadImage(of: snapshot)
@@ -425,4 +435,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
 enum SyncEngineError: Error {
     /// Die Server-Antwort hat nicht genau einen Eintrag je Auftrag.
     case responseCountMismatch
+    /// Die Liste des Artikels wurde offline angelegt und ist noch nicht auf dem Server.
+    case listNotYetCreated
 }

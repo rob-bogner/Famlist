@@ -84,6 +84,12 @@ final class SwiftDataListStore {
         try save()
     }
 
+    /// Abmelden: alle lokalen Listen entfernen.
+    func deleteAll() throws {
+        try context.delete(model: ListEntity.self)
+        try context.save()
+    }
+
     /// Persists any pending context changes to the underlying store.
     func save() throws {
         if context.hasChanges {

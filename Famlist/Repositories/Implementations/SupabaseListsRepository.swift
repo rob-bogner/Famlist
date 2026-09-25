@@ -24,92 +24,23 @@ final class SupabaseListsRepository: ListsRepository {
     }
 
     func ensureDefaultListExists(for owner: UUID) async throws -> List {
-        // Fetch
-        let fetched: [List] = try await client
-            .from("lists")
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .eq("owner_id", value: owner.uuidString)
-            .eq("is_default", value: true)
-            .limit(1)
-            .execute()
-            .value
-        if let row = fetched.first {
-            return logResult(params: (owner: owner, hit: true), result: row)
-        }
-        // Insert when none exists - explicitly set owner_id to avoid RLS violations
-        struct NewList: Codable {
-            let owner_id: String
-            let title: String
-            let is_default: Bool
-        }
-        let insert = NewList(owner_id: owner.uuidString, title: "My List", is_default: true)
-        let inserted: List = try await client
-            .from("lists")
-            .insert(insert)
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .single()
-            .execute()
-            .value
-        return logResult(params: (owner: owner, created: true), result: inserted)
+        let model = try await ensureDefaultList(id: UUID(), for: owner)
+        return List(id: model.id, owner_id: model.ownerId, title: model.title, is_default: model.isDefault,
+                    created_at: model.createdAt, updated_at: model.updatedAt)
     }
 
-    /// Fetches the default list as an app-level ListModel; creates it if missing.
+    /// Standardliste atomar sicherstellen (RPC ensure_default_list, Migration 018): höchstens eine je Besitzer,
+    /// auch wenn zwei Geräte gleichzeitig starten.
+    func ensureDefaultList(id: UUID, for owner: UUID) async throws -> ListModel {
+        struct Params: Encodable, Sendable { let p_id: UUID }
+        let rows: [ListRow] = try await client.rpcRows("ensure_default_list", params: Params(p_id: id))
+        guard let row = rows.first else { throw URLError(.cannotParseResponse) }
+        return logResult(params: (owner: owner, requestedId: id), result: row.model)
+    }
+
+    /// Fetches the default list as an app-level ListModel; creates it if missing (atomar, siehe oben).
     func fetchDefaultList(for ownerId: UUID) async throws -> ListModel {
-        // Row mapping for precise column selection
-        struct ListRow: Codable {
-            let id: UUID
-            let owner_id: UUID
-            let title: String
-            let is_default: Bool
-            let created_at: Date
-            let updated_at: Date?
-        }
-        // Helper to map DB row -> ListModel with updatedAt fallback
-        func map(_ r: ListRow) -> ListModel {
-            ListModel(
-                id: r.id,
-                ownerId: r.owner_id,
-                title: r.title,
-                isDefault: r.is_default,
-                createdAt: r.created_at,
-                updatedAt: r.updated_at ?? r.created_at
-            )
-        }
-        // 1) Try fetch default for owner
-        let fetched: [ListRow] = try await client
-            .from("lists")
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .eq("owner_id", value: ownerId.uuidString)
-            .eq("is_default", value: true)
-            .limit(1)
-            .execute()
-            .value
-        if let row = fetched.first {
-            let result = map(row)
-            let finalResult = logResult(params: (ownerId: ownerId, hit: true), result: result)
-            UserLog.Data.listLoaded(name: result.title, itemCount: 0)
-            return finalResult
-        }
-        
-        UserLog.Data.loadingList()
-        // 2) Not found -> insert default with explicit owner_id to avoid RLS violations.
-        struct NewList: Codable {
-            let owner_id: String
-            let title: String
-            let is_default: Bool
-        }
-        let payload = NewList(owner_id: ownerId.uuidString, title: "My List", is_default: true)
-        let inserted: ListRow = try await client
-            .from("lists")
-            .insert(payload)
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .single()
-            .execute()
-            .value
-        let result = map(inserted)
-        let finalResult = logResult(params: (ownerId: ownerId, created: true), result: result)
-        UserLog.Data.listLoaded(name: result.title, itemCount: 0)
-        return finalResult
+        try await ensureDefaultList(id: UUID(), for: ownerId)
     }
 
     func observeLists(for owner: UUID) -> AsyncStream<[List]> {
@@ -135,20 +66,24 @@ final class SupabaseListsRepository: ListsRepository {
     }
 
     func createList(for owner: UUID, title: String) async throws -> List {
+        try await createList(id: UUID(), for: owner, title: title)
+    }
+
+    /// Anlegen mit einer auf dem Gerät vergebenen ID (Offline-First, OfflineListsRepository).
+    func createList(id: UUID, for owner: UUID, title: String) async throws -> List {
         struct NewList: Codable {
+            let id: UUID
             let owner_id: UUID
             let title: String
         }
         let value: List = try await client
             .from("lists")
-            .insert(NewList(owner_id: owner, title: title))
+            .insert(NewList(id: id, owner_id: owner, title: title))
             .select()
             .single()
             .execute()
             .value
-        let result = logResult(params: (owner: owner, title: title), result: value)
-        UserLog.Data.listCreated(name: title)
-        return result
+        return logResult(params: (owner: owner, title: title), result: value)
     }
 
     func fetchAllLists(for ownerId: UUID) async throws -> [ListModel] {
@@ -210,20 +145,15 @@ final class SupabaseListsRepository: ListsRepository {
         logVoid(params: (action: "deleteList", listId: listId))
     }
 
+    /// Standardliste in EINER Transaktion umstellen (RPC set_default_list, Migration 018).
     func setDefaultList(listId: UUID, ownerId: UUID) async throws {
-        struct UnsetPatch: Codable { let is_default: Bool; let updated_at: Date }
-        struct SetPatch: Codable { let is_default: Bool; let updated_at: Date }
-        _ = try await client
-            .from("lists")
-            .update(UnsetPatch(is_default: false, updated_at: Date()))
-            .eq("owner_id", value: ownerId.uuidString)
-            .execute()
-        _ = try await client
-            .from("lists")
-            .update(SetPatch(is_default: true, updated_at: Date()))
-            .eq("id", value: listId.uuidString)
-            .execute()
-        logVoid(params: (listId: listId, ownerId: ownerId))
+        struct Params: Encodable, Sendable { let p_list_id: UUID }
+        let _: Bool = try await client.rpcValue("set_default_list", params: Params(p_list_id: listId))
+        logVoid(params: (action: "setDefaultList", listId: listId))
+    }
+
+    func leaveList(listId: UUID, profileId: UUID) async throws {
+        try await removeMember(listId: listId, profileId: profileId)
     }
 
     func removeMember(listId: UUID, profileId: UUID) async throws {
@@ -272,7 +202,7 @@ final class SupabaseListsRepository: ListsRepository {
 
     /// Liest `list_id` aus einer Broadcast-Nachricht. realtime.send liefert
     /// `{"event": …, "payload": {"list_id": …}}`; zur Sicherheit wird auch die oberste Ebene geprüft.
-    static func listId(fromBroadcast message: JSONObject) -> UUID? {
+    nonisolated static func listId(fromBroadcast message: JSONObject) -> UUID? {
         let inner = message["payload"]?.objectValue ?? message
         guard let raw = inner["list_id"]?.stringValue else { return nil }
         return UUID(uuidString: raw)
@@ -336,5 +266,20 @@ final class SupabaseListsRepository: ListsRepository {
         } catch {
             throw InviteError.from(error) ?? error
         }
+    }
+}
+
+/// Zeile der Tabelle lists (RPC-Antworten).
+private struct ListRow: Decodable {
+    let id: UUID
+    let owner_id: UUID
+    let title: String
+    let is_default: Bool
+    let created_at: Date
+    let updated_at: Date?
+
+    var model: ListModel {
+        ListModel(id: id, ownerId: owner_id, title: title, isDefault: is_default,
+                  createdAt: created_at, updatedAt: updated_at ?? created_at)
     }
 }

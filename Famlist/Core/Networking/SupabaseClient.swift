@@ -170,6 +170,9 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         let configuration = URLSessionConfiguration.default
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        #if DEBUG
+        if SimulatedOffline.isActive { configuration.protocolClasses = [SimulatedOfflineURLProtocol.self] }
+        #endif
         return URLSession(configuration: configuration)
     }()
 

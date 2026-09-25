@@ -47,7 +47,7 @@ final class LiveDuplicateAddUITests: XCTestCase {
         }
         shot("signin")
         // Korb-Kachel: 86 × 86 im Hero, links oben (VoiceOver-verborgen) → Koordinate.
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 20 + 43, dy: 120 + 43)).press(forDuration: 1.2)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 72, dy: 195)).press(forDuration: 1.2)
         let tester = app.buttons["Tester"]
         XCTAssertTrue(tester.waitForExistence(timeout: 5), "Testkonten-Dialog")
         tester.tap()

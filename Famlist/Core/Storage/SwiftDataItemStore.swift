@@ -170,6 +170,12 @@ final class SwiftDataItemStore {
         return rows.count
     }
 
+    /// Abmelden: alle lokalen Artikel entfernen (sie gehören zum abgemeldeten Konto).
+    func deleteAll() throws {
+        try context.delete(model: ItemEntity.self)
+        try context.save()
+    }
+
     /// Removes an item from the context once the remote delete has been confirmed.
     func purge(id: UUID) throws {
         guard let entity = try fetchItem(id: id) else { return }

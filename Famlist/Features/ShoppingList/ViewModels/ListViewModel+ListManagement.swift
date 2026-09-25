@@ -22,7 +22,7 @@
  - @MainActor ensures all @Published mutations happen on the UI thread.
 
  📝 Last Change:
- - Initial creation for FAM-34 & FAM-35.
+ - Offline zuerst über OfflineListsRepository; Löschen/Verlassen entfernt lokale Daten (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -146,8 +146,8 @@ extension ListViewModel {
         }
         logVoid(params: (action: "deleteList", listId: list.id, title: list.title))
 
-        // Local: soft-delete and remove from UI
-        try? listStore.delete(listId: list.id)
+        // Local: sofort aus der Anzeige; Artikel, Fotos und Warteschlange erst nach angenommenem Auftrag
+        // entfernen (der Server löscht die Artikel per CASCADE).
         allLists.removeAll { $0.id == list.id }
         listItemCounts.removeValue(forKey: list.id)
         UserLog.Data.listDeleted(name: list.title)
@@ -165,20 +165,14 @@ extension ListViewModel {
             guard let self else { return }
             do {
                 try await repo.deleteList(listId: list.id)
-                await MainActor.run {
-                    try? self.listStore.purge(listId: list.id)
-                    logVoid(params: (action: "deleteList.success", listId: list.id))
-                }
+                self.forgetLocalData(of: list.id)
+                logVoid(params: (action: "deleteList.accepted", listId: list.id))
             } catch {
-                // Rollback: re-insert list locally
-                await MainActor.run {
-                    _ = try? self.listStore.upsert(model: list)
-                    self.allLists.append(list)
-                    self.allLists.sort { $0.createdAt < $1.createdAt }
-                    self.listItemCounts[list.id] = (try? self.itemStore.fetchItems(listId: list.id))?.count ?? 0
-                    self.setError(error)
-                    logVoid(params: (action: "deleteList.error", error: (error as NSError).localizedDescription))
-                }
+                // Rollback: Liste wieder anzeigen (ihre Artikel sind noch da)
+                self.allLists.append(list)
+                self.allLists.sort { $0.createdAt < $1.createdAt }
+                self.setError(error)
+                logVoid(params: (action: "deleteList.error", error: (error as NSError).localizedDescription))
             }
         }
     }
@@ -197,8 +191,8 @@ extension ListViewModel {
         }
         Task { [weak self] in
             do {
-                try await repo.removeMember(listId: list.id, profileId: profileId)
-                await MainActor.run { try? self?.listStore.purge(listId: list.id) }
+                try await repo.leaveList(listId: list.id, profileId: profileId)
+                await MainActor.run { self?.forgetLocalData(of: list.id) }
             } catch {
                 await MainActor.run {
                     guard let self else { return }

@@ -25,6 +25,8 @@
 import Foundation // Provides UUID and Date.
 
 /// List-related operations for sharing and creation.
+/// @MainActor wie ItemsRepository: Die Offline-Schicht (OfflineListsRepository) hält Zustand auf dem Main Actor.
+@MainActor
 protocol ListsRepository {
     /// Get or create default list.
     /// - Parameter owner: The owner UUID.
@@ -95,6 +97,15 @@ protocol ListsRepository {
 
     /// Einladung annehmen (RPC accept_list_invite). Gibt die Listen-ID zurück; mehrfaches Annehmen ist unschädlich.
     func acceptInvite(token: String) async throws -> UUID
+
+    /// Anlegen mit einer auf dem Gerät vergebenen ID (Offline-First).
+    func createList(id: UUID, for owner: UUID, title: String) async throws -> List
+
+    /// Standardliste sicherstellen (RPC ensure_default_list); `id` gilt, falls noch keine existiert.
+    func ensureDefaultList(id: UUID, for owner: UUID) async throws -> ListModel
+
+    /// Geteilte Liste verlassen (eigene Mitgliedschaft).
+    func leaveList(listId: UUID, profileId: UUID) async throws
 }
 
 /// Convenience API to retrieve the default list as a strongly-typed ListModel.
@@ -115,6 +126,23 @@ extension ListsRepository {
             createdAt: row.created_at ?? Date(),
             updatedAt: row.updated_at ?? row.created_at ?? Date() // Prefer updated_at; fallback to created_at or now
         )
+    }
+}
+
+extension ListsRepository {
+    /// Anlegen mit einer auf dem Gerät vergebenen ID (Offline-First). Standard: ID des Servers.
+    func createList(id: UUID, for owner: UUID, title: String) async throws -> List {
+        try await createList(for: owner, title: title)
+    }
+
+    /// Standardliste sicherstellen; `id` wird verwendet, falls noch keine existiert.
+    func ensureDefaultList(id: UUID, for owner: UUID) async throws -> ListModel {
+        try await fetchDefaultList(for: owner)
+    }
+
+    /// Geteilte Liste verlassen. Standard: eigene Mitgliedschaft löschen.
+    func leaveList(listId: UUID, profileId: UUID) async throws {
+        try await removeMember(listId: listId, profileId: profileId)
     }
 }
 

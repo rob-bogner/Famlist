@@ -26,6 +26,7 @@
 
 import Foundation // Foundation provides UUID and URL used here.
 import SwiftUI // Import SwiftUI to use ObservableObject and @Published.
+import Supabase // PostgrestError (Profil fehlt = PGRST116).
 
 /// Coordinates authentication lifecycle and post-login bootstrapping for the app.
 @MainActor
@@ -37,7 +38,11 @@ final class AppSessionViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
     @Published var isRestoringSession: Bool = false
-    @Published var currentProfile: Profile? = nil
+    /// Jede Änderung (Laden, Benutzername, Favorit, Foto) landet auch in der lokalen Kopie – sonst startet
+    /// die App offline mit einem veralteten Profil (z. B. wieder „Profil anlegen“).
+    @Published var currentProfile: Profile? = nil {
+        didSet { if let currentProfile { ProfileCache.save(currentProfile) } }
+    }
     /// Adresse, an die zuletzt ein Anmeldelink ging (Toast „Wir haben dir einen Link geschickt“).
     @Published var magicLinkSentTo: String? = nil
     /// Vorschau der offenen Einladung (Name des Einladenden, Liste, Zahlen) für „Einladung annehmen“.
@@ -258,48 +263,13 @@ final class AppSessionViewModel: ObservableObject {
         }
     }
     
-    /// Completes auth after handling the magic link deep link; loads profile and default list.
+    /// Completes auth: loads profile and start list and opens the list.
+    /// Offline-First: Mit einem gespeicherten Profil startet die App sofort aus der lokalen Kopie; das
+    /// Profil wird im Hintergrund aktualisiert. Vorher führte ein Start ohne Netz auf „Anmelden“ (Audit K6).
     func handleAuthCompletion() async {
-        isLoading = true
-        defer { isLoading = false }
-        
         do {
             await markPhase(.profile)
-            // Note: User-Logs für Profil-Laden erfolgen im Repository (mit mehr Details wie publicId)
-            
-            // Try to load existing profile, create new one if it doesn't exist
-            let me: Profile
-            do {
-                me = try await profiles.myProfile()
-                logVoid(params: [
-                    "action": "loadProfile",
-                    "status": "existing",
-                    "profileId": me.id
-                ])
-                // Note: User-Log erfolgt im Repository
-            } catch {
-                // Profile doesn't exist - this is a new user, create profile automatically
-                logVoid(params: [
-                    "action": "loadProfile",
-                    "status": "notFound",
-                    "creating": true
-                ])
-                guard let onboardingService else {
-                    throw NSError(
-                        domain: "AppSessionViewModel",
-                        code: 401,
-                        userInfo: [NSLocalizedDescriptionKey: "No onboarding service available"]
-                    )
-                }
-                me = try await onboardingService.createProfileForNewUser()
-                logVoid(params: [
-                    "action": "createProfile",
-                    "status": "created",
-                    "profileId": me.id
-                ])
-                // Note: User-Log erfolgt im OnboardingService
-            }
-            
+            let me = try await loadProfile()
             currentProfile = me
 
             // Gespeicherten Invite aus dem Pre-Auth-Zustand übernehmen
@@ -309,21 +279,16 @@ final class AppSessionViewModel: ObservableObject {
             }
 
             await markPhase(.defaultList)
-            let defaultList = try await startList(for: me)
+            let startList = try await startList(for: me)
             listViewModel.configure(listsRepository: lists)
             // Membership-Observation starten — muss nach configure(listsRepository:) aufgerufen
             // werden, damit listsRepository gesetzt ist, sonst startet die Observation nicht (RC-5).
             listViewModel.startObservingMemberships(userId: me.id)
-            listViewModel.defaultList = defaultList
-            listViewModel.switchList(to: defaultList.id)
-            
-            _ = logResult(
-                params: (profileId: me.id, defaultListId: defaultList.id),
-                result: "bootstrapped"
-            )
-            
+            listViewModel.defaultList = startList
+            listViewModel.switchList(to: startList.id)
+            _ = logResult(params: (profileId: me.id, startListId: startList.id), result: "bootstrapped")
             UserLog.Auth.authBootstrapCompleted()
-            
+
             await markPhase(.itemsSnapshot)
             UserLog.Data.loadingItems()
             self.isAuthenticated = true
@@ -331,6 +296,29 @@ final class AppSessionViewModel: ObservableObject {
             self.errorMessage = (error as NSError).localizedDescription
             self.isAuthenticated = false
         }
+    }
+
+    /// Profil: lokale Kopie sofort (Aktualisierung im Hintergrund), sonst vom Server.
+    /// Ein neues Profil wird NUR angelegt, wenn der Server ausdrücklich „keine Zeile“ meldet (PGRST116) –
+    /// vorher genügte ein kurzer Netzfehler, und die öffentliche ID wurde überschrieben (Audit H6).
+    private func loadProfile() async throws -> Profile {
+        if let userId = authService?.currentUserId, let cached = ProfileCache.load(userId: userId) {
+            Task { await refreshProfileFromServer() }
+            return cached
+        }
+        do {
+            return try await profiles.myProfile()
+        } catch let error as PostgrestError where error.code == "PGRST116" {
+            logVoid(params: ["action": "loadProfile", "status": "notFound", "creating": true])
+            guard let onboardingService else { throw error }
+            return try await onboardingService.createProfileForNewUser()
+        }
+    }
+
+    /// Server-Stand des Profils übernehmen (z. B. auf einem anderen Gerät geändert). Fehler sind unkritisch.
+    func refreshProfileFromServer() async {
+        guard let me = try? await profiles.myProfile(), currentProfile?.id == me.id else { return }
+        currentProfile = me
     }
     
     // MARK: - Deep Link Handler
@@ -367,29 +355,49 @@ final class AppSessionViewModel: ObservableObject {
     }
 
     // MARK: - Sign Out
-    
-    /// Signs the user out from Supabase and clears local state.
+
+    /// Weitere lokale Speicher, die beim Abmelden geleert werden (Preise, Kategorien – verdrahtet in FamlistApp).
+    private(set) var signOutHandlers: [@MainActor () -> Void] = []
+
+    func onSignOut(_ handler: @escaping @MainActor () -> Void) {
+        signOutHandlers.append(handler)
+    }
+
+    /// Abmelden: offene Änderungen möglichst noch senden, dann abmelden und IMMER alle lokalen Daten
+    /// des Kontos löschen – auch wenn der Server nicht erreichbar ist (Audit H5).
     func signOut() {
         guard let authService else { return }
         if isLoading { return }
-        
         Task { @MainActor in
             isLoading = true
             defer { isLoading = false }
-            
+            await listViewModel.commitPendingDeletion()?.value
+            await listViewModel.syncEngine?.resumeSync()          // letzte Änderungen senden, falls online
             do {
                 try await authService.signOut()
-                listViewModel.clearForSignOut()
-                isAuthenticated = false
-                errorMessage = nil
             } catch {
-                errorMessage = (error as NSError).localizedDescription
-                logVoid(params: [
-                    "action": "signOut",
-                    "status": "error",
-                    "message": errorMessage ?? ""
-                ])
+                logVoid(params: ["action": "signOut", "status": "remoteFailed", "message": (error as NSError).localizedDescription])
             }
+            resetLocalState()
+            UserLog.Auth.loggedOut()
+            isAuthenticated = false
+            errorMessage = nil
         }
+    }
+
+    /// Löscht alles, was zum abgemeldeten Konto gehört: Artikel, Listen, Warteschlangen, Fotos,
+    /// Profil-Kopie, Preise, Kategorien, Einstellungen je Liste.
+    func resetLocalState() {
+        listViewModel.clearForSignOut()
+        (lists as? OfflineListsRepository)?.clearLocalData()
+        signOutHandlers.forEach { $0() }
+        ProfileCache.clearAll()
+        LocalAccountData.removeListPreferences()
+        currentProfile = nil
+        avatarImage = nil
+        pendingInvite = nil
+        pendingInviteStorage = nil
+        invitePreview = nil
+        logVoid(params: ["action": "resetLocalState"])
     }
 }

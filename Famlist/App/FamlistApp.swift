@@ -69,7 +69,9 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 syncOrchestrator: syncOrchestrator
             )
             let profilesRepo = SupabaseProfilesRepository(client: client)
-            let listsRepo = SupabaseListsRepository(client: client)
+            // Listen offline zuerst: lokale Kopie + Warteschlange, Senden sobald Netz da ist.
+            let listsRepo = OfflineListsRepository(remote: SupabaseListsRepository(client: client),
+                                                   reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
             
             // Produktfotos in Supabase Storage (Migration 016).
             let imageStorage = SupabaseImageStorage(client: client)
@@ -85,7 +87,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 hlcGenerator: hlcGenerator,
                 syncMonitor: syncMonitor,
                 imageStorage: imageStorage,
-                isOnline: { ConnectivityMonitor.shared.isOnline }
+                isOnline: { ConnectivityMonitor.shared.isOnline },
+                isListReady: { [weak listsRepo] listId in listsRepo?.isListReady(listId) ?? true }
             )
             
             // Create list VM without starting observation; it will start after auth completes.
@@ -115,6 +118,13 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client))
             self.priceBook = PriceBook(repository: SupabasePricePointsRepository(client: client),
                                        reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
+            // Abmelden: Preise und Kategorien des Kontos verwerfen.
+            let priceBook = self.priceBook
+            let categoryStore = self.categoryStore
+            self.sessionViewModel.onSignOut { [weak priceBook, weak categoryStore] in
+                priceBook?.clearLocal()
+                categoryStore?.resetLocal()
+            }
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
             let itemsRepo = PreviewItemsRepository() // Items repo in memory.

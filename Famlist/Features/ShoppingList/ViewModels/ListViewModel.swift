@@ -232,6 +232,17 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// - Parameter listsRepository: Concrete implementation (Supabase or Preview) resolving default list rows.
     func configure(listsRepository: ListsRepository) {
         self.listsRepository = listsRepository
+        if let offline = listsRepository as? OfflineListsRepository {
+            // Liste auf dem Server weg (gelöscht/entfernt) → lokale Daten löschen.
+            offline.onListsVanished = { [weak self] ids in
+                guard let self else { return }
+                ids.forEach { self.handleMembershipRemoval(listId: $0) }
+            }
+            // Neue Liste angelegt → wartende Artikel dieser Liste jetzt senden.
+            offline.onFlushed = { [weak self] in
+                Task { await self?.syncEngine?.resumeSync() }
+            }
+        }
     }
     
     /// Injects the connectivity monitor so the view model can resume realtime sync when the device comes back online.
@@ -356,6 +367,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         PaginationCursor.clear(listId: listId)
         clearLastSyncTimestamp()
         (catalogRepository as? OfflineItemCatalogRepository)?.clearLocalData()   // Artikelstamm des Kontos
+        // Alle Artikel (inkl. Fotos) und Listen des Kontos vom Gerät löschen (Audit H5).
+        do {
+            try itemStore.deleteAll()
+            try listStore.deleteAll()
+        } catch {
+            logVoid(params: (action: "clearForSignOut.deleteAll.error", error: (error as NSError).localizedDescription))
+        }
         currentCursor = nil
         hasMoreItems = true
         isLoadingNextPage = false

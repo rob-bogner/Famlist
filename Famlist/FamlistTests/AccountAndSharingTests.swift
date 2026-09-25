@@ -79,8 +79,9 @@ final class AccountAndSharingTests: XCTestCase {
                              listStore: SwiftDataListStore(context: context), startImmediately: false)
     }
 
-    private func makeSession(_ profiles: StubProfiles, lists: StubLists = StubLists()) throws -> AppSessionViewModel {
-        let session = AppSessionViewModel(client: nil, profiles: profiles, lists: lists, listViewModel: try makeListVM())
+    private func makeSession(_ profiles: StubProfiles, lists: StubLists? = nil) throws -> AppSessionViewModel {
+        let session = AppSessionViewModel(client: nil, profiles: profiles, lists: lists ?? StubLists(),
+                                          listViewModel: try makeListVM())
         session.currentProfile = me
         return session
     }

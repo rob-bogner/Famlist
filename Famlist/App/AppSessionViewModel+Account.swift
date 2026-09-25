@@ -159,10 +159,12 @@ extension AppSessionViewModel {
         do {
             try await profiles.deleteAccount()
             UserLog.Auth.accountDeleted()
-            try? await authService?.signOut()
-            listViewModel.clearForSignOut()
-            currentProfile = nil
-            avatarImage = nil
+            do {
+                try await authService?.signOut()
+            } catch {
+                logVoid(params: (action: "deleteAccount.signOut", error: (error as NSError).localizedDescription))
+            }
+            resetLocalState()
             isAuthenticated = false
             return true
         } catch {

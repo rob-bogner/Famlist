@@ -93,6 +93,13 @@ final class PriceBook: ObservableObject {
         return [latestByItem[key], queued].compactMap { $0 }.max { $0.purchasedAt < $1.purchasedAt }
     }
 
+    /// Abmelden: Warteschlange und Zwischenspeicher gehören zum abgemeldeten Konto (sonst würden die
+    /// Preise später mit der ID des NÄCHSTEN Nutzers gesendet, Audit H5).
+    func clearLocal() {
+        pending = []
+        latestByItem = [:]
+    }
+
     private func remember(_ point: PricePoint) {
         if let known = latestByItem[point.itemKey], known.purchasedAt > point.purchasedAt { return }
         latestByItem[point.itemKey] = point

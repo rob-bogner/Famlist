@@ -157,6 +157,16 @@ final class CategoryStore: ObservableObject {
     /// Nur für Tests: wartet, bis alle Schreibaufträge erledigt sind.
     func waitForWrites() async { await writeTask?.value }
 
+    /// Abmelden: Standard-Kategorien, kein Profil – die Kategorien des Vorgängers dürfen nicht ins
+    /// nächste Konto geschrieben werden (Audit H5).
+    func resetLocal() {
+        writeTask?.cancel()
+        writeTask = nil
+        profileId = nil
+        categories = CategoryDefinition.defaults
+        errorMessage = nil
+    }
+
     private func normalized(_ list: [CategoryDefinition], renumber: Bool = false) -> [CategoryDefinition] {
         var sorted = renumber ? list : list.sorted { $0.position < $1.position }
         if !sorted.contains(where: \.isFallback) {

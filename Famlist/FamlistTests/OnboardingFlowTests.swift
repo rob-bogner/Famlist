@@ -50,7 +50,8 @@ private final class JoinLists: ListsRepository {
 final class OnboardingFlowTests: XCTestCase {
     private let meId = UUID()
 
-    private func makeSession(lists: ListsRepository = JoinLists(), username: String? = nil) throws -> AppSessionViewModel {
+    private func makeSession(lists listsOrNil: ListsRepository? = nil, username: String? = nil) throws -> AppSessionViewModel {
+        let lists = listsOrNil ?? JoinLists()
         let container = try ModelContainer(for: Schema([ItemEntity.self, ListEntity.self]),
                                            configurations: [ModelConfiguration(isStoredInMemoryOnly: true)])
         let context = ModelContext(container)
