@@ -60,6 +60,8 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     private let backoffCalculator: BackoffCalculator
     private let syncMonitor: SyncMonitor?
     private let isOnline: @MainActor () -> Bool
+    /// Hochladen der Fotos vor dem Senden (nil = keine Fotos hochladen, z. B. in Tests).
+    private let imageStorage: ImageStorage?
 
     // MARK: - State
 
@@ -77,6 +79,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         hlcGenerator: HybridLogicalClockGenerator,
         backoffCalculator: BackoffCalculator = .default,
         syncMonitor: SyncMonitor? = nil,
+        imageStorage: ImageStorage? = nil,
         isOnline: @escaping @MainActor () -> Bool = { true }
     ) {
         self.repository = repository
@@ -85,6 +88,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         self.hlcGenerator = hlcGenerator
         self.backoffCalculator = backoffCalculator
         self.syncMonitor = syncMonitor
+        self.imageStorage = imageStorage
         self.isOnline = isOnline
         startQueueProcessing()
         updatePendingCount()
@@ -150,8 +154,18 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         await write(models, tombstone: false, sendImmediately: false)
     }
 
+    /// Alte Base64-Fotos einer Liste nach Storage umziehen (Migration 016): Foto hochladen, Pfad setzen.
+    /// Mehrere Geräte dürfen das gleichzeitig tun – gleiches Foto ergibt gleiche Datei und gleichen Pfad.
+    func migrateLegacyImages(listId: UUID) async {
+        guard imageStorage != nil,
+              let legacy = try? itemStore.itemsWithLegacyImage(listId: listId), !legacy.isEmpty else { return }
+        logVoid(params: (action: "migrateLegacyImages", listId: listId, count: legacy.count))
+        await write(legacy.map { $0.toItemModel() }, tombstone: false, forceImage: true)
+    }
+
     /// Der gemeinsame Schreibweg: neue HLC je Artikel, lokal speichern, einreihen, senden.
-    private func write(_ items: [ItemModel], tombstone: Bool, sendImmediately: Bool = true) async {
+    private func write(_ items: [ItemModel], tombstone: Bool, sendImmediately: Bool = true,
+                       forceImage: Bool = false) async {
         var seen = Set<String>()
         for item in items where seen.insert(item.id).inserted {
             guard let uuid = UUID(uuidString: item.id), item.listId != nil else {
@@ -162,9 +176,11 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             // receive(): neue HLC ist größer als die der lokalen Zeile, auch wenn die eigene Uhr nachgeht.
             let hlc = existing.map { hlcGenerator.receive($0.hlc) } ?? hlcGenerator.tick()
             let isNew = existing == nil || existing?.tombstone == true
-            let imageChanged = !tombstone && (existing == nil || existing?.imageData != item.imageData)
+            let imageChanged = !tombstone && (forceImage || existing == nil || existing?.imageData != item.imageData)
+            var model = item
+            if imageChanged { model.imagePath = nil }            // Pfad bildet prepare() nach dem Hochladen
             do {
-                let entity = try itemStore.writeLocal(item, hlc: hlc, tombstone: tombstone, modifiedBy: hlcGenerator.nodeId)
+                let entity = try itemStore.writeLocal(model, hlc: hlc, tombstone: tombstone, modifiedBy: hlcGenerator.nodeId)
                 let type: SyncOperationType = tombstone ? .delete : (isNew ? .create : .update)
                 enqueue(entity.toItemModel(), type: type, hlc: hlc, tombstone: tombstone, includeImage: imageChanged)
             } catch {
@@ -212,6 +228,12 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         }
     }
 
+    /// Kein Zugriff mehr auf eine Liste: wartende Operationen verwerfen (sie würden nur abgelehnt).
+    func forgetList(_ listId: UUID) {
+        operationQueue.removeOperations(listId: listId)
+        updatePendingCount()
+    }
+
     /// Abmelden: Nichts aus der Warteschlange darf ins nächste Konto gelangen.
     func resetForSignOut() {
         operationQueue.removeAll()
@@ -237,7 +259,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         while true {
             let batch = operationQueue.dequeueBatch(limit: Self.batchSize)
             guard !batch.isEmpty else { break }
-            let (operations, requests) = prepare(batch)
+            let (operations, requests) = await prepare(batch)
             guard !requests.isEmpty else { continue }
             let keepGoing = await send(requests, for: operations)
             sent += operations.count
@@ -250,12 +272,12 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         syncEventObserver?(.completed(itemCount: sent, remaining: operationQueue.count))
     }
 
-    /// Entfernt überholte Operationen und baut die Aufträge für den Server.
-    private func prepare(_ batch: [SyncOperation]) -> ([SyncOperation], [ItemUpsertRequest]) {
+    /// Entfernt überholte Operationen, lädt geänderte Fotos hoch und baut die Aufträge für den Server.
+    private func prepare(_ batch: [SyncOperation]) async -> ([SyncOperation], [ItemUpsertRequest]) {
         var operations: [SyncOperation] = []
         var requests: [ItemUpsertRequest] = []
         for operation in batch {
-            guard let snapshot = try? operation.decodeItemSnapshot() else {
+            guard var snapshot = try? operation.decodeItemSnapshot() else {
                 operationQueue.markFailed(operation.id, message: "snapshot unreadable")
                 continue
             }
@@ -266,10 +288,33 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 operationQueue.markSuccess(operation.id)
                 continue
             }
+            if operation.includesImage {
+                do {
+                    snapshot.imagePath = try await uploadImage(of: snapshot)
+                } catch {
+                    handleFailure(of: operation, kind: SyncErrorClassifier.classify(error), error: error)
+                    continue
+                }
+            }
             operations.append(operation)
             requests.append(ItemUpsertRequest(item: snapshot, includeImage: operation.includesImage))
         }
         return (operations, requests)
+    }
+
+    /// Lädt das Foto eines Auftrags hoch und liefert seinen Storage-Pfad (nil = kein Foto).
+    /// Der Pfad wird auch lokal eingetragen, solange dort noch dasselbe Foto liegt.
+    private func uploadImage(of snapshot: ItemModel) async throws -> String? {
+        guard let base64 = snapshot.imageData, let listIdString = snapshot.listId,
+              let listId = UUID(uuidString: listIdString),
+              let object = ProductImageCodec.storageObject(folder: listId, base64: base64) else { return nil }
+        guard let imageStorage else { return snapshot.imagePath }
+        try await imageStorage.upload(object.data, bucket: ProductImageCodec.itemBucket, path: object.path)
+        if let uuid = UUID(uuidString: snapshot.id), let entity = try? itemStore.fetchItem(id: uuid),
+           entity.imageData == base64 {
+            entity.imagePath = object.path
+        }
+        return object.path
     }
 
     /// Sendet einen Stapel. - Returns: false, wenn der Durchlauf abbrechen soll (offline/vorübergehend).
@@ -296,7 +341,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         switch result.status {
         case .applied, .stale:
             operationQueue.markSuccess(operation.id)
-            if let row = result.item { _ = try? itemStore.mergeRemote(row, includeImage: false) }
+            if let row = result.item { _ = try? itemStore.mergeRemote(row, legacyImageKnown: false) }
             markSyncedIfSettled(itemId: operation.itemId)
         case .denied, .invalid:
             operationQueue.markFailed(operation.id, message: result.message ?? result.status.rawValue)

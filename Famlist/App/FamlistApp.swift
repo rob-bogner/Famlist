@@ -71,6 +71,9 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             let profilesRepo = SupabaseProfilesRepository(client: client)
             let listsRepo = SupabaseListsRepository(client: client)
             
+            // Produktfotos in Supabase Storage (Migration 016).
+            let imageStorage = SupabaseImageStorage(client: client)
+
             // Create operation queue for sync engine
             let operationQueue = SyncOperationQueue(context: modelContainer.mainContext)
             
@@ -81,6 +84,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 operationQueue: operationQueue,
                 hlcGenerator: hlcGenerator,
                 syncMonitor: syncMonitor,
+                imageStorage: imageStorage,
                 isOnline: { ConnectivityMonitor.shared.isOnline }
             )
             
@@ -95,6 +99,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             )
             lvm.configure(connectivityMonitor: connectivityMonitor)
             lvm.configure(syncEngine: syncEngine)
+            lvm.configure(imageStorage: imageStorage)
             // Artikelstamm offline zuerst: lokale Warteschlange, Senden sofort bzw. sobald wieder Netz da ist.
             lvm.configure(catalogRepository: OfflineItemCatalogRepository(
                 remote: SupabaseItemCatalogRepository(client: client),

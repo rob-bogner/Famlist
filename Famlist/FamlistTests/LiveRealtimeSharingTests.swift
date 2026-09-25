@@ -25,6 +25,7 @@
 import XCTest
 import Supabase
 import SwiftData
+import UIKit
 @testable import Famlist
 
 /// Sitzungsspeicher im RAM – je Client eigener, damit zwei Konten parallel angemeldet bleiben.
@@ -44,7 +45,13 @@ private final class LiveTestClient: SupabaseClienting {
     var auth: any AuthClienting { client.auth }
     var realtime: RealtimeClientV2 { client.realtimeV2 }
     func from(_ table: String) -> PostgrestQueryBuilder { client.from(table) }
-    func storageUpload(bucket: String, path: String, data: Data, contentType: String) async throws {}
+    func storageUpload(bucket: String, path: String, data: Data, contentType: String) async throws {
+        _ = try await client.storage.from(bucket).upload(path, data: data,
+                                                         options: FileOptions(contentType: contentType, upsert: true))
+    }
+    func storageDownload(bucket: String, path: String) async throws -> Data {
+        try await client.storage.from(bucket).download(path: path)
+    }
     func storageCreateSignedURL(bucket: String, path: String, expiresIn: Int) async throws -> String { "" }
     func rpc(_ function: String) async throws { try await client.rpc(function).execute() }
     func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] {
@@ -62,13 +69,18 @@ private final class LiveDevice {
     let store: SwiftDataItemStore
     let repository: SupabaseItemsRepository
     let engine: SyncEngine
+    let images: SupabaseImageStorage
+    let prefetcher: ItemImagePrefetcher
 
     init(client: SupabaseClient, node: String) {
         store = SwiftDataItemStore(context: container.mainContext)
-        repository = SupabaseItemsRepository(client: LiveTestClient(client), itemStore: store)
+        let facade = LiveTestClient(client)
+        repository = SupabaseItemsRepository(client: facade, itemStore: store)
+        images = SupabaseImageStorage(client: facade)
         engine = SyncEngine(repository: repository, itemStore: store,
                             operationQueue: SyncOperationQueue(context: container.mainContext),
-                            hlcGenerator: HybridLogicalClockGenerator(nodeId: node))
+                            hlcGenerator: HybridLogicalClockGenerator(nodeId: node), imageStorage: images)
+        prefetcher = ItemImagePrefetcher(store: store, storage: images) {}
     }
 
     func visible(_ listId: UUID) -> [ItemEntity] { (try? store.fetchItems(listId: listId)) ?? [] }
@@ -105,7 +117,8 @@ final class LiveRealtimeSharingTests: XCTestCase {
         let client = SupabaseClient(
             supabaseURL: config.url,
             supabaseKey: config.anonKey,
-            options: .init(auth: .init(storage: MemoryAuthStorage()))
+            options: .init(auth: .init(storage: MemoryAuthStorage()),
+                           global: .init(session: AppSupabaseClient.uncachedSession))
         )
         let credentials = SimulatorAuthHelper.getCredentials(for: account)
         _ = try await client.auth.signIn(email: credentials.email, password: credentials.password)
@@ -293,6 +306,48 @@ final class LiveRealtimeSharingTests: XCTestCase {
         // 6. Warteschlangen leer, nichts fehlgeschlagen
         XCTAssertEqual(deviceA.engine.pendingOperations, 0)
         XCTAssertEqual(deviceB.engine.pendingOperations, 0)
+    }
+
+    @MainActor
+    func test_photo_uploadedOnA_availableOfflineOnB() async throws {
+        let list = try await makeSharedList()
+        let deviceA = LiveDevice(client: owner, node: "live-A")
+        let deviceB = LiveDevice(client: member, node: "live-B")
+        let stream = deviceB.repository.observeItems(listId: list)
+        let observer = Task { for await _ in stream {} }
+        defer { observer.cancel() }
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 1200, height: 900), format: format).image { ctx in
+            UIColor.orange.setFill(); ctx.fill(CGRect(x: 0, y: 0, width: 1200, height: 900))
+        }
+        let base64 = try XCTUnwrap(ProductImageCodec.encode(image))
+        await deviceA.engine.createItem(ItemModel(imageData: base64, name: "Livetest Foto", listId: list.uuidString))
+        let path = try XCTUnwrap(deviceA.visible(list).first?.imagePath, "Pfad nach dem Hochladen gesetzt")
+
+        try await waitFor("Pfad auf B") { await MainActor.run { deviceB.visible(list).first?.imagePath == path } }
+        await deviceB.prefetcher.prefetchMissing()
+        XCTAssertEqual(deviceB.visible(list).first?.imageData, base64, "B hat das Foto lokal (offline verfügbar)")
+
+        // Datenbankzeile trägt kein Base64 mehr
+        struct Row: Decodable { let imagedata: String?; let image_path: String? }
+        let rows: [Row] = try await owner.from("items").select("imagedata,image_path")
+            .eq("list_id", value: list.uuidString).execute().value
+        XCTAssertEqual(rows.first?.image_path, path)
+        XCTAssertNil(rows.first?.imagedata)
+
+        // Nach dem Entfernen verweigert der SERVER das Foto. Frischer Client, damit kein lokaler
+        // HTTP-Cache (URLCache, cache-control) das Ergebnis verfälscht.
+        let memberId = try await member.auth.session.user.id
+        try await owner.from("list_members").delete().eq("list_id", value: list.uuidString)
+            .eq("profile_id", value: memberId.uuidString).execute()
+        let freshMember = try await signedInClient(.demo)
+        do {
+            _ = try await freshMember.storage.from("item-images").download(path: path)
+            XCTFail("Nach dem Entfernen kein Zugriff mehr auf das Foto")
+        } catch {}
     }
 }
 #endif

@@ -49,6 +49,24 @@ final class ListViewModelMembershipEvictionTests: XCTestCase {
 
     // MARK: - Tests
 
+    /// Nach dem Entfernen dürfen Artikel und Fotos der Liste nicht auf dem Gerät bleiben.
+    func test_membershipRemoval_purgesLocalItemsAndPhotos() throws {
+        let own = makeList(isDefault: true)
+        let shared = makeList(isDefault: false)
+        let vm = makeViewModel(activeListId: own.id)
+        vm.allLists = [own, shared]
+        for name in ["Milch", "Brot"] {
+            try vm.itemStore.upsert(model: ItemModel(imageData: "YWJj", name: name, listId: shared.id.uuidString))
+        }
+        try vm.itemStore.upsert(model: ItemModel(name: "Eigenes", listId: own.id.uuidString))
+        try vm.itemStore.save()
+
+        vm.handleMembershipRemoval(listId: shared.id)
+
+        XCTAssertTrue(try vm.itemStore.fetchItems(listId: shared.id, includeDeleted: true).isEmpty)
+        XCTAssertEqual(try vm.itemStore.fetchItems(listId: own.id).count, 1, "eigene Liste bleibt")
+    }
+
     func test_membershipRemoval_nonActiveList_doesNotSwitch() async throws {
         let list1 = makeList(isDefault: true)
         let list2 = makeList(isDefault: false)

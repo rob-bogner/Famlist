@@ -22,7 +22,7 @@ extension ItemEntity {
     func toItemModel() -> ItemModel {
         ItemModel(
             id: id.uuidString,
-            imageUrl: nil,
+            imagePath: imagePath,
             imageData: imageData,
             name: name,
             units: units,
@@ -54,10 +54,13 @@ extension ItemEntity {
 
     /// Übernimmt Inhalt und CRDT-Felder einer gewonnenen Remote-Zeile und markiert sie als synchron.
     /// Ob die Zeile gewinnt, entscheidet vorher `ItemSyncPolicy` – hier gibt es keine Sonderregeln mehr.
-    /// - Parameter includeImage: false, wenn die Quelle das Foto nicht mitschickt (Realtime-UPDATE ohne
-    ///   unverändertes TOAST-Feld, Antwort der RPC upsert_items_lww): Dann bleibt das lokale Foto.
-    func apply(model: ItemModel, includeImage: Bool = true) {
-        assignContent(from: model, includeImage: includeImage)
+    /// - Parameters:
+    ///   - imagePathKnown: Die Quelle enthält `image_path` (Realtime, Delta, RPC-Antwort: ja).
+    ///   - legacyImageKnown: Die Quelle enthält das alte Base64-Feld `imagedata` (Delta/Seitenladen: ja;
+    ///     Realtime-UPDATE ohne Änderung daran und RPC-Antwort: nein).
+    func apply(model: ItemModel, imagePathKnown: Bool = true, legacyImageKnown: Bool = true) {
+        assignContent(from: model, includeImage: false)
+        applyRemoteImage(model, pathKnown: imagePathKnown, legacyKnown: legacyImageKnown)
         if let newCreatedAt = model.createdAt { self.createdAt = newCreatedAt }
         if let newUpdatedAt = model.updatedAt { self.updatedAt = newUpdatedAt }
         self.hlcTimestamp = model.hlcTimestamp ?? 0
@@ -68,10 +71,31 @@ extension ItemEntity {
         self.syncStatus = .synced
     }
 
+    /// Foto einer Remote-Zeile: Neuer Pfad → lokale Kopie verwerfen (der Prefetcher lädt nach).
+    /// Gleicher Pfad → lokale Kopie behalten. Kein Pfad → altes Base64 übernehmen bzw. Foto entfernt.
+    private func applyRemoteImage(_ model: ItemModel, pathKnown: Bool, legacyKnown: Bool) {
+        if pathKnown, let path = model.imagePath {
+            if path != imagePath {             // neues Foto: lokale Kopie verwerfen, Prefetcher lädt nach
+                imagePath = path
+                imageData = nil
+            }
+        } else if legacyKnown {                // altes Format (Base64) oder Foto entfernt
+            imagePath = nil
+            imageData = model.imageData
+        } else if pathKnown, imagePath != nil {
+            imagePath = nil                    // Foto auf einem anderen Gerät entfernt
+            imageData = nil
+        }
+    }
+
     /// Schreibt die sichtbaren Felder eines Artikels (ohne CRDT- und Sync-Felder).
+    /// - Parameter includeImage: Foto (Base64 und Pfad) mit übernehmen.
     func assignContent(from model: ItemModel, includeImage: Bool = true) {
         if ownerPublicId == nil { self.ownerPublicId = model.ownerPublicId }
-        if includeImage { self.imageData = model.imageData }
+        if includeImage {
+            self.imageData = model.imageData
+            self.imagePath = model.imagePath
+        }
         self.name = model.name
         self.units = model.units
         self.measure = model.measure
@@ -129,6 +153,7 @@ extension ItemEntity {
             tombstone: model.tombstone ?? false,
             lastModifiedBy: model.lastModifiedBy
         )
+        entity.imagePath = model.imagePath
         entity.setTombstone(model.tombstone ?? false)
         return entity
     }

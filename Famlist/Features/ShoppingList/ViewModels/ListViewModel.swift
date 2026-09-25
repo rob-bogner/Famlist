@@ -185,6 +185,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
     /// Listen, für die in dieser Sitzung schon Fotos aus dem Artikelstamm übernommen wurden.
     internal var backfilledListIDs: Set<UUID> = []
+
+    /// Lädt Fotos anderer Geräte sofort herunter (offline verfügbar). nil ohne Storage (Vorschau/Tests).
+    internal var imagePrefetcher: ItemImagePrefetcher?
     
     /// Enumerates triggers that can resume realtime sync to aid logging and debugging.
     internal enum ResumeTrigger: String {
@@ -240,6 +243,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             .sink { [weak self] isOnline in
                 guard let self else { return }
                 if isOnline {
+                    self.prefetchImages()
                     self.resumeRealtimeSync(trigger: .connectivity)
                     // Also resume sync engine if available
                     Task {
@@ -266,6 +270,19 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
                 UserLog.Sync.itemSyncFailed(name: item.name, units: item.units, measure: item.measure)
             }
         }
+    }
+
+    /// Fotos in Supabase Storage (Migration 016): Herunterladen für die Offline-Anzeige.
+    func configure(imageStorage: ImageStorage) {
+        imagePrefetcher = ItemImagePrefetcher(store: itemStore, storage: imageStorage) { [weak self] in
+            self?.refreshItemsFromStore()
+        }
+    }
+
+    /// Fehlende Fotos im Hintergrund laden (alle Listen).
+    internal func prefetchImages() {
+        guard let imagePrefetcher else { return }
+        Task { await imagePrefetcher.prefetchMissing() }
     }
 
     /// Injects the personal item catalog repository for smart search support.

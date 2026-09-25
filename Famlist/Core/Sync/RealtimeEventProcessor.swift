@@ -58,7 +58,8 @@ final class RealtimeEventProcessor {
         }
         do {
             let (item, _) = try parseItemFromPayload(record)
-            let result = try itemStore.mergeRemote(item, includeImage: record.keys.contains("imagedata"))
+            let result = try itemStore.mergeRemote(item, imagePathKnown: record.keys.contains("image_path"),
+                                                   legacyImageKnown: record.keys.contains("imagedata"))
             try itemStore.save()
             logVoid(params: (action: "processUpsert", itemId: item.id, result: "\(result)"))
             return result
@@ -232,7 +233,7 @@ final class RealtimeEventProcessor {
         
         let item = ItemModel(
             id: idString,
-            imageUrl: nil,
+            imagePath: extractString("image_path"),
             imageData: imageData,
             name: name,
             units: units,

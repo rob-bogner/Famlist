@@ -39,7 +39,7 @@ extension ListViewModel {
     ///   - image: Optional image to attach.
     func addItemFromInput(name: String, units: String, measure: String, image: UIImage? = nil) {
         let newItem = ItemModel(
-            imageData: image?.toBase64(),
+            imageData: image.flatMap(ProductImageCodec.encode),
             name: name,
             units: Int(units) ?? 1,
             measure: measure, // addItem() normalisiert via canonicalizeMeasure

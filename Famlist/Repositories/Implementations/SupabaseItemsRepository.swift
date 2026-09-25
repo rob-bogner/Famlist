@@ -39,6 +39,7 @@ struct SupabaseItemRow: Codable {
     let listId: UUID
     let ownerPublicId: String?
     let imageData: String?
+    let imagePath: String?
     let name: String
     let units: Int
     let measure: String
@@ -61,6 +62,7 @@ struct SupabaseItemRow: Codable {
         case listId = "list_id"
         case ownerPublicId = "ownerpublicid"
         case imageData = "imagedata"
+        case imagePath = "image_path"
         case name, units, measure, price, isChecked, category
         case isUnavailable = "is_unavailable"
         case productDescription = "productdescription"
@@ -86,7 +88,7 @@ struct SupabaseItemRow: Codable {
 
         return ItemModel(
             id: id.uuidString,
-            imageUrl: nil,
+            imagePath: imagePath,
             imageData: imageData,
             name: name,
             units: units,

@@ -35,19 +35,12 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Unique identifier for the item.
     let id: String
 
-    /// TODO: [Future Migration] Public or signed URL to image in Supabase Storage
-    /// Current Status: NOT IMPLEMENTED - imageUrl is not used anywhere in the codebase
-    /// Migration Plan: When DB size becomes an issue, migrate to:
-    ///   1. Upload images to Supabase Storage
-    ///   2. Store URLs here instead of Base64
-    ///   3. Implement local cache (Data) for offline availability
-    ///   4. Remove imageData after migration complete
-    /// Trade-off: Base64 works offline but bloats DB; URLs are small but need caching
-    var imageUrl: String?
+    /// Pfad des Fotos im Storage-Bucket `item-images` („<list_id>/<sha256>.jpg“, Migration 016).
+    /// Das ist, was zwischen Geräten synchronisiert wird. nil = kein Foto oder noch nicht hochgeladen.
+    var imagePath: String?
 
-    /// Base64-encoded image data for offline-first functionality
-    /// Note: This approach stores images directly in the database which impacts size/performance
-    /// See imageUrl documentation for planned migration path
+    /// Foto als Base64 (JPEG) – die LOKALE Kopie für die Anzeige, auch offline. Wird nicht mehr in die
+    /// Datenbank geschrieben; andere Geräte laden das Foto über `imagePath` nach (ItemImagePrefetcher).
     var imageData: String?
     
     /// Name of the item (e.g., "Milk", "Bread").
@@ -138,7 +131,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     
     // MARK: - CodingKeys
     private enum CodingKeys: String, CodingKey {
-        case id, imageUrl, imageData, name, units, measure, price, isChecked, category
+        case id, imagePath = "image_path", imageData, name, units, measure, price, isChecked, category
         case isUnavailable
         case productDescription, brand, listId, ownerPublicId
         case createdAt = "created_at"
@@ -156,7 +149,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ///
     /// - Parameters:
     ///   - id: Unique identifier, defaults to a new random UUID.
-    ///   - imageUrl: Optional image URL (Supabase Storage), defaults to nil.
+    ///   - imagePath: Storage-Pfad des Fotos (Migration 016), defaults to nil.
     ///   - imageData: Optional Base64-encoded image data, defaults to nil.
     ///   - name: Name of the item, defaults to an empty string.
     ///   - units: Number of units, defaults to 1.
@@ -177,7 +170,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
     ///   - lastModifiedBy: Last modifier ID (optional, for CRDT)
     init(
         id: String = UUID().uuidString, // Generates a unique ID if none provided
-        imageUrl: String? = nil,
+        imagePath: String? = nil,
         imageData: String? = nil, // Default image data is nil
         name: String = "", // Default name is an empty string
         units: Int = 1, // Default to 1 unit
@@ -201,7 +194,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         isSyncFailed: Bool = false
     ) {
         self.id = id // Assigns the unique identifier
-        self.imageUrl = imageUrl
+        self.imagePath = imagePath
         self.imageData = imageData // Assigns the optional Base64 image data
         self.name = name // Assigns the item's name
         self.units = units // Assigns the quantity of the item
@@ -232,7 +225,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             id: try c.decode(String.self, forKey: .id),
-            imageUrl: try c.decodeIfPresent(String.self, forKey: .imageUrl),
+            imagePath: try c.decodeIfPresent(String.self, forKey: .imagePath),
             imageData: try c.decodeIfPresent(String.self, forKey: .imageData),
             name: try c.decode(String.self, forKey: .name),
             units: try c.decode(Int.self, forKey: .units),
@@ -260,7 +253,7 @@ extension ItemModel {
     /// Kopie mit anderer ID (die ID ist unveränderlich; neue Artikel bekommen ihre endgültige ID erst
     /// beim Anlegen, siehe ItemIdentity).
     func withId(_ newId: String) -> ItemModel {
-        ItemModel(id: newId, imageUrl: imageUrl, imageData: imageData, name: name, units: units, measure: measure,
+        ItemModel(id: newId, imagePath: imagePath, imageData: imageData, name: name, units: units, measure: measure,
                   price: price, isChecked: isChecked, isUnavailable: isUnavailable, category: category,
                   productDescription: productDescription, brand: brand, listId: listId, ownerPublicId: ownerPublicId,
                   createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt, hlcTimestamp: hlcTimestamp,

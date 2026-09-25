@@ -67,6 +67,12 @@ protocol SyncEngineProtocol: AnyObject {
     /// Abmelden: Warteschlange leeren.
     func resetForSignOut()
 
+    /// Kein Zugriff mehr auf eine Liste: deren wartende Operationen verwerfen.
+    func forgetList(_ listId: UUID)
+
+    /// Alte Base64-Fotos einer Liste nach Storage umziehen (Migration 016).
+    func migrateLegacyImages(listId: UUID) async
+
     /// App im Hintergrund: Sende-Timer anhalten.
     func pause()
 
@@ -85,8 +91,10 @@ extension SyncEngineProtocol {
     func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void) {}
     func setSyncEventObserver(_ observer: @escaping @MainActor (SyncEvent) -> Void) {}
     func resetForSignOut() {}
+    func forgetList(_ listId: UUID) {}
     func pause() {}
     func resume() {}
+    func migrateLegacyImages(listId: UUID) async {}
     func deleteItems(_ items: [ItemModel]) async {
         for item in items { await deleteItem(item) }
     }

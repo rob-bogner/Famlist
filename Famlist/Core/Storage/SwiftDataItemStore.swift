@@ -87,7 +87,7 @@ final class SwiftDataItemStore {
     /// Sie wird nur übernommen, wenn sie neuer ist als die lokale Zeile (ItemSyncPolicy).
     /// Speichert nicht – der Aufrufer ruft `save()` einmal am Ende.
     @discardableResult
-    func mergeRemote(_ model: ItemModel, includeImage: Bool = true) throws -> RemoteMergeResult {
+    func mergeRemote(_ model: ItemModel, imagePathKnown: Bool = true, legacyImageKnown: Bool = true) throws -> RemoteMergeResult {
         guard let id = UUID(uuidString: model.id) else { return .ignored }
         let existing = try fetchItem(id: id)
         switch ItemSyncPolicy.decide(local: existing?.hlc, remote: model.hlc) {
@@ -95,7 +95,7 @@ final class SwiftDataItemStore {
             context.insert(ItemEntity.make(from: model))
             return .inserted
         case .applyRemote:
-            existing?.apply(model: model, includeImage: includeImage)
+            existing?.apply(model: model, imagePathKnown: imagePathKnown, legacyImageKnown: legacyImageKnown)
             return .applied
         case .keepLocal:
             return .ignored
@@ -132,6 +132,20 @@ final class SwiftDataItemStore {
         return entity
     }
 
+    /// Artikel (alle Listen), deren Foto einen Storage-Pfad hat, aber noch nicht lokal vorliegt.
+    func itemsMissingImage(limit: Int) throws -> [ItemEntity] {
+        let descriptor = FetchDescriptor<ItemEntity>(predicate: #Predicate { $0.imagePath != nil })
+        return Array(try context.fetch(descriptor)
+            .filter { $0.imageData == nil && $0.deletedAt == nil }
+            .prefix(limit))
+    }
+
+    /// Artikel einer Liste mit altem Base64-Foto ohne Storage-Pfad (Umzug nach Storage, Migration 016).
+    func itemsWithLegacyImage(listId: UUID) throws -> [ItemEntity] {
+        let descriptor = FetchDescriptor<ItemEntity>(predicate: #Predicate { $0.listId == listId })
+        return try context.fetch(descriptor).filter { $0.imagePath == nil && $0.imageData != nil && $0.deletedAt == nil }
+    }
+
     /// Entfernt lokale Löschmarkierungen, die bestätigt und älter als `cutoff` sind.
     /// Der Server löscht seine nach 30 Tagen (Cron gc_tombstones); danach braucht sie niemand mehr.
     @discardableResult
@@ -144,6 +158,16 @@ final class SwiftDataItemStore {
         candidates.forEach { context.delete($0) }
         try save()
         return candidates.count
+    }
+
+    /// Entfernt ALLE lokalen Artikel einer Liste (inkl. Löschmarkierungen und Foto-Kopien) –
+    /// z. B. nach dem Entfernen aus einer geteilten Liste. - Returns: Anzahl entfernter Zeilen.
+    @discardableResult
+    func purgeAll(listId: UUID) throws -> Int {
+        let rows = try fetchItems(listId: listId, includeDeleted: true)
+        rows.forEach { context.delete($0) }
+        try save()
+        return rows.count
     }
 
     /// Removes an item from the context once the remote delete has been confirmed.

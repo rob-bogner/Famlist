@@ -19,7 +19,7 @@
  - No explicit owner filter needed in queries; RLS handles it automatically.
 
  📝 Last Change:
- - Initial creation for FAM-60 smart search feature.
+ - Fotos in Storage statt Base64 (Migration 016); fetchAll seitenweise (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -42,7 +42,10 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
     }
 
     /// Security: nur die Spalten, die die UI braucht.
-    private static let columns = "id,owner_public_id,name,brand,category,product_description,measure,price,image_data,barcode"
+    /// image_data nur noch für den Umzug alter Fotos nach Storage (Migration 016).
+    private static let columns = "id,owner_public_id,name,brand,category,product_description,measure,price,image_data,image_path,barcode"
+    /// Seitengröße für fetchAll (PostgREST liefert sonst höchstens `max_rows` Zeilen – ohne Hinweis).
+    static let pageSize = 500
 
     // MARK: - ItemCatalogRepository
 
@@ -69,27 +72,53 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
         // PostgreSQL uuid::text produces lowercase; Swift UUID.uuidString produces uppercase.
         // Lowercase is required for the RLS policy: owner_public_id = auth.uid()::TEXT
         catalogEntry.ownerPublicId = session.user.id.uuidString.lowercased()
+        catalogEntry.imagePath = try await uploadImage(of: catalogEntry, userId: session.user.id)
         try await client
             .from("item_catalog")
-            .upsert(catalogEntry, onConflict: "owner_public_id,name_lower")
+            .upsert(CatalogInsert(catalogEntry), onConflict: "owner_public_id,name_lower")
             .execute()
+    }
+
+    /// Foto nach catalog-images/<user>/<sha256>.jpg; liefert den Pfad (nil = kein Foto).
+    private func uploadImage(of entry: ItemCatalogEntry, userId: UUID) async throws -> String? {
+        guard let base64 = entry.imageData,
+              let object = ProductImageCodec.storageObject(folder: userId, base64: base64) else { return nil }
+        try await client.storageUpload(bucket: ProductImageCodec.catalogBucket, path: object.path,
+                                       data: object.data, contentType: "image/jpeg")
+        return object.path
+    }
+
+    func downloadImage(path: String) async throws -> Data? {
+        try await client.storageDownload(bucket: ProductImageCodec.catalogBucket, path: path)
     }
 
     /// Alle Einträge des Nutzers (RLS begrenzt auf owner_public_id = auth.uid()).
     func fetchAll() async throws -> [ItemCatalogEntry] {
-        try await client
-            .from("item_catalog")
-            .select(Self.columns)
-            .order("name_lower", ascending: true)
-            .execute()
-            .value
+        var all: [ItemCatalogEntry] = []
+        var offset = 0
+        while true {
+            let page: [ItemCatalogEntry] = try await client
+                .from("item_catalog")
+                .select(Self.columns)
+                .order("name_lower", ascending: true)
+                .order("id", ascending: true)
+                .range(from: offset, to: offset + Self.pageSize - 1)
+                .execute()
+                .value
+            all += page
+            guard page.count == Self.pageSize else { return all }
+            offset += Self.pageSize
+        }
     }
 
     /// Ändert einen Eintrag über seine ID; owner_public_id bleibt unverändert (RLS).
     func update(_ entry: ItemCatalogEntry) async throws {
+        let session = try await client.auth.session
+        var updated = entry
+        updated.imagePath = try await uploadImage(of: entry, userId: session.user.id)
         try await client
             .from("item_catalog")
-            .update(CatalogUpdate(entry))
+            .update(CatalogUpdate(updated))
             .eq("id", value: entry.id)
             .execute()
     }
@@ -122,7 +151,7 @@ private struct CatalogUpdate: Encodable {
     let productDescription: String?
     let measure: String
     let price: Double
-    let imageData: String?
+    let imagePath: String?
 
     init(_ entry: ItemCatalogEntry) {
         name = entry.name
@@ -131,13 +160,13 @@ private struct CatalogUpdate: Encodable {
         productDescription = entry.productDescription
         measure = entry.measure
         price = entry.price
-        imageData = entry.imageData
+        imagePath = entry.imagePath
     }
 
     enum CodingKeys: String, CodingKey {
         case name, brand, category, measure, price
         case productDescription = "product_description"
-        case imageData = "image_data"
+        case imagePath = "image_path"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -148,6 +177,35 @@ private struct CatalogUpdate: Encodable {
         try c.encode(productDescription, forKey: .productDescription)
         try c.encode(measure, forKey: .measure)
         try c.encode(price, forKey: .price)
-        try c.encode(imageData, forKey: .imageData)
+        try c.encode(imagePath, forKey: .imagePath)             // Trigger leert dabei das alte image_data
+    }
+}
+
+/// Neuer Eintrag (Upsert) ohne Base64 – das Foto steht nur als Storage-Pfad in der Zeile.
+private struct CatalogInsert: Encodable {
+    let entry: ItemCatalogEntry
+    init(_ entry: ItemCatalogEntry) { self.entry = entry }
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, brand, category, measure, price, barcode
+        case ownerPublicId = "owner_public_id"
+        case productDescription = "product_description"
+        case imagePath = "image_path"
+        case imageData = "image_data"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(entry.id, forKey: .id)
+        try c.encode(entry.ownerPublicId, forKey: .ownerPublicId)
+        try c.encode(entry.name, forKey: .name)
+        try c.encode(entry.brand, forKey: .brand)
+        try c.encode(entry.category, forKey: .category)
+        try c.encode(entry.productDescription, forKey: .productDescription)
+        try c.encode(entry.measure, forKey: .measure)
+        try c.encode(entry.price, forKey: .price)
+        try c.encodeIfPresent(entry.barcode, forKey: .barcode)
+        try c.encode(entry.imagePath, forKey: .imagePath)
+        try c.encodeNil(forKey: .imageData)                        // altes Base64 beim Upsert leeren
     }
 }

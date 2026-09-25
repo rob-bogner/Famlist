@@ -198,6 +198,14 @@ final class SyncOperationQueue {
         saveOrLog("clearFailedOperations", operationId: nil)
     }
 
+    /// Entfernt alle Operationen einer Liste (kein Zugriff mehr, z. B. aus der Liste entfernt).
+    func removeOperations(listId: UUID) {
+        let affected = fetchAll().filter { $0.listId == listId }
+        guard !affected.isEmpty else { return }
+        affected.forEach { inFlight.remove($0.id); context.delete($0) }
+        saveOrLog("removeOperationsForList", operationId: nil)
+    }
+
     /// Entfernt ALLE Operationen (Abmelden: nichts darf ins nächste Konto gelangen).
     func removeAll() {
         inFlight.removeAll()

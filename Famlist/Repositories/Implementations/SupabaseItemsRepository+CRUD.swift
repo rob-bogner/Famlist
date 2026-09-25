@@ -11,8 +11,8 @@
  🔰 Notes for Beginners:
  - Jeder Auftrag trägt den vollen Artikelstand samt HLC und Löschmarkierung. Der Server übernimmt ihn
    nur, wenn er neuer ist, und antwortet je Artikel mit applied/stale/denied/invalid plus gültiger Zeile.
- - Das Foto (`imagedata`) wird nur mitgeschickt, wenn es sich geändert hat (`includeImage`).
-   Fehlt der Schlüssel, behält der Server sein Foto.
+ - Das Foto geht nur als Storage-Pfad (`image_path`) mit, und nur, wenn es sich geändert hat
+   (`includeImage`). Fehlt der Schlüssel, behält der Server sein Foto. Base64 wird nicht mehr gesendet.
  - Aufträge werden in Stapeln zu höchstens 200 gesendet (Server-Grenze).
 
  📝 Last Change:
@@ -35,7 +35,7 @@ private struct UpsertRow: Encodable {
         case id
         case listId = "list_id"
         case ownerPublicId = "ownerpublicid"
-        case imageData = "imagedata"
+        case imagePath = "image_path"
         case name, units, measure, price, isChecked, category, brand, tombstone
         case isUnavailable = "is_unavailable"
         case productDescription = "productdescription"
@@ -50,7 +50,8 @@ private struct UpsertRow: Encodable {
         try c.encode(item.id, forKey: .id)
         try c.encode(item.listId, forKey: .listId)
         try c.encodeIfPresent(item.ownerPublicId, forKey: .ownerPublicId)
-        if includeImage { try c.encode(item.imageData, forKey: .imageData) }   // explizites null = Foto entfernt
+        // Foto nur als Storage-Pfad (Migration 016); explizites null = Foto entfernt, Schlüssel fehlt = unverändert.
+        if includeImage { try c.encode(item.imagePath, forKey: .imagePath) }
         try c.encode(item.name, forKey: .name)
         try c.encode(item.units, forKey: .units)
         try c.encode(MeasureCanonicalizer.canonicalize(item.measure), forKey: .measure)

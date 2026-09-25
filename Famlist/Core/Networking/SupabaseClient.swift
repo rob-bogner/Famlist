@@ -130,6 +130,8 @@ protocol SupabaseClienting { // Protocol to hide concrete Supabase types from th
     func rpc(_ function: String) async throws
     /// Löscht Dateien aus einem Storage-Bucket.
     func storageRemove(bucket: String, paths: [String]) async throws
+    /// Lädt eine Datei aus einem privaten Storage-Bucket (mit der Sitzung des Nutzers).
+    func storageDownload(bucket: String, path: String) async throws -> Data
     /// Ruft eine Postgres-Funktion mit Parametern auf und dekodiert die Zeilen.
     func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R]
     /// Ruft eine Postgres-Funktion mit Parametern auf, die einen einzelnen Wert liefert (z. B. uuid, boolean).
@@ -140,6 +142,7 @@ extension SupabaseClienting {
     // Standard für Test-Doubles, die diese Aufrufe nicht brauchen.
     func rpc(_ function: String) async throws {}
     func storageRemove(bucket: String, paths: [String]) async throws {}
+    func storageDownload(bucket: String, path: String) async throws -> Data { throw URLError(.fileDoesNotExist) }
     func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] { [] }
     func rpcValue<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> R {
         throw PostgrestError(message: "rpcValue(\(function)) not available in this client")
@@ -160,12 +163,23 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         authStateTask?.cancel()
     }
 
+    /// Eigene Session OHNE HTTP-Cache: Fotos liegen ohnehin in SwiftData (offline verfügbar); ein
+    /// zusätzlicher Datei-Cache hielte private Fotos und API-Antworten auch nach Abmelden oder
+    /// Entfernen aus einer Liste auf dem Gerät vor (Audit 25.09.2026).
+    static let uncachedSession: URLSession = {
+        let configuration = URLSessionConfiguration.default
+        configuration.urlCache = nil
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        return URLSession(configuration: configuration)
+    }()
+
     init?(config: SupabaseConfig) { // Failable initializer; returns nil if misconfigured (kept simple here).
         // Configure auth to auto-refresh tokens; rely on library defaults for secure storage/persistence.
         let options = SupabaseClientOptions(
             auth: SupabaseClientOptions.AuthOptions(
                 autoRefreshToken: true
-            )
+            ),
+            global: SupabaseClientOptions.GlobalOptions(session: Self.uncachedSession)
         )
         // Initialize Supabase client with URL, anon key, and configured options.
         self.client = SupabaseClient(supabaseURL: config.url, supabaseKey: config.anonKey, options: options) // Create configured client.
@@ -217,6 +231,10 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
 
     func rpcValue<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> R {
         try await client.rpc(function, params: params).execute().value
+    }
+
+    func storageDownload(bucket: String, path: String) async throws -> Data {
+        try await client.storage.from(bucket).download(path: path)
     }
 
     func storageRemove(bucket: String, paths: [String]) async throws {

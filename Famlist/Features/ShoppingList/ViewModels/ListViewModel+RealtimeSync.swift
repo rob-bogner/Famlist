@@ -88,6 +88,7 @@ extension ListViewModel {
 
                     // applyItems filters pendingBulkDeleteIDs and guards against redundant UI updates.
                     self.applyItems(sorted)
+                    self.prefetchImages()                    // neues Foto eines anderen Geräts sofort laden
                 }
             }
         }
@@ -96,8 +97,10 @@ extension ListViewModel {
         incrementalSyncTask?.cancel()
         incrementalSyncTask = Task { [weak self] in
             await self?.runIncrementalSync()
-            guard !Task.isCancelled else { return }
-            await self?.backfillImagesFromCatalog()   // Fotos aus dem Artikelstamm nachtragen
+            guard !Task.isCancelled, let self else { return }
+            self.prefetchImages()
+            await self.syncEngine?.migrateLegacyImages(listId: self.listId)
+            await self.backfillImagesFromCatalog()   // Fotos aus dem Artikelstamm nachtragen
         }
     }
 
@@ -180,6 +183,19 @@ extension ListViewModel {
         startObserving()
     }
 
+    /// Kein Zugriff mehr: Artikel, Fotos, Warteschlange und Zwischenstände dieser Liste vom Gerät löschen.
+    /// Vorher blieben sie nach dem Entfernen aus einer geteilten Liste gespeichert (Audit 25.09.2026).
+    internal func forgetLocalData(of removedListId: UUID) {
+        syncEngine?.forgetList(removedListId)
+        let purged = (try? itemStore.purgeAll(listId: removedListId)) ?? 0
+        try? listStore.purge(listId: removedListId)
+        try? listStore.save()
+        PaginationCursor.clear(listId: removedListId)
+        UserDefaults.standard.removeObject(forKey: "fam24_last_sync_ts_\(removedListId.uuidString)")
+        listItemCounts[removedListId] = nil
+        logVoid(params: (action: "forgetLocalData", listId: removedListId, purgedItems: purged))
+    }
+
     // MARK: - Membership Observation (FAM-21 Bug Fix)
 
     /// Startet eine Realtime-Beobachtung auf list_members DELETE-Events für den angegebenen User.
@@ -203,6 +219,7 @@ extension ListViewModel {
     internal func handleMembershipRemoval(listId removedListId: UUID) {
         logVoid(params: (action: "handleMembershipRemoval", listId: removedListId))
         allLists.removeAll { $0.id == removedListId }
+        forgetLocalData(of: removedListId)
 
         guard listId == removedListId else { return } // Nicht aktive Liste → kein Wechsel nötig
 
