@@ -59,6 +59,8 @@ enum ActiveListSheet: Equatable, Identifiable {
     case itemPriceHistory(ItemModel)
     /// Einkauf erledigt, noch ohne Kassenzettel (erscheint, sobald alles abgehakt ist).
     case shoppingDoneOffer
+    /// Import aus Zwischenablage (Menü).
+    case importClipboard
 
     var id: String {
         switch self {
@@ -85,6 +87,7 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .priceHistory(let entry): return "priceHistory-\(entry.id)"
         case .itemPriceHistory(let item): return "itemPriceHistory-\(item.id)"
         case .shoppingDoneOffer: return "shoppingDoneOffer"
+        case .importClipboard: return "importClipboard"
         }
     }
 }

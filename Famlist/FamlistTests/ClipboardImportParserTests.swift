@@ -534,4 +534,33 @@ final class ClipboardImportParserTests: XCTestCase {
     private func parse(_ content: String) -> ClipboardImportParser.ParseResult {
         ClipboardImportParser.parse("Liste\n\n" + content)
     }
+
+    // MARK: - Trennlinien (Audit 25.09.2026)
+
+    func test_separatorLines_areSkipped_notItems() {
+        let result = ClipboardImportParser.parse("Milch\n---\n***\n===\nBrot")
+        XCTAssertEqual(result.items.map(\.name), ["Milch", "Brot"])
+        XCTAssertEqual(result.skippedLines.count, 3, "Trennlinien erscheinen als übersprungen")
+    }
+
+    // MARK: - Nachgestellte Menge mit Einheit (Audit 25.09.2026)
+
+    func test_trailingQuantityWithUnit_isRecognized() {
+        let result = ClipboardImportParser.parse("Milch 2 l\nEier 10 Stk\nRitter Sport 100 g\nCola 1,5 l")
+        XCTAssertEqual(result.items.map(\.name), ["Milch", "Eier", "Ritter Sport", "Cola"])
+        XCTAssertEqual(result.items[0].units, 2)
+        XCTAssertEqual(result.items[0].measure, "l")
+        XCTAssertEqual(result.items[1].units, 10)
+        XCTAssertEqual(result.items[1].measure, "piece")
+        XCTAssertEqual(result.items[2].units, 100)
+        XCTAssertEqual(result.items[2].measure, "g")
+        XCTAssertEqual(result.items[3].units, 1500, "1,5 l wird wie bei führender Menge in ml umgerechnet")
+        XCTAssertEqual(result.items[3].measure, "ml")
+    }
+
+    func test_trailingNumberWithoutKnownUnit_staysInName() {
+        let result = ClipboardImportParser.parse("Vitamin C 500\nMilch 3,5 %")
+        XCTAssertEqual(result.items.map(\.name), ["Vitamin C 500", "Milch 3,5 %"])
+        XCTAssertEqual(result.items.map(\.units), [1, 1])
+    }
 }

@@ -209,7 +209,7 @@ extension ShoppingListView {
         case .manageItems: openManageItems()
         case .manageCategories: activeSheet = .manageCategories
         case .receipt: openReceiptCapture()
-        case .importClipboard: showImport = true
+        case .importClipboard: activeSheet = .importClipboard
         case .settings: activeSheet = .settings
         }
     }

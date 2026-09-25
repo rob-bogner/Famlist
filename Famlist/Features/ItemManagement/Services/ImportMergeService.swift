@@ -76,11 +76,7 @@ struct ImportMergeService {
     ) -> MergeResult {
         guard !selected.isEmpty else { return MergeResult(targets: []) }
 
-        // Build lookup: canonicalId → existing ItemModel (incl. soft-deleted)
-        let localByID: [String: ItemModel] = Dictionary(
-            allLocalItems.map { ($0.id, $0) },
-            uniquingKeysWith: { first, _ in first }
-        )
+        let lookup = LocalLookup(allLocalItems)
 
         // Step 1 — Group by canonical ID, preserving first-occurrence order
         var orderedIds: [String] = []
@@ -126,12 +122,12 @@ struct ImportMergeService {
             let productDesc      = group.compactMap(\.productDescription).first
 
             // Step 3 — Classify against local store
-            if let existing = localByID[canonicalId] {
+            if let existing = lookup.existing(id: canonicalId, name: first.name) {
                 if existing.deletedAt != nil || existing.isChecked {
                     // Gelöscht oder schon abgehakt (gekauft) → wieder offen mit der importierten Menge.
                     // Vorher wurde die Menge eines abgehakten Artikels erhöht, und er blieb abgehakt (Audit M8).
                     let reactivatedItem = ItemModel(
-                        id: canonicalId,
+                        id: existing.id,
                         name: first.name,
                         units: finalUnits,
                         measure: finalMeasure,
@@ -155,7 +151,7 @@ struct ImportMergeService {
             } else {
                 // Not found → create new
                 let newItem = ItemModel(
-                    id: canonicalId,
+                    id: lookup.isOccupied(canonicalId) ? UUID().uuidString : canonicalId,
                     name: first.name,
                     units: finalUnits,
                     measure: finalMeasure,
@@ -170,4 +166,29 @@ struct ImportMergeService {
 
         return MergeResult(targets: targets)
     }
+}
+
+/// Findet den vorhandenen Artikel zu einem importierten Namen.
+/// Zuerst über die berechnete ID, dann über den Namen. Liegt unter der berechneten ID ein Artikel mit
+/// ANDEREM Namen (umbenannter Altbestand), gilt er nicht als Treffer. Sonst würde „Milch“ die
+/// „Hafermilch“ überschreiben (gleiche Regel wie ItemIdentity, Audit H3).
+private struct LocalLookup {
+    private let byId: [String: ItemModel]
+    private let byName: [String: ItemModel]
+
+    init(_ items: [ItemModel]) {
+        byId = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        // Pro Name gewinnt ein aktiver Artikel vor einem gelöschten.
+        byName = Dictionary(items.map { (ItemIdentity.normalizedKey($0.name), $0) },
+                            uniquingKeysWith: { first, second in first.deletedAt == nil ? first : second })
+    }
+
+    func existing(id: String, name: String) -> ItemModel? {
+        let key = ItemIdentity.normalizedKey(name)
+        if let hit = byId[id], ItemIdentity.normalizedKey(hit.name) == key { return hit }
+        return byName[key]
+    }
+
+    /// true, wenn unter der ID schon ein Artikel mit anderem Namen liegt.
+    func isOccupied(_ id: String) -> Bool { byId[id] != nil }
 }

@@ -324,4 +324,23 @@ final class ImportMergeServiceTests: XCTestCase {
         XCTAssertNotNil(brotTarget)
         XCTAssertEqual(brotTarget?.item.units, 1)
     }
+
+    // MARK: - Abgleich über den Namen (Audit 25.09.2026)
+
+    func test_merge_existingWithOtherId_matchedByName_noDuplicate() {
+        let legacy = ItemModel(id: UUID().uuidString, name: "Milch", units: 1, listId: testListId.uuidString)
+        let result = merge(selected: [parsedItem("milch ", units: 2)], localItems: [legacy])
+        guard case .update(let item) = result.targets.first else { return XCTFail("Expected .update") }
+        XCTAssertEqual(item.id, legacy.id, "vorhandener Artikel wird erhöht, kein zweites „Milch“")
+        XCTAssertEqual(item.units, 3)
+    }
+
+    func test_merge_renamedItemOnCanonicalId_isNotOverwritten() {
+        let canonical = UUID.deterministicItemID(listId: testListId, name: "Milch").uuidString
+        let renamed = ItemModel(id: canonical, name: "Hafermilch", units: 1, listId: testListId.uuidString)
+        let result = merge(selected: [parsedItem("Milch")], localItems: [renamed])
+        guard case .createNew(let item) = result.targets.first else { return XCTFail("Expected .createNew") }
+        XCTAssertNotEqual(item.id, canonical, "Hafermilch darf nicht überschrieben werden")
+        XCTAssertEqual(item.name, "Milch")
+    }
 }

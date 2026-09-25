@@ -216,7 +216,8 @@ struct ClipboardImportParser {
 
         // Stage 4: Name / Notiz trennen
         let (name, note) = extractNameAndNote(parsed.remaining)
-        guard !name.isEmpty else { return nil }
+        // Trennlinien wie „---“, „***“ oder „===“ sind keine Artikel: Ein Name braucht mindestens einen Buchstaben.
+        guard name.unicodeScalars.contains(where: CharacterSet.letters.contains) else { return nil }
 
         let (units, measure) = parsed.explicit
             ? resolveUnits(parsed.quantity, measure: parsed.measure)
@@ -261,6 +262,11 @@ struct ClipboardImportParser {
         // 3d: Trailing-Suffix "Milch 1x" / "Milch x2"
         if let suffix = parseSuffixQuantity(text) {
             return QuantityParse(quantity: Double(suffix.units), explicit: true, remaining: suffix.remaining)
+        }
+        // 3e: Nachgestellte Menge mit bekannter Einheit – "Milch 2 l", "Ritter Sport 100 g", "Eier 10 Stk".
+        if let trailing = parseTrailingUnitQuantity(text) {
+            return QuantityParse(quantity: trailing.quantity, measure: trailing.measure, explicit: true,
+                                 remaining: trailing.remaining)
         }
         return QuantityParse(remaining: text)
     }
@@ -422,6 +428,24 @@ struct ClipboardImportParser {
         return (max(1, Int(parseQuantityString(number).rounded(.up))), String(text[nameRange]))
     }
 
+    // MARK: - Stage 3e: Nachgestellte Menge mit Einheit
+
+    /// `Milch 2 l` → qty=2, measure="l", remaining="Milch".
+    /// Nur mit einer unterstützten Einheit: `Vitamin C 500` oder `Milch 3,5 %` bleiben unverändert.
+    private static func parseTrailingUnitQuantity(
+        _ text: String
+    ) -> (quantity: Double, measure: String, remaining: String)? {
+        let pattern = #"^(.+?)\s+(\d+(?:[.,]\d+)?)\s*([\p{L}]+\.?)$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match     = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let nameRange = Range(match.range(at: 1), in: text),
+              let numRange  = Range(match.range(at: 2), in: text),
+              let unitRange = Range(match.range(at: 3), in: text),
+              let measure   = supportedUnitsMap[text[unitRange].lowercased()]
+        else { return nil }
+        return (parseQuantityString(String(text[numRange])), measure, String(text[nameRange]))
+    }
+
     // MARK: - Stage 4: Name / Notiz trennen
 
     /// Trennt Artikelname von optionalem Zusatztext.
@@ -432,11 +456,15 @@ struct ClipboardImportParser {
     /// 3. Kein Trennzeichen → gesamter Text ist der Name
     private static func extractNameAndNote(_ text: String) -> (name: String, note: String?) {
         var depth = 0
-        for (offset, char) in text.enumerated() {
+        let chars = Array(text)
+        for (offset, char) in chars.enumerated() {
+            // Dezimalkomma („Milch 3,5 %“) ist kein Trenner zwischen Name und Notiz.
+            let isDecimalComma = offset > 0 && offset + 1 < chars.count
+                && chars[offset - 1].isNumber && chars[offset + 1].isNumber
             switch char {
             case "(": depth += 1
             case ")": depth = max(0, depth - 1)
-            case "," where depth == 0:
+            case "," where depth == 0 && !isDecimalComma:
                 let idx  = text.index(text.startIndex, offsetBy: offset)
                 let name = String(text[..<idx]).trimmingCharacters(in: .whitespaces)
                 let note = String(text[text.index(after: idx)...]).trimmingCharacters(in: .whitespaces)
