@@ -17,7 +17,7 @@
  - Nur die geöffnete Liste: Andere Listen sind nicht geladen.
 
  📝 Last Change:
- - Initial creation (Änderungen im Artikelstamm erschienen nicht in der Liste).
+ - Fotos aus dem Artikelstamm in Listenartikel ohne Foto übernehmen; fehlende Angaben beim Hinzufügen ergänzen.
  ------------------------------------------------------------------------
  */
 
@@ -59,5 +59,46 @@ extension ListViewModel {
         a.name == b.name && a.brand == b.brand && a.category == b.category
             && a.productDescription == b.productDescription && a.measure == b.measure
             && a.price == b.price && a.imageData == b.imageData
+    }
+
+    // MARK: - Fehlende Angaben ergänzen
+
+    /// Übernimmt Foto, Preis, Marke, Kategorie, Beschreibung und Einheit aus `source`,
+    /// aber nur dort, wo `item` noch nichts hat. Menge, Abhak-Status und Name bleiben.
+    static func fillingMissingFields(of item: ItemModel, from source: ItemModel) -> ItemModel {
+        var u = item
+        if isBlank(u.imageData), !isBlank(source.imageData) { u.imageData = source.imageData }
+        if u.price <= 0, source.price > 0 { u.price = source.price }
+        if isBlank(u.brand), !isBlank(source.brand) { u.brand = source.brand }
+        if isBlank(u.category), !isBlank(source.category) { u.category = source.category }
+        if isBlank(u.productDescription), !isBlank(source.productDescription) { u.productDescription = source.productDescription }
+        if u.measure.isEmpty, !source.measure.isEmpty { u.measure = source.measure }
+        return u
+    }
+
+    private static func isBlank(_ value: String?) -> Bool {
+        value?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
+    }
+
+    /// Listenartikel ohne Foto bekommen das Foto aus dem Artikelstamm (gleicher Name).
+    /// Läuft beim Öffnen einer Liste; offline aus dem lokalen Stamm-Zwischenspeicher.
+    func backfillImagesFromCatalog() async {
+        guard let catalogRepository, items.contains(where: { Self.isBlank($0.imageData) }) else { return }
+        guard let entries = try? await catalogRepository.fetchAll() else { return }
+        let images = Dictionary(entries.compactMap { entry -> (String, String)? in
+            guard let data = entry.imageData, !Self.isBlank(data) else { return nil }
+            return (CatalogOperation.key(entry.name), data)
+        }, uniquingKeysWith: { first, _ in first })
+        var filled = 0
+        for item in items where Self.isBlank(item.imageData) {
+            guard let data = images[CatalogOperation.key(item.name)] else { continue }
+            var updated = item
+            updated.imageData = data
+            updateItem(updated, suppressUserLog: true, updateCatalog: false)
+            filled += 1
+        }
+        if filled > 0 {
+            logVoid(params: (action: "backfillImagesFromCatalog", listId: listId, filled: filled))
+        }
     }
 }

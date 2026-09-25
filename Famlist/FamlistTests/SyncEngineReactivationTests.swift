@@ -353,4 +353,45 @@ final class SyncEngineReactivationTests: XCTestCase {
         }
         XCTAssertNil(entity.deletedAt, "Normal createItem must not set deletedAt")
     }
+
+    // MARK: - Offline-First: lokale Anzeige vor dem Netzwerk
+
+    /// AC: Der Beobachter für lokale Schreibvorgänge feuert, BEVOR das Repository (Netzwerk) aufgerufen wird.
+    func test_localWriteObserver_firesBeforeRemotePush() async {
+        let spy = self.spy!
+        var pushesWhenObserved: [Int] = []
+        sut.setLocalWriteObserver { pushesWhenObserved.append(spy.createdItems.count) }
+
+        await sut.createItem(ItemModel(name: "Milch", listId: UUID().uuidString))
+
+        XCTAssertEqual(pushesWhenObserved.first, 0, "UI-Aktualisierung vor dem Senden")
+        XCTAssertEqual(spy.createdItems.count, 1)
+    }
+
+    // MARK: - Bearbeiten ohne lokalen Datensatz
+
+    /// Früher kehrte updateItem() still zurück, wenn der Artikel lokal fehlte – der Preis ging verloren.
+    func test_updateItem_missingEntity_storesPriceLocally() async throws {
+        let listId = UUID()
+        let item = ItemModel(id: UUID().uuidString, name: "Milch", price: 1.49, listId: listId.uuidString)
+
+        await sut.updateItem(item)
+
+        let stored = try itemStore.fetchItem(id: UUID(uuidString: item.id)!)
+        XCTAssertEqual(stored?.price ?? 0, 1.49, accuracy: 0.0001)
+        XCTAssertNotNil(stored?.hlcTimestamp)
+    }
+
+    /// Normalfall: Preis eines vorhandenen Artikels ändern.
+    func test_updateItem_existingEntity_updatesPrice() async throws {
+        let listId = UUID()
+        await sut.createItem(ItemModel(name: "Milch", listId: listId.uuidString))
+        let id = UUID.deterministicItemID(listId: listId, name: "Milch")
+        var edited = try XCTUnwrap(try itemStore.fetchItem(id: id)).toItemModel()
+        edited.price = 1.49
+
+        await sut.updateItem(edited)
+
+        XCTAssertEqual(try itemStore.fetchItem(id: id)?.price ?? 0, 1.49, accuracy: 0.0001)
+    }
 }

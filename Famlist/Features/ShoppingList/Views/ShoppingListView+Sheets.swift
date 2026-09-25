@@ -104,7 +104,10 @@ extension ShoppingListView {
                           onClose: { hideKeyboard(); activeSheet = .manageItems },
                           onSave: { saveCatalogEdit(from: entry, to: entry.applying($0)) })
         case .edit(let item):
-            EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet)
+            EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet,
+                          onPriceHistory: { hideKeyboard(); activeSheet = .itemPriceHistory(item) },
+                          lastPriceText: { await lastPriceText(for: item) },
+                          onPriceChanged: { recordPrice(for: $0) })
         case .productImage(let item):
             ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
         case .lists:
@@ -144,7 +147,7 @@ extension ShoppingListView {
             DeleteAccountDialog(appearance: appearance, isWorking: isDeletingAccount, errorText: deleteAccountError,
                                 onConfirm: deleteAccount, onCancel: { activeSheet = .settings })
                 .offset(y: insets.topShift)
-        case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory:
+        case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory, .itemPriceHistory, .shoppingDoneOffer:
             receiptSheetView(sheet, k: k)
         case .listName(let mode):
             ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {

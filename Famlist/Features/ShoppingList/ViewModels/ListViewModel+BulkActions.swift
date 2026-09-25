@@ -128,9 +128,11 @@ extension ListViewModel {
         }
         
         // 1. LOKALES ARRAY SOFORT AKTUALISIEREN (nur gefilterte Items)
+        let wasComplete = isShoppingComplete
         for i in items.indices where itemIDsToUpdate.contains(items[i].id) {
             items[i].isChecked = targetState
         }
+        noteCheckChange(wasComplete: wasComplete)
         
         // Convert String IDs to UUIDs once
         let uuidsToUpdate = itemIDsToUpdate.compactMap { UUID(uuidString: $0) }

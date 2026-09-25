@@ -79,6 +79,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Gelöschte Artikel, die noch per „Rückgängig“ zurückgeholt werden können (Toast, 5 s).
     @Published var pendingDeletion: PendingItemDeletion?
 
+    /// Neue ID, sobald der Nutzer den letzten offenen Artikel abhakt (→ „Einkauf erledigt“ anbieten).
+    /// Nur Nutzeraktionen setzen sie – kein Listenwechsel, kein Realtime-Update anderer Mitglieder.
+    @Published var shoppingCompletedEvent: UUID?
+
     /// Läuft ab, sobald der Rückgängig-Toast ausgeblendet wird; schreibt dann die Löschung.
     internal var pendingDeletionTask: Task<Void, Never>?
 
@@ -243,6 +247,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Pass `SyncEngine` in production, `PreviewSyncEngine` in previews.
     func configure(syncEngine: any SyncEngineProtocol) {
         self.syncEngine = syncEngine
+        // Offline-First: nach jedem lokalen Schreiben sofort aus SwiftData neu lesen (nicht erst nach dem Netzwerk).
+        syncEngine.setLocalWriteObserver { [weak self] in self?.refreshItemsFromStore() }
     }
 
     /// Injects the personal item catalog repository for smart search support.
@@ -325,11 +331,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
         // Duplikat-Check: existiert bereits ein ungehacktes Item mit gleichem Namen?
         if let existingIndex = items.firstIndex(where: {
-            $0.name.lowercased() == normalized.name.lowercased() && !$0.isChecked
+            CatalogOperation.key($0.name) == CatalogOperation.key(normalized.name) && !$0.isChecked
         }) {
             var incremented = items[existingIndex]
             let oldUnits = incremented.units
             incremented.units = oldUnits + 1
+            // Fehlende Angaben aus dem neu hinzugefügten Artikel übernehmen (z. B. Foto aus dem
+            // Artikelstamm). Vorhandene Werte bleiben unverändert.
+            incremented = ListViewModel.fillingMissingFields(of: incremented, from: normalized)
+            logVoid(params: (action: "addItem.increment", itemId: incremented.id, from: oldUnits,
+                             to: incremented.units, gotImage: items[existingIndex].imageData == nil && incremented.imageData != nil))
             UserLog.Data.itemCountIncremented(
                 name: incremented.name,
                 from: oldUnits,
@@ -429,6 +440,11 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
             }
         }
 
+        // Offline-First: Bearbeitung sofort in `items` sichtbar machen. Vorher kam die Änderung erst
+        // nach `syncEngine.updateItem` (inkl. Netzwerk-Queue) über refreshItemsFromStore an – bei langsamer
+        // oder fehlender Verbindung zeigte „Artikel bearbeiten“ deshalb weiter den alten Preis (0,00).
+        applyLocalEdit(normalized)
+
         // Track animation state if requested.
         if trackPendingAnimation {
             pendingAnimatedItemIDs.insert(normalized.id)
@@ -452,6 +468,23 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         }
     }
     
+    /// Übernimmt die bearbeitbaren Felder sofort in `items`; CRDT-/Sync-Felder bleiben unverändert.
+    private func applyLocalEdit(_ edited: ItemModel) {
+        guard let index = items.firstIndex(where: { $0.id == edited.id }) else { return }
+        var current = items[index]
+        current.name = edited.name
+        current.units = edited.units
+        current.measure = edited.measure
+        current.price = edited.price
+        current.isChecked = edited.isChecked
+        current.isUnavailable = edited.isUnavailable
+        current.category = edited.category
+        current.productDescription = edited.productDescription
+        current.brand = edited.brand
+        current.imageData = edited.imageData
+        items[index] = current
+    }
+
     /// Deletes an item by id within the current list.
     /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
     func deleteItem(_ item: ItemModel) {
@@ -506,6 +539,8 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
     func toggleItemChecked(_ item: ItemModel) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        let wasComplete = isShoppingComplete
+        defer { noteCheckChange(wasComplete: wasComplete) }
 
         // Optimistic update: toggle in-place, then re-sort according to currentSortOrder.
         // This prevents "double jump" and keeps the order consistent with any remote snapshots.

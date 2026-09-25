@@ -27,8 +27,11 @@ struct ShoppingDoneView: View {
     var totalCount: Int?
     var total: Decimal = 11.51
     var savedPrices = 5
+    /// false = noch ohne Kassenzettel (ShoppingDoneScan.dc.html): Angebot „Kassenzettel scannen“ statt Summe.
+    var hasReceipt = true
     var onFinish: () -> Void = {}
     var onKeep: () -> Void = {}
+    var onScan: () -> Void = {}
 
     var body: some View {
         let k = SheetTheme(appearance)
@@ -59,6 +62,30 @@ struct ShoppingDoneView: View {
                 .padding(.top, 30)
             }
 
+            if hasReceipt {
+                receiptSummary(totalText: totalText, infoFont: infoFont, k: k, t: t)
+            } else {
+                scanOffer(infoFont: infoFont, k: k, t: t)
+            }
+
+            if hasReceipt {
+                VStack(spacing: 8) {
+                    CTAButton(title: "Abgehakte löschen & fertig", k: k, action: onFinish)
+                    EKKTextButton(title: "Liste behalten", color: k.accentText, action: onKeep)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 34)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+            } else {
+                offerButtons(k: k)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
+    }
+
+    /// Mit Kassenzettel (ShoppingDone.dc.html): Summe, gespeicherte Preise, Hinweis.
+    private func receiptSummary(totalText: String, infoFont: UIFont, k: SheetTheme, t: EKKTokens) -> some View {
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
                     statTile("Gesamt", totalText, k: k, t: t)
@@ -82,17 +109,63 @@ struct ShoppingDoneView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 444)
+    }
 
-            VStack(spacing: 8) {
-                CTAButton(title: "Abgehakte löschen & fertig", k: k, action: onFinish)
-                EKKTextButton(title: "Liste behalten", color: k.accentText, action: onKeep)
+    /// Ohne Kassenzettel (ShoppingDoneScan.dc.html): Karte „Kassenzettel scannen?“ + Hinweis.
+    private func scanOffer(infoFont: UIFont, k: SheetTheme, t: EKKTokens) -> some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 14) {
+                SVGIcon(Icon.camera, size: 24, color: k.accentText, lineWidth: 1.9)
+                    .frame(width: 52, height: 52)
+                    .background(CSSBox(shape: RR(16), paint: t.tile))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Kassenzettel scannen?")
+                        .font(AppFont.outfit(17, 600))
+                        .foregroundStyle(k.text)
+                    Text("Preise werden automatisch erkannt und fließen in den Preisverlauf.")
+                        .font(AppFont.dm(13, 400))
+                        .foregroundStyle(k.sub)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 34)
-            .frame(maxHeight: .infinity, alignment: .bottom)
+            .padding(17)
+            .background(CSSBox(shape: RR(22), paint: t.card, border: 1, borderColor: t.cardBorder, shadows: t.cardShadow))
+            .accessibilityElement(children: .combine)
+
+            HStack(spacing: 10) {
+                SVGIcon(EKKIcon.trend, size: 20, color: k.accentText, lineWidth: 1.9)
+                    .accessibilityHidden(true)
+                Text("Geht auch später über ☰ → Kassenzettel scannen.")
+                    .font(AppFont.dm(14, 400))
+                    .foregroundStyle(k.sub)
+                    .cssLineHeight(19.6, font: infoFont)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.vertical, 15)
+            .padding(.horizontal, 17)
+            .background(CSSBox(shape: RR(20), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea()
+        .padding(.horizontal, 20)
+        .padding(.top, 444)
+    }
+
+    /// CTA „Kassenzettel scannen“ + zwei Textknöpfe nebeneinander.
+    private func offerButtons(k: SheetTheme) -> some View {
+        VStack(spacing: 8) {
+            CTAButton(title: "Kassenzettel scannen", k: k, icon: Icon.camera, action: onScan)
+            HStack(spacing: 8) {
+                EKKTextButton(title: "Abgehakte löschen", color: k.accentText, action: onFinish)
+                    .frame(maxWidth: .infinity)
+                EKKTextButton(title: "Liste behalten", color: k.sub, action: onKeep)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 34)
+        .frame(maxHeight: .infinity, alignment: .bottom)
     }
 
     /// Design-Text „alle 6 Artikel abgehakt“ nur, wenn wirklich alle abgehakt sind; sonst „2 von 6 Artikeln abgehakt“.
@@ -122,3 +195,9 @@ struct ShoppingDoneView: View {
 
 #Preview("Einkauf erledigt", traits: .fixedLayout(width: 390, height: 844)) { ShoppingDoneView(appearance: .light) }
 #Preview("Einkauf erledigt – Dark", traits: .fixedLayout(width: 390, height: 844)) { ShoppingDoneView(appearance: .dark) }
+#Preview("Einkauf erledigt – ohne Kassenzettel", traits: .fixedLayout(width: 390, height: 844)) {
+    ShoppingDoneView(appearance: .light, hasReceipt: false)
+}
+#Preview("Einkauf erledigt – ohne Kassenzettel – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    ShoppingDoneView(appearance: .dark, hasReceipt: false)
+}

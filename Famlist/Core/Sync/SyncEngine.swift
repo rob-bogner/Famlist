@@ -58,6 +58,13 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     
     /// Track if we're currently processing the queue to avoid concurrent processing
     private var isProcessingQueue: Bool = false
+
+    /// Offline-First: meldet jedes lokale Schreiben sofort (ListViewModel → refreshItemsFromStore).
+    private var localWriteObserver: (@MainActor () -> Void)?
+
+    func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void) {
+        localWriteObserver = observer
+    }
     
     /// Cancellables for Combine subscriptions
     private var cancellables = Set<AnyCancellable>()
@@ -164,23 +171,31 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     /// Updates an existing item with CRDT metadata
     /// - Parameter item: The item to update
     func updateItem(_ item: ItemModel) async {
-        // Get existing metadata and update HLC
-        guard let uuid = UUID(uuidString: item.id),
-              let existingEntity = try? itemStore.fetchItem(id: uuid) else {
-            logVoid(params: (action: "updateItem.error", reason: "Item not found in store"))
+        guard UUID(uuidString: item.id) != nil else {
+            logVoid(params: (action: "updateItem.error", reason: "Invalid item id", itemId: item.id))
             return
         }
-        
-        // Initialize HLC if missing (for old data).
-        // Epoch=0 fallback: hlcGenerator.receive() uses max(wallClock, remoteHLC+1),
-        // so epoch loses every comparison and the new HLC is always causally after now.
-        let existingHLC = HybridLogicalClock(
-            timestamp: existingEntity.hlcTimestamp ?? 0,
-            counter: existingEntity.hlcCounter ?? 0,
-            nodeId: existingEntity.hlcNodeId ?? hlcGenerator.nodeId
-        )
+        logVoid(params: (action: "updateItem.start", itemId: item.id, price: item.price, units: item.units))
 
-        let newHLC = hlcGenerator.receive(existingHLC)
+        // Get existing metadata and update HLC.
+        // Fehlt der Datensatz lokal (z. B. Liste noch nicht vollständig geladen), wird die Bearbeitung
+        // trotzdem gespeichert: früher kehrte die Methode hier still zurück, und die Änderung (z. B. der
+        // Preis) verschwand beim nächsten refreshItemsFromStore() wieder.
+        let newHLC: HybridLogicalClock
+        if let uuid = UUID(uuidString: item.id), let existingEntity = try? itemStore.fetchItem(id: uuid) {
+            // Initialize HLC if missing (for old data).
+            // Epoch=0 fallback: hlcGenerator.receive() uses max(wallClock, remoteHLC+1),
+            // so epoch loses every comparison and the new HLC is always causally after now.
+            let existingHLC = HybridLogicalClock(
+                timestamp: existingEntity.hlcTimestamp ?? 0,
+                counter: existingEntity.hlcCounter ?? 0,
+                nodeId: existingEntity.hlcNodeId ?? hlcGenerator.nodeId
+            )
+            newHLC = hlcGenerator.receive(existingHLC)
+        } else {
+            logVoid(params: (action: "updateItem.missingEntity", itemId: item.id, fallback: "upsert"))
+            newHLC = hlcGenerator.tick()
+        }
         let metadata = CRDTMetadata(
             hlc: newHLC,
             tombstone: false,
@@ -332,10 +347,12 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             }
             
             try itemStore.save()
+            localWriteObserver?()                  // UI sofort aktualisieren, nicht erst nach processQueue()
             
             logVoid(params: (
                 action: "storeLocally",
                 itemId: item.id,
+                price: entity.price,
                 hlcTimestamp: metadata.hlc.timestamp,
                 tombstone: metadata.tombstone
             ))

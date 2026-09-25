@@ -22,17 +22,34 @@ final class PriceHistoryViewModel: ObservableObject {
 
     let entry: ItemCatalogEntry
     private let priceBook: PriceBook
+    /// Ladenname für den Ersatzpunkt (z. B. Listenname „Edeka“), wenn es noch keinen Verlauf gibt.
+    private let fallbackStore: String
 
-    init(entry: ItemCatalogEntry, priceBook: PriceBook) {
+    init(entry: ItemCatalogEntry, priceBook: PriceBook, fallbackStore: String? = nil) {
         self.entry = entry
         self.priceBook = priceBook
+        self.fallbackStore = fallbackStore ?? "Gespeicherter Preis"
     }
 
     func load() async {
         isLoading = true
-        points = await priceBook.history(itemName: entry.name)
+        let history = await priceBook.history(itemName: entry.name)
+        points = Self.withFallback(history, entry: entry, store: fallbackStore)
         stats = PriceStatistics.make(points: points)
         isLoading = false
+    }
+
+    /// Ohne Verlauf, aber mit gespeichertem Artikelpreis: dieser Preis als einziger Punkt (heute).
+    /// So zeigt der Preisverlauf auch einen einzelnen Preis an statt „Noch keine Preise“.
+    static func withFallback(_ history: [PricePoint], entry: ItemCatalogEntry, store: String,
+                             now: Date = Date()) -> [PricePoint] {
+        guard history.isEmpty, entry.price > 0 else { return history }
+        return [PricePoint(itemName: entry.name, storeName: store, purchasedAt: now, price: decimal(entry.price))]
+    }
+
+    /// Double → Decimal auf 2 Nachkommastellen (1.49 bleibt 1.49 statt 1.4899999…).
+    static func decimal(_ value: Double) -> Decimal {
+        Decimal(string: String(format: "%.2f", value), locale: Locale(identifier: "en_US_POSIX")) ?? Decimal(value)
     }
 
     /// „250 g · zuletzt 2,49 € bei Edeka“ (Design); ohne Preise „Noch keine Preise“.

@@ -36,6 +36,9 @@ struct ShoppingListContent: View {
     var onShowImage: (ItemModel) -> Void = { _ in }
 
     @State private var draggingId: String?
+    /// Einstellungen → Liste → „Preise anzeigen“ (Summe in der Fortschrittskarte).
+    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+
 
     var body: some View {
         let sections = listViewModel.visibleSections
@@ -44,7 +47,8 @@ struct ShoppingListContent: View {
                        onShowLists: onShowLists, onMenu: onMenu)
             ListSearchBar(t: t, action: onSearch, onScan: onScan)
                 .padding(.top, 18)
-            ProgressHero(t: t, checked: listViewModel.checkedItemCount, total: listViewModel.totalItemCount)
+            ProgressHero(t: t, checked: listViewModel.checkedItemCount, total: listViewModel.totalItemCount,
+                         totalPrice: showPrices ? PriceDisplaySetting.total(of: listViewModel.items) : nil)
                 .padding(.top, 18)
             ListFilterTabs(t: t, selection: $listViewModel.itemFilter)
                 .padding(.top, 18)
@@ -114,7 +118,6 @@ struct ShoppingListContent: View {
             isRecentlySynced: listViewModel.recentlySyncedItemIDs.contains(item.id),
             onRetry: { listViewModel.retryItem(item) }
         )
-        .id("\(item.isChecked ? "checked" : "open")-\(item.id)") // eigene Identität je Abschnitt
         .modifier(ManualReorder(enabled: listViewModel.sortSettings.order == .manual,
                                 itemId: item.id, draggingId: $draggingId,
                                 onMove: { listViewModel.moveItem($0, to: $1) }))

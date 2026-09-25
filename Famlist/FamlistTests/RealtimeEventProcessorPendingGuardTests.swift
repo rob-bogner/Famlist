@@ -243,4 +243,20 @@ final class RealtimeEventProcessorPendingGuardTests: XCTestCase {
         let entity = try? itemStore.fetchItem(id: itemId)
         XCTAssertNil(entity, "Tombstone on .synced entity must purge the local record")
     }
+
+    // MARK: - Menge als Text / AnyJSON
+
+    /// AC: Kommt `units` nicht als Int (AnyJSON-Wrapper oder Text „4“), darf die Menge nicht auf 1 zurückfallen.
+    func test_processUpdate_unitsAsText_isParsed() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
+        var payload = makeUpdatePayload(id: itemId, listId: listId, units: 1, hlcTimestamp: 2_000)
+        var record = payload["record"] as? [String: Any] ?? [:]
+        record["units"] = "4"
+        payload["record"] = record
+
+        await sut.processUpdate(payload, listId: listId)
+
+        XCTAssertEqual(try itemStore.fetchItem(id: itemId)?.units, 4)
+    }
 }

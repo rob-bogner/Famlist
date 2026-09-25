@@ -23,14 +23,22 @@ struct CTAButton: View {
     let title: String
     let k: SheetTheme
     var isEnabled = true
+    /// Optionales Icon links vom Text (20 pt, Strich 2, Farbe wie der Text), z. B. Kamera bei „Kassenzettel scannen“.
+    var icon: [SVGElement]? = nil
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(AppFont.dm(16, 600))
-                .foregroundStyle(k.ctaText)
-                .lineLimit(1)
+            HStack(spacing: 8) {
+                if let icon {
+                    SVGIcon(icon, size: 20, color: k.ctaText, lineWidth: 2)
+                        .accessibilityHidden(true)
+                }
+                Text(title)
+                    .font(AppFont.dm(16, 600))
+                    .foregroundStyle(k.ctaText)
+                    .lineLimit(1)
+            }
                 .padding(.horizontal, 24)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
@@ -54,6 +62,7 @@ struct CTAButton: View {
     VStack(spacing: 20) {
         CTAButton(title: "Zur Liste hinzufügen", k: SheetTheme(.light))
         CTAButton(title: "Speichern", k: SheetTheme(.light), isEnabled: false)
+        CTAButton(title: "Kassenzettel scannen", k: SheetTheme(.dark), icon: Icon.camera)
     }
     .padding(20)
 }

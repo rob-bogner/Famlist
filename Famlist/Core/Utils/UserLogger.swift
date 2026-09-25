@@ -405,6 +405,11 @@ struct UserLog {
             log("✅ Alle \(count) Artikel als erledigt markiert")
         }
 
+        /// Letzter offener Artikel abgehakt → Einkauf erledigt
+        static func shoppingCompleted(list: String, count: Int) {
+            log("🛒 Einkauf „\(list)“ erledigt – alle \(count) Artikel abgehakt")
+        }
+
         static func allItemsUnchecked(count: Int) {
             log("⬜️ Alle \(count) Artikel zurückgesetzt")
         }

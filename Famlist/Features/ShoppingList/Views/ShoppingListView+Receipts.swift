@@ -47,6 +47,23 @@ extension ShoppingListView {
             PriceHistorySheet(viewModel: PriceHistoryViewModel(entry: entry, priceBook: priceBook),
                               appearance: appearance,
                               onClose: { activeSheet = .manageItems })
+        case .itemPriceHistory(let item):
+            // Aktuellen Stand aus der Liste nehmen: der Snapshot im Sheet-Fall kennt einen frisch gespeicherten Preis nicht.
+            let current = listViewModel.items.first { $0.id == item.id } ?? item
+            PriceHistorySheet(viewModel: PriceHistoryViewModel(entry: .from(item: current, ownerPublicId: current.ownerPublicId ?? ""),
+                                                               priceBook: priceBook, fallbackStore: currentStoreName),
+                              appearance: appearance,
+                              onClose: { activeSheet = .edit(item) })
+        case .shoppingDoneOffer:
+            // Design: ShoppingDoneScan.dc.html – noch ohne Kassenzettel
+            ShoppingDoneView(appearance: appearance,
+                             listName: listViewModel.defaultList?.title ?? String(localized: "shoppingList.title"),
+                             itemCount: listViewModel.checkedItemCount,
+                             totalCount: listViewModel.items.count,
+                             hasReceipt: false,
+                             onFinish: finishShopping,
+                             onKeep: closeReceiptFlow,
+                             onScan: openReceiptCapture)
         default:
             EmptyView()
         }
@@ -59,6 +76,38 @@ extension ShoppingListView {
                                            catalog: listViewModel.catalogRepository,
                                            priceBook: priceBook)
         activeSheet = .receiptCapture
+    }
+
+    /// ListViewModel meldet „Einkauf erledigt“ → nach kurzer Pause anbieten, wenn nichts anderes offen ist.
+    func offerShoppingDone(for event: UUID) {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 700_000_000)            // Abhak-Animation sichtbar lassen
+            guard listViewModel.shoppingCompletedEvent == event, listViewModel.isShoppingComplete,
+                  activeSheet == nil, activeOverlay == nil else { return }
+            activeSheet = .shoppingDoneOffer
+        }
+    }
+
+    /// Unterzeile für den Link „Preisverlauf“: „zuletzt 2,49 €“, ohne Preise „Noch keine Preise“.
+    /// Zuerst Zwischenspeicher (sofort), sonst einmal den Verlauf laden.
+    func lastPriceText(for item: ItemModel) async -> String? {
+        var last = priceBook.cachedLatest(itemName: item.name)
+        if last == nil { last = await priceBook.history(itemName: item.name).last }   // kein await im ??-Autoclosure
+        if let last { return "zuletzt \(PriceHistoryViewModel.euro(last.price))" }
+        let current = listViewModel.items.first { $0.id == item.id } ?? item
+        return current.price > 0 ? "zuletzt \(PriceDisplaySetting.euro(current.price))" : "Noch keine Preise"
+    }
+
+    /// Ladenname für Preispunkte aus „Artikel bearbeiten“: der Listenname (z. B. „Edeka“).
+    var currentStoreName: String {
+        listViewModel.defaultList?.title ?? String(localized: "shoppingList.title")
+    }
+
+    /// Neuer Preis in „Artikel bearbeiten“ → Preispunkt (heute, Laden = Listenname) für den Preisverlauf.
+    func recordPrice(for item: ItemModel) {
+        let point = PricePoint(itemName: item.name, storeName: currentStoreName, purchasedAt: Date(),
+                               price: PriceHistoryViewModel.decimal(item.price))
+        Task { await priceBook.save([point]) }
     }
 
     private func reviewReceipt(_ flow: ReceiptFlowViewModel) {

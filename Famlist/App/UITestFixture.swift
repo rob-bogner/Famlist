@@ -55,7 +55,10 @@ enum UITestFixture {
             }
         } else {
             for (name, category) in sampleItems {
-                vm.addItem(ItemModel(name: name, units: 1, category: category.rawValue, listId: vm.listId.uuidString))
+                // `-fixtureLargeImage`: „Brot“ mit großem Foto (~600 KB Base64 wie auf dem Gerät).
+                let image = name == "Brot" && args.contains("-fixtureLargeImage") ? largeImageBase64 : nil
+                vm.addItem(ItemModel(imageData: image, name: name, units: 1, category: category.rawValue,
+                                     listId: vm.listId.uuidString))
             }
         }
         vm.listItemCounts = Dictionary(uniqueKeysWithValues: vm.allLists.map { ($0.id, $0.id == vm.listId ? sampleItems.count : 2) })
@@ -77,6 +80,20 @@ enum UITestFixture {
     }
 
     private static let designInviteId = UUID()
+
+    /// Rauschbild 1200 × 1200 als JPEG → Base64 (groß wie ein Kamerafoto im Artikelstamm).
+    private static var largeImageBase64: String {
+        let size = CGSize(width: 1200, height: 1200)
+        let image = UIGraphicsImageRenderer(size: size).image { ctx in
+            for y in stride(from: 0, to: 1200, by: 6) {
+                for x in stride(from: 0, to: 1200, by: 6) {
+                    UIColor(hue: CGFloat((x * 7 + y * 13) % 360) / 360, saturation: 0.6, brightness: 0.9, alpha: 1).setFill()
+                    ctx.fill(CGRect(x: x, y: y, width: 6, height: 6))
+                }
+            }
+        }
+        return image.jpegData(compressionQuality: 0.9)?.base64EncodedString() ?? ""
+    }
 
     /// Kategorien im Speicher (Standard-Kategorien, kein Supabase).
     static let categoryStore = CategoryStore(repository: InMemoryCategoryDefinitionsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)

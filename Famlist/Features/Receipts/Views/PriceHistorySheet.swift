@@ -117,7 +117,7 @@ struct PriceHistorySheet: View {
                     }
 
                     if stats.stores.isEmpty {
-                        Text(vm.isLoading ? "Preise werden geladen …" : "Noch keine Preise · Preise kommen aus gescannten Kassenzetteln")
+                        Text(vm.isLoading ? "Preise werden geladen …" : "Noch keine Preise · Preis bei „Artikel bearbeiten“ eintragen oder Kassenzettel scannen")
                             .font(AppFont.dm(12, 400))
                             .foregroundStyle(k.sub)
                             .multilineTextAlignment(.center)

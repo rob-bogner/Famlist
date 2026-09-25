@@ -123,9 +123,16 @@ final class RealtimeEventProcessor {
                 return
             }
 
-            let (item, metadata) = try parseItemFromPayload(record)
+            var (item, metadata) = try parseItemFromPayload(record)
 
             guard let uuid = UUID(uuidString: item.id) else { return }
+
+            // Postgres schickt große, unveränderte Werte (TOAST, hier: das Foto) bei UPDATE nicht mit –
+            // das Feld fehlt dann ganz. Fehlt es, bleibt das lokale Foto. Nur ein ausdrückliches `null`
+            // (Foto wirklich entfernt) löscht es. Nachgewiesen im Gerätelog vom 25.09.2026.
+            if record["imagedata"] == nil, let existing = try? itemStore.fetchItem(id: uuid) {
+                item.imageData = existing.imageData
+            }
 
             // FAM-41: Remote tombstone → route to canonical delete path.
             if metadata.tombstone {
@@ -309,6 +316,12 @@ final class RealtimeEventProcessor {
             }
             if let value = record[key] as? Double {
                 return Int(value)
+            }
+            // AnyJSON-Wrapper / Zahl als Text (wie extractDouble): sonst fiel die Menge still auf 1 zurück.
+            if let anyValue = record[key], String(describing: anyValue) != "<null>" {
+                let str = String(describing: anyValue).replacingOccurrences(of: "AnyJSON.", with: "")
+                if let intVal = Int(str) { return intVal }
+                if let doubleVal = Double(str) { return Int(doubleVal) }
             }
             return nil
         }

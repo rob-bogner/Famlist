@@ -26,6 +26,8 @@ struct ProgressHero: View {
     let t: ListTheme
     let checked: Int
     let total: Int
+    /// Summe Preis × Menge; nil blendet die Zeile aus (Einstellung „Preise anzeigen“ aus).
+    var totalPrice: Double? = nil
 
     private var fraction: Double { total == 0 ? 0 : Double(checked) / Double(total) }
     private var percent: Int { Int((fraction * 100).rounded()) }
@@ -39,7 +41,8 @@ struct ProgressHero: View {
         .background { decoration }
         .background(CSSBox(shape: RR(28), paint: t.heroBg, shadows: t.heroShadow))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Fortschritt: \(checked) von \(total) Artikeln erledigt, \(percent) Prozent")
+        .accessibilityLabel("Fortschritt: \(checked) von \(total) Artikeln erledigt, \(percent) Prozent"
+                            + (totalPrice.map { ", \(PriceDisplaySetting.euro($0)) gesamt" } ?? ""))
     }
 
     private var headerRow: some View {
@@ -61,6 +64,16 @@ struct ProgressHero: View {
                 Text("\(checked) von \(total) \(checked == 1 && total == 1 ? "Artikel" : "Artikeln")")
                     .font(AppFont.dm(16, 600))
                     .foregroundStyle(Color.white)
+                if let totalPrice {
+                    // Hybrid.dc.html: margin-top 1, DM Sans 13/500, weiß 0,86
+                    Text("\(PriceDisplaySetting.euro(totalPrice)) gesamt")
+                        .font(AppFont.dm(13, 500))
+                        .foregroundStyle(Color.rgba(255, 255, 255, 0.86))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.top, 1)
+                        .contentTransition(.numericText())
+                }
             }
 
             Spacer(minLength: 0)
@@ -140,4 +153,4 @@ private struct ProgressTrack: View {
 }
 
 #Preview("0 %") { ProgressHero(t: ListTheme(.light), checked: 0, total: 1).padding(20) }
-#Preview("60 % Dark") { ProgressHero(t: ListTheme(.dark), checked: 3, total: 5).padding(20).background(Color.hex("#071012")) }
+#Preview("60 % Dark") { ProgressHero(t: ListTheme(.dark), checked: 3, total: 5, totalPrice: 12.47).padding(20).background(Color.hex("#071012")) }

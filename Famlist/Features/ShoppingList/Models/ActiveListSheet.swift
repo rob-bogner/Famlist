@@ -55,6 +55,10 @@ enum ActiveListSheet: Equatable, Identifiable {
     case shoppingDone
     /// Preisverlauf eines Artikels; liegt über „Artikel verwalten“.
     case priceHistory(ItemCatalogEntry)
+    /// Preisverlauf eines Listenartikels; liegt über „Artikel bearbeiten“ (Link neben dem Preis).
+    case itemPriceHistory(ItemModel)
+    /// Einkauf erledigt, noch ohne Kassenzettel (erscheint, sobald alles abgehakt ist).
+    case shoppingDoneOffer
 
     var id: String {
         switch self {
@@ -79,6 +83,8 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .receiptReview: return "receiptReview"
         case .shoppingDone: return "shoppingDone"
         case .priceHistory(let entry): return "priceHistory-\(entry.id)"
+        case .itemPriceHistory(let item): return "itemPriceHistory-\(item.id)"
+        case .shoppingDoneOffer: return "shoppingDoneOffer"
         }
     }
 }
@@ -91,6 +97,7 @@ extension ActiveListSheet {
         case .deleteAccount: return .settings
         case .editCategory: return .manageCategories
         case .priceHistory: return .manageItems
+        case .itemPriceHistory(let item): return .edit(item)
         default: return nil
         }
     }

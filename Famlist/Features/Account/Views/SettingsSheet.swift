@@ -24,6 +24,7 @@ import SwiftUI
 struct SettingsSheet: View {
     @EnvironmentObject var session: AppSessionViewModel
     @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
+    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
     let appearance: Appearance
     var onClose: () -> Void = {}
     var onEditProfile: () -> Void = {}
@@ -53,6 +54,16 @@ struct SettingsSheet: View {
                     .padding(.top, 22)
                 appearanceSegment(t: t, k: k)
                     .padding(.top, 10)
+
+                ListAccountSectionLabel(text: "Liste", t: t)
+                    .padding(.top, 22)
+                SettingsGroup(t: t) {
+                    SettingsRow(t: t, title: "Preise anzeigen", titleColor: k.text,
+                                subtitle: "Auf Artikelkarten und in der Fortschrittskarte", hasTopLine: false) {
+                        ListAccountToggle(t: t, isOn: $showPrices, label: "Preise anzeigen")
+                    }
+                }
+                .padding(.top, 10)
 
                 ListAccountSectionLabel(text: "Benachrichtigungen", t: t)
                     .padding(.top, 22)

@@ -102,6 +102,9 @@ struct ShoppingListView: View {
         #if DEBUG
         .onAppear { applyDesignLaunchState() }
         #endif
+        .onChange(of: listViewModel.shoppingCompletedEvent) { _, event in
+            if let event { offerShoppingDone(for: event) }
+        }
         .onChange(of: listViewModel.pendingDeletion?.id) { _, newId in
             guard newId != nil else { return }
             undoRemaining = 1
