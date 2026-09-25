@@ -53,7 +53,9 @@ final class SupabasePricePointsRepository: PricePointsRepository {
             Row(id: $0.id, profile_id: uid, item_key: $0.itemKey, item_name: $0.itemName, store_name: $0.storeName,
                 purchased_at: Self.dayFormatter.string(from: $0.purchasedAt), price: $0.price)
         }
-        try await client.from("price_points").upsert(rows, onConflict: "id").execute()
+        // ignoreDuplicates → ON CONFLICT DO NOTHING: Doppeltes Senden (Antwort ging verloren) ist harmlos und
+        // braucht keine UPDATE-Regel. Vorher blieb die Warteschlange danach für immer hängen (Audit H9).
+        try await client.from("price_points").upsert(rows, onConflict: "id", ignoreDuplicates: true).execute()
     }
 
     func history(itemKey: String) async throws -> [PricePoint] {

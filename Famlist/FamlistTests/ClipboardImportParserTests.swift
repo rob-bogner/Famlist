@@ -1,6 +1,6 @@
 /*
  ClipboardImportParserTests.swift
- Created: 19.10.2025 | Updated: 16.03.2026
+ Created: 19.10.2025 | Updated: 25.09.2026
 
  Purpose: Unit-Tests für ClipboardImportParser
 
@@ -10,6 +10,8 @@
  - 14.03.2026: FAM-60 cont. – Pipeline-Refactor: führende Klammern, Dezimalzahlen,
                kanonisches Measure-Mapping, nicht unterstützte Einheiten verworfen
  - 16.03.2026: FAM-71 – Tests für ParsedItem.stableId(forList:)
+ - 25.09.2026: Audit-Fixes – Ladenname-Erkennung, Multiplikatoren (2x / x2 / 2×),
+               Dezimalmengen (kg→g, l→ml, Stück aufrunden), Aufzählungszeichen
 */
 
 import XCTest
@@ -418,6 +420,112 @@ final class ClipboardImportParserTests: XCTestCase {
         let item = result.items[0]
         let expected = UUID.deterministicItemID(listId: fixedListId, name: item.name).uuidString
         XCTAssertEqual(item.stableId(forList: fixedListId), expected)
+    }
+
+    // MARK: - Audit: Erste Zeile nur bei eindeutigem Ladennamen
+
+    /// Erste Zeile ohne Laden-Merkmal ist ein Artikel.
+    func test_firstLine_plainItem_isImported() {
+        let result = ClipboardImportParser.parse("Milch\nEier")
+        XCTAssertNil(result.storeName)
+        XCTAssertEqual(result.items.map(\.name), ["Milch", "Eier"])
+    }
+
+    /// Leerzeile allein macht die erste Zeile noch nicht zum Ladennamen.
+    func test_firstLine_blankLineWithoutCategory_isItem() {
+        let result = ClipboardImportParser.parse("Milch\n\nEier")
+        XCTAssertNil(result.storeName)
+        XCTAssertEqual(result.items.map(\.name), ["Milch", "Eier"])
+    }
+
+    /// „Edeka:“ → Doppelpunkt am Ende kennzeichnet den Laden.
+    func test_firstLine_colonSuffix_isStoreName() {
+        let result = ClipboardImportParser.parse("Edeka:\nMilch")
+        XCTAssertEqual(result.storeName, "Edeka")
+        XCTAssertEqual(result.items.map(\.name), ["Milch"])
+    }
+
+    /// Bekannte Kette (Liste aus ReceiptParser.knownStores) → Ladenname.
+    func test_firstLine_knownStore_isStoreName() {
+        let result = ClipboardImportParser.parse("Rewe\nMilch\nEier")
+        XCTAssertEqual(result.storeName, "Rewe")
+        XCTAssertEqual(result.items.map(\.name), ["Milch", "Eier"])
+    }
+
+    /// „[Obst]“ in der ersten Zeile bleibt wie bisher eine Kategorie.
+    func test_firstLine_bracket_staysCategory() {
+        let result = ClipboardImportParser.parse("[Obst]\nÄpfel")
+        XCTAssertNil(result.storeName)
+        XCTAssertEqual(result.items.first?.category, "Obst")
+    }
+
+    // MARK: - Audit: Multiplikatoren
+
+    func test_multiplier_variants_giveTwoPieces() {
+        let inputs = ["2x Milch", "2 x Milch", "x2 Milch", "2× Milch", "2X Milch", "Milch x2", "Milch 2×"]
+        for input in inputs {
+            let item = parse("[A]\n" + input).items.first
+            XCTAssertEqual(item?.name, "Milch", input)
+            XCTAssertEqual(item?.units, 2, input)
+            XCTAssertEqual(item?.measure, "piece", input)
+        }
+    }
+
+    // MARK: - Audit: Dezimalmengen
+
+    func test_decimal_kg_convertsToGram() {
+        let item = parse("[A]\n1,5 kg Kartoffeln").items[0]
+        XCTAssertEqual(item.units, 1500)
+        XCTAssertEqual(item.measure, "g")
+        XCTAssertEqual(item.name, "Kartoffeln")
+    }
+
+    func test_decimal_l_convertsToMilliliter() {
+        let item = parse("[A]\n0,5 l Milch").items[0]
+        XCTAssertEqual(item.units, 500)
+        XCTAssertEqual(item.measure, "ml")
+    }
+
+    func test_decimal_quarterKg_andFraction() {
+        XCTAssertEqual(parse("[A]\n0,25 kg Hack").items[0].units, 250)
+        XCTAssertEqual(parse("[A]\n1/2 kg Butter").items[0].measure, "g")
+        XCTAssertEqual(parse("[A]\n1/2 kg Butter").items[0].units, 500)
+    }
+
+    func test_decimal_meter_convertsToCentimeter() {
+        let item = parse("[A]\n1,5 m Folie").items[0]
+        XCTAssertEqual(item.units, 150)
+        XCTAssertEqual(item.measure, "cm")
+    }
+
+    func test_wholeKg_staysKg() {
+        let item = parse("[A]\n2 kg Mehl").items[0]
+        XCTAssertEqual(item.units, 2)
+        XCTAssertEqual(item.measure, "kg")
+    }
+
+    func test_decimal_pieces_roundUp() {
+        let item = parse("[A]\n1,5 Brot").items[0]
+        XCTAssertEqual(item.units, 2)
+        XCTAssertEqual(item.measure, "piece")
+        XCTAssertEqual(item.name, "Brot")
+    }
+
+    // MARK: - Audit: Aufzählungszeichen
+
+    func test_bullets_areStripped() {
+        let input = "- Milch\n• Eier\n* Butter\n☐ Käse\n☑ Brot\n✓ Wurst\n1. Äpfel\n2) Birnen\n[x] Salz\n[ ] Zucker\n- [ ] Mehl"
+        let result = ClipboardImportParser.parse(input)
+        XCTAssertNil(result.storeName)
+        XCTAssertEqual(result.items.map(\.name),
+                       ["Milch", "Eier", "Butter", "Käse", "Brot", "Wurst", "Äpfel", "Birnen", "Salz", "Zucker", "Mehl"])
+        XCTAssertTrue(result.items.allSatisfy { $0.units == 1 && $0.measure == "" })
+    }
+
+    func test_bullet_withMultiplier() {
+        let item = ClipboardImportParser.parse("- 2x Milch").items.first
+        XCTAssertEqual(item?.name, "Milch")
+        XCTAssertEqual(item?.units, 2)
     }
 
     // MARK: - Hilfsmethode

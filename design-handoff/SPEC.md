@@ -150,10 +150,12 @@ Jede Zeile hat eine Light- und eine Dark-Variante, außer bei den Kamera-Screens
 
 ## 5. Noch nicht gestaltet – NICHT umsetzen
 
-- Live-Gesamtkosten in der Liste
 - Avatar „wer hat was“ an Artikeln
-- Link „Preisverlauf“ in „Artikel bearbeiten“
 
-Diese drei Punkte kommen später mit eigenem Design. Bis dahin gilt: kein eigenes UI dafür erfinden.
+Dieser Punkt kommt später mit eigenem Design. Bis dahin gilt: kein eigenes UI dafür erfinden.
+
+**Von Robert freigegeben (25.09.2026), obwohl nicht gestaltet:** Live-Gesamtkosten in der Fortschrittskarte,
+Preis auf jeder Artikelkarte (abschaltbar: Einstellungen → „Preise anzeigen“) und der Link „Preisverlauf“ in
+„Artikel bearbeiten“. Umsetzung und Abweichungen: PLAN.md §9.
 
 **Übergangslösung für den Preisverlauf:** Der Screen wird gebaut. Bis der Link gestaltet ist, erreicht man ihn über das System-Kontextmenü (langer Druck) auf einen Artikel in „Artikel verwalten“, Eintrag „Preisverlauf“.

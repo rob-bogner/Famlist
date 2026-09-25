@@ -213,6 +213,16 @@ final class ImportMergeServiceTests: XCTestCase {
         XCTAssertEqual(item.units, 2)  // 1 existing + 1 imported
     }
 
+    /// Schon abgehakt (gekauft) und erneut importiert → wieder offen mit der importierten Menge (Audit M8).
+    func test_merge_checkedItem_reopensWithImportedUnits() {
+        var bought = activeItem(name: "Milch", units: 3)
+        bought.isChecked = true
+        let result = merge(selected: [parsedItem("Milch", units: 2)], localItems: [bought])
+        guard case .reactivate(let item) = result.targets.first else { return XCTFail("Expected .reactivate") }
+        XCTAssertEqual(item.units, 2)
+        XCTAssertFalse(item.isChecked)
+    }
+
     func test_merge_existingActiveItem_pendingCreate_producesUpdate() {
         var local = activeItem(name: "Milch", units: 1)
         // pendingCreate is active (no deletedAt) → should still produce .update

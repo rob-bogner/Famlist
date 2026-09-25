@@ -127,8 +127,9 @@ struct ImportMergeService {
 
             // Step 3 — Classify against local store
             if let existing = localByID[canonicalId] {
-                if existing.deletedAt != nil {
-                    // Soft-deleted → reactivate with fresh imported data
+                if existing.deletedAt != nil || existing.isChecked {
+                    // Gelöscht oder schon abgehakt (gekauft) → wieder offen mit der importierten Menge.
+                    // Vorher wurde die Menge eines abgehakten Artikels erhöht, und er blieb abgehakt (Audit M8).
                     let reactivatedItem = ItemModel(
                         id: canonicalId,
                         name: first.name,

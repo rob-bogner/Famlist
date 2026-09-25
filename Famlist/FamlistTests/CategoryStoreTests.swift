@@ -30,6 +30,24 @@ private final class SpySyncEngine: SyncEngineProtocol {
     func applyBulkItems(_ targets: [ImportTarget]) async {}
 }
 
+/// Kategorien-Server, der zwischen „offline“ und „online“ umgeschaltet werden kann.
+private final class FlakyCategoriesRepository: CategoryDefinitionsRepository {
+    var offline = false
+    let inner = InMemoryCategoryDefinitionsRepository()
+    func fetch(profileId: UUID) async throws -> [CategoryDefinition] {
+        if offline { throw URLError(.notConnectedToInternet) }
+        return try await inner.fetch(profileId: profileId)
+    }
+    func upsert(_ categories: [CategoryDefinition], profileId: UUID) async throws {
+        if offline { throw URLError(.notConnectedToInternet) }
+        try await inner.upsert(categories, profileId: profileId)
+    }
+    func delete(id: UUID) async throws {
+        if offline { throw URLError(.notConnectedToInternet) }
+        try await inner.delete(id: id)
+    }
+}
+
 @MainActor
 final class CategoryStoreTests: XCTestCase {
     /// Wartet, bis `condition` erfüllt ist (höchstens 2 s) – statt fester Pausen, die unter Last zu kurz sind.
@@ -138,5 +156,50 @@ final class CategoryStoreTests: XCTestCase {
         await waitUntil { spy.updated.count == 2 }
         XCTAssertEqual(Set(spy.updated.map(\.name)), ["Milch", "Käse"])
         XCTAssertTrue(spy.updated.allSatisfy { $0.category == "Sonstiges" })
+    }
+
+    // MARK: - Offline zuerst (Audit M4)
+
+    func test_offlineChanges_stayLocal_andAreSentLater() async throws {
+        let repo = FlakyCategoriesRepository()
+        let store = CategoryStore(repository: repo, defaults: defaults)
+        await store.load(profileId: profileId)
+        await store.waitForWrites()
+        repo.offline = true
+        XCTAssertTrue(store.add(name: "Drogerie", icon: "bag"))
+        await store.waitForWrites()
+        XCTAssertTrue(store.categories.contains { $0.name == "Drogerie" })
+        XCTAssertNil(store.errorMessage, "offline ist kein Fehler")
+        XCTAssertFalse(repo.inner.stored.contains { $0.name == "Drogerie" })
+
+        // Neustart offline: die Änderung ist noch da
+        let restarted = CategoryStore(repository: repo, defaults: defaults)
+        await restarted.load(profileId: profileId)
+        XCTAssertTrue(restarted.categories.contains { $0.name == "Drogerie" })
+
+        // Wieder online: beim Laden zuerst senden, dann übernehmen – nichts geht verloren
+        repo.offline = false
+        await restarted.load(profileId: profileId)
+        await restarted.waitForWrites()
+        XCTAssertTrue(repo.inner.stored.contains { $0.name == "Drogerie" })
+        XCTAssertTrue(restarted.categories.contains { $0.name == "Drogerie" })
+    }
+
+    func test_offlineDelete_survivesRestart_andIsSentLater() async throws {
+        let repo = FlakyCategoriesRepository()
+        let store = CategoryStore(repository: repo, defaults: defaults)
+        await store.load(profileId: profileId)
+        await store.waitForWrites()
+        let milk = try XCTUnwrap(store.categories.first { !$0.isFallback })
+        repo.offline = true
+        XCTAssertNotNil(store.delete(milk.id))
+        await store.waitForWrites()
+
+        repo.offline = false
+        let restarted = CategoryStore(repository: repo, defaults: defaults)
+        await restarted.load(profileId: profileId)
+        await restarted.waitForWrites()
+        XCTAssertFalse(repo.inner.stored.contains { $0.id == milk.id })
+        XCTAssertFalse(restarted.categories.contains { $0.id == milk.id })
     }
 }

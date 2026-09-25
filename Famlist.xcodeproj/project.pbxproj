@@ -2501,7 +2501,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Famlist/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Famlist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Wir benötigen Zugriff auf die Kamera, um Fotos als Produktbild aufzunehmen.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Famlist nutzt die Kamera, um Produktfotos aufzunehmen, Barcodes zu scannen und Kassenzettel zu erfassen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
@@ -2534,7 +2534,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Famlist/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Famlist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Wir benötigen Zugriff auf die Kamera, um Fotos als Produktbild aufzunehmen.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Famlist nutzt die Kamera, um Produktfotos aufzunehmen, Barcodes zu scannen und Kassenzettel zu erfassen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = NO;

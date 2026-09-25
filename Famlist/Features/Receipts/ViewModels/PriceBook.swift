@@ -12,9 +12,12 @@
    Supabase geschickt. Klappt das nicht, bleiben sie in der Warteschlange und werden gesendet,
    sobald wieder Netz da ist (bzw. beim nächsten Speichern oder Öffnen des Preisverlaufs).
  - Der Preisverlauf zeigt Supabase-Daten plus noch nicht gesendete Preise.
+ - Offline-First beim Lesen: `localHistory` liefert sofort die zuletzt geladenen Punkte (gespeichert
+   in UserDefaults) plus Warteschlange; `history` lädt danach vom Server.
 
  📝 Last Change:
- - Senden, sobald wieder Netz da ist (`reconnect`).
+ - Verlauf lokal vorhalten und sofort zeigen; manuelle Preise aus „Artikel bearbeiten“ hier statt in
+   der View; Abmelden leert alles (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -26,6 +29,7 @@ final class PriceBook: ObservableObject {
     private let repository: PricePointsRepository?
     private let defaults: UserDefaults
     private static let pendingKey = "pendingPricePoints"
+    private static let historyKey = "priceHistoryCache"
     private var reconnectSubscription: AnyCancellable?
     /// Letzter bekannter Preis je Artikel (item_key) – füllt den Link „Preisverlauf“ sofort, ohne Netz.
     private var latestByItem: [String: PricePoint] = [:]
@@ -74,16 +78,48 @@ final class PriceBook: ObservableObject {
         }
     }
 
-    /// Alle Preise eines Artikels (Supabase + Warteschlange, ohne Doppelte), älteste zuerst.
+    /// Zuletzt geladene Verläufe je Artikel (für die Offline-Anzeige).
+    private var historyCache: [String: [PricePoint]] {
+        get {
+            guard let data = defaults.data(forKey: Self.historyKey) else { return [:] }
+            return (try? JSONDecoder().decode([String: [PricePoint]].self, from: data)) ?? [:]
+        }
+        set { defaults.set(try? JSONEncoder().encode(newValue), forKey: Self.historyKey) }
+    }
+
+    /// Sofort und ohne Netz: zuletzt geladener Verlauf plus Warteschlange, älteste zuerst.
+    func localHistory(itemName: String) -> [PricePoint] {
+        let key = PricePoint.key(for: itemName)
+        return merged(historyCache[key] ?? [], key: key)
+    }
+
+    /// Verlauf vom Server (plus Warteschlange). Ohne Netz: die lokale Kopie.
     func history(itemName: String) async -> [PricePoint] {
         await flush()
         let key = PricePoint.key(for: itemName)
-        let remote = (try? await repository?.history(itemKey: key)) ?? []
-        let remoteIds = Set(remote.map(\.id))
-        let local = pending.filter { $0.itemKey == key && !remoteIds.contains($0.id) }
-        let all = (remote + local).sorted { $0.purchasedAt < $1.purchasedAt }
+        guard let repository, let remote = try? await repository.history(itemKey: key) else {
+            return localHistory(itemName: itemName)
+        }
+        var cache = historyCache
+        cache[key] = remote
+        historyCache = cache
+        let all = merged(remote, key: key)
         if let last = all.last { remember(last) }
         return all
+    }
+
+    private func merged(_ confirmed: [PricePoint], key: String) -> [PricePoint] {
+        let ids = Set(confirmed.map(\.id))
+        let local = pending.filter { $0.itemKey == key && !ids.contains($0.id) }
+        return (confirmed + local).sorted { $0.purchasedAt < $1.purchasedAt }
+    }
+
+    /// Neuer Preis aus „Artikel bearbeiten“ → Preispunkt von heute. Laden = Listenname: In Famlist
+    /// heißen Listen nach dem Laden („Edeka“, „Rewe“), die Kategorien folgen dem Ladenweg.
+    func recordManualPrice(itemName: String, price: Double, store: String) {
+        let point = PricePoint(itemName: itemName, storeName: store, purchasedAt: Date(),
+                               price: PriceHistoryViewModel.decimal(price))
+        Task { await save([point]) }
     }
 
     /// Letzter Preis aus Zwischenspeicher oder lokaler Warteschlange (synchron, kein Netzwerk).
@@ -98,6 +134,7 @@ final class PriceBook: ObservableObject {
     func clearLocal() {
         pending = []
         latestByItem = [:]
+        defaults.removeObject(forKey: Self.historyKey)
     }
 
     private func remember(_ point: PricePoint) {

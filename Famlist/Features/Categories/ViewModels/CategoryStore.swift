@@ -8,7 +8,8 @@
  - Hält die Kategorien des Nutzers in Ladenweg-Reihenfolge: laden, anlegen, bearbeiten, löschen, umsortieren.
 
  🔰 Notes for Beginners:
- - Offline-first light: Die Liste liegt als Cache in UserDefaults (pro Profil) und ist sofort da.
+ - Offline zuerst: Die Liste liegt in UserDefaults (pro Profil) und ist sofort da. Änderungen werden
+   als „offen“ gemerkt (übersteht Neustarts) und gesendet, sobald Netz da ist.
    Änderungen gelten sofort lokal; das Speichern in Supabase läuft im Hintergrund.
  - Beim ersten Start eines Kontos (keine Kategorien in Supabase) werden die 8 Standard-Kategorien angelegt.
  - „Sonstiges“ ist immer vorhanden und kann nicht gelöscht werden.
@@ -16,14 +17,20 @@
  - Schreibaufträge an Supabase laufen strikt nacheinander (sonst könnten schnelle Änderungen vertauscht ankommen).
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 6).
+ - Offline zuerst mit gemerkten offenen Änderungen und Senden bei Netz (Audit 25.09.2026, M4).
  ------------------------------------------------------------------------
  */
 
+import Combine
 import Foundation
 
 @MainActor
 final class CategoryStore: ObservableObject {
+    /// Offene, noch nicht gesendete Änderungen (übersteht Neustarts).
+    private struct PendingSync: Codable {
+        var dirty = false
+        var deletedIds: [UUID] = []
+    }
     @Published private(set) var categories: [CategoryDefinition] = CategoryDefinition.defaults
     @Published var errorMessage: String?
 
@@ -32,15 +39,35 @@ final class CategoryStore: ObservableObject {
     private var profileId: UUID?
     /// Letzter Schreibauftrag; neue warten darauf, damit Supabase die Änderungen in Tipp-Reihenfolge erhält.
     private var writeTask: Task<Void, Never>?
+    private var reconnectSubscription: AnyCancellable?
 
-    init(repository: CategoryDefinitionsRepository?, defaults: UserDefaults = .standard) {
+    /// `reconnect`: meldet „wieder online“ → offene Änderungen senden.
+    init(repository: CategoryDefinitionsRepository?, defaults: UserDefaults = .standard,
+         reconnect: AnyPublisher<Bool, Never>? = nil) {
         self.repository = repository
         self.defaults = defaults
+        reconnectSubscription = reconnect?
+            .removeDuplicates()
+            .filter { $0 }
+            .sink { [weak self] _ in self?.scheduleSync() }
     }
 
     private func cacheKey(_ id: UUID) -> String { "categoryDefinitions.\(id.uuidString)" }
+    private func pendingKey(_ id: UUID) -> String { "categoryDefinitions.pending.\(id.uuidString)" }
 
-    /// Nach der Anmeldung: Cache sofort, dann Supabase; leeres Konto → Standard-Kategorien anlegen.
+    private var pending: PendingSync {
+        get {
+            guard let profileId, let data = defaults.data(forKey: pendingKey(profileId)) else { return PendingSync() }
+            return (try? JSONDecoder().decode(PendingSync.self, from: data)) ?? PendingSync()
+        }
+        set {
+            guard let profileId else { return }
+            defaults.set(try? JSONEncoder().encode(newValue), forKey: pendingKey(profileId))
+        }
+    }
+
+    /// Nach der Anmeldung: Cache sofort; zuerst eigene offene Änderungen senden, dann Supabase übernehmen.
+    /// Leeres Konto → Standard-Kategorien anlegen. Offline bleibt der lokale Stand (Audit M4).
     func load(profileId: UUID) async {
         self.profileId = profileId
         if let data = defaults.data(forKey: cacheKey(profileId)),
@@ -48,13 +75,16 @@ final class CategoryStore: ObservableObject {
             categories = normalized(cached)
         }
         guard let repository else { return }
+        if pending.dirty {
+            scheduleSync()
+            await writeTask?.value
+            guard !pending.dirty else { return }              // offline: lokaler Stand bleibt maßgeblich
+        }
         do {
             let remote = try await repository.fetch(profileId: profileId)
             if remote.isEmpty {
-                let seed = categories.isEmpty ? CategoryDefinition.defaults : categories
-                categories = normalized(seed)
-                let seeded = categories
-                enqueue { try await repository.upsert(seeded, profileId: profileId) }
+                categories = normalized(categories.isEmpty ? CategoryDefinition.defaults : categories)
+                markDirty()
             } else {
                 categories = normalized(remote)
             }
@@ -96,11 +126,11 @@ final class CategoryStore: ObservableObject {
     /// Löschen (nicht „Sonstiges“). Liefert den gelöschten Namen (Artikel → „Sonstiges“).
     func delete(_ id: UUID) -> String? {
         guard let target = categories.first(where: { $0.id == id }), !target.isFallback else { return nil }
+        var state = pending
+        state.deletedIds.append(id)
+        pending = state
         apply(categories.filter { $0.id != id }, changed: nil)
         UserLog.Data.categoryDeleted(name: target.name)
-        if let repository {
-            enqueue { try await repository.delete(id: id) }
-        }
         return target.name
     }
 
@@ -130,26 +160,45 @@ final class CategoryStore: ObservableObject {
 
     // MARK: - Intern
 
-    /// Positionen neu durchzählen, „Sonstiges“ sicherstellen, Cache + Supabase schreiben.
+    /// Positionen neu durchzählen, „Sonstiges“ sicherstellen, Cache schreiben, zum Senden vormerken.
     private func apply(_ list: [CategoryDefinition], changed: [CategoryDefinition]?) {
-        let before = categories
         categories = normalized(list, renumber: true)
         saveCache()
-        guard let repository, let profileId else { return }
-        let dirty = categories.filter { c in before.first(where: { $0.id == c.id }) != c }
-        enqueue { try await repository.upsert(dirty, profileId: profileId) }
+        markDirty()
     }
 
-    /// Hängt einen Schreibauftrag hinten an; Fehler landen in `errorMessage` (lokal bleibt die Änderung).
-    private func enqueue(_ work: @escaping () async throws -> Void) {
+    private func markDirty() {
+        var state = pending
+        state.dirty = true
+        pending = state
+        scheduleSync()
+    }
+
+    /// Sendet den ganzen lokalen Stand (Upsert) und die Löschungen. Nacheinander, damit Supabase die
+    /// Änderungen in Tipp-Reihenfolge erhält. Ohne Netz bleibt alles vorgemerkt.
+    private func scheduleSync() {
+        guard let repository, let profileId, pending.dirty else { return }
         let previous = writeTask
         writeTask = Task {
             await previous?.value
+            guard self.profileId == profileId, self.pending.dirty else { return }
+            let snapshot = self.categories
+            let deleted = self.pending.deletedIds
             do {
-                try await work()
+                try await repository.upsert(snapshot, profileId: profileId)
+                for id in deleted { try await repository.delete(id: id) }
+                // Nur zurücksetzen, wenn inzwischen nichts Neues dazukam.
+                if self.categories == snapshot { self.pending = PendingSync() } else {
+                    var state = self.pending
+                    state.deletedIds.removeAll { deleted.contains($0) }
+                    self.pending = state
+                    self.scheduleSync()
+                }
             } catch {
-                errorMessage = "Kategorien konnten nicht gespeichert werden."
-                logVoid(params: (action: "categories.save.error", error: (error as NSError).localizedDescription))
+                logVoid(params: (action: "categories.sync.deferred", error: (error as NSError).localizedDescription))
+                if SyncErrorClassifier.classify(error) == .permanent {
+                    self.errorMessage = "Kategorien konnten nicht gespeichert werden."
+                }
             }
         }
     }
@@ -162,6 +211,7 @@ final class CategoryStore: ObservableObject {
     func resetLocal() {
         writeTask?.cancel()
         writeTask = nil
+        if let profileId { defaults.removeObject(forKey: pendingKey(profileId)) }
         profileId = nil
         categories = CategoryDefinition.defaults
         errorMessage = nil

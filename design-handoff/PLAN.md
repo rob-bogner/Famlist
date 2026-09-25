@@ -237,3 +237,9 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ShoppingDone | „alle n Artikel abgehakt“ nur, wenn alle abgehakt sind, sonst „n von m Artikeln abgehakt“ | Design zeigt nur den Fall „alle“ |
 | PriceHistory | Zweite Zeile ohne Packungsgröße („250 g“); Hinweis „Noch keine Preise · …“ nur ohne Preise; Monate ohne Preis haben keinen Punkt | Artikelstamm speichert keine Packungsgröße; „Beispielwerte“ ist Design-Text |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |
+| Liste (Fortschrittskarte, ItemCard) | Gesamtkosten und Preis je Karte („1,49 €“, bei mehreren Stück zusätzlich „je …“); bei g/kg/ml/l/cm/m zählt der Preis einmal | Nicht gestaltet; von Robert am 25.09.2026 freigegeben (SPEC §5) |
+| EditItem | Link „Preisverlauf“ unter dem Preis (Trend-Icon, Zeile 52 pt, Chevron) | Nicht gestaltet; von Robert am 25.09.2026 freigegeben (SPEC §5) |
+| Settings | Schalter „Preise anzeigen“ | Gehört zur freigegebenen Preis-Anzeige |
+| ShoppingDone | Variante ohne Kassenzettel: Karte „Kassenzettel scannen?“ statt Summe; öffnet sich 0,7 s nach dem letzten Abhaken | Kein eigenes Design (ShoppingDoneScan.dc.html existiert nicht); Aufbau aus ShoppingDone.dc.html abgeleitet |
+| AcceptInvite / ShareMembers | Fehler (Einladung abgelaufen, Link offline nicht erstellbar) als Glas-Toast wie in SignIn | Fehlerzustände nicht gestaltet |
+

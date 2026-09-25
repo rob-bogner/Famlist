@@ -31,12 +31,18 @@ final class PriceHistoryViewModel: ObservableObject {
         self.fallbackStore = fallbackStore ?? "Gespeicherter Preis"
     }
 
+    /// Offline-First: zuerst sofort der lokale Stand, danach der Server (Audit M6 – vorher wartete die
+    /// Anzeige ohne Netz, bis die Anfrage abbrach).
     func load() async {
+        show(priceBook.localHistory(itemName: entry.name))
         isLoading = true
-        let history = await priceBook.history(itemName: entry.name)
+        show(await priceBook.history(itemName: entry.name))
+        isLoading = false
+    }
+
+    private func show(_ history: [PricePoint]) {
         points = Self.withFallback(history, entry: entry, store: fallbackStore)
         stats = PriceStatistics.make(points: points)
-        isLoading = false
     }
 
     /// Ohne Verlauf, aber mit gespeichertem Artikelpreis: dieser Preis als einziger Punkt (heute).

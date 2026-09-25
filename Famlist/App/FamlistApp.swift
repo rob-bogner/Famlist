@@ -115,7 +115,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
 
             // Create the session VM that coordinates auth and default list bootstrap.
             self.sessionViewModel = AppSessionViewModel(client: client, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm)
-            self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client))
+            self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client),
+                                               reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
             self.priceBook = PriceBook(repository: SupabasePricePointsRepository(client: client),
                                        reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
             // Abmelden: Preise und Kategorien des Kontos verwerfen.

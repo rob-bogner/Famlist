@@ -92,7 +92,7 @@ extension ShoppingListView {
     /// Zuerst Zwischenspeicher (sofort), sonst einmal den Verlauf laden.
     func lastPriceText(for item: ItemModel) async -> String? {
         var last = priceBook.cachedLatest(itemName: item.name)
-        if last == nil { last = await priceBook.history(itemName: item.name).last }   // kein await im ??-Autoclosure
+        if last == nil { last = priceBook.localHistory(itemName: item.name).last }    // ohne Netz, sofort
         if let last { return "zuletzt \(PriceHistoryViewModel.euro(last.price))" }
         let current = listViewModel.items.first { $0.id == item.id } ?? item
         return current.price > 0 ? "zuletzt \(PriceDisplaySetting.euro(current.price))" : "Noch keine Preise"
@@ -103,11 +103,9 @@ extension ShoppingListView {
         listViewModel.defaultList?.title ?? String(localized: "shoppingList.title")
     }
 
-    /// Neuer Preis in „Artikel bearbeiten“ → Preispunkt (heute, Laden = Listenname) für den Preisverlauf.
+    /// Neuer Preis in „Artikel bearbeiten“ → Preispunkt für den Preisverlauf (Logik im PriceBook).
     func recordPrice(for item: ItemModel) {
-        let point = PricePoint(itemName: item.name, storeName: currentStoreName, purchasedAt: Date(),
-                               price: PriceHistoryViewModel.decimal(item.price))
-        Task { await priceBook.save([point]) }
+        priceBook.recordManualPrice(itemName: item.name, price: item.price, store: currentStoreName)
     }
 
     private func reviewReceipt(_ flow: ReceiptFlowViewModel) {

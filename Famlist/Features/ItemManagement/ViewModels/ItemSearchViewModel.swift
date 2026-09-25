@@ -94,33 +94,31 @@ final class ItemSearchViewModel: ObservableObject {
 
     // MARK: - Private Helpers
 
+    /// Eigene Treffer (lokal/Artikelstamm) erscheinen sofort; die OpenFoodFacts-Treffer kommen nach,
+    /// sobald das Netz antwortet (Audit M5 – vorher wartete alles auf die langsamere Online-Suche).
     private func performSearch(query: String) async {
         errorMessage = nil
-
-        // Run both searches in parallel
-        async let personalTask = fetchPersonal(query: query)
         async let globalTask = fetchGlobal(query: query)
 
-        let personal = await personalTask
-        let global = await globalTask
-
+        let personal = await fetchPersonal(query: query)
         guard !Task.isCancelled else { return }
-
-        if let personal {
-            personalResults = personal
-                .prefix(Self.maxPersonalResults)
-                .map { SearchResult(entry: $0, source: .personal, imageUrl: nil) }
-            globalResults = global
-                .map { globalEntry in
-                    // ownerPublicId "" is a placeholder; addItem() fills it from the auth session.
-                    let entry = globalEntry.toItemCatalogEntry(ownerPublicId: "")
-                    return SearchResult(entry: entry, source: .global, imageUrl: globalEntry.imageUrl)
-                }
-        } else {
-            // Personal search failed
+        guard let personal else {
             errorMessage = String(localized: "itemSearch.error.generic")
             personalResults = []
             globalResults = []
+            isSearching = false
+            return
+        }
+        personalResults = personal
+            .prefix(Self.maxPersonalResults)
+            .map { SearchResult(entry: $0, source: .personal, imageUrl: nil) }
+
+        let global = await globalTask
+        guard !Task.isCancelled else { return }
+        globalResults = global.map { globalEntry in
+            // ownerPublicId "" is a placeholder; addItem() fills it from the auth session.
+            let entry = globalEntry.toItemCatalogEntry(ownerPublicId: "")
+            return SearchResult(entry: entry, source: .global, imageUrl: globalEntry.imageUrl)
         }
         isSearching = false
     }
