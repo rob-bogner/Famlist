@@ -21,7 +21,7 @@
  🔰 Notes for Beginners:
  - Uses XCTest with @MainActor for thread-safe ViewModel testing.
  - SpyCatalogRepository captures calls so we can assert save was triggered.
- - All async tests use `await` with explicit Task.sleep where debounce is involved.
+ - Suche: Tests warten auf `searchTask`, Hintergrund-Speichern über `waitUntil` (keine festen Wartezeiten).
 
  📝 Last Change:
  - Initial creation for FAM-52 test coverage.
@@ -383,7 +383,7 @@ final class ItemSearchViewModelTests: XCTestCase {
         sut.onSearchTextChanged()
 
         // Wait for debounce (300ms) + some margin
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertNotNil(sut.errorMessage)
         // Must NOT contain raw URLError or Supabase details
@@ -402,13 +402,13 @@ final class ItemSearchViewModelTests: XCTestCase {
         ]
         sut.searchText = "Milch"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         // Now throw on next search
         spy.shouldThrow = true
         sut.searchText = "Mi"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertTrue(sut.personalResults.isEmpty)
         XCTAssertTrue(sut.globalResults.isEmpty)
@@ -428,7 +428,7 @@ final class ItemSearchViewModelTests: XCTestCase {
 
         sut.searchText = "But"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertEqual(sut.personalResults.count, 1)
         XCTAssertEqual(sut.personalResults.first?.entry.name, "Butter")
@@ -441,7 +441,7 @@ final class ItemSearchViewModelTests: XCTestCase {
         sut.onSearchTextChanged()
         XCTAssertTrue(sut.isSearching)
 
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
         XCTAssertFalse(sut.isSearching)
     }
 
@@ -460,7 +460,7 @@ final class ItemSearchViewModelTests: XCTestCase {
         // Yield to let cancelled tasks clear before starting the debounce clock.
         // Then wait well beyond the 300ms debounce window.
         await Task.yield()
-        try await Task.sleep(nanoseconds: 800_000_000) // 800ms
+        await sut.searchTask?.value
 
         // The debounce must have fired at least once and the final query must be "Milch".
         // We don't assert count == 1 because slow CI environments may let an earlier
@@ -501,9 +501,7 @@ final class ListViewModelCatalogTests: XCTestCase {
     func test_addItem_triggersCatalogSave() async throws {
         let item = ItemModel(name: "Mehl", units: 1, measure: "kg")
         sut.addItem(item)
-
-        // Fire-and-forget: give the background Task time to complete
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { spy.savedEntries.count == 1 }
 
         XCTAssertEqual(spy.savedEntries.count, 1)
         XCTAssertEqual(spy.savedEntries.first?.name, "Mehl")
@@ -519,7 +517,7 @@ final class ListViewModelCatalogTests: XCTestCase {
             brand: "Kölln"
         )
         sut.addItem(item)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { !spy.savedEntries.isEmpty }
 
         let saved = spy.savedEntries.first
         XCTAssertNotNil(saved)
@@ -554,7 +552,7 @@ final class ListViewModelCatalogTests: XCTestCase {
     func test_updateItem_triggersCatalogSave() async throws {
         let item = ItemModel(name: "Joghurt", units: 2, measure: "Becher")
         sut.updateItem(item)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { spy.savedEntries.count == 1 }
 
         XCTAssertEqual(spy.savedEntries.count, 1)
         XCTAssertEqual(spy.savedEntries.first?.name, "Joghurt")
@@ -563,13 +561,13 @@ final class ListViewModelCatalogTests: XCTestCase {
     func test_updateItem_catalogSaveReflectsNewAttributes() async throws {
         let item = ItemModel(name: "Butter", units: 1, measure: "Packung")
         sut.updateItem(item)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { spy.savedEntries.count == 1 }
 
         // Simulate attribute change: update price
         var updated = item
         updated.price = 2.49
         sut.updateItem(updated)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { spy.savedEntries.count == 2 }
 
         // Both calls should have triggered a save (upsert handles deduplication)
         XCTAssertEqual(spy.savedEntries.count, 2)

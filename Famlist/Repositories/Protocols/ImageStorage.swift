@@ -19,8 +19,10 @@
 
 import Foundation
 
+/// `Sendable`: Umsetzungen sind @MainActor-Klassen und damit ohnehin Sendable; so darf die Referenz
+/// in Task-Gruppen übergeben werden (ItemImagePrefetcher).
 @MainActor
-protocol ImageStorage: AnyObject {
+protocol ImageStorage: AnyObject, Sendable {
     func upload(_ data: Data, bucket: String, path: String) async throws
     func download(bucket: String, path: String) async throws -> Data
 }

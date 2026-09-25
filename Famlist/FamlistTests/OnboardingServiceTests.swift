@@ -23,20 +23,20 @@ final class OnboardingServiceTests: XCTestCase {
     var mockProfilesRepo: MockProfilesRepository!
     var onboardingService: OnboardingService!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mockAuthClient = MockAuthClientForOnboarding()
         mockClient = MockSupabaseClientForOnboarding(auth: mockAuthClient)
         mockProfilesRepo = MockProfilesRepository()
         onboardingService = OnboardingService(client: mockClient, profiles: mockProfilesRepo)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         onboardingService = nil
         mockProfilesRepo = nil
         mockClient = nil
         mockAuthClient = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Tests
@@ -134,7 +134,7 @@ final class MockAuthClientForOnboarding: AuthClienting, @unchecked Sendable {
 
 // MARK: - Mock SupabaseClienting for Onboarding
 
-@MainActor
+/// Nicht @MainActor: SupabaseClienting ist Sendable; der Mock hält nur eine unveränderliche Referenz.
 final class MockSupabaseClientForOnboarding: SupabaseClienting {
 
     private let _auth: MockAuthClientForOnboarding

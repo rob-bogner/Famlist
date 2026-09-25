@@ -19,15 +19,19 @@
 
 import XCTest
 
+// @MainActor: XCUIApplication und XCUIElement sind Main-Actor-isoliert; XCTest führt UI-Tests ohnehin auf dem Main Thread aus.
+@MainActor
 final class LiveDuplicateAddUITests: XCTestCase {
     private var app: XCUIApplication!
     private let shots = ProcessInfo.processInfo.environment["FAMLIST_SHOTS"]
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FAMLIST_LIVE"] == "1", "nur mit TEST_RUNNER_FAMLIST_LIVE=1")
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
+        // Testdaten („Livetest …“) nach jedem Lauf wieder löschen (vorher blieben sie im Testkonto liegen).
+        addTeardownBlock { await LiveTestCleanup.removeLiveTestData() }
     }
 
     private func shot(_ name: String) {
@@ -46,8 +50,7 @@ final class LiveDuplicateAddUITests: XCTestCase {
             return
         }
         shot("signin")
-        // Korb-Kachel: 86 × 86 im Hero, links oben (VoiceOver-verborgen) → Koordinate.
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 72, dy: 195)).press(forDuration: 1.2)
+        XCTAssertTrue(app.openTestAccountsDialog(), "Anmeldebildschirm")
         let tester = app.buttons["Tester"]
         XCTAssertTrue(tester.waitForExistence(timeout: 5), "Testkonten-Dialog")
         tester.tap()

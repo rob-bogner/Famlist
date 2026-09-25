@@ -14,7 +14,8 @@
 
  🔰 Notes for Beginners:
  - Use these functions to print concise, readable logs during development.
- - Sensitive fields like tokens or imageData are redacted in parameters automatically.
+ - Sensitive fields like tokens, e-mail or imageData are redacted in parameters automatically.
+ - Nur in Debug-Builds aktiv: Die ausgelieferte App schreibt keine Logs (Datenschutz, Leistung – Audit 25.09.2026).
 
  📝 Last Change:
  - Initial addition of a small, dependency-free logger used by Supabase client and repositories.
@@ -43,7 +44,8 @@ private func stringifyParams<P>(_ params: P) -> String {
 /// Redacts likely sensitive/large values by key name (extend if needed).
 private func redactIfSensitive(_ key: String, value: Any) -> String {
     let k = key.lowercased()
-    if k.contains("imagedata") || k.contains("token") || k.contains("password") || k.contains("key") {
+    if k.contains("imagedata") || k.contains("token") || k.contains("password") || k.contains("key")
+        || k.contains("email") {
         return "\(key)=<redacted>"
     }
     return "\(key)=\(describeValue(value))" // Use describeValue for nested structures
@@ -109,8 +111,10 @@ func logResult<T, P>(
     params: P,
     result: T
 ) -> T {
+    #if DEBUG
     let paramsStr = stringifyParamsWithRedaction(params)
     print("[LOG] \(function) @\(file):\(line) [\(paramsStr)] → \(String(describing: result))")
+    #endif
     return result
 }
 
@@ -122,7 +126,9 @@ func logResult<T>(
     line: UInt = #line,
     result: T
 ) -> T {
+    #if DEBUG
     print("[LOG] \(function) @\(file):\(line) → \(String(describing: result))")
+    #endif
     return result
 }
 
@@ -133,8 +139,10 @@ func logVoid<P>(
     line: UInt = #line,
     params: P
 ) {
+    #if DEBUG
     let paramsStr = stringifyParamsWithRedaction(params)
     print("[LOG] \(function) @\(file):\(line) [\(paramsStr)] → Void")
+    #endif
 }
 
 /// Convenience overload for Void functions without parameters.
@@ -143,5 +151,7 @@ func logVoid(
     file: StaticString = #fileID,
     line: UInt = #line
 ) {
+    #if DEBUG
     print("[LOG] \(function) @\(file):\(line) → Void")
+    #endif
 }

@@ -40,7 +40,7 @@ enum SimulatorAuthHelper {
         /// (Schlüssel TEST_PASSWORD_DEVELOPER / _TESTER / _DEMO). Leer, wenn die Datei fehlt.
         /// Der Simulator darf Dateien des Macs lesen; der Pfad wird aus `#filePath` abgeleitet.
         var password: String {
-            SimulatorAuthHelper.localSecrets["TEST_PASSWORD_\(description.uppercased())"] as? String ?? ""
+            SimulatorAuthHelper.localSecrets["TEST_PASSWORD_\(description.uppercased())"] ?? ""
         }
         
         var description: String {
@@ -53,11 +53,12 @@ enum SimulatorAuthHelper {
     }
     
     /// Projektordner/Secrets.plist, fünf Ebenen über dieser Datei.
-    static let localSecrets: [String: Any] = {
+    /// Nur Textwerte (`[String: String]` ist Sendable); gelesen werden ohnehin nur Strings.
+    static let localSecrets: [String: String] = {
         var url = URL(fileURLWithPath: #filePath)
         for _ in 0..<5 { url.deleteLastPathComponent() }
         let file = url.appendingPathComponent("Secrets.plist")
-        return (NSDictionary(contentsOf: file) as? [String: Any]) ?? [:]
+        return ((NSDictionary(contentsOf: file) as? [String: Any]) ?? [:]).compactMapValues { $0 as? String }
     }()
 
     static func getCredentials(for account: TestAccount) -> (email: String, password: String) {

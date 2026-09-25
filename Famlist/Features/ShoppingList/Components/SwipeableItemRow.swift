@@ -23,6 +23,7 @@
 
  📝 Last Change:
  - Glas-Aktionen nach GlassActionButton ausgelagert (gemeinsam mit den Listen-Karten).
+ - LeadingCheckAction und UndoActionButton in eigene Dateien ausgelagert (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -212,99 +213,6 @@ struct SwipeableItemRow: View {
         }
         // Beide Durchwisch-Aktionen schalten den Abhak-Zustand um (Abhaken bzw. Zurück auf die Liste).
         if outcome == .triggerLeading || outcome == .triggerTrailing { onToggleChecked() }
-    }
-}
-
-// MARK: - Leading Check Action
-
-/// Grüne Abhak-Aktion links hinter der Karte (Rechts-Wischen). Abgehakt: gelbes „Zurück“.
-/// Nicht im Design gezeichnet – Stil der Glas-Aktionen, Farben Grün #6EE7A8 → #22C55E → #15803D.
-private struct LeadingCheckAction: View {
-    let t: ListTheme
-    let isChecked: Bool
-    let progress: CGFloat
-    let isArmed: Bool
-    let action: () -> Void
-
-    var body: some View {
-        let colors = isChecked
-            ? ("#FFE38A", "#F5B521", "#C98A06", Color.rgba(201, 138, 6, 0.7))
-            : ("#6EE7A8", "#22C55E", "#15803D", Color.rgba(34, 197, 94, 0.6))
-        VStack(spacing: 6) {
-            Button(action: action) { circle(colors) }
-                .buttonStyle(.plain)
-                .accessibilityHidden(true)
-            Text(isChecked ? "Zurück" : "Abhaken")
-                .font(AppFont.dm(12, 600))
-                .foregroundStyle(t.sub)
-                .fixedSize()
-        }
-        .frame(width: 76, height: 94)
-        .padding(.leading, 10)
-        .accessibilityHidden(true)
-    }
-
-    private func circle(_ colors: (String, String, String, Color)) -> some View {
-            SVGIcon(isChecked ? Icon.undo : Icon.check, size: 22,
-                    color: isChecked ? .hex("#4A3300") : .white, lineWidth: 2.4)
-                .frame(width: 56, height: 56)
-                .background(alignment: .top) {
-                    GlossEllipse(opacity: 0.6)
-                        .frame(height: 20)
-                        .padding(.horizontal, 10)
-                        .padding(.top, 3)
-                }
-                .clipShape(Circle())
-                .background(CSSBox(
-                    shape: Circle(),
-                    paint: .radialCircle(UnitPoint(x: 0.32, y: 0.24),
-                                         [stop(.hex(colors.0), 0), stop(.hex(colors.1), 0.55), stop(.hex(colors.2), 1)]),
-                    shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.55)),
-                              .inner(0, -3, 8, 0, .rgba(0, 0, 0, 0.18)),
-                              .drop(0, 10, 20, -8, colors.3)]))
-                .scaleEffect(isArmed ? 1.12 : 0.7 + 0.3 * progress)
-                .contentShape(Circle())
-    }
-}
-
-// MARK: - Undo Action
-
-/// Gelber „Zurück“-Knopf 56 in einer 76 breiten Spalte.
-private struct UndoActionButton: View {
-    let t: ListTheme
-    var isArmed = false
-    let action: () -> Void
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Button(action: action) {
-                SVGIcon(Icon.undo, size: 22, color: .hex("#4A3300"), lineWidth: 2.2)
-                    .frame(width: 56, height: 56)
-                    .background(alignment: .top) {
-                        GlossEllipse(opacity: 0.65)
-                            .frame(height: 20)
-                            .padding(.horizontal, 10)
-                            .padding(.top, 3)
-                    }
-                    .clipShape(Circle())
-                    .background(CSSBox(
-                        shape: Circle(),
-                        paint: .radialCircle(UnitPoint(x: 0.32, y: 0.24),
-                                             [stop(.hex("#FFE38A"), 0), stop(.hex("#F5B521"), 0.55), stop(.hex("#C98A06"), 1)]),
-                        shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.6)),
-                                  .inner(0, -3, 8, 0, .rgba(120, 70, 0, 0.25)),
-                                  .drop(0, 10, 20, -8, .rgba(201, 138, 6, 0.7))]))
-                    .scaleEffect(isArmed ? 1.12 : 1)
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHidden(true)
-
-            Text("Zurück")
-                .font(AppFont.dm(12, 600))
-                .foregroundStyle(t.sub)
-        }
-        .frame(width: 76, height: 94)
     }
 }
 

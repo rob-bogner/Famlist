@@ -174,14 +174,21 @@ final class OfflineListsRepositoryTests: XCTestCase {
         let container = PersistenceController(inMemory: true).container
         let store = SwiftDataItemStore(context: container.mainContext)
         let repo = PreviewItemsRepository()
-        var ready = false
+        // Referenz statt lokaler var: Die @MainActor-Closure ist Sendable und darf keine veränderliche Variable einfangen.
+        let ready = ReadyFlag()
         let engine = SyncEngine(repository: repo, itemStore: store, operationQueue: SyncOperationQueue(context: container.mainContext),
-                                hlcGenerator: HybridLogicalClockGenerator(nodeId: "n"), isListReady: { _ in ready })
+                                hlcGenerator: HybridLogicalClockGenerator(nodeId: "n"), isListReady: { _ in ready.value })
         let listId = UUID()
         await engine.createItem(ItemModel(name: "Milch", listId: listId.uuidString))
         XCTAssertEqual(engine.pendingOperations, 1, "wartet auf die Liste")
-        ready = true
+        ready.value = true
         await engine.resumeSync()
         XCTAssertEqual(engine.pendingOperations, 0)
     }
+}
+
+/// Umschaltbarer Wahrheitswert für Closures auf dem Main Actor.
+@MainActor
+private final class ReadyFlag {
+    var value = false
 }

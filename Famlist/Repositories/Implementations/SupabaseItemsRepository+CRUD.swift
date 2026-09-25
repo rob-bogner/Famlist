@@ -73,7 +73,8 @@ private struct UpsertParams: Encodable, Sendable {
     let p_items: [UpsertRow]
 }
 
-extension UpsertRow: @unchecked Sendable {}
+// ItemModel ist ein reiner Werttyp (Sendable) – kein @unchecked nötig.
+extension UpsertRow: Sendable {}
 
 /// Eine Zeile der RPC-Antwort.
 private struct UpsertResponseRow: Decodable {

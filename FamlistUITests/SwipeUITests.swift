@@ -20,10 +20,12 @@
 import XCTest
 
 /// Real-device swipe checks on the in-memory fixture. Card position = position of the check circle.
+// @MainActor: XCUIApplication und XCUIElement sind Main-Actor-isoliert; XCTest führt UI-Tests ohnehin auf dem Main Thread aus.
+@MainActor
 final class SwipeUITests: XCTestCase {
     private var app: XCUIApplication!
 
-    override func setUp() {
+    override func setUp() async throws {
         continueAfterFailure = true
         app = XCUIApplication()
         app.launchArguments = ["-uiTestFixture"]

@@ -15,7 +15,8 @@
 import Foundation // Provides UUID.
 
 /// Profile-related operations.
-protocol ProfilesRepository {
+/// `Sendable`: Die ViewModels (Main Actor) rufen die async-Methoden auf, die außerhalb des Main Actors laufen.
+protocol ProfilesRepository: Sendable {
     /// Create or update current profile.
     /// - Parameters:
     ///   - authUserId: The authenticated user's UUID.

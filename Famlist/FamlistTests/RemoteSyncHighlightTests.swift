@@ -97,8 +97,8 @@ final class RemoteSyncHighlightTests: XCTestCase {
     func test_markRecentlySynced_clearsAfterDelay() async {
         sut.markRecentlySynced(ids: ["id-auto-clear"])
         XCTAssertTrue(sut.recentlySyncedItemIDs.contains("id-auto-clear"))
-        // Wait slightly longer than the 2-second clear window.
-        try? await Task.sleep(nanoseconds: 2_200_000_000)
+        // Auf das Ablaufen des 2-Sekunden-Fensters warten (höchstens 4 s).
+        await waitUntil(timeout: 4) { !sut.recentlySyncedItemIDs.contains("id-auto-clear") }
         XCTAssertFalse(sut.recentlySyncedItemIDs.contains("id-auto-clear"),
                        "ID must be removed after the 2-second TTL")
     }

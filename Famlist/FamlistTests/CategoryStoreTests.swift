@@ -31,6 +31,8 @@ private final class SpySyncEngine: SyncEngineProtocol {
 }
 
 /// Kategorien-Server, der zwischen „offline“ und „online“ umgeschaltet werden kann.
+/// @MainActor schützt den Schalter `offline`; so erfüllt die Klasse das Sendable-Protokoll.
+@MainActor
 private final class FlakyCategoriesRepository: CategoryDefinitionsRepository {
     var offline = false
     let inner = InMemoryCategoryDefinitionsRepository()

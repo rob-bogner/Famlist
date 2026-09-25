@@ -21,6 +21,8 @@
 
 import XCTest
 
+// @MainActor: XCUIApplication und XCUIElement sind Main-Actor-isoliert; XCTest führt UI-Tests ohnehin auf dem Main Thread aus.
+@MainActor
 final class ScreenTourUITests: XCTestCase {
     private var shotsDirectory: String?
     private let environment = ProcessInfo.processInfo.environment
@@ -32,7 +34,7 @@ final class ScreenTourUITests: XCTestCase {
                          "manageCategories", "editCategory", "receiptCapture", "receiptReview",
                          "shoppingDone", "priceHistory", "manageItems", "importClipboard"]
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         shotsDirectory = environment["FAMLIST_SHOTS"]
         try XCTSkipIf(shotsDirectory == nil, "nur mit TEST_RUNNER_FAMLIST_SHOTS=<Ordner>")
         continueAfterFailure = true
@@ -42,7 +44,7 @@ final class ScreenTourUITests: XCTestCase {
         let app = XCUIApplication()
         var arguments = ["-uiTestFixture", "-designFixture"] + extra
         if let size = environment["FAMLIST_TEXTSIZE"] { arguments += ["-UIPreferredContentSizeCategoryName", size] }
-        if environment["FAMLIST_DARK"] == "1" { arguments += ["-AppleInterfaceStyle", "Dark", "-appearanceChoice", "dark"] }
+        if environment["FAMLIST_DARK"] == "1" { arguments += ["-AppleInterfaceStyle", "Dark", "-appearanceChoice", "Dunkel"] } // Rohwert von ListAccountAppearanceChoice.dark
         app.launchArguments = arguments
         app.launch()
         return app

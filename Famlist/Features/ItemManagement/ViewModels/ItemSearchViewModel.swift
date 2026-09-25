@@ -48,7 +48,8 @@ final class ItemSearchViewModel: ObservableObject {
 
     // MARK: - Private State
 
-    private var searchTask: Task<Void, Never>?
+    /// Lesbar für Tests: statt fester Wartezeiten auf die laufende Suche warten.
+    private(set) var searchTask: Task<Void, Never>?
 
     // MARK: - Constants
 

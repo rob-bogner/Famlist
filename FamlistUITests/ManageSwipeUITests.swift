@@ -19,6 +19,8 @@
 
 import XCTest
 
+// @MainActor: XCUIApplication und XCUIElement sind Main-Actor-isoliert; XCTest führt UI-Tests ohnehin auf dem Main Thread aus.
+@MainActor
 final class ManageSwipeUITests: XCTestCase {
     private var app: XCUIApplication!
 

@@ -258,6 +258,12 @@ extension ListViewModel {
         settings.order = order
         applySortSettings(settings)
         logVoid(params: (action: "setSortOrder", order: order.rawValue))
+        UserLog.Data.sortChanged(to: order.rawValue)
+    }
+
+    /// Nutzer hat die Liste in die Zwischenablage kopiert (Protokoll für die Nutzer-Logs).
+    func noteListCopied(count: Int) {
+        UserLog.Data.listCopied(title: defaultList?.title ?? "", count: count)
     }
 
     /// Schalter „Erledigte nach unten“ der aktiven Liste.

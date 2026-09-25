@@ -88,6 +88,11 @@ final class ShareMembersViewModel: ObservableObject {
         await loadInviteURL(reportErrors: true)
     }
 
+    /// Nutzer hat den Einladungslink kopiert (Protokoll für die Nutzer-Logs).
+    func noteInviteLinkCopied() {
+        UserLog.Data.inviteLinkCopied(listName: list.title)
+    }
+
     /// Holt den Einladungs-Token beim Server. Ohne Verbindung bleibt der Link aus.
     private func loadInviteURL(reportErrors: Bool) async {
         guard inviteURL == nil, let lists else { return }

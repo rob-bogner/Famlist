@@ -73,7 +73,8 @@ final class ItemImagePrefetcher {
             let slice = jobs[index..<min(index + Self.maxConcurrent, jobs.count)]
             await withTaskGroup(of: (UUID, Data?).self) { group in
                 for (id, path) in slice {
-                    group.addTask { @MainActor [storage] in
+                    // Ohne @MainActor: storage ist Sendable, download(...) läuft ohnehin auf dem Main Actor.
+                    group.addTask { [storage] in
                         (id, try? await storage.download(bucket: ProductImageCodec.itemBucket, path: path))
                     }
                 }

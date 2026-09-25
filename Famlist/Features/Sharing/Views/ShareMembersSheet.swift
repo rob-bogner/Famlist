@@ -229,7 +229,7 @@ struct ShareMembersSheet: View {
             return
         }
         UIPasteboard.general.string = url.absoluteString
-        UserLog.Data.inviteLinkCopied(listName: vm.list.title)
+        vm.noteInviteLinkCopied()
         flash($copiedLink)
     }
 

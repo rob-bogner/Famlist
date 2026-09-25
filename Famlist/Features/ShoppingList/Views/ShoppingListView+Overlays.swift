@@ -80,7 +80,7 @@ extension ShoppingListView {
                 .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
         case .sort:
             SortMenuScreen(appearance: appearance, settings: listViewModel.sortSettings,
-                           onSelect: { listViewModel.setSortOrder($0); UserLog.Data.sortChanged(to: $0.rawValue) },
+                           onSelect: { listViewModel.setSortOrder($0) },
                            onToggleDoneAtBottom: { listViewModel.setDoneAtBottom($0) },
                            onDismiss: closeOverlay)
                 .offset(y: insets.dockShift)
@@ -184,7 +184,7 @@ extension ShoppingListView {
         let ordered = listViewModel.visibleSectionsIgnoringFilter.flatMap(\.items)
         let count = ListClipboardFormatter.items(ordered, scope: scope).count
         UIPasteboard.general.string = copyText(scope)
-        UserLog.Data.listCopied(title: listViewModel.defaultList?.title ?? "", count: count)
+        listViewModel.noteListCopied(count: count)
         let result = CopyResult(count: count, scope: scope)
         activeOverlay = nil
         withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { copied = result }

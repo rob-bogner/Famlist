@@ -19,10 +19,12 @@
 
 import XCTest
 
+// @MainActor: XCUIApplication und XCUIElement sind Main-Actor-isoliert; XCTest führt UI-Tests ohnehin auf dem Main Thread aus.
+@MainActor
 final class DuplicateAddUITests: XCTestCase {
     private var app: XCUIApplication!
 
-    override func setUp() {
+    override func setUp() async throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["-uiTestFixture"]

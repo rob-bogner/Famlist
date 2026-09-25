@@ -54,10 +54,10 @@ private final class LiveTestClient: SupabaseClienting {
     }
     func storageCreateSignedURL(bucket: String, path: String, expiresIn: Int) async throws -> String { "" }
     func rpc(_ function: String) async throws { try await client.rpc(function).execute() }
-    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] {
+    func rpcRows<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> [R] {
         try await client.rpc(function, params: params).execute().value
     }
-    func rpcValue<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> R {
+    func rpcValue<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> R {
         try await client.rpc(function, params: params).execute().value
     }
 }

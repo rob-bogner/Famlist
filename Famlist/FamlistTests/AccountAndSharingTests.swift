@@ -19,6 +19,8 @@ import XCTest
 import SwiftData
 @testable import Famlist
 
+/// @MainActor schützt die veränderlichen Test-Felder; so erfüllt die Klasse das Sendable-Protokoll.
+@MainActor
 private final class StubProfiles: ProfilesRepository {
     var me: Profile
     var takenNames: Set<String> = []

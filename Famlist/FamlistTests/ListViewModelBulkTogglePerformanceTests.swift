@@ -79,24 +79,24 @@ final class ListViewModelBulkTogglePerformanceTests: XCTestCase {
 
         let startTime = CFAbsoluteTimeGetCurrent()
         viewModel.toggleAllItems()
-        try await Task.sleep(nanoseconds: 200_000_000) // 200ms – covers debounce + batch
+        await waitUntil { viewModel.items.allSatisfy { $0.isChecked } }
         let elapsed = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
 
         XCTAssertTrue(viewModel.items.allSatisfy { $0.isChecked }, "All 50 items should be checked")
         XCTAssertLessThan(elapsed, 300, "Toggle 50 items should complete in <300ms, took \(elapsed)ms")
     }
 
-    /// Toggles 100 items; wall-time limit includes mandatory 300ms sleep for debounce + async settle.
+    /// Toggles 100 items; gemessen bis alle Artikel abgehakt sind (inkl. Entprellung).
     func testToggleAll100Items() async throws {
         createTestItems(count: 100)
 
         let startTime = CFAbsoluteTimeGetCurrent()
         viewModel.toggleAllItems()
-        try await Task.sleep(nanoseconds: 300_000_000) // 300ms — covers debounce (50ms) + batch
+        await waitUntil { viewModel.items.allSatisfy { $0.isChecked } }
         let elapsed = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
 
         XCTAssertTrue(viewModel.items.allSatisfy { $0.isChecked }, "All 100 items should be checked")
-        // 300ms mandatory sleep + generous margin for SwiftData queries on CI hardware
+        // großzügige Grenze für SwiftData auf langsamer CI-Hardware
         XCTAssertLessThan(elapsed, 1500, "Toggle 100 items should complete in <1500ms, took \(elapsed)ms")
     }
 
@@ -106,7 +106,7 @@ final class ListViewModelBulkTogglePerformanceTests: XCTestCase {
 
         let startTime = CFAbsoluteTimeGetCurrent()
         viewModel.toggleAllItems()
-        try await Task.sleep(nanoseconds: 700_000_000) // 700ms
+        await waitUntil { viewModel.items.allSatisfy { $0.isChecked } }
         let elapsed = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
 
         XCTAssertTrue(viewModel.items.allSatisfy { $0.isChecked }, "All 200 items should be checked")
@@ -122,9 +122,7 @@ final class ListViewModelBulkTogglePerformanceTests: XCTestCase {
         viewModel.toggleAllItems()
         viewModel.toggleAllItems()
 
-        // 500ms: 50ms debounce + SwiftData batch queries (items not in store → 20×nil lookups)
-        // + await on repository.batchUpdateItems. 150ms was too tight on CI hardware.
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await waitUntil { viewModel.items.allSatisfy { $0.isChecked } }
 
         // After an odd number of debounced calls (effectively 1), all items should be checked.
         let checkedCount = viewModel.items.filter { $0.isChecked }.count
@@ -137,12 +135,12 @@ final class ListViewModelBulkTogglePerformanceTests: XCTestCase {
 
         // First toggle → all checked
         viewModel.toggleAllItems()
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { viewModel.items.allSatisfy { $0.isChecked } }
         XCTAssertTrue(viewModel.items.allSatisfy { $0.isChecked }, "All items should be checked after first toggle")
 
         // Second toggle → all unchecked
         viewModel.toggleAllItems()
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { viewModel.items.allSatisfy { !$0.isChecked } }
         XCTAssertTrue(viewModel.items.allSatisfy { !$0.isChecked }, "All items should be unchecked after second toggle")
     }
 
@@ -159,7 +157,7 @@ final class ListViewModelBulkTogglePerformanceTests: XCTestCase {
 
         // Toggle all → should check the remaining 25 items.
         viewModel.toggleAllItems()
-        try await Task.sleep(nanoseconds: 100_000_000)
+        await waitUntil { viewModel.items.allSatisfy { $0.isChecked } }
 
         XCTAssertTrue(viewModel.items.allSatisfy { $0.isChecked }, "All 50 items should be checked after toggle")
 

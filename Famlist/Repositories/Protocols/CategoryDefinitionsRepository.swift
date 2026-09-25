@@ -18,7 +18,8 @@
 
 import Foundation
 
-protocol CategoryDefinitionsRepository {
+/// `Sendable`: CategoryStore (Main Actor) ruft die async-Methoden auf, die außerhalb des Main Actors laufen.
+protocol CategoryDefinitionsRepository: Sendable {
     /// Eigene Kategorien, nach Position sortiert.
     func fetch(profileId: UUID) async throws -> [CategoryDefinition]
     /// Legt an oder ändert (Name, Icon, Position) – mehrere auf einmal (z. B. nach dem Umsortieren).
@@ -27,6 +28,8 @@ protocol CategoryDefinitionsRepository {
 }
 
 /// Für Vorschauen und Tests: hält alles im Speicher.
+/// @MainActor schützt den veränderlichen Speicher; so ist die Klasse Sendable.
+@MainActor
 final class InMemoryCategoryDefinitionsRepository: CategoryDefinitionsRepository {
     private(set) var stored: [CategoryDefinition]
 

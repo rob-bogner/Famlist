@@ -20,13 +20,16 @@
 
 import XCTest
 
+// @MainActor: XCUIApplication und XCUIElement sind Main-Actor-isoliert; XCTest führt UI-Tests ohnehin auf dem Main Thread aus.
+@MainActor
 final class OfflineStartUITests: XCTestCase {
     private var app: XCUIApplication!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FAMLIST_LIVE"] == "1", "nur mit TEST_RUNNER_FAMLIST_LIVE=1")
         continueAfterFailure = false
         app = XCUIApplication()
+        addTeardownBlock { await LiveTestCleanup.removeLiveTestData() }   // „Offlineprobe …“ wieder löschen
     }
 
     private var searchButton: XCUIElement { app.buttons["Artikel suchen oder hinzufügen"] }
@@ -39,7 +42,7 @@ final class OfflineStartUITests: XCTestCase {
             XCTAssertTrue(searchButton.waitForExistence(timeout: 20))
             return
         }
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 72, dy: 195)).press(forDuration: 1.2)
+        XCTAssertTrue(app.openTestAccountsDialog(), "Anmeldebildschirm")
         let tester = app.buttons["Tester"]
         XCTAssertTrue(tester.waitForExistence(timeout: 5), "Testkonten-Dialog")
         tester.tap()

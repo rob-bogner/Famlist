@@ -22,18 +22,18 @@ final class AuthServiceTests: XCTestCase {
     var mockClient: MockSupabaseClientForAuth!
     var authService: AuthService!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mockAuthClient = MockAuthClient()
         mockClient = MockSupabaseClientForAuth(auth: mockAuthClient)
         authService = AuthService(client: mockClient)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         authService = nil
         mockClient = nil
         mockAuthClient = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Tests
@@ -172,7 +172,7 @@ final class MockAuthClient: AuthClienting, @unchecked Sendable {
 }
 
 /// Mock `SupabaseClienting` for auth-only tests.
-@MainActor
+/// Nicht @MainActor: SupabaseClienting ist Sendable; der Mock hält nur eine unveränderliche Referenz.
 final class MockSupabaseClientForAuth: SupabaseClienting {
 
     private let _auth: MockAuthClient

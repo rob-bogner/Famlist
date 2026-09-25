@@ -10,7 +10,7 @@
  - Lightweight in-memory repository implementations used only for SwiftUI previews and offline UI demos.
 
  🛠 Includes:
- - PreviewProfilesRepository, PreviewListsRepository, PreviewCategoriesRepository returning canned data.
+ - PreviewProfilesRepository, PreviewListsRepository returning canned data.
 
  🔰 Notes for Beginners:
  - These avoid network calls in previews so the canvas renders instantly.
@@ -24,6 +24,8 @@
 import Foundation // Foundation provides UUID, AsyncStream, and basic types for these simple stores.
 
 /// Preview implementation of ProfilesRepository storing a single profile in memory.
+/// @MainActor schützt das veränderliche Profil; so erfüllt die Klasse das Sendable-Protokoll.
+@MainActor
 final class PreviewProfilesRepository: ProfilesRepository { // Used by previews to avoid network.
     private var profile = Profile(
         id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
@@ -98,18 +100,5 @@ final class PreviewListsRepository: ListsRepository { // Simple data source for 
                             is_default: l.id == listId,
                             created_at: l.created_at, updated_at: Date())
         }
-    }
-}
-
-/// Preview implementation of CategoriesRepository returning a static list of categories.
-final class PreviewCategoriesRepository: CategoriesRepository { // Simple category source.
-    private var cats: [Category] = [ // Seed example categories.
-        .init(id: UUID(), name: "Dairy", emoji: "🥛", color_hex: "#88CCFF", profile_id: nil),
-        .init(id: UUID(), name: "Bakery", emoji: "🥖", color_hex: "#FFCC88", profile_id: nil)
-    ]
-    func all(for profileId: UUID?) async throws -> [Category] { cats } // Return all categories.
-    func create(name: String, emoji: String?, colorHex: String?) async throws -> Category { // Append and return new category.
-        let c = Category(id: UUID(), name: name, emoji: emoji, color_hex: colorHex, profile_id: nil) // Build category.
-        cats.append(c); return c // Store and return.
     }
 }

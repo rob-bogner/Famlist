@@ -67,8 +67,12 @@ enum UITestFixture {
 
     /// Startscreen der Fixture. `-designScreen signIn|profileSetup|acceptInvite` zeigt einen Einstiegs-Screen
     /// statt der Liste (Pixel-Abgleich gegen design-handoff/Design/png).
-    @ViewBuilder
     static var rootView: some View {
+        FixtureAppearance { screen }
+    }
+
+    @ViewBuilder
+    private static var screen: some View {
         switch UserDefaults.standard.string(forKey: "designScreen") {
         case "signIn": SignInView()
         case "profileSetup": ProfileSetupView()
@@ -131,4 +135,17 @@ enum UITestFixture {
         ("Batterien", .sonstiges), ("Kerzen", .sonstiges)
     ]
 }
+
+/// Wendet wie RootView die gespeicherte Wahl „System/Hell/Dunkel“ an (vorher zeigte die Fixture immer
+/// das Systemschema, die Dunkel-Tour lief deshalb hell).
+private struct FixtureAppearance<Content: View>: View {
+    @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        content()
+            .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
+    }
+}
+
 #endif

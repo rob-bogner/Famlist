@@ -32,7 +32,8 @@ import SwiftData
 final class RealtimeEventProcessor {
 
     // ISO8601DateFormatter ist teuer in der Erstellung – einmal als static property anlegen.
-    private static let isoFormatter = ISO8601DateFormatter()
+    // @MainActor: Der Formatter ist nicht Sendable; er wird nur von processUpsert (Main Actor) benutzt.
+    @MainActor private static let isoFormatter = ISO8601DateFormatter()
 
     // MARK: - Dependencies
 
@@ -93,6 +94,7 @@ final class RealtimeEventProcessor {
 
     // MARK: - Helpers
     
+    @MainActor
     private func parseItemFromPayload(_ record: [String: Any]) throws -> (ItemModel, CRDTMetadata) {
         // Helper to extract values from Supabase AnyJSON or plain Any
         func extractString(_ key: String) -> String? {

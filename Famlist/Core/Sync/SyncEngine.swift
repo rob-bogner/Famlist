@@ -21,6 +21,8 @@
  - Nutzer-Logs schreibt diese Klasse nicht (Projektregel); sie meldet `SyncEvent`s an das ViewModel.
 
  📝 Last Change:
+ - Lokale Änderungen/Steuerung → SyncEngine+LocalChanges.swift, Foto-Upload → SyncEngine+Images.swift,
+   SyncEngineError → SyncEngineError.swift ausgelagert (Audit 25.09.2026).
  - Neu aufgebaut (Audit 25.09.2026): ein Schreibweg, Server-LWW, Stapel, Fehlerklassen, keine
    Sonder-Pfade mehr für Anlegen/Löschen/„Alle abhaken“.
  ------------------------------------------------------------------------
@@ -54,14 +56,14 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     // MARK: - Dependencies
 
     private let repository: ItemsRepository
-    private let itemStore: SwiftDataItemStore
-    private let operationQueue: SyncOperationQueue
-    private let hlcGenerator: HybridLogicalClockGenerator
+    let itemStore: SwiftDataItemStore
+    let operationQueue: SyncOperationQueue
+    let hlcGenerator: HybridLogicalClockGenerator
     private let backoffCalculator: BackoffCalculator
     private let syncMonitor: SyncMonitor?
     private let isOnline: @MainActor () -> Bool
     /// Hochladen der Fotos vor dem Senden (nil = keine Fotos hochladen, z. B. in Tests).
-    private let imageStorage: ImageStorage?
+    let imageStorage: ImageStorage?
     /// Existiert die Liste schon auf dem Server? Artikel offline angelegter Listen warten, bis die
     /// Liste angelegt ist (OfflineListsRepository.isListReady) – sonst lehnt der Server sie ab.
     private let isListReady: @MainActor (UUID) -> Bool
@@ -70,7 +72,7 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
 
     private var queueProcessingTimer: Timer?
     private var isProcessingQueue = false
-    private var localWriteObserver: (@MainActor () -> Void)?
+    private(set) var localWriteObserver: (@MainActor () -> Void)?
     private var syncEventObserver: (@MainActor (SyncEvent) -> Void)?
 
     // MARK: - Initialization
@@ -99,10 +101,10 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         updatePendingCount()
     }
 
-    // Mit Swift 5.10+ (SE-0371) läuft deinit einer @MainActor-Klasse auf dem Main Thread.
-    deinit {
-        queueProcessingTimer?.invalidate()
-    }
+    // Kein deinit: Timer ist nicht Sendable und darf im nicht isolierten deinit nicht angefasst werden
+    // (isolated deinit braucht das Laufzeitsymbol swift_task_deinitOnExecutor, das nur schwach gelinkt wird und
+    // unter iOS 17 fehlen kann). Der Timer beendet sich stattdessen selbst, sobald die Engine
+    // freigegeben ist – auf dem Run Loop, auf dem er läuft (siehe startQueueProcessing).
 
     // MARK: - Observers
 
@@ -114,140 +116,9 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         syncEventObserver = observer
     }
 
-    // MARK: - Local Changes
-
-    /// Legt einen Artikel an. Die ID ist deterministisch aus (Liste, Name), außer sie ist bereits von
-    /// einem Artikel mit anderem Namen belegt (siehe ItemIdentity).
-    func createItem(_ item: ItemModel) async {
-        var model = item
-        if let listIdString = item.listId, let listId = UUID(uuidString: listIdString) {
-            model = item.withId(ItemIdentity.newItemId(name: item.name, listId: listId, store: itemStore,
-                                                       fallback: UUID(uuidString: item.id)).uuidString)
-        }
-        await write([model], tombstone: false)
-    }
-
-    func updateItem(_ item: ItemModel) async {
-        await write([item], tombstone: false)
-    }
-
-    func deleteItem(_ item: ItemModel) async {
-        await write([item], tombstone: true)
-    }
-
-    func deleteItems(_ items: [ItemModel]) async {
-        await write(items, tombstone: true)
-    }
-
-    /// Mehrere Änderungen in EINEM Speichervorgang und EINEM Sende-Durchlauf (z. B. „Alle abhaken“).
-    func applyLocalChanges(_ items: [ItemModel]) async {
-        await write(items, tombstone: false)
-    }
-
-    /// Import aus der Zwischenablage: Schreiben ohne Senden; der Aufrufer ruft danach `resumeSync()`.
-    func applyBulkItems(_ targets: [ImportTarget]) async {
-        let models = targets.map { target -> ItemModel in
-            switch target {
-            case .createNew(let model), .reactivate(let model):
-                var fresh = model
-                fresh.isChecked = false
-                return fresh
-            case .update(let model):
-                return model
-            }
-        }
-        await write(models, tombstone: false, sendImmediately: false)
-    }
-
-    /// Alte Base64-Fotos einer Liste nach Storage umziehen (Migration 016): Foto hochladen, Pfad setzen.
-    /// Mehrere Geräte dürfen das gleichzeitig tun – gleiches Foto ergibt gleiche Datei und gleichen Pfad.
-    func migrateLegacyImages(listId: UUID) async {
-        guard imageStorage != nil,
-              let legacy = try? itemStore.itemsWithLegacyImage(listId: listId), !legacy.isEmpty else { return }
-        logVoid(params: (action: "migrateLegacyImages", listId: listId, count: legacy.count))
-        await write(legacy.map { $0.toItemModel() }, tombstone: false, forceImage: true)
-    }
-
-    /// Der gemeinsame Schreibweg: neue HLC je Artikel, lokal speichern, einreihen, senden.
-    private func write(_ items: [ItemModel], tombstone: Bool, sendImmediately: Bool = true,
-                       forceImage: Bool = false) async {
-        var seen = Set<String>()
-        for item in items where seen.insert(item.id).inserted {
-            guard let uuid = UUID(uuidString: item.id), item.listId != nil else {
-                logVoid(params: (action: "write.skip", itemId: item.id, reason: "invalid id or listId"))
-                continue
-            }
-            let existing = try? itemStore.fetchItem(id: uuid)
-            // receive(): neue HLC ist größer als die der lokalen Zeile, auch wenn die eigene Uhr nachgeht.
-            let hlc = existing.map { hlcGenerator.receive($0.hlc) } ?? hlcGenerator.tick()
-            let isNew = existing == nil || existing?.tombstone == true
-            let imageChanged = !tombstone && (forceImage || existing == nil || existing?.imageData != item.imageData)
-            var model = item
-            if imageChanged { model.imagePath = nil }            // Pfad bildet prepare() nach dem Hochladen
-            do {
-                let entity = try itemStore.writeLocal(model, hlc: hlc, tombstone: tombstone, modifiedBy: hlcGenerator.nodeId)
-                let type: SyncOperationType = tombstone ? .delete : (isNew ? .create : .update)
-                enqueue(entity.toItemModel(), type: type, hlc: hlc, tombstone: tombstone, includeImage: imageChanged)
-            } catch {
-                logVoid(params: (action: "write.error", itemId: item.id, error: error.localizedDescription))
-            }
-        }
-        saveStore("write")
-        updatePendingCount()
-        localWriteObserver?()
-        if sendImmediately { await processQueue() }
-    }
-
-    private func enqueue(_ snapshot: ItemModel, type: SyncOperationType, hlc: HybridLogicalClock,
-                         tombstone: Bool, includeImage: Bool) {
-        let metadata = CRDTMetadata(hlc: hlc, tombstone: tombstone, lastModifiedBy: hlcGenerator.nodeId)
-        do {
-            let operation = try SyncOperation.create(type: type, item: snapshot, metadata: metadata)
-            operation.includesImage = includeImage
-            operationQueue.enqueue(operation)
-        } catch {
-            logVoid(params: (action: "enqueue.error", itemId: snapshot.id, error: error.localizedDescription))
-        }
-    }
-
-    // MARK: - Control
-
-    /// Verbindung wieder da / App im Vordergrund: Wartezeiten zurücksetzen und sofort senden.
-    func resumeSync() async {
-        operationQueue.resetRetryDelays()
-        await processQueue()
-    }
-
-    /// „Erneut versuchen“ an einem fehlgeschlagenen Artikel.
-    func retryItem(_ item: ItemModel) async {
-        operationQueue.resetFailedOperation(itemId: item.id)
-        if operationQueue.hasPendingOperation(itemId: item.id) {
-            if let uuid = UUID(uuidString: item.id), let entity = try? itemStore.fetchItem(id: uuid) {
-                entity.syncStatus = entity.tombstone == true ? .pendingDelete : .pendingUpdate
-                saveStore("retryItem")
-            }
-            localWriteObserver?()
-            await processQueue()
-        } else {
-            await write([item], tombstone: false)     // keine Operation mehr da: Stand neu einreihen
-        }
-    }
-
-    /// Kein Zugriff mehr auf eine Liste: wartende Operationen verwerfen (sie würden nur abgelehnt).
-    func forgetList(_ listId: UUID) {
-        operationQueue.removeOperations(listId: listId)
-        updatePendingCount()
-    }
-
-    /// Abmelden: Nichts aus der Warteschlange darf ins nächste Konto gelangen.
-    func resetForSignOut() {
-        operationQueue.removeAll()
-        updatePendingCount()
-    }
-
     // MARK: - Queue Processing
 
-    private func processQueue() async {
+    func processQueue() async {
         guard !isProcessingQueue, operationQueue.count > 0 else { return }
         guard isOnline() else {
             logVoid(params: (action: "processQueue.skip", reason: "offline", pending: operationQueue.count))
@@ -310,21 +181,6 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
             requests.append(ItemUpsertRequest(item: snapshot, includeImage: operation.includesImage))
         }
         return (operations, requests)
-    }
-
-    /// Lädt das Foto eines Auftrags hoch und liefert seinen Storage-Pfad (nil = kein Foto).
-    /// Der Pfad wird auch lokal eingetragen, solange dort noch dasselbe Foto liegt.
-    private func uploadImage(of snapshot: ItemModel) async throws -> String? {
-        guard let base64 = snapshot.imageData, let listIdString = snapshot.listId,
-              let listId = UUID(uuidString: listIdString),
-              let object = ProductImageCodec.storageObject(folder: listId, base64: base64) else { return nil }
-        guard let imageStorage else { return snapshot.imagePath }
-        try await imageStorage.upload(object.data, bucket: ProductImageCodec.itemBucket, path: object.path)
-        if let uuid = UUID(uuidString: snapshot.id), let entity = try? itemStore.fetchItem(id: uuid),
-           entity.imageData == base64 {
-            entity.imagePath = object.path
-        }
-        return object.path
     }
 
     /// Sendet einen Stapel. - Returns: false, wenn der Durchlauf abbrechen soll (offline/vorübergehend).
@@ -391,7 +247,8 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
 
     private func startQueueProcessing() {
         queueProcessingTimer?.invalidate()
-        queueProcessingTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+        queueProcessingTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
+            guard self != nil else { timer.invalidate(); return } // Engine freigegeben → Timer beenden.
             Task { @MainActor [weak self] in await self?.processQueue() }
         }
     }
@@ -401,12 +258,12 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         queueProcessingTimer = nil
     }
 
-    private func updatePendingCount() {
+    func updatePendingCount() {
         pendingOperations = operationQueue.count
         syncMonitor?.updateQueueDepth(pendingOperations)
     }
 
-    private func saveStore(_ action: String) {
+    func saveStore(_ action: String) {
         do {
             try itemStore.save()
         } catch {
@@ -429,12 +286,4 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         _ = try? itemStore.purgeTombstones(olderThan: Date().addingTimeInterval(-Self.tombstoneRetention))
         Task { await resumeSync() }
     }
-}
-
-/// Fehler der SyncEngine selbst (nicht vom Server).
-enum SyncEngineError: Error {
-    /// Die Server-Antwort hat nicht genau einen Eintrag je Auftrag.
-    case responseCountMismatch
-    /// Die Liste des Artikels wurde offline angelegt und ist noch nicht auf dem Server.
-    case listNotYetCreated
 }

@@ -65,8 +65,8 @@ final class SupabaseRealtimeManager {
     ///   - onResubscribed: Nach einer Wiederverbindung (nicht beim ersten Anmelden) – Verpasstes nachholen.
     func setupRealtimeChannel(
         for listId: UUID,
-        onEvent: @escaping @MainActor (RealtimeEvent) async -> Void,
-        onResubscribed: @escaping @MainActor () async -> Void = {}
+        onEvent: @escaping @MainActor @Sendable (RealtimeEvent) async -> Void,
+        onResubscribed: @escaping @MainActor @Sendable () async -> Void = {}
     ) async {
         teardownRealtimeChannel(for: listId)
         let channel = client.realtime.channel(Self.topic(for: listId)) { $0.isPrivate = true }
@@ -76,12 +76,9 @@ final class SupabaseRealtimeManager {
 
         sessions[listId] = Task { @MainActor in
             await withTaskGroup(of: Void.self) { group in
-                group.addTask { @MainActor in
-                    for await message in changes {
-                        if let event = Self.event(from: message) { await onEvent(event) }
-                    }
-                }
-                group.addTask { @MainActor in
+                // Beide Aufgaben rufen Main-Actor-Funktionen auf; übergeben werden nur Sendable-Werte.
+                group.addTask { await Self.forward(changes, to: onEvent) }
+                group.addTask {
                     await Self.keepSubscribed(channel, statuses: statuses, listId: listId, onResubscribed: onResubscribed)
                 }
                 await group.waitForAll()
@@ -89,10 +86,18 @@ final class SupabaseRealtimeManager {
         }
     }
 
+    /// Reicht jede Artikeländerung des Kanals an `onEvent` weiter (auf dem Main Actor).
+    private static func forward(_ changes: AsyncStream<JSONObject>,
+                                to onEvent: @escaping @MainActor @Sendable (RealtimeEvent) async -> Void) async {
+        for await message in changes {
+            if let event = Self.event(from: message) { await onEvent(event) }
+        }
+    }
+
     /// Meldet an und hält die Verbindung: Nach jedem erneuten „subscribed“ wird Verpasstes nachgeholt;
     /// scheitert das Anmelden, wird mit wachsender Wartezeit erneut versucht.
     private static func keepSubscribed(_ channel: RealtimeChannelV2, statuses: AsyncStream<RealtimeChannelStatus>,
-                                       listId: UUID, onResubscribed: @escaping @MainActor () async -> Void) async {
+                                       listId: UUID, onResubscribed: @escaping @MainActor @Sendable () async -> Void) async {
         var delay: TimeInterval = 1
         while !Task.isCancelled {
             do {

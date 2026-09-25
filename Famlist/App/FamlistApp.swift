@@ -40,8 +40,12 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     /// Initializes repositories and view models for the app.
     @MainActor
     init() { // Construct dependencies for the running app.
+        let environment = ProcessInfo.processInfo.environment
+        // Unit-Tests laufen in der App als Gastgeber: dann weder die echte Datenbank des Simulators noch
+        // Supabase öffnen (vorher liefen Anmeldung, Realtime und Sync parallel zu den Tests).
+        let isUnitTestHost = environment["XCTestConfigurationFilePath"] != nil
         let persistenceController: PersistenceController // Decide which persistence flavour to use.
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" { // Detect SwiftUI preview context.
+        if environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" || isUnitTestHost { // Previews und Unit-Tests
             persistenceController = .preview // Use transient in-memory storage during previews.
         } else {
             persistenceController = .shared // Use the disk-backed container for the live app.
@@ -54,7 +58,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
         let itemStore = SwiftDataItemStore(context: modelContainer.mainContext)
         let listStore = SwiftDataListStore(context: modelContainer.mainContext)
 
-        if let config = SupabaseConfigLoader.load(), // Try to load Supabase secrets from bundle.
+        if !isUnitTestHost,
+           let config = SupabaseConfigLoader.load(), // Try to load Supabase secrets from bundle.
            let client = AppSupabaseClient(config: config) { // Initialize the Supabase client if configured.
             // HLC-Uhr mit gespeicherter Geräte-ID und letztem Stand (über Neustarts monoton).
             let hlcGenerator = HybridLogicalClockGenerator(defaults: .standard)

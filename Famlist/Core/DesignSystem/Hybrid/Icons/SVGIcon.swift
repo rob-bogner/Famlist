@@ -25,7 +25,9 @@ struct SVGIcon: View {
     let color: Color
     let lineWidth: CGFloat
 
-    init(_ elements: [SVGElement], size: CGFloat, color: Color, lineWidth: CGFloat) {
+    // nonisolated: Das init speichert nur Werte (kein Main-Actor-Zustand); so darf das Icon auch in
+    // nicht isolierten Label-Closures stehen (z. B. PhotosPicker).
+    nonisolated init(_ elements: [SVGElement], size: CGFloat, color: Color, lineWidth: CGFloat) {
         self.elements = elements
         self.size = size
         self.color = color
