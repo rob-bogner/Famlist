@@ -51,6 +51,87 @@ final class ReceiptFlowTests: XCTestCase {
         XCTAssertEqual(flow.savableCount, 2, "Neue Artikel werden nur nach Bestätigung gespeichert")
     }
 
+    // MARK: - Nicht auf dem Bon gefunden
+
+    private func makeMissingFlow(_ repo: InMemoryPricePointsRepository = InMemoryPricePointsRepository()) -> ReceiptFlowViewModel {
+        let flow = ReceiptFlowViewModel(
+            listItemNames: ["Kerrygold, original irische Butter", "Kokosmilch", "Bananen", "Toastbrot"],
+            checkedItems: [ItemModel(name: "Kerrygold, original irische Butter"), ItemModel(name: "Bananen"),
+                           ItemModel(name: "Toastbrot")],
+            catalog: nil, priceBook: PriceBook(repository: repo, defaults: defaults))
+        flow.recognize = { _ in self.bon }
+        flow.addPage(UIImage())
+        return flow
+    }
+
+    func test_missingItems_areCheckedItemsWithoutBonLine() async {
+        let flow = makeMissingFlow()
+        await flow.process()
+        XCTAssertEqual(flow.missingItems.map(\.name), ["Bananen", "Toastbrot"])
+        XCTAssertEqual(flow.unassignedLines.map(\.raw), ["FAIRGL.VM SCHOKO"])
+    }
+
+    func test_assignLine_removesItemFromMissing_andSavesPrice() async {
+        let repo = InMemoryPricePointsRepository()
+        let flow = makeMissingFlow(repo)
+        await flow.process()
+        let bananen = flow.missingItems[0]
+        let line = flow.lineSuggestions(for: bananen)[0]
+        flow.assignLine(line.id, to: bananen)
+        XCTAssertEqual(flow.missingItems.map(\.name), ["Toastbrot"])
+        XCTAssertTrue(flow.unassignedLines.isEmpty)
+        await flow.savePrices()
+        XCTAssertTrue(repo.stored.contains { $0.itemName == "Bananen" && $0.price == Decimal(string: "3.49") })
+    }
+
+    func test_manualPrice_isSaved_notBought_isSkipped() async {
+        let repo = InMemoryPricePointsRepository()
+        let flow = makeMissingFlow(repo)
+        await flow.process()
+        let before = flow.savableCount
+        flow.setManualPrice(Decimal(string: "1.19")!, for: flow.missingItems[0])      // Bananen
+        flow.markNotBought(flow.missingItems[1])                                      // Toastbrot
+        XCTAssertEqual(flow.savableCount, before + 1)
+        await flow.savePrices()
+        XCTAssertTrue(repo.stored.contains { $0.itemName == "Bananen" && $0.price == Decimal(string: "1.19") })
+        XCTAssertFalse(repo.stored.contains { $0.itemName == "Toastbrot" })
+    }
+
+    func test_clearResolution_undoesDecision() async {
+        let flow = makeMissingFlow()
+        await flow.process()
+        let toast = flow.missingItems[1]
+        flow.markNotBought(toast)
+        flow.clearResolution(for: toast)
+        XCTAssertNil(flow.missingResolutions[toast.id])
+    }
+
+    /// „Zurück“ aus „Kassenzettel prüfen“: Aufnahmen bleiben, Ergebnis wird verworfen und neu erkannt.
+    func test_backToCapture_keepsPages_andReprocesses() async {
+        let flow = makeFlow(InMemoryPricePointsRepository())
+        await flow.process()
+        flow.backToCapture()
+        XCTAssertEqual(flow.phase, .capturing)
+        XCTAssertTrue(flow.lines.isEmpty)
+        XCTAssertNil(flow.storeName)
+        XCTAssertEqual(flow.pages.count, 1)
+
+        flow.addPage(UIImage())
+        await flow.process()
+        XCTAssertEqual(flow.phase, .review)
+        XCTAssertEqual(flow.lines.count, 3)
+    }
+
+    /// Mini-Ansicht: ✕ löscht genau die gewählte Aufnahme; ungültiger Index ändert nichts.
+    func test_removePage() {
+        let flow = makeFlow(InMemoryPricePointsRepository())
+        flow.addPage(UIImage())
+        flow.removePage(at: 0)
+        XCTAssertEqual(flow.pages.count, 1)
+        flow.removePage(at: 5)
+        XCTAssertEqual(flow.pages.count, 1)
+    }
+
     func test_corrections_assign_confirmNew_ignore() async {
         let flow = makeFlow(InMemoryPricePointsRepository())
         await flow.process()

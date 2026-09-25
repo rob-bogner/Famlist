@@ -40,6 +40,11 @@ final class ReceiptFlowViewModel: ObservableObject {
     @Published var purchaseDate: Date?
     @Published private(set) var receiptTotal: Decimal?
     @Published var errorMessage: String?
+    /// Entscheidungen zu „Nicht auf dem Bon gefunden“, je Artikel-ID.
+    @Published private(set) var missingResolutions: [String: ReceiptMissingResolution] = [:]
+
+    /// Abgehakte Artikel der Liste beim Start des Ablaufs (gekauft laut Liste).
+    let checkedItems: [ItemModel]
 
     private(set) var candidates: [String]
     /// Bekannte Artikelpreise je Name-Schlüssel (CatalogOperation.key): aus der Liste und aus dem Artikelstamm.
@@ -51,9 +56,11 @@ final class ReceiptFlowViewModel: ObservableObject {
     var recognize: ([UIImage]) async -> [String] = ReceiptTextRecognizer.recognizeLines(in:)
 
     /// `listPrices`: Artikelname → Preis der Artikel in der geöffneten Liste.
-    init(listItemNames: [String], listPrices: [String: Double] = [:], catalog: (any ItemCatalogRepository)?,
-         priceBook: PriceBook) {
+    /// `checkedItems`: abgehakte Artikel – daraus entsteht „Nicht auf dem Bon gefunden“.
+    init(listItemNames: [String], listPrices: [String: Double] = [:], checkedItems: [ItemModel] = [],
+         catalog: (any ItemCatalogRepository)?, priceBook: PriceBook) {
         self.candidates = listItemNames
+        self.checkedItems = checkedItems
         self.listPrices = Dictionary(listPrices.map { (CatalogOperation.key($0.key), $0.value) },
                                      uniquingKeysWith: { first, _ in first })
         self.catalog = catalog
@@ -63,11 +70,29 @@ final class ReceiptFlowViewModel: ObservableObject {
     /// Summe laut Bon, sonst Summe der Positionen.
     var total: Decimal { receiptTotal ?? lines.filter { !$0.ignored }.reduce(0) { $0 + $1.price } }
 
-    var savableCount: Int { lines.filter(\.isSaved).count }
+    var savableCount: Int { lines.filter(\.isSaved).count + manualPrices.count }
 
     // MARK: - Aufnahme
 
     func addPage(_ image: UIImage) { pages.append(image) }
+
+    /// Mini-Ansicht: einzelne Aufnahme löschen (✕ am Vorschaubild).
+    func removePage(at index: Int) {
+        guard pages.indices.contains(index) else { return }
+        pages.remove(at: index)
+        UserLog.Data.receiptPageRemoved(remaining: pages.count)
+    }
+
+    /// „Zurück“ in „Kassenzettel prüfen“: Aufnahmen bleiben, das Erkennungsergebnis wird verworfen
+    /// und beim nächsten „Prüfen“ aus allen Aufnahmen neu erstellt.
+    func backToCapture() {
+        phase = .capturing
+        lines = []
+        storeName = nil
+        purchaseDate = nil
+        receiptTotal = nil
+        errorMessage = nil
+    }
 
     // MARK: - Erkennen
 
@@ -123,6 +148,57 @@ final class ReceiptFlowViewModel: ObservableObject {
         lines[i].ignored = true
     }
 
+    // MARK: - Nicht auf dem Bon gefunden
+
+    /// Abgehakte Artikel, zu denen keine Bon-Zeile gehört (zugeordnet oder „prüfen“; ignorierte zählen nicht).
+    var missingItems: [ItemModel] {
+        let found = Set(lines.filter { !$0.ignored && ($0.status != .new || $0.confirmedNew) }
+            .compactMap { $0.itemName.map(CatalogOperation.key) })
+        return checkedItems.filter { !found.contains(CatalogOperation.key($0.name)) }
+    }
+
+    /// Bon-Zeilen ohne Artikel („Neuer Artikel?“, weder bestätigt noch ignoriert).
+    var unassignedLines: [ReceiptReviewLine] {
+        lines.filter { $0.status == .new && !$0.confirmedNew && !$0.ignored }
+    }
+
+    /// Vorschläge für „Zuordnen“: freie Bon-Zeilen, die ähnlichste zuerst.
+    func lineSuggestions(for item: ItemModel) -> [ReceiptReviewLine] {
+        unassignedLines.sorted { ReceiptItemMatcher.score($0.raw, item.name) > ReceiptItemMatcher.score($1.raw, item.name) }
+    }
+
+    /// „Zuordnen“: Bon-Zeile gehört zu diesem Artikel → er gilt als gefunden und verlässt den Abschnitt.
+    func assignLine(_ lineId: UUID, to item: ItemModel) {
+        assign(lineId, to: item.name)
+        missingResolutions[item.id] = nil
+        UserLog.Data.receiptMissingAssigned(name: item.name)
+    }
+
+    /// „Preis eingeben“: wird beim Speichern wie ein Bon-Preis behandelt.
+    func setManualPrice(_ price: Decimal, for item: ItemModel) {
+        guard price > 0 else { return }
+        missingResolutions[item.id] = .priced(price)
+    }
+
+    /// „Nicht gekauft“ (die Liste setzt den Artikel über die View wieder auf offen).
+    func markNotBought(_ item: ItemModel) {
+        missingResolutions[item.id] = .notBought
+        UserLog.Data.receiptItemNotBought(name: item.name)
+    }
+
+    /// „Rückgängig“ / „Ändern“: Entscheidung aufheben.
+    func clearResolution(for item: ItemModel) {
+        missingResolutions[item.id] = nil
+    }
+
+    /// Von Hand eingegebene Preise der (noch) nicht gefundenen Artikel.
+    private var manualPrices: [(item: ItemModel, price: Decimal)] {
+        missingItems.compactMap { item in
+            if case .some(.priced(let price)) = missingResolutions[item.id] { return (item, price) }
+            return nil
+        }
+    }
+
     // MARK: - Speichern
 
     func savePrices() async {
@@ -130,7 +206,7 @@ final class ReceiptFlowViewModel: ObservableObject {
         let date = purchaseDate ?? Date()
         let points = lines.filter(\.isSaved).compactMap { line in
             line.itemName.map { PricePoint(itemName: $0, storeName: store, purchasedAt: date, price: line.unitPrice) }
-        }
+        } + manualPrices.map { PricePoint(itemName: $0.item.name, storeName: store, purchasedAt: date, price: $0.price) }
         let saved = await priceBook.save(points)
         phase = .done(saved: saved)
     }
@@ -146,6 +222,10 @@ final class ReceiptFlowViewModel: ObservableObject {
             guard let name = line.itemName else { continue }
             // Über den Text: NSDecimalNumber.doubleValue macht aus 2,49 den Wert 2,4899999999999998.
             let change = ReceiptPriceChange(name: name, price: Double(line.unitPrice.description) ?? 0)
+            latest[change.key] = change
+        }
+        for manual in manualPrices {
+            let change = ReceiptPriceChange(name: manual.item.name, price: Double(manual.price.description) ?? 0)
             latest[change.key] = change
         }
         return latest.values

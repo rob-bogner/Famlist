@@ -22,11 +22,13 @@ struct CircleCloseButton: View {
     let size: CGFloat
     let iconSize: CGFloat
     let lineWidth: CGFloat
+    /// Standard ✕; „Zurück“ nutzt denselben Knopf mit Icon.chevronLeft.
+    var icon: [SVGElement] = Icon.close
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
-            SVGIcon(Icon.close, size: iconSize, color: k.icon, lineWidth: lineWidth)
+            SVGIcon(icon, size: iconSize, color: k.icon, lineWidth: lineWidth)
                 .frame(width: size, height: size)
                 .background(Circle().fill(k.close))
                 .contentShape(Circle())

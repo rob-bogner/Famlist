@@ -21,6 +21,9 @@ import SwiftUI
 enum Icon {
     static let chevronDown: [SVGElement] = [.path("M6 9l6 6 6-6")]
     static let chevronRight: [SVGElement] = [.path("M9 6l6 6-6 6")]
+    static let chevronLeft: [SVGElement] = [.path("M15 18l-6-6 6-6")]
+    /// Kreispfeil zurück (Dock „Zurücksetzen“, „Nicht gekauft · wieder offen“).
+    static let rotateBack: [SVGElement] = [.path("M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5")]
     static let chevronsUpDown: [SVGElement] = [.path("M8 9l4-4 4 4M8 15l4 4 4-4")]
     static let viewToggle: [SVGElement] = [.rect(3.5, 4, 17, 7, 2), .path("M4 15.5h16M4 19.5h16")]
     static let menu: [SVGElement] = [.path("M5 8h14M5 12h14M5 16h14")]

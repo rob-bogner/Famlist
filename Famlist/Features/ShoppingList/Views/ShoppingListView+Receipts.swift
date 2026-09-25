@@ -33,10 +33,15 @@ extension ShoppingListView {
         case .receiptReview:
             if let flow = receiptFlow {
                 ReceiptReviewSheet(flow: flow, appearance: appearance, onClose: closeReceiptFlow,
+                                   onBack: {
+                                       flow.backToCapture()
+                                       activeSheet = .receiptCapture
+                                   },
                                    onSaved: { activeSheet = .shoppingDone },
                                    onUpdateItemPrices: { changes in
                                        Task { await listViewModel.applyReceiptPrices(changes) }
-                                   })
+                                   },
+                                   onSetItemBought: { item, bought in setItemChecked(item, bought) })
             }
         case .shoppingDone:
             ShoppingDoneView(appearance: appearance,
@@ -79,6 +84,7 @@ extension ShoppingListView {
         receiptFlow = ReceiptFlowViewModel(listItemNames: listViewModel.items.map(\.name),
                                            listPrices: Dictionary(listViewModel.items.map { ($0.name, $0.price) },
                                                                   uniquingKeysWith: { first, _ in first }),
+                                           checkedItems: listViewModel.items.filter(\.isChecked),
                                            catalog: listViewModel.catalogRepository,
                                            priceBook: priceBook)
         activeSheet = .receiptCapture
@@ -112,6 +118,12 @@ extension ShoppingListView {
     /// Neuer Preis in „Artikel bearbeiten“ → Preispunkt für den Preisverlauf (Logik im PriceBook).
     func recordPrice(for item: ItemModel) {
         priceBook.recordManualPrice(itemName: item.name, price: item.price, store: currentStoreName)
+    }
+
+    /// „Nicht gekauft“ / „Rückgängig“ aus „Kassenzettel prüfen“: Abhak-Status auf der Liste setzen.
+    private func setItemChecked(_ item: ItemModel, _ checked: Bool) {
+        guard let current = listViewModel.items.first(where: { $0.id == item.id }), current.isChecked != checked else { return }
+        listViewModel.toggleItemChecked(current)
     }
 
     private func reviewReceipt(_ flow: ReceiptFlowViewModel) {

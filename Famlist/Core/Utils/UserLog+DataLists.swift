@@ -38,6 +38,21 @@ extension UserLog.Data {
         UserLog.log("🧾 Kassenzettel erkannt: \(lines) Positionen\(store.map { " bei \($0)" } ?? "")")
     }
 
+    /// Kassenzettel: nicht gefundenen Artikel einer Bon-Zeile zugeordnet
+    static func receiptMissingAssigned(name: String) {
+        UserLog.log("🧾 „\(name)“ einer Bon-Zeile zugeordnet")
+    }
+
+    /// Kassenzettel: Artikel als „nicht gekauft“ markiert (wieder offen auf der Liste)
+    static func receiptItemNotBought(name: String) {
+        UserLog.log("🧾 „\(name)“ nicht gekauft – wieder offen")
+    }
+
+    /// Kassenzettel: einzelne Aufnahme gelöscht
+    static func receiptPageRemoved(remaining: Int) {
+        UserLog.log("🧾 Aufnahme gelöscht, \(remaining) übrig")
+    }
+
     /// Kategorie umbenannt / Icon geändert
     static func categoryUpdated(name: String) {
         UserLog.log("🏷️ Kategorie „\(name)“ gespeichert")

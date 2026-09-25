@@ -63,7 +63,7 @@ struct ItemCard: View {
             Spacer(minLength: 0)
 
             if item.isSyncFailed { syncFailedIcon }
-            checkButton
+            trailingColumn
         }
         .padding(15)                      // 1 border + 14 padding
         .frame(maxWidth: .infinity)
@@ -102,27 +102,6 @@ struct ItemCard: View {
                 .padding(.horizontal, 11)
                 .background(CSSBox(shape: Pill, paint: .color(t.chipBg), shadows: t.chipInset))
                 .fixedSize()
-            if showPrices && item.price > 0 {
-                // Hybrid.dc.html: Gesamtpreis Outfit 15/600 t.text, 10 neben dem Mengen-Chip (8 + 2);
-                // dahinter Einzelpreis „je 1,49 €“ DM Sans 12/500 t.sub, Abstand 6.
-                let perUnit = PriceDisplaySetting.multiplier(for: item) > 1
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(PriceDisplaySetting.euro(PriceDisplaySetting.lineTotal(item)))
-                        .font(AppFont.outfit(15, 600))
-                        .foregroundStyle(t.text)
-                    if perUnit {                                  // „je …“ nur bei mehreren Stück
-                        Text("je \(PriceDisplaySetting.euro(item.price))")
-                            .font(AppFont.dm(12, 500))
-                            .foregroundStyle(t.sub)
-                    }
-                }
-                .padding(.leading, 2)
-                .fixedSize()
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(perUnit
-                    ? "Gesamt \(PriceDisplaySetting.euro(PriceDisplaySetting.lineTotal(item))), je \(PriceDisplaySetting.euro(item.price))"
-                    : "Preis \(PriceDisplaySetting.euro(item.price))")
-            }
             if item.isUnavailable {
                 Text("Nicht verfügbar")
                     .font(AppFont.dm(13, 600))
@@ -142,22 +121,54 @@ struct ItemCard: View {
         }
     }
 
+    private var hasPrice: Bool { showPrices && item.price > 0 }
+
+    /// Rechte Spalte (vertikal zentriert): kleine Checkbox (32), darunter rechtsbündig der Preis.
+    private var trailingColumn: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            checkButton
+            if hasPrice { priceLabel }
+        }
+    }
+
+    /// „2,98 €“ (Outfit 15/600, t.text); bei mehreren Stück davor „je 1,49 €“ (DM Sans 12/500, t.sub).
+    private var priceLabel: some View {
+        let perUnit = PriceDisplaySetting.multiplier(for: item) > 1
+        let total = PriceDisplaySetting.euro(PriceDisplaySetting.lineTotal(item))
+        let single = PriceDisplaySetting.euro(item.price)
+        return HStack(alignment: .firstTextBaseline, spacing: 6) {
+            if perUnit {                                  // „je …“ nur bei mehreren Stück
+                Text("je \(single)")
+                    .font(AppFont.dm(12, 500))
+                    .foregroundStyle(t.sub)
+            }
+            Text(total)
+                .font(AppFont.outfit(15, 600))
+                .foregroundStyle(t.text)
+        }
+        .fixedSize()
+        .opacity(dimmed ? 0.55 : 1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(perUnit ? "Gesamt \(total), je \(single)" : "Preis \(single)")
+    }
+
+    /// Sichtbar 32 × 32, Tippfläche weiter 44 × 44 (contentShape 6 pt größer).
     @ViewBuilder
     private var checkButton: some View {
         if item.isChecked {
-            SVGIcon(Icon.check, size: 20, color: .white, lineWidth: 2.6)
-                .frame(width: 44, height: 44)
+            SVGIcon(Icon.check, size: 15, color: .white, lineWidth: 2.4)
+                .frame(width: 32, height: 32)
                 .background(CSSBox(shape: Circle(), paint: t.fabBg,
                                    shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.45)),
-                                             .drop(0, 6, 14, -6, t.accentGlow)]))
-                .contentShape(Circle())
+                                             .drop(0, 5, 11, -5, t.accentGlow)]))
+                .contentShape(Circle().inset(by: -6))
                 .swipeFriendlyTap("\(item.name) ist abgehakt. Tippen macht es wieder offen.", action: onToggleChecked)
         } else {
             Color.clear
-                .frame(width: 44, height: 44)
+                .frame(width: 32, height: 32)
                 .background(CSSBox(shape: Circle(), paint: .color(t.checkBg), border: 2,
                                    borderColor: t.checkRing, shadows: t.checkShadow))
-                .contentShape(Circle())
+                .contentShape(Circle().inset(by: -6))
                 .swipeFriendlyTap("\(item.name) abhaken", action: onToggleChecked)
         }
     }
@@ -166,7 +177,7 @@ struct ItemCard: View {
 #Preview {
     VStack(spacing: 12) {
         ItemCard(t: ListTheme(.light), item: ItemModel(name: "Butter", units: 1, measure: "pack", brand: "Kerrygold"))
-        ItemCard(t: ListTheme(.light), item: ItemModel(name: "Milch", units: 2, measure: "l", isUnavailable: true))
+        ItemCard(t: ListTheme(.light), item: ItemModel(name: "Milch", units: 2, measure: "pack", price: 1.49))
         ItemCard(t: ListTheme(.light), item: ItemModel(name: "Eier", units: 10, isChecked: true))
     }
     .padding(20)
@@ -175,7 +186,7 @@ struct ItemCard: View {
 #Preview("Dark") {
     VStack(spacing: 12) {
         ItemCard(t: ListTheme(.dark), item: ItemModel(name: "Butter", units: 1, measure: "pack", brand: "Kerrygold"))
-        ItemCard(t: ListTheme(.dark), item: ItemModel(name: "Milch", units: 2, measure: "l", isUnavailable: true))
+        ItemCard(t: ListTheme(.dark), item: ItemModel(name: "Milch", units: 2, measure: "pack", price: 1.49))
         ItemCard(t: ListTheme(.dark), item: ItemModel(name: "Eier", units: 10, isChecked: true))
     }
     .padding(20)

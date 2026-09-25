@@ -28,10 +28,14 @@ struct ReceiptReviewSheet: View {
     @ObservedObject var flow: ReceiptFlowViewModel
     let appearance: Appearance
     var onClose: () -> Void = {}
+    /// „Zurück“: zurück zu „Kassenzettel fotografieren“ (Aufnahmen bleiben). nil = kein Knopf.
+    var onBack: (() -> Void)? = nil
     /// Nach „Preise speichern“ (→ „Einkauf erledigt“).
     var onSaved: () -> Void = {}
     /// „Preise übernehmen“: Bon-Preise als neue Artikelpreise speichern.
     var onUpdateItemPrices: ([ReceiptPriceChange]) -> Void = { _ in }
+    /// „Nicht gekauft“ / „Rückgängig“: Artikel auf der Liste wieder öffnen bzw. erneut abhaken.
+    var onSetItemBought: (ItemModel, Bool) -> Void = { _, _ in }
 
     @State private var correcting: ReceiptReviewLine?
     @State private var editingStore = false
@@ -49,7 +53,7 @@ struct ReceiptReviewSheet: View {
         }) {
             SheetSurface(k: k, height: 790) {
                 VStack(alignment: .leading, spacing: 0) {
-                    SheetHeader(title: "Kassenzettel prüfen", k: k, onClose: onClose)
+                    SheetHeader(title: "Kassenzettel prüfen", k: k, onClose: onClose, onBack: onBack)
 
                     if flow.phase == .recognizing {
                         VStack(spacing: 14) {
@@ -60,13 +64,16 @@ struct ReceiptReviewSheet: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        summaryCard(t: t)
-                            .padding(.top, 16)
-
-                        EKKSectionLabel(text: "Zuordnung", k: k)
-                            .padding(.top, 18)
-
+                        // Design: Kopfkarte, Zuordnung und „Nicht auf dem Bon gefunden“ scrollen gemeinsam.
                         ScrollView {
+                          VStack(spacing: 0) {
+                            summaryCard(t: t)
+                                .padding(.top, 16)
+
+                            EKKSectionLabel(text: "Zuordnung", k: k)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 18)
+
                             VStack(spacing: 8) {
                                 if let error = flow.errorMessage {
                                     Text(error)
@@ -80,7 +87,11 @@ struct ReceiptReviewSheet: View {
                                 }
                             }
                             .padding(.top, 10)
-                            .padding(.bottom, 16)
+
+                            if !flow.missingItems.isEmpty { missingSection(k: k) }
+
+                            Color.clear.frame(height: 16)
+                          }
                         }
                         .scrollIndicators(.hidden)
 
@@ -135,6 +146,13 @@ struct ReceiptReviewSheet: View {
                     Text(flow.lines.count == 1 ? "1 Position erkannt" : "\(flow.lines.count) Positionen erkannt")
                         .font(AppFont.dm(15, 600))
                         .foregroundStyle(Color.white)
+                    let missing = flow.missingItems.count
+                    if missing > 0 {
+                        Text(missing == 1 ? "1 Artikel nicht gefunden" : "\(missing) Artikel nicht gefunden")
+                            .font(AppFont.dm(13, 400))
+                            .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
+                            .contentTransition(.numericText())
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Text(flow.total.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE"))))
@@ -149,6 +167,42 @@ struct ReceiptReviewSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint("Laden ändern")
+    }
+
+    /// „Nicht auf dem Bon gefunden · n“: Label (margin-top 22), Hinweis 12 (margin-top 4), Karten ab 10, Abstand 12.
+    @ViewBuilder
+    private func missingSection(k: SheetTheme) -> some View {
+        let items = flow.missingItems
+        EKKSectionLabel(text: "Nicht auf dem Bon gefunden · \(items.count)", k: k)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 22)
+        Text("Abgehakt, aber auf dem Kassenzettel nicht erkannt. Ohne Auswahl wird kein Preis gespeichert.")
+            .font(AppFont.dm(12, 400))
+            .foregroundStyle(k.sub)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .padding(.top, 4)
+        VStack(spacing: 12) {
+            ForEach(items) { item in
+                ReceiptMissingItemCard(
+                    item: item,
+                    resolution: flow.missingResolutions[item.id],
+                    suggestions: flow.lineSuggestions(for: item),
+                    appearance: appearance,
+                    onAssign: { lineId in withAnimation(.easeOut(duration: 0.25)) { flow.assignLine(lineId, to: item) } },
+                    onPrice: { flow.setManualPrice($0, for: item) },
+                    onNotBought: {
+                        flow.markNotBought(item)
+                        onSetItemBought(item, false)
+                    },
+                    onUndo: {
+                        if flow.missingResolutions[item.id] == .notBought { onSetItemBought(item, true) }
+                        flow.clearResolution(for: item)
+                    })
+            }
+        }
+        .padding(.top, 10)
     }
 
     /// Positions-Karte: Rahmen 1 (content-box) → Einzug 13 / 15; Warnung mit warnBorder.
@@ -234,6 +288,16 @@ struct ReceiptReviewSheet: View {
     flow.apply(ReceiptParser.parse(lines: ["EDEKA", "KERRYGOLD BUTTER 2,49 A", "ALPRO SOJA DRINK 2,29 A",
                                            "KOKOSM. 400ML 1,39 A", "FAIRGL.VM SCHOKO 3,49 A"]))
     return ReceiptReviewSheet(flow: flow, appearance: .light)
+}
+
+#Preview("Kassenzettel prüfen – nicht gefunden", traits: .fixedLayout(width: 390, height: 844)) {
+    let flow = ReceiptFlowViewModel(listItemNames: ["Kerrygold, original irische Butter", "Schokolade", "Bananen"],
+                                    checkedItems: [ItemModel(name: "Kerrygold, original irische Butter"),
+                                                   ItemModel(name: "Schokolade", units: 1),
+                                                   ItemModel(name: "Bananen", units: 6)],
+                                    catalog: nil, priceBook: PriceBook(repository: nil))
+    flow.apply(ReceiptParser.parse(lines: ["EDEKA", "KERRYGOLD BUTTER 2,49 A", "FAIRGL.VM SCHOKO 3,49 A"]))
+    return ReceiptReviewSheet(flow: flow, appearance: .dark)
 }
 
 #Preview("Kassenzettel prüfen – Dark", traits: .fixedLayout(width: 390, height: 844)) {

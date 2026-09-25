@@ -15,6 +15,8 @@
 		06FD8F135A1219E95E55DE78 /* ListViewModel+Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCA80C39C4E4047873B75265 /* ListViewModel+Feedback.swift */; };
 		0728E4D793DE4FC56C7C8BBB /* ClipboardImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC84C774F12521B59C55E401 /* ClipboardImportSheet.swift */; };
 		097F694D538224CA9B936472 /* ReceiptCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B4546B940D7BC33B62D08F /* ReceiptCaptureView.swift */; };
+		6F6F7AD570FF4927067EC157 /* ReceiptPageThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA136E82F674F826E10C5ED8 /* ReceiptPageThumbnail.swift */; };
+		B6F90D79343934176E47F9CB /* ReceiptMissingItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D0EADCB514C2BD58B6AFBB /* ReceiptMissingItemCard.swift */; };
 		0A06906852E7B296F6AAB75B /* ItemSyncPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3F3300E2142A2DF7B4BA49 /* ItemSyncPolicy.swift */; };
 		0B1B8C377962E1D8FAFFFAD3 /* ManualOrderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BA54AF0172B4665425044A4 /* ManualOrderStore.swift */; };
 		0C22D3E9B135CB4B4D306E3B /* EKKSheetStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2BD84D0FADFAA52D409BDA /* EKKSheetStage.swift */; };
@@ -306,6 +308,7 @@
 		EA28A16BD277DE7FC9D7CBF8 /* SheetPriceField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1374D768C61416BEDCAEDC0C /* SheetPriceField.swift */; };
 		EAD401F4F71D41CB8D8D8E6F /* SyncEngineProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAB5986EE2C4B488F5B896F /* SyncEngineProtocol.swift */; };
 		EB5CA57CA54FE04DEF800AC0 /* ReceiptPriceChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA75FCEC3320A99EB4748DD /* ReceiptPriceChange.swift */; };
+		1221171D02FE2A501DBD5203 /* ReceiptMissingResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62645B84BF34F06F54A21B7 /* ReceiptMissingResolution.swift */; };
 		EBC7BACFBF66FA9DA0BEF0D8 /* ListViewModel+Sections.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39533751677ABB50FBDF7FE /* ListViewModel+Sections.swift */; };
 		ECA96BA91C15AA3C9D49CF17 /* InvitePreviewInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA69735CAAD66D218C66C03 /* InvitePreviewInfo.swift */; };
 		ECC716F64F069802FEA3F330 /* SearchResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B472D0C386283DEE8908C5D9 /* SearchResultCard.swift */; };
@@ -628,6 +631,8 @@
 		991A0BDD82F117F26D339E85 /* LiveTestCleanup.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveTestCleanup.swift; sourceTree = "<group>"; };
 		9957AE63B51D70F0CDA45AFC /* ListBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListBackground.swift; sourceTree = "<group>"; };
 		99B4546B940D7BC33B62D08F /* ReceiptCaptureView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptCaptureView.swift; sourceTree = "<group>"; };
+		AA136E82F674F826E10C5ED8 /* ReceiptPageThumbnail.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptPageThumbnail.swift; sourceTree = "<group>"; };
+		F4D0EADCB514C2BD58B6AFBB /* ReceiptMissingItemCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptMissingItemCard.swift; sourceTree = "<group>"; };
 		99B55F6738336DDF939AA278 /* SVGElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGElement.swift; sourceTree = "<group>"; };
 		9A6831F301FD6B1CCED370FE /* ProductImageSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageSheet.swift; sourceTree = "<group>"; };
 		9AFA20EA94EFCD62385EFF22 /* ListSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSearchBar.swift; sourceTree = "<group>"; };
@@ -846,6 +851,7 @@
 		FCB512660842D353A5CEC13A /* UserFacingErrorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserFacingErrorTests.swift; sourceTree = "<group>"; };
 		FD23F53DFEF0ED28B0FC12FA /* CategoryDefinitionsRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryDefinitionsRepository.swift; sourceTree = "<group>"; };
 		FEA75FCEC3320A99EB4748DD /* ReceiptPriceChange.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptPriceChange.swift; sourceTree = "<group>"; };
+		A62645B84BF34F06F54A21B7 /* ReceiptMissingResolution.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptMissingResolution.swift; sourceTree = "<group>"; };
 		FF4EA2D73E9113FF2AE5A9CD /* ListMenuItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListMenuItem.swift; sourceTree = "<group>"; };
 		FF92034CA1B193FB7E2FA8F1 /* ListViewModelApplyItemsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListViewModelApplyItemsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1079,6 +1085,7 @@
 				1F34A336B25C6145856D4A5B /* ReceiptReviewLine.swift */,
 				C310138D57EEA5E62756EAC3 /* PricePoint.swift */,
 				FEA75FCEC3320A99EB4748DD /* ReceiptPriceChange.swift */,
+				A62645B84BF34F06F54A21B7 /* ReceiptMissingResolution.swift */,
 			);
 			name = Models;
 			path = Models;
@@ -1204,6 +1211,8 @@
 				20ABB730A67FD3514AF46E23 /* CameraPreviewView.swift */,
 				BA88F11D910B4F3E2EA895C2 /* ShoppingDoneView.swift */,
 				99B4546B940D7BC33B62D08F /* ReceiptCaptureView.swift */,
+				AA136E82F674F826E10C5ED8 /* ReceiptPageThumbnail.swift */,
+				F4D0EADCB514C2BD58B6AFBB /* ReceiptMissingItemCard.swift */,
 				0641E458603C87012598E434 /* PriceHistorySheet.swift */,
 			);
 			name = Views;
@@ -2365,6 +2374,8 @@
 				47A93E8EB530099E540B4F89 /* CameraPreviewView.swift in Sources */,
 				C2239E173C6E3611E5E02EE1 /* ShoppingDoneView.swift in Sources */,
 				097F694D538224CA9B936472 /* ReceiptCaptureView.swift in Sources */,
+				6F6F7AD570FF4927067EC157 /* ReceiptPageThumbnail.swift in Sources */,
+				B6F90D79343934176E47F9CB /* ReceiptMissingItemCard.swift in Sources */,
 				A715FAE1F5F1FE4118706928 /* PriceHistorySheet.swift in Sources */,
 				DBCEA3D3128C81DDFBFE0150 /* ReceiptCamera.swift in Sources */,
 				053E5B6953032F49590853BF /* ReceiptParser.swift in Sources */,
@@ -2435,6 +2446,7 @@
 				7169FB980890D5BF040C761F /* ListViewModel+Reconcile.swift in Sources */,
 				B2AB657B801DD58BE107B87C /* LocalJSONFile.swift in Sources */,
 				EB5CA57CA54FE04DEF800AC0 /* ReceiptPriceChange.swift in Sources */,
+				1221171D02FE2A501DBD5203 /* ReceiptMissingResolution.swift in Sources */,
 				1EE91DD96707A4FC08D0C0C7 /* ListViewModel+ReceiptPrices.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

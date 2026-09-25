@@ -18,14 +18,18 @@
 
 import SwiftUI
 
-/// Sucher-Ecke oben links: 34 × 34, Rahmen 4 oben + links, äußerer Radius 18 (innen 14).
-/// Umsetzung: Rahmen einer 38 × 38-Box (rechte/untere Kante liegen außerhalb) auf 34 × 34 beschnitten.
+/// Sucher-Ecke oben links: Standard 34 × 34, Rahmen 4 oben + links, äußerer Radius 18.
+/// Kassenzettel (ReceiptCapture.dc.html): 36 × 36, Radius 20.
+/// Umsetzung: Rahmen einer um 4 größeren Box (rechte/untere Kante liegen außerhalb) auf size × size beschnitten.
 struct ViewfinderCorner: View {
+    var size: CGFloat = 34
+    var radius: CGFloat = 18
+
     var body: some View {
-        UnevenRoundedRectangle(topLeadingRadius: 18, style: .circular)
+        UnevenRoundedRectangle(topLeadingRadius: radius, style: .circular)
             .strokeBorder(Color.white, lineWidth: 4)
-            .frame(width: 38, height: 38)
-            .frame(width: 34, height: 34, alignment: .topLeading)
+            .frame(width: size + 4, height: size + 4)
+            .frame(width: size, height: size, alignment: .topLeading)
             .clipped()
     }
 }
