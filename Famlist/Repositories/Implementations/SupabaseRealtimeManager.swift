@@ -2,18 +2,31 @@
  SupabaseRealtimeManager.swift
  Famlist
  Created on: 18.10.2025
- Last updated on: 18.10.2025
+ Last updated on: 25.09.2026
 
  ------------------------------------------------------------------------
- 📄 File Overview: Manages Supabase Realtime channel lifecycle for item observation.
- 🛠 Includes: Channel setup/teardown, stream handling for insertions, updates, and deletions.
- 🔰 Notes for Beginners: Extracted from SupabaseItemsRepository to follow Single Responsibility.
- 📝 Last Change: Initial creation to isolate Realtime channel management from CRUD operations.
+ 📄 File Overview:
+ - Verwaltet den Realtime-Kanal je Liste: privater Broadcast-Kanal `list:<list_id>` (Migration 017).
+
+ 🛠 Includes:
+ - Anmelden am Kanal mit Wiederholung (wachsende Wartezeit), Abmelden beim Verlassen der Liste.
+ - Umwandeln der Broadcast-Nachricht „item_change“ in RealtimeEvent (insert/update/delete).
+ - Meldung „wieder verbunden“, damit die Liste Verpasstes per Delta-Abgleich nachholt.
+
+ 🔰 Notes for Beginners:
+ - Broadcast statt Postgres Changes: Supabase empfiehlt Broadcast für Skalierung; Postgres Changes
+   verarbeitet alle Änderungen auf einem Thread und prüft jeden Abonnenten einzeln.
+ - Der Kanal ist privat: Lesen darf nur, wer Zugriff auf die Liste hat (Policy list_topic_read).
+ - Nachrichten können bei einem Verbindungsabbruch fehlen. Deshalb löst jede Wiederverbindung einen
+   Delta-Abgleich aus; doppelte Nachrichten sind harmlos (HLC-Regel).
+
+ 📝 Last Change:
+ - Auf privaten Broadcast umgestellt, Wiederholung und Wiederverbindungs-Meldung (Audit 25.09.2026).
  ------------------------------------------------------------------------
 */
 
-import Foundation // Provides UUID.
-import Supabase // Brings in Supabase types for Realtime channels.
+import Foundation
+import Supabase
 
 /// Realtime event types with their payloads
 enum RealtimeEvent {
@@ -23,127 +36,113 @@ enum RealtimeEvent {
 }
 
 /// Manages Realtime channel lifecycle and streams for a specific list.
-/// @MainActor stellt sicher, dass channels und channelTasks ohne Data Races mutiert werden.
 @MainActor
 final class SupabaseRealtimeManager {
-    
-    // MARK: - Dependencies
-    
-    private let client: SupabaseClienting
-    
-    // MARK: - State
 
-    /// Track Realtime channels for each list to enable cleanup on unsubscribe.
+    /// Ereignisname der Trigger-Nachricht (Migration 017).
+    nonisolated static let itemChangeEvent = "item_change"
+    /// Obergrenze der Wartezeit zwischen Anmeldeversuchen.
+    nonisolated static let maxRetryDelay: TimeInterval = 30
+
+    private let client: SupabaseClienting
+
+    /// Laufende Beobachtung je Liste (Kanal + Aufgabe), damit sie beim Verlassen beendet werden kann.
+    private var sessions: [UUID: Task<Void, Never>] = [:]
     private var channels: [UUID: RealtimeChannelV2] = [:]
 
-    /// Track iterating Tasks per list so they can be cancelled on teardown (prevents Zombie-Tasks).
-    private var channelTasks: [UUID: [Task<Void, Never>]] = [:]
-    
-    // MARK: - Lifecycle
-    
     init(client: SupabaseClienting) {
         self.client = client
     }
-    
-    // MARK: - Channel Management
-    
-    /// Sets up a Realtime channel to listen for changes on the items table for a specific list.
-    /// Following the pattern from: https://ardyan.medium.com/building-chat-app-with-supabase-swiftui-in-under-100-lines-of-code-d01285f6e87a
+
+    /// Kanalname für eine Liste.
+    nonisolated static func topic(for listId: UUID) -> String {
+        "list:\(listId.uuidString.lowercased())"
+    }
+
+    /// Startet die Beobachtung einer Liste.
     /// - Parameters:
-    ///   - listId: The list UUID to monitor.
-    ///   - onEvent: Callback invoked with event payload for granular processing.
+    ///   - onEvent: Jede Artikeländerung.
+    ///   - onResubscribed: Nach einer Wiederverbindung (nicht beim ersten Anmelden) – Verpasstes nachholen.
     func setupRealtimeChannel(
         for listId: UUID,
-        onEvent: @escaping (RealtimeEvent) async -> Void
+        onEvent: @escaping @MainActor (RealtimeEvent) async -> Void,
+        onResubscribed: @escaping @MainActor () async -> Void = {}
     ) async {
-        let channelId = "public:items:\(listId)"
-        logVoid(params: (listId: listId, action: "setupChannel", channelId: channelId))
-        
-        let channel = client.realtime.channel(channelId)
-        
-        // Create AsyncStreams for each change type using postgresChange with type-safe filter syntax
-        let insertions = channel.postgresChange(
-            InsertAction.self,
-            schema: "public",
-            table: "items",
-            filter: .eq("list_id", value: listId.uuidString)
-        )
-        let updates = channel.postgresChange(
-            UpdateAction.self,
-            schema: "public",
-            table: "items",
-            filter: .eq("list_id", value: listId.uuidString)
-        )
-        let deletions = channel.postgresChange(
-            DeleteAction.self,
-            schema: "public",
-            table: "items",
-            filter: .eq("list_id", value: listId.uuidString)
-        )
-        
-        // Subscribe to the channel BEFORE consuming the streams
-        do {
-            try await channel.subscribeWithError()
-            logVoid(params: (
-                listId: listId,
-                action: "channelSubscribed",
-                channelId: channelId,
-                status: "success"
-            ))
-        } catch {
-            logVoid(params: (
-                listId: listId,
-                action: "channelSubscribed",
-                channelId: channelId,
-                status: "failed",
-                error: String(describing: error)
-            ))
-            return
-        }
-        
-        // Store channel for later cleanup
+        teardownRealtimeChannel(for: listId)
+        let channel = client.realtime.channel(Self.topic(for: listId)) { $0.isPrivate = true }
         channels[listId] = channel
+        let changes = channel.broadcastStream(event: Self.itemChangeEvent)
+        let statuses = channel.statusChange
 
-        // Tasks werden gespeichert, damit sie bei teardown explizit gecancelled werden können.
-        let insertionTask = Task {
-            for await insertion in insertions {
-                logVoid(params: (listId: listId, action: "realtimeInsert", record: insertion.record))
-                let payload = ["record": Self.bridge(insertion.record)]
-                await onEvent(.insert(payload: payload))
+        sessions[listId] = Task { @MainActor in
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { @MainActor in
+                    for await message in changes {
+                        if let event = Self.event(from: message) { await onEvent(event) }
+                    }
+                }
+                group.addTask { @MainActor in
+                    await Self.keepSubscribed(channel, statuses: statuses, listId: listId, onResubscribed: onResubscribed)
+                }
+                await group.waitForAll()
             }
         }
-
-        let updateTask = Task {
-            for await update in updates {
-                logVoid(params: (listId: listId, action: "realtimeUpdate", record: update.record))
-                let payload = ["record": Self.bridge(update.record)]
-                await onEvent(.update(payload: payload))
-            }
-        }
-
-        let deletionTask = Task {
-            for await deletion in deletions {
-                logVoid(params: (listId: listId, action: "realtimeDelete", oldRecord: deletion.oldRecord))
-                let payload = ["old_record": Self.bridge(deletion.oldRecord)]
-                await onEvent(.delete(payload: payload))
-            }
-        }
-
-        channelTasks[listId] = [insertionTask, updateTask, deletionTask]
     }
-    
+
+    /// Meldet an und hält die Verbindung: Nach jedem erneuten „subscribed“ wird Verpasstes nachgeholt;
+    /// scheitert das Anmelden, wird mit wachsender Wartezeit erneut versucht.
+    private static func keepSubscribed(_ channel: RealtimeChannelV2, statuses: AsyncStream<RealtimeChannelStatus>,
+                                       listId: UUID, onResubscribed: @escaping @MainActor () async -> Void) async {
+        var delay: TimeInterval = 1
+        while !Task.isCancelled {
+            do {
+                try await channel.subscribeWithError()
+                logVoid(params: (action: "realtime.subscribed", listId: listId))
+                break
+            } catch {
+                logVoid(params: (action: "realtime.subscribeError", listId: listId, retryIn: delay,
+                                 error: String(describing: error)))
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                delay = min(delay * 2, maxRetryDelay)
+            }
+        }
+        var wasSubscribed = true
+        for await status in statuses {
+            guard !Task.isCancelled else { return }
+            if status == .subscribed {
+                if !wasSubscribed {
+                    logVoid(params: (action: "realtime.resubscribed", listId: listId))
+                    await onResubscribed()
+                }
+                wasSubscribed = true
+            } else if status == .unsubscribed {
+                wasSubscribed = false
+            }
+        }
+    }
+
+    /// Wandelt eine Broadcast-Nachricht in ein RealtimeEvent (nil = unbekanntes Format).
+    nonisolated static func event(from message: JSONObject) -> RealtimeEvent? {
+        let body = message["payload"]?.objectValue ?? message
+        guard let operation = body["operation"]?.stringValue else { return nil }
+        switch operation {
+        case "INSERT", "UPDATE":
+            guard let record = body["record"]?.objectValue else { return nil }
+            let payload: [String: Any] = ["record": bridge(record)]
+            return operation == "INSERT" ? .insert(payload: payload) : .update(payload: payload)
+        case "DELETE":
+            guard let old = body["old_record"]?.objectValue else { return nil }
+            return .delete(payload: ["old_record": bridge(old)])
+        default:
+            return nil
+        }
+    }
+
     // MARK: - AnyJSON Bridge
 
-    /// Converts a [String: AnyJSON] Supabase record into a [String: Any] dictionary
-    /// with native Swift value types (String, Int, Double, Bool, nil).
-    ///
-    /// Background: The Supabase Realtime SDK delivers records as [String: AnyJSON] where
-    /// each value is an AnyJSON enum case. Passing this dict as [String: Any] makes every
-    /// conditional cast (as? Int, as? Int64, as? Double …) fail at runtime because the
-    /// runtime type is AnyJSON, not the target scalar type.
-    /// Encoding to JSON and round-tripping through JSONSerialization converts AnyJSON
-    /// back to native Foundation scalars so that all downstream extract functions work.
-    private static func bridge(_ record: [String: AnyJSON]) -> [String: Any] {
+    /// Converts a [String: AnyJSON] record into a [String: Any] dictionary with native Swift values,
+    /// so that downstream `as? Int` / `as? Double` casts work.
+    nonisolated static func bridge(_ record: [String: AnyJSON]) -> [String: Any] {
         guard
             let data = try? JSONEncoder().encode(record),
             let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -153,19 +152,18 @@ final class SupabaseRealtimeManager {
         return dict
     }
 
-    /// Tears down the Realtime channel for a specific list when no more observers exist.
-    /// - Parameter listId: The list UUID whose channel should be closed.
+    /// Tears down the Realtime channel for a specific list.
+    /// Das SDK verwaltet Kanäle nach Namen: Wird die Liste sofort wieder geöffnet, liefert es dasselbe
+    /// Kanal-Objekt zurück. Dann darf das verzögerte Entfernen es nicht mehr abmelden.
     func teardownRealtimeChannel(for listId: UUID) {
-        guard let channel = channels[listId] else { return }
-        // Tasks explizit cancellen, bevor der Channel unsubscribed wird.
-        channelTasks[listId]?.forEach { $0.cancel() }
-        channelTasks.removeValue(forKey: listId)
-        Task {
-            await channel.unsubscribe()
+        sessions[listId]?.cancel()
+        sessions.removeValue(forKey: listId)
+        guard let channel = channels.removeValue(forKey: listId) else { return }
+        let realtime = client.realtime
+        Task { @MainActor [weak self] in
+            if let current = self?.channels[listId], current === channel { return }   // wiederverwendet
+            await realtime.removeChannel(channel)
         }
-        channels.removeValue(forKey: listId)
         logVoid(params: (listId: listId, action: "teardownRealtimeChannel"))
-        // Note: User-Log erfolgt in ListViewModel+RealtimeSync (dort ist mehr Kontext verfügbar)
     }
 }
-

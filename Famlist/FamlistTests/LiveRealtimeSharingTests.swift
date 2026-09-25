@@ -160,24 +160,43 @@ final class LiveRealtimeSharingTests: XCTestCase {
         let joined: UUID = try await member.rpc("accept_list_invite", params: TokenParam(p_token: token)).execute().value
         XCTAssertEqual(joined, newListId)
 
-        // 3. Mitglied abonniert die Liste (derselbe Kanal-Aufbau wie SupabaseRealtimeManager)
+        // 3. Mitglied abonniert den privaten Broadcast-Kanal der Liste (wie SupabaseRealtimeManager, Migration 017)
         let log = EventLog()
-        let itemsChannel = member.realtimeV2.channel("public:items:\(newListId)")
-        let inserts = itemsChannel.postgresChange(InsertAction.self, schema: "public", table: "items",
-                                                  filter: .eq("list_id", value: newListId.uuidString))
-        let updates = itemsChannel.postgresChange(UpdateAction.self, schema: "public", table: "items",
-                                                  filter: .eq("list_id", value: newListId.uuidString))
+        let itemsChannel = member.realtimeV2.channel(SupabaseRealtimeManager.topic(for: newListId)) { $0.isPrivate = true }
+        let changes = itemsChannel.broadcastStream(event: SupabaseRealtimeManager.itemChangeEvent)
         try await itemsChannel.subscribeWithError()
-        let insertTask = Task { for await e in inserts { await log.add("insert:\(e.record["name"]?.stringValue ?? "")") } }
-        let updateTask = Task {
-            for await e in updates {
-                let name = e.record["name"]?.stringValue ?? ""
-                let units = e.record["units"]?.intValue ?? -1
-                let tomb = e.record["tombstone"]?.boolValue ?? false
-                await log.add("update:\(name):\(units):\(tomb)")
+        let changeTask = Task {
+            for await message in changes {
+                guard let event = SupabaseRealtimeManager.event(from: message) else { continue }
+                switch event {
+                case .insert(let p):
+                    let r = p["record"] as? [String: Any] ?? [:]
+                    await log.add("insert:\(r["name"] as? String ?? "")")
+                case .update(let p):
+                    let r = p["record"] as? [String: Any] ?? [:]
+                    await log.add("update:\(r["name"] as? String ?? ""):\(r["units"] as? Int ?? -1):\(r["tombstone"] as? Bool ?? false)")
+                case .delete:
+                    await log.add("delete")
+                }
             }
         }
-        defer { insertTask.cancel(); updateTask.cancel() }
+        defer { changeTask.cancel() }
+
+        // Außenstehender (kein Mitglied) versucht, den Kanal mitzuhören.
+        let outsider = try await signedInClient(.developer)
+        let outsiderLog = EventLog()
+        let spyChannel = outsider.realtimeV2.channel(SupabaseRealtimeManager.topic(for: newListId)) { $0.isPrivate = true }
+        let spyChanges = spyChannel.broadcastStream(event: SupabaseRealtimeManager.itemChangeEvent)
+        // Der Server verweigert den Beitritt (Policy list_topic_read); nicht länger als 5 s darauf warten.
+        let outsiderJoined = await withTaskGroup(of: Bool.self) { group -> Bool in
+            group.addTask { (try? await spyChannel.subscribeWithError()) != nil }
+            group.addTask { try? await Task.sleep(nanoseconds: 5_000_000_000); return false }
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
+        }
+        let spyTask = Task { for await _ in spyChanges { await outsiderLog.add("leak") } }
+        defer { spyTask.cancel() }
 
         // Privater Kanal des Mitglieds für „entfernt“
         let userChannel = member.realtimeV2.channel("user:\(memberId.uuidString.lowercased())") { $0.isPrivate = true }
@@ -211,6 +230,11 @@ final class LiveRealtimeSharingTests: XCTestCase {
         try await owner.from("items").update(TombPatch(tombstone: true, hlc_timestamp: now + 2, hlc_counter: 0, hlc_node_id: "live-owner"))
             .eq("id", value: itemId.uuidString).execute()
         try await waitFor("Löschmarkierung beim Mitglied") { await log.contains(":true") }
+
+        // Der Außenstehende darf nichts empfangen haben.
+        let leaked = await outsiderLog.entries.count
+        XCTAssertEqual(leaked, 0, "Kein Ereignis darf an Nicht-Mitglieder gehen (angemeldet: \(outsiderJoined))")
+        await outsider.realtimeV2.removeAllChannels()
 
         // 5. Besitzer entfernt das Mitglied → privater Broadcast
         try await owner.from("list_members").delete()

@@ -43,6 +43,11 @@ extension ListViewModel {
         observeTask?.cancel()
         loadLocalSnapshot()
         hasObservedActiveList = true
+        // Nach einem Realtime-Abbruch Verpasstes nachholen (Audit M4).
+        repository.setReconnectHandler { [weak self] reconnectedList in
+            guard let self, reconnectedList == self.listId else { return }
+            Task { await self.runIncrementalSync() }
+        }
         // Restore persisted cursor so pagination continues from where it left off after app restart.
         if currentCursor == nil {
             currentCursor = PaginationCursor.load(listId: listId)

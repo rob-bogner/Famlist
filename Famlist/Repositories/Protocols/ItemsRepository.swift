@@ -39,6 +39,10 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     /// Einziger Schreibweg für Artikel – alle Änderungen laufen über die SyncEngine hierher.
     func upsertItems(_ requests: [ItemUpsertRequest]) async throws -> [ItemUpsertResult]
 
+    /// Wird aufgerufen, wenn der Realtime-Kanal einer Liste nach einem Abbruch wieder verbunden ist.
+    /// Die Liste holt dann Verpasstes per Delta-Abgleich nach.
+    func setReconnectHandler(_ handler: @escaping @MainActor (UUID) -> Void)
+
     // MARK: - Pagination & Incremental Sync (FAM-79 / FAM-41)
 
     /// Fetches a page of non-tombstoned items sorted by (created_at ASC, id ASC).
@@ -60,6 +64,11 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     ///   - since: High-water mark timestamp. Items updated before or at this time are excluded.
     /// - Returns: Changed items (creates, updates, tombstones) since `since`.
     func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel]
+}
+
+extension ItemsRepository {
+    /// Standard: keine Realtime-Verbindung (Vorschau, Tests).
+    func setReconnectHandler(_ handler: @escaping @MainActor (UUID) -> Void) {}
 }
 
 // MARK: - Preview/In-Memory Implementation

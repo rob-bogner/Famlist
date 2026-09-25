@@ -135,6 +135,13 @@ final class SupabaseItemsRepository: ItemsRepository {
 
     // MARK: - State
 
+    /// Meldung „Realtime wieder verbunden“ an die Liste (Delta-Abgleich).
+    private var reconnectHandler: (@MainActor (UUID) -> Void)?
+
+    func setReconnectHandler(_ handler: @escaping @MainActor (UUID) -> Void) {
+        reconnectHandler = handler
+    }
+
     /// Active continuations keyed by listId → unique observer token.
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
 
@@ -165,9 +172,11 @@ final class SupabaseItemsRepository: ItemsRepository {
             // Set up Realtime subscription if this is the first observer for this list.
             if self.continuations[listId]?.count == 1 {
                 Task {
-                    await self.realtimeManager.setupRealtimeChannel(for: listId) { [weak self] event in
-                        await self?.processRealtimeEvent(event, listId: listId)
-                    }
+                    await self.realtimeManager.setupRealtimeChannel(
+                        for: listId,
+                        onEvent: { [weak self] event in await self?.processRealtimeEvent(event, listId: listId) },
+                        onResubscribed: { [weak self] in self?.reconnectHandler?(listId) }
+                    )
                 }
             }
 
