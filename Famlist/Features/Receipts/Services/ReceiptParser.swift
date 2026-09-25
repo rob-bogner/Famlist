@@ -11,7 +11,9 @@
  - Eingabe sind Textzeilen (von oben nach unten), wie sie ReceiptTextRecognizer aus Vision liefert.
  - Position = Text + Preis am Zeilenende („KERRYGOLD BUTTER   2,49 A“). Der Steuer-Buchstabe (A/B/1/2, *)
    nach dem Preis wird ignoriert.
- - Übersprungen werden: Mengenzeilen („2 Stk x 1,29“), Gewichtszeilen ohne Endpreis („0,534 kg x 2,99 EUR/kg“),
+ - Mengenzeilen („2 Stk x 1,29“, „2 x 1,29“) sind keine Positionen. Sie setzen die Stückzahl der Position,
+   deren Betrag passt (2 × 1,29 = 2,58): zuerst die Position davor, sonst die nächste.
+ - Übersprungen werden: Gewichtszeilen ohne Endpreis („0,534 kg x 2,99 EUR/kg“),
    Zahlungs- und Steuerzeilen (BAR, EC, KARTE, MwSt …), Pfand/Leergut.
  - Gewichtszeile MIT Endpreis („0,512 kg x 9,99 EUR/kg  5,11 A“): Der Endpreis gehört zum Artikelnamen
    in der Zeile davor (Zeile ohne Preis) bzw. ersetzt den Preis der vorherigen Position.
@@ -21,6 +23,7 @@
  - Reine Funktion → Unit-Tests mit Beispiel-Bons (ReceiptParserTests).
 
  📝 Last Change:
+ - 25.09.2026: Mengenzeilen setzen die Stückzahl der passenden Position; „2 x 1,29“ ist keine Position mehr.
  - 25.09.2026: Audit-Fixes – Rabatte mit nachgestelltem/alleinstehendem Minus, Rabatt nie unter 0,
    Summenwörter nur als ganzes Wort („SUMMERROLLS“ ist keine Summe), Gewichtszeilen mit Endpreis.
  ------------------------------------------------------------------------
@@ -45,12 +48,15 @@ enum ReceiptParser {
     private static let pricePattern =
         #"^(.*?)(?:^|[\s€]+)(-?\d{1,4}[.,]\d{2})(-?)\s*(?:€|EUR)?\s*(?:[A-Z]|\d|\*|[A-Z]\s?\*)?\s*$"#
     private static let quantityPattern = #"^\s*\d+([.,]\d+)?\s*(stk|st|x|kg|g)\b.*\b(x|à|a)\b.*\d+[.,]\d{2}"#
+    /// Reine Mengenzeile: „2 Stk x 1,29“, „3 St. x 0,99“, „2 x 1,29“. Gruppe 1 = Stückzahl, Gruppe 2 = Stückpreis.
+    private static let countPattern = #"^(\d{1,3})\s*(?:STK|ST)?\.?\s*[X×*]\s*(\d{1,4}[.,]\d{2})\s*(?:€|EUR)?\s*$"#
     private static let datePattern = #"(\d{1,2})\.(\d{1,2})\.(\d{2,4})"#
 
     static func parse(lines rawLines: [String]) -> ParsedReceipt {
         let lines = rawLines.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         var result = ParsedReceipt(store: detectStore(lines), date: detectDate(lines), lines: [], total: nil)
         var pendingName: String?        // Artikelname ohne Preis direkt in der Zeile davor
+        var pendingCount: (count: Int, amount: Decimal)?   // Mengenzeile, die vor ihrer Position steht
 
         for line in lines {
             let upper = line.uppercased()
@@ -65,13 +71,20 @@ enum ReceiptParser {
                 applyWeightLine(line, nameBefore: nameBefore, to: &result)
                 continue
             }
+            if let count = countLine(line) {
+                if !applyCount(count, toLastOf: &result) { pendingCount = count }
+                continue
+            }
             if isSkippable(upper) || line.range(of: quantityPattern, options: [.regularExpression, .caseInsensitive]) != nil {
                 continue
             }
             guard let (text, price) = split(line) else { pendingName = articleName(line); continue }
             if price < 0 { applyDiscount(price, to: &result); continue }
             guard let name = articleName(text) else { continue }
-            result.lines.append(.init(raw: name, price: price))
+            var entry = ParsedReceipt.Line(raw: name, price: price)
+            if let count = pendingCount, count.count > 1, count.amount == price { entry.quantity = count.count }
+            pendingCount = nil
+            result.lines.append(entry)
         }
         return result
     }
@@ -81,7 +94,25 @@ enum ReceiptParser {
     /// Rabatt: von der vorherigen Position abziehen, nie unter 0.
     private static func applyDiscount(_ discount: Decimal, to result: inout ParsedReceipt) {
         guard let last = result.lines.popLast() else { return }
-        result.lines.append(.init(raw: last.raw, price: max(0, last.price + discount)))
+        result.lines.append(.init(raw: last.raw, price: max(0, last.price + discount), quantity: last.quantity))
+    }
+
+    /// Mengenzeile → (Stückzahl, Betrag = Stückzahl × Stückpreis).
+    private static func countLine(_ line: String) -> (count: Int, amount: Decimal)? {
+        guard let regex = try? NSRegularExpression(pattern: countPattern, options: .caseInsensitive),
+              let m = regex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+              let countRange = Range(m.range(at: 1), in: line), let count = Int(line[countRange]),
+              let unitRange = Range(m.range(at: 2), in: line),
+              let unit = Decimal(string: line[unitRange].replacingOccurrences(of: ",", with: "."),
+                                 locale: Locale(identifier: "en_US_POSIX")) else { return nil }
+        return (count, unit * Decimal(count))
+    }
+
+    /// Stückzahl an die vorherige Position hängen, wenn deren Betrag passt. false → gehört zur nächsten.
+    private static func applyCount(_ count: (count: Int, amount: Decimal), toLastOf result: inout ParsedReceipt) -> Bool {
+        guard count.count > 1, let last = result.lines.last, last.quantity == 1, last.price == count.amount else { return false }
+        result.lines[result.lines.count - 1].quantity = count.count
+        return true
     }
 
     /// Gewichtszeile („0,512 kg x 9,99 EUR/kg  5,11 A“). Ohne Endpreis → ignorieren.

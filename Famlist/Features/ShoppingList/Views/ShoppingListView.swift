@@ -54,6 +54,8 @@ struct ShoppingListView: View {
     @State var deleteAccountError: String?
     /// „Artikel verwalten“ bleibt beim Wechsel ins Bearbeiten-Sheet erhalten.
     @State var manageItemsVM: ManageItemsViewModel?
+    /// Eingaben in „Artikel bearbeiten“, solange der Preisverlauf darüber liegt (sonst gingen sie beim Zurückkehren verloren).
+    @State var editDraft: ItemModel?
     /// Ablauf „Kassenzettel“: lebt von der Aufnahme bis „Einkauf erledigt“.
     @State var receiptFlow: ReceiptFlowViewModel?
     /// Fehlermeldung des ListViewModels als Toast (blendet nach 3 s aus).
@@ -106,6 +108,13 @@ struct ShoppingListView: View {
         #endif
         .onChange(of: listViewModel.shoppingCompletedEvent) { _, event in
             if let event { offerShoppingDone(for: event) }
+        }
+        .onChange(of: activeSheet?.id) { _, _ in
+            // Entwurf gilt nur für „Artikel bearbeiten“ ↔ Preisverlauf; jedes andere Sheet (oder keins) verwirft ihn.
+            switch activeSheet {
+            case .edit, .itemPriceHistory: break
+            default: editDraft = nil
+            }
         }
         .onChange(of: listViewModel.pendingDeletion?.id) { _, newId in
             guard newId != nil else { return }

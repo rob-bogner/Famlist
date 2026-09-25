@@ -13,9 +13,11 @@
  - ItemFormViewModel(item:) übernimmt alle Felder inklusive isChecked und isUnavailable,
    damit Speichern keinen Status zurücksetzt.
  - Speichern geht über ListViewModel.updateItem → SyncEngine (neuer HLC → Last-Writer-Wins).
+ - `draft`: Eingaben, die vor dem Wechsel in den Preisverlauf gemacht wurden. Beim Zurückkehren
+   füllt der Entwurf das Formular; `item` bleibt der gespeicherte Stand (Vergleich „Preis geändert“).
 
  📝 Last Change:
- - Initial creation (aus ItemFormScreens des Design-Pakets MyListUI).
+ - Eingaben überstehen den Wechsel in den Preisverlauf (vorher war ein eingetippter Preis danach weg).
  ------------------------------------------------------------------------
  */
 
@@ -33,19 +35,20 @@ struct EditItemSheet: View {
     let onClose: () -> Void
     /// Eigene Speicher-Aktion (Artikel verwalten → Artikelstamm). nil = Listenartikel aktualisieren.
     var onSave: ((ItemModel) -> Void)?
-    /// Link „Preisverlauf“ neben dem Preis (EditItem.dc.html). nil = kein Link.
-    var onPriceHistory: (() -> Void)?
+    /// Link „Preisverlauf“ neben dem Preis (EditItem.dc.html); bekommt die aktuellen Eingaben als Entwurf. nil = kein Link.
+    var onPriceHistory: ((ItemModel) -> Void)?
     /// Liefert die Unterzeile des Links („zuletzt 2,49 €“); läuft im Hintergrund, blockiert nichts.
     var lastPriceText: (() async -> String?)?
     /// Preis wurde beim Speichern geändert (> 0) → Preispunkt für den Verlauf anlegen. nil = nichts tun.
     var onPriceChanged: ((ItemModel) -> Void)?
     @State private var priceSubtitle = "Preise & Läden"
 
-    init(item: ItemModel, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat,
+    init(item: ItemModel, draft: ItemModel? = nil, k: SheetTheme, maxHeight: CGFloat, keyboardHeight: CGFloat,
          onClose: @escaping () -> Void, onSave: ((ItemModel) -> Void)? = nil,
-         onPriceHistory: (() -> Void)? = nil, lastPriceText: (() async -> String?)? = nil,
+         onPriceHistory: ((ItemModel) -> Void)? = nil, lastPriceText: (() async -> String?)? = nil,
          onPriceChanged: ((ItemModel) -> Void)? = nil) {
-        _formVM = StateObject(wrappedValue: ItemFormViewModel(item: item))
+        let start = draft.flatMap { $0.id == item.id ? $0 : nil } ?? item
+        _formVM = StateObject(wrappedValue: ItemFormViewModel(item: start))
         self.item = item
         self.k = k
         self.maxHeight = maxHeight
@@ -113,7 +116,7 @@ struct EditItemSheet: View {
                 FieldLabel(text: "Preis", k: k)
                 HStack(spacing: 10) {
                     SheetPriceField(k: k, price: $formVM.price, hasError: formVM.priceError != nil)
-                    if let onPriceHistory { priceHistoryLink(action: onPriceHistory) }
+                    if let onPriceHistory { priceHistoryLink { onPriceHistory(currentDraft) } }
                 }
             }
         }
@@ -156,6 +159,11 @@ struct EditItemSheet: View {
 
     private var unitsBinding: Binding<Int> {
         Binding(get: { Int(formVM.units) ?? 1 }, set: { formVM.units = String($0) })
+    }
+
+    /// Aktuelle Eingaben als Artikel (gleiche ID, Liste und Besitzer wie `item`).
+    private var currentDraft: ItemModel {
+        formVM.toItemModel(existingId: item.id, listId: item.listId, ownerPublicId: item.ownerPublicId)
     }
 
     private func save() {

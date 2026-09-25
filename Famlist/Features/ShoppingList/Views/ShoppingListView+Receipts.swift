@@ -12,10 +12,11 @@
  - Einstieg: ☰ → „Kassenzettel scannen“. Das ReceiptFlowViewModel lebt in `receiptFlow`, bis der
    Ablauf geschlossen wird; Schließen an beliebiger Stelle verwirft ihn.
  - „Abgehakte löschen & fertig“ nutzt dasselbe Löschen mit Rückgängig wie das Dock.
+ - „Preise übernehmen“ (Rückfrage in „Kassenzettel prüfen“) setzt die Bon-Preise in Liste und Artikelstamm.
  - Preisverlauf: Schließen führt zurück zu „Artikel verwalten“ (liegt weichgezeichnet darunter).
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 7).
+ - Bon-Preise als neue Artikelpreise übernehmen; Listenpreise für den Vergleich an den Ablauf übergeben.
  ------------------------------------------------------------------------
  */
 
@@ -32,7 +33,10 @@ extension ShoppingListView {
         case .receiptReview:
             if let flow = receiptFlow {
                 ReceiptReviewSheet(flow: flow, appearance: appearance, onClose: closeReceiptFlow,
-                                   onSaved: { activeSheet = .shoppingDone })
+                                   onSaved: { activeSheet = .shoppingDone },
+                                   onUpdateItemPrices: { changes in
+                                       Task { await listViewModel.applyReceiptPrices(changes) }
+                                   })
             }
         case .shoppingDone:
             ShoppingDoneView(appearance: appearance,
@@ -73,6 +77,8 @@ extension ShoppingListView {
     func openReceiptCapture() {
         openRow = nil
         receiptFlow = ReceiptFlowViewModel(listItemNames: listViewModel.items.map(\.name),
+                                           listPrices: Dictionary(listViewModel.items.map { ($0.name, $0.price) },
+                                                                  uniquingKeysWith: { first, _ in first }),
                                            catalog: listViewModel.catalogRepository,
                                            priceBook: priceBook)
         activeSheet = .receiptCapture

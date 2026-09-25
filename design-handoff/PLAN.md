@@ -234,6 +234,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ManageCategories | Wischen nach links → „Löschen“ (wie ManageItems); „Sonstiges“ nicht wischbar | Roberts Wunsch; nicht gestaltet |
 | ReceiptCapture | Ohne Kamera Hinweis „Kamera nicht verfügbar“, Auslöser und Licht gedimmt; Zähler rechts = Aufnahmen, Tippen startet „Kassenzettel prüfen“ | Platzhalter „Kamerabild“ des Designs; Weiter-Schritt nicht gestaltet |
 | ReceiptReview | Tippen auf eine Position → System-Dialog (Vorschläge, „Als neuen Artikel speichern“, „Ignorieren“); Tippen auf die Summen-Karte → Laden ändern; Ladekreis während der Texterkennung | Korrigieren nicht gestaltet |
+| ReceiptReview | „Preise speichern“ → System-Dialog „Artikelpreise aktualisieren?“ („Preise übernehmen“ / „Nur Preisverlauf“), nur wenn ein Bon-Preis vom gespeicherten Artikelpreis abweicht | Von Robert am 25.09.2026 gewünscht; nicht gestaltet |
 | ShoppingDone | „alle n Artikel abgehakt“ nur, wenn alle abgehakt sind, sonst „n von m Artikeln abgehakt“ | Design zeigt nur den Fall „alle“ |
 | PriceHistory | Zweite Zeile ohne Packungsgröße („250 g“); Hinweis „Noch keine Preise · …“ nur ohne Preise; Monate ohne Preis haben keinen Punkt | Artikelstamm speichert keine Packungsgröße; „Beispielwerte“ ist Design-Text |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |

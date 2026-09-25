@@ -28,6 +28,11 @@ extension UserLog.Data {
         UserLog.log("🧾 \(count) Preise gespeichert")
     }
 
+    /// Preise vom Kassenzettel als neue Artikelpreise übernommen
+    static func itemPricesUpdated(count: Int) {
+        UserLog.log("🧾 \(count == 1 ? "1 Artikelpreis" : "\(count) Artikelpreise") vom Kassenzettel übernommen")
+    }
+
     /// Kassenzettel erkannt
     static func receiptRecognized(lines: Int, store: String?) {
         UserLog.log("🧾 Kassenzettel erkannt: \(lines) Positionen\(store.map { " bei \($0)" } ?? "")")

@@ -14,9 +14,11 @@
    „Als neuen Artikel speichern“, „Ignorieren“. Ignorierte Positionen sind gedimmt.
  - Tippen auf die Summen-Karte ändert den Laden (System-Eingabe), falls er nicht erkannt wurde.
  - Während der Texterkennung zeigt der Inhalt einen Ladekreis.
+ - „Preise speichern“: Weichen Bon-Preise von gespeicherten Artikelpreisen ab, fragt ein System-Dialog
+   (nicht gestaltet), ob sie als neue Artikelpreise übernommen werden. Der Preisverlauf wird immer gespeichert.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 7).
+ - Rückfrage „Artikelpreise aktualisieren?“ vor dem Speichern.
  ------------------------------------------------------------------------
  */
 
@@ -28,11 +30,15 @@ struct ReceiptReviewSheet: View {
     var onClose: () -> Void = {}
     /// Nach „Preise speichern“ (→ „Einkauf erledigt“).
     var onSaved: () -> Void = {}
+    /// „Preise übernehmen“: Bon-Preise als neue Artikelpreise speichern.
+    var onUpdateItemPrices: ([ReceiptPriceChange]) -> Void = { _ in }
 
     @State private var correcting: ReceiptReviewLine?
     @State private var editingStore = false
     @State private var storeDraft = ""
     @State private var isSaving = false
+    @State private var pendingPriceChanges: [ReceiptPriceChange] = []
+    @State private var askingPriceUpdate = false
 
     var body: some View {
         let k = SheetTheme(appearance)
@@ -101,6 +107,12 @@ struct ReceiptReviewSheet: View {
             TextField("z. B. Edeka", text: $storeDraft)
             Button("Übernehmen") { flow.storeName = storeDraft.trimmingCharacters(in: .whitespaces) }
             Button("Abbrechen", role: .cancel) {}
+        }
+        .alert("Artikelpreise aktualisieren?", isPresented: $askingPriceUpdate) {
+            Button("Preise übernehmen") { persist(updating: pendingPriceChanges) }
+            Button("Nur Preisverlauf", role: .cancel) { persist(updating: []) }
+        } message: {
+            Text(ReceiptFlowViewModel.priceChangeMessage(pendingPriceChanges))
         }
     }
 
@@ -194,10 +206,22 @@ struct ReceiptReviewSheet: View {
         Binding(get: { correcting != nil }, set: { if !$0 { correcting = nil } })
     }
 
+    /// Weichen Preise ab → erst fragen, sonst direkt speichern.
     private func save() {
+        let changes = flow.priceChanges
+        if changes.isEmpty {
+            persist(updating: [])
+        } else {
+            pendingPriceChanges = changes
+            askingPriceUpdate = true
+        }
+    }
+
+    private func persist(updating changes: [ReceiptPriceChange]) {
         isSaving = true
         Task {
             await flow.savePrices()
+            if !changes.isEmpty { onUpdateItemPrices(changes) }
             isSaving = false
             onSaved()
         }

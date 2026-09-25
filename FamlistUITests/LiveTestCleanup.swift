@@ -7,6 +7,7 @@
  📄 File Overview:
  - Räumt nach Live-UI-Tests auf: löscht alle Artikel und Artikelstamm-Einträge mit dem Namensanfang
    „Livetest“ oder „Offlineprobe“ in den drei Testkonten (vorher blieben sie nach jedem Lauf liegen).
+ - `serverRows` liest Zeilen des Testkontos „Tester“ direkt vom Server (Prüfung, ob ein Wert wirklich ankam).
 
  🔰 Notes for Beginners:
  - Zugang wie in AuthTestHelpers: lokale, nicht versionierte Secrets.plist im Projektordner
@@ -45,6 +46,19 @@ enum LiveTestCleanup {
             }
         }
         return removed
+    }
+
+    /// Liest Zeilen als Testkonto „Tester“, z. B. `items?name=like.Livetest*&select=name,price`.
+    static func serverRows(_ path: String) async -> [[String: Any]] {
+        guard let base = secrets["SUPABASE_URL"], let key = secrets["SUPABASE_ANON_KEY"],
+              let password = secrets["TEST_PASSWORD_TESTER"],
+              let token = await signIn(base: base, key: key, email: "tester@grocerygenius.app", password: password),
+              let url = URL(string: "\(base)/rest/v1/\(path)") else { return [] }
+        var request = URLRequest(url: url)
+        request.setValue(key, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, _) = try? await URLSession.shared.data(for: request) else { return [] }
+        return (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
     }
 
     private static func signIn(base: String, key: String, email: String, password: String) async -> String? {

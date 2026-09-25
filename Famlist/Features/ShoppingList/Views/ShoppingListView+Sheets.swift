@@ -124,8 +124,9 @@ extension ShoppingListView {
                           onClose: { hideKeyboard(); activeSheet = .manageItems },
                           onSave: { saveCatalogEdit(from: entry, to: entry.applying($0)) })
         case .edit(let item):
-            EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet,
-                          onPriceHistory: { hideKeyboard(); activeSheet = .itemPriceHistory(item) },
+            EditItemSheet(item: item, draft: editDraft, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
+                          onClose: closeSheet,
+                          onPriceHistory: { draft in hideKeyboard(); editDraft = draft; activeSheet = .itemPriceHistory(item) },
                           lastPriceText: { await lastPriceText(for: item) },
                           onPriceChanged: { recordPrice(for: $0) })
         case .productImage(let item):

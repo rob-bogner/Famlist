@@ -218,4 +218,36 @@ extension ReceiptParserTests {
         XCTAssertEqual(r.lines.map(\.raw), ["Tomaten"])
         XCTAssertEqual(r.lines.map(\.price), [d("5.11")])
     }
+
+    // MARK: - Mengenzeilen
+
+    func test_quantityLine_afterPosition_setsQuantity() {
+        let r = ReceiptParser.parse(lines: ["BANANEN   2,58 B", "2 Stk x 1,29", "KOKOSM. 400ML   1,39 B"])
+        XCTAssertEqual(r.lines.map(\.raw), ["BANANEN", "KOKOSM. 400ML"])
+        XCTAssertEqual(r.lines.map(\.quantity), [2, 1])
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: r.lines[0].price, quantity: r.lines[0].quantity), d("1.29"))
+    }
+
+    func test_quantityLine_beforePosition_setsQuantityOfNext() {
+        let r = ReceiptParser.parse(lines: ["BROT   2,50 A", "3 x 0,99", "JOGHURT   2,97 A"])
+        XCTAssertEqual(r.lines.map(\.raw), ["BROT", "JOGHURT"], "„3 x 0,99“ ist keine eigene Position")
+        XCTAssertEqual(r.lines.map(\.quantity), [1, 3])
+    }
+
+    func test_quantityLine_amountDoesNotMatch_keepsQuantityOne() {
+        let r = ReceiptParser.parse(lines: ["BROT   2,50 A", "2 Stk x 1,29", "MILCH   1,19 A"])
+        XCTAssertEqual(r.lines.map(\.quantity), [1, 1])
+    }
+
+    func test_quantityLine_withDiscount_keepsQuantity() {
+        let r = ReceiptParser.parse(lines: ["BANANEN   2,58 B", "2 Stk x 1,29", "Rabatt   -0,50"])
+        XCTAssertEqual(r.lines.map(\.price), [d("2.08")])
+        XCTAssertEqual(r.lines.map(\.quantity), [2])
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: d("2.08"), quantity: 2), d("1.04"))
+    }
+
+    func test_unitPrice_roundsToCents() {
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: d("1.00"), quantity: 3), d("0.33"))
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: d("2.49"), quantity: 1), d("2.49"))
+    }
 }

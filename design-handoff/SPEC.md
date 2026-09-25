@@ -115,7 +115,7 @@ Jede Zeile hat eine Light- und eine Dark-Variante, außer bei den Kamera-Screens
       - Automatische Zuordnung zu Artikeln mit Status „Zugeordnet“, „Zuordnung prüfen“ oder „Neuer Artikel?“
       - Laden und Datum
       - Summe
-    - „Preise speichern“ legt Preispunkte an.
+    - „Preise speichern“ legt Preispunkte an. Weicht ein Bon-Preis vom gespeicherten Artikelpreis ab, fragt die App, ob die Bon-Preise die Artikelpreise ersetzen sollen (Liste und Artikelstamm).
     - Einkauf erledigt zeigt die Summe und die Anzahl gespeicherter Preise. Dann „Abgehakte löschen & fertig“ oder „Liste behalten“.
     - Preisverlauf pro Artikel:
       - Tiefster, Schnitt und Höchster Preis
