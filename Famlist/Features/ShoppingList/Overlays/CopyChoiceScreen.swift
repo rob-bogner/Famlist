@@ -23,6 +23,8 @@
 import SwiftUI
 
 struct CopyChoiceScreen: View {
+    /// Bildschirmbreite: Der Zeiger folgt der Pille, auch wenn das Dock breiter als im Design ist.
+    @Environment(\.hybridScreenWidth) var screenWidth
     var appearance: Appearance = .light
     var accentHex: String? = nil
     var openCount = 1
@@ -34,7 +36,7 @@ struct CopyChoiceScreen: View {
     var body: some View {
         let k = OverlayTheme(appearance, accentHex: accentHex)
         return OverlayStage(appearance: appearance, accentHex: accentHex, dock: .copy, onDismiss: onDismiss) {
-            PopoverMenu(k: k, width: 270, pointerLeft: 155.67) {
+            PopoverMenu(k: k, width: 270, pointerLeft: DockGeometry.pointerLeft(for: .copy, screenWidth: screenWidth)) {
                 PopoverMenuHeading(text: "In Zwischenablage kopieren", k: k)
                 PopoverMenuRow(k: k, icon: OverlayIcon.clipboard, title: "Offene Artikel",
                                subtitle: "Was noch gekauft werden muss", trailing: .text("\(openCount)"),

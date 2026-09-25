@@ -26,6 +26,10 @@ private struct HybridHostedKey: EnvironmentKey {
     static let defaultValue = false
 }
 
+private struct HybridScreenWidthKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 390           // Design-Referenz
+}
+
 private struct HybridSheetMaxHeightKey: EnvironmentKey {
     static let defaultValue: CGFloat = .infinity
 }
@@ -35,6 +39,12 @@ extension EnvironmentValues {
     var hybridHosted: Bool {
         get { self[HybridHostedKey.self] }
         set { self[HybridHostedKey.self] = newValue }
+    }
+
+    /// Bildschirmbreite (für Dock-Geometrie und Menü-Zeiger). Vorschauen: 390.
+    var hybridScreenWidth: CGFloat {
+        get { self[HybridScreenWidthKey.self] }
+        set { self[HybridScreenWidthKey.self] = newValue }
     }
 
     /// Größte erlaubte Sheet-Höhe (Bildschirmhöhe − 54). Vorschauen: unbegrenzt.

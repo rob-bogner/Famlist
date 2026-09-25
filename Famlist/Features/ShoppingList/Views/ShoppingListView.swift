@@ -76,6 +76,7 @@ struct ShoppingListView: View {
                 sheetLayer(k: k, maxHeight: screenHeight - 54, insets: insets)   // Design: 54 pt Luft über dem höchsten Sheet
             }
             .environment(\.hybridHosted, true)
+            .environment(\.hybridScreenWidth, geo.size.width)
         }
         .ignoresSafeArea(.keyboard)
         .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)

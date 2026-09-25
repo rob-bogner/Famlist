@@ -32,7 +32,7 @@ struct CategoryDefinition: Codable, Identifiable, Hashable {
 
     var isFallback: Bool { name.caseInsensitiveCompare(Self.fallbackName) == .orderedSame }
 
-    var svgIcon: [SVGElement] { CategoryIconCatalog.icon(for: icon) }
+    var svgIcon: [SVGElement] { CategoryIconCatalog.icon(for: CategoryIconCatalog.displayKey(name: name, icon: icon)) }
 
     /// Die bisherigen 8 festen Kategorien (ItemCategory.displayOrder) als Startwerte.
     static let defaults: [CategoryDefinition] = {

@@ -22,6 +22,8 @@
 import SwiftUI
 
 struct DeleteChoiceScreen: View {
+    /// Bildschirmbreite: Der Zeiger folgt der Pille, auch wenn das Dock breiter als im Design ist.
+    @Environment(\.hybridScreenWidth) var screenWidth
     var appearance: Appearance = .light
     var accentHex: String? = nil
     var checkedCount = 0
@@ -33,7 +35,7 @@ struct DeleteChoiceScreen: View {
     var body: some View {
         let k = OverlayTheme(appearance, accentHex: accentHex)
         return OverlayStage(appearance: appearance, accentHex: accentHex, dock: .delete, onDismiss: onDismiss) {
-            PopoverMenu(k: k, width: 270, pointerLeft: 211) {
+            PopoverMenu(k: k, width: 270, pointerLeft: DockGeometry.pointerLeft(for: .delete, screenWidth: screenWidth)) {
                 PopoverMenuHeading(text: "Artikel löschen", k: k)
                 PopoverMenuRow(k: k, icon: OverlayIcon.checkAll, title: "Nur abgehakte",
                                subtitle: checkedCount == 0 ? "Noch nichts abgehakt" : "Offene Artikel bleiben",

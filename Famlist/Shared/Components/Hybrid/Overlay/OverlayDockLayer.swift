@@ -18,7 +18,7 @@
 
 import SwiftUI
 
-/// Dock über der Abdunkelung: 350 × 64, links 20, unten 34.
+/// Dock über der Abdunkelung: Höhe 64, links/rechts 20, unten 34 (bei 390 pt: 350 breit).
 struct OverlayDockLayer: View {
     let appearance: Appearance
     var accentHex: String? = nil
@@ -27,9 +27,9 @@ struct OverlayDockLayer: View {
 
     var body: some View {
         DockView(appearance: appearance, accentHex: accentHex, active: active, pill: pill)
-            .frame(width: 350, height: 64)
-            .padding(.leading, 20)
+            .frame(height: 64)
+            .padding(.horizontal, 20)
             .padding(.bottom, 34)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 }

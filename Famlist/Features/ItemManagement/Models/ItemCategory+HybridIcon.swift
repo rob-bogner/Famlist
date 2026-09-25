@@ -21,16 +21,5 @@ import Foundation
 
 extension ItemCategory {
     /// Vector icon used by the Hybrid design (section headers, category chips).
-    var svgIcon: [SVGElement] {
-        switch self {
-        case .obstGemuese: return Icon.leaf
-        case .milch:       return Icon.drop
-        case .backwaren:   return Icon.cutlery
-        case .getraenke:   return Icon.glass
-        case .haushalt:    return Icon.home
-        case .tiefkuehl:   return Icon.snowflake
-        case .fleisch:     return Icon.flame
-        case .sonstiges:   return Icon.tag
-        }
-    }
+    var svgIcon: [SVGElement] { CategoryIconCatalog.icon(for: CategoryIconCatalog.key(for: self)) }
 }

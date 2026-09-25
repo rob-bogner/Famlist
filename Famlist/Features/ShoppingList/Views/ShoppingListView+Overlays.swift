@@ -30,7 +30,6 @@ extension ShoppingListView {
         let k = OverlayTheme(appearance, variant: activeOverlay == .menu ? .listMenu : .dockMenu)
         let dockOnTop = activeOverlay?.keepsDockOnTop ?? false
         ZStack(alignment: .bottom) {
-            if !dockOnTop { dock(t: t, insets: insets) }
             if activeOverlay != nil {
                 // OverlayScrim: Weichzeichner 2 liegt auf der Liste, hier nur die Farbe + Tippen schließt
                 k.scrim
@@ -39,10 +38,17 @@ extension ShoppingListView {
                     .onTapGesture(perform: closeOverlay)
                     .transition(.opacity)
                     .accessibilityHidden(true)
+                    .zIndex(1)
             }
-            if dockOnTop { dock(t: t, insets: insets) }
+            // Genau EINE Dock-Instanz: Nur die Ebene wechselt (unter/über der Abdunkelung).
+            // Zwei bedingte Instanzen würden beim Öffnen/Schließen ausgetauscht → doppelte Leiste,
+            // @Namespace neu, Pille springt statt zu gleiten.
+            dock(t: t, insets: insets)
+                .zIndex(dockOnTop ? 2 : 0)
             overlayContent(insets: insets)
+                .zIndex(3)
             toasts(insets: insets)
+                .zIndex(4)
         }
     }
 
@@ -51,10 +57,10 @@ extension ShoppingListView {
                  liveBlur: true,                   // backdrop-filter des Designs: Leiste ist nur zu 78/84 % deckend
                  onCheck: dockCheck, onSort: { toggle(.sort) }, onCopy: { toggle(.copy) },
                  onDelete: { toggle(.delete) }, onAdd: openNewItem)
-            .frame(width: 350, height: 64)
-            .padding(.leading, 20)
+            .frame(height: 64)
+            .padding(.horizontal, 20)                     // volle Breite: links und rechts 20
             .padding(.bottom, insets.dockBottom)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .ignoresSafeArea()
             .blur(radius: activeSheet != nil ? 3 : (activeOverlay == .menu ? 2 : 0), opaque: false)
             .allowsHitTesting(activeSheet == nil && activeOverlay != .menu)

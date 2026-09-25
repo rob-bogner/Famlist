@@ -33,8 +33,9 @@ struct RootView: View { // SwiftUI View declaration.
     var body: some View { // Root view body.
         Group { // Conditional container to switch views without rebuilding hierarchy unnecessarily.
             if session.isRestoringSession { // If session is restoring, show a loading indicator.
-                ProgressView() // Show a spinner while restoring session.
+                SplashView() // Splash im Hybrid-Design: gleiches Logo wie der Launch Screen + Spinner.
                     .accessibilityLabel(Text(String(localized: "auth.session.restoring"))) // Accessibility label for loading.
+                    .transition(.opacity)
             } else if session.isAuthenticated { // If authenticated and not restoring, show the main app UI.
                 if session.needsProfileSetup {
                     ProfileSetupView() // Schritt 2 von 2: Benutzername fehlt noch.
@@ -49,6 +50,7 @@ struct RootView: View { // SwiftUI View declaration.
             }
         }
         .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
+        .animation(.easeInOut(duration: 0.3), value: session.isRestoringSession)
         .animation(.easeInOut(duration: 0.3), value: session.needsProfileSetup)
         .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.listId)
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
@@ -56,6 +58,66 @@ struct RootView: View { // SwiftUI View declaration.
         }
     }
 }
+
+// MARK: - Splash (Design: Splash.dc.html / SplashDark.dc.html)
+
+/// Splash im Redesign „Hybrid“. Nahtloser Übergang vom Launch Screen:
+/// Hintergrund (`LaunchBackground`) und Logo-Gruppe (`LaunchLogo`, 320 × 286 pt inkl. 40 pt Rand)
+/// sind dieselben Assets wie im Launch Screen (Info.plist → UILaunchScreen), exakt mittig.
+/// Neu kommt nur der Spinner dazu: 32 × 32, Unterkante 120 pt über dem Bildschirmrand.
+struct SplashView: View {
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        let dark = colorScheme == .dark
+        ZStack {
+            Color("LaunchBackground")
+            if dark {
+                // radial-gradient(120% 60% at 50% 100%, rgba(accent, .1), transparent 60%)
+                GeometryReader { geo in
+                    EllipticalGradient(colors: [Color.rgba(31, 194, 204, 0.1), .clear],
+                                       center: .bottom, startRadiusFraction: 0, endRadiusFraction: 0.6)
+                        .frame(width: geo.size.width * 2.4, height: geo.size.height * 1.2)
+                        .position(x: geo.size.width / 2, y: geo.size.height)
+                }
+            }
+            Image("LaunchLogo")
+            VStack {
+                Spacer()
+                SplashSpinner(dark: dark)
+                    .padding(.bottom, 120)
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Spinner 32 × 32: Ring (Strich 3,5) + Viertelbogen mit runder Kappe, 1 Umdrehung pro Sekunde.
+struct SplashSpinner: View {
+    let dark: Bool
+    @State private var spinning = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(dark ? Color.rgba(31, 194, 204, 0.18) : Color.rgba(15, 163, 174, 0.14), lineWidth: 3.5)
+            Circle()
+                .trim(from: 0, to: 0.25)
+                .stroke(dark ? Color.hex("#67D6DC") : Color.hex("#0FA3AE"),
+                        style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .frame(width: 26, height: 26)                      // r 13 (Strich mittig auf dem Kreis wie im SVG)
+        .frame(width: 32, height: 32)
+        .rotationEffect(.degrees(spinning ? 360 : 0))
+        .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: spinning)
+        .onAppear { spinning = true }
+        .accessibilityHidden(true)
+    }
+}
+
+#Preview("Splash") { SplashView() }
+#Preview("Splash – Dark") { SplashView().preferredColorScheme(.dark) }
 
 #Preview {
     // Preview the unauthenticated state.

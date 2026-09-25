@@ -1,0 +1,261 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-24T09:29:00+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: 89af6ac
+    head_subject: 'ENHANCE(FAM-71/FAM-72): Deterministische Item-IDs beim Clipboard-Import + Measure-Canonicalization im Repository'
+    uncommitted_changes: true
+summary: |
+  Das Hybrid-Redesign aus ~/Downloads/MyListUI ist vollständig in Famlist umgesetzt und auf Roberts
+  iPhone 16 Pro Max installiert (Debug-Build). Nichts ist committet (48 geänderte/neue/gelöschte Pfade).
+  Neu: Liste + 4 eigene Sheets im Glas-Design, Schriften Outfit/DM Sans, Filter-Tabs, „Nicht verfügbar“
+  (Spalte is_unavailable, Migration 005 auf Supabase ausgeführt), „Liste duplizieren“, eigene Wischgeste.
+  Die Wischgeste wurde auf dem Gerät gemessen und mehrfach korrigiert; Robert hat „smooth“ und
+  „Abhaken funktioniert perfekt“ bestätigt. Letzte Änderung (Links-Durchwischen „Zurück“ bei
+  abgehakten Artikeln) ist installiert, Roberts Rückmeldung dazu steht noch aus.
+  Achtung: lokaler main ist 16 Commits hinter origin/main.
+goal: |
+  Design-Paket MyListUI (16 Artboards, Light/Dark) 1:1 auf Famlist anwenden, mit echten Daten.
+  Präzisierungen von Robert: alles in einem Durchgang; Import/Profil/Abmelden/Löschen ins „Mehr“-Menü;
+  „Liste duplizieren“ und „Nicht verfügbar“ echt bauen; Schriften aus google/fonts.
+  Wischen: Apples Verhalten mit den eigenen Glas-Buttons (NICHT .swipeActions). Rechts zweistufig
+  (bis Button = offen lassen, weiter = Abhaken); abgehakte Artikel: rechts und links zweistufig „Zurück“.
+  Bewusstes Zurückziehen muss einen Wisch abbrechen. Fertig, wenn Robert auf dem Gerät zufrieden ist
+  und committet wurde.
+current_state: |
+  Geprüft (24.09.2026, 09:26): Build erfolgreich (Simulator + Gerät). Unit-Tests 253, davon 8 failed –
+  alle in ListViewModelDuplicateDetectionTests, schlagen identisch auf HEAD 89af6ac fehl (per Worktree geprüft).
+  28 Wisch-Physik-Tests und 14 UI-Tests auf dem echten iPhone bestanden. Supabase-Spalte is_unavailable
+  existiert (REST-Abfrage HTTP 200). git status: 48 Einträge, alles uncommitted; main behind origin/main 16.
+  UI-Test-Target existiert NUR in der Scratchpad-Kopie, nicht im Projekt.
+  Gefolgert/ungeprüft: Roberts Urteil zum Links-Durchwischen „Zurück“ fehlt; Konflikte mit den 16
+  Remote-Commits nicht untersucht.
+completed_work:
+  - |
+    Design-Grundlagen: Core/DesignSystem/Hybrid/ (Rendering, Icons, Theme, README) – 1 Typ pro Datei,
+    Schriften Famlist/Resources/Fonts + Info.plist UIAppFonts.
+  - |
+    Datenfeld isUnavailable durch ItemModel (eigener Decoder, Fallback false), ItemEntity (Default false),
+    Mapping, Supabase-Repos, RealtimeEventProcessor, SyncEngine, ConflictResolver; migrations/005 angewandt.
+  - |
+    ViewModel: ItemFilter + itemFilter, ListViewModel+ItemStatus (toggleItemUnavailable, checkAllItems(in:)),
+    ListViewModel+Duplicate (duplicateActiveList), UserLog-Einträge.
+  - |
+    UI: ShoppingListView/ShoppingListContent neu, 12 Components in Features/ShoppingList/Components,
+    Sheets ItemSearchSheet/NewItemSheet/EditItemSheet/ProductImageSheet, Shared/Components/Hybrid.
+    12 alte Views per git rm entfernt (ListView, ListRowView, AddItemView, EditItemView, ItemSearchView …).
+  - |
+    Wischgeste: DirectionalPanGestureRecognizer (tolerante Richtungsentscheidung), HorizontalPanGesture,
+    SwipeRevealPhysics (3 Ruhelagen, Gummiband, Durchwischen 180 pt, Zurückschnellen vs. Abbruch ≥400 ms),
+    SwipeableItemRow, OpenSwipeRow; ItemCard .contentShape (Ursache „links aus der Mitte geht nicht“).
+decisions:
+  - decision: |
+      Eigene Wischgeste statt Apples .swipeActions.
+    rationale: |
+      .swipeActions zeichnet Buttons selbst (nur Symbol/Text/tint); Robert will die Glas-Buttons.
+      Eine List-Umstellung wurde begonnen und auf Roberts Wunsch verworfen.
+  - decision: |
+      Offene Artikel: Links-Durchwischen löst NICHT aus.
+    rationale: |
+      Links liegt „Löschen“; versehentliches Löschen vermeiden. Nur abgehakte Artikel haben links Durchwischen („Zurück“).
+  - decision: |
+      Rechts-Wischen auf abgehakten Artikeln = Zurück (früher: Löschen).
+    rationale: |
+      Löschen per Wisch in Abhak-Richtung zu gefährlich; Löschen über „Erledigte löschen“ im Dock.
+  - decision: |
+      Abbruch-Erkennung über Dauer der Rückbewegung (≥400 ms) statt Geschwindigkeit.
+    rationale: |
+      Auf dem Gerät gemessen: bewusste Abbrüche 783/950 ms bei 616–760 pt/s; Daumen-Zurückschnellen ≈90–280 ms.
+files:
+  - path: Famlist.xcodeproj/project.pbxproj
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      Alle neuen Dateien/Schriften eingetragen, 12 alte entfernt (per Skript scratchpad/pbx.py).
+  - path: Famlist/Features/ShoppingList/Components/SwipeableItemRow.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Wisch-Zeile, Glas-Aktionen, LeadingCheckAction, UndoActionButton; Zustand openRow: OpenSwipeRow?.
+  - path: Famlist/Features/ShoppingList/Services/SwipeRevealPhysics.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Reine Wischlogik: release(from:_:) -> Outcome (.rest / .triggerLeading / .triggerTrailing).
+  - path: Famlist/Shared/Components/Hybrid/DirectionalPanGestureRecognizer.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      UIKit-Erkenner; decide(dx:dy:) testbar; Scroll-Pan wartet via shouldBeRequiredToFailBy.
+  - path: Famlist/Features/ShoppingList/Components/ItemCard.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      .contentShape(RR(24)) zwingend (CSSBox ist allowsHitTesting(false)); Bild/Kreis via swipeFriendlyTap.
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      Neuer Hauptscreen: eigene Sheet-Ebene, Mehr-Menü, ListConfirmation-Dialoge, CloseSwipedRowOnScroll.
+  - path: Famlist/Features/ItemManagement/Models/ItemModel.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      isUnavailable + eigener init(from:) für alte SyncOperation-Snapshots.
+  - path: Famlist/Repositories/Implementations/SupabaseItemsRepository+CRUD.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      is_unavailable in ItemRow/ItemUpdatePayload (setzt Migration 005 voraus – ist angewandt).
+  - path: migrations/005_add_item_is_unavailable.sql
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Auf Supabase-Projekt mbfztpbwfktiduemqqfe am 24.09.2026 07:31 via MCP apply_migration ausgeführt.
+  - path: Famlist/FamlistTests/SwipeRevealPhysicsTests.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      22 Tests inkl. echter Gerätemessungen; dazu DirectionalPanDecisionTests (6), ItemAvailabilityTests (10).
+  - path: Famlist/Core/DesignSystem/Hybrid
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      20 Design-Dateien + README (aus MyListUI aufgeteilt).
+  - path: Famlist/Features/ShoppingList/Views/ListView.swift
+    status: deleted
+    staged: true
+    session_change: true
+    note: |
+      Eine von 12 per git rm entfernten Alt-Views (staged deletions).
+checks:
+  - method: |
+      Unit-Test-Suite im Simulator (iPhone 17 Pro, iOS 26.5).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF'
+    result: failed
+    detail: |
+      253 Tests, 8 failed – alle ListViewModelDuplicateDetectionTests, vorbestehend (auch auf HEAD 89af6ac).
+      Alle neuen Tests bestanden. Stand 09:24.
+  - method: |
+      14 UI-Wisch-Tests auf dem echten iPhone 16 Pro Max (Testkopie im Scratchpad mit UI-Test-Target).
+    command: |
+      cd <scratchpad>/uicopy && xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS,id=00008140-000A64A201F1801C' -allowProvisioningUpdates -only-testing:FamlistUITests
+    result: passed
+    detail: |
+      14/14 bestanden (09:23), nach der letzten Codeänderung. Scratchpad ist sessiongebunden (/private/tmp …).
+  - method: |
+      Roberts manueller Test auf dem Gerät für Links-Durchwischen „Zurück“ (abgehakte Artikel).
+    command: null
+    result: not_run
+    detail: |
+      Version installiert 09:24; Rückmeldung fehlt.
+  - method: |
+      SwiftLint / SwiftFormat.
+    command: null
+    result: not_run
+    detail: |
+      Auf dem Rechner nicht installiert.
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'platform=iOS,id=00008140-000A64A201F1801C' -derivedDataPath <dd> -allowProvisioningUpdates && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <dd>/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone (Signierung automatisch, Team YHSZ8G8RWJ).
+  - command: |
+      xcrun devicectl device process launch --console --terminate-existing --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 com.roxo.famlist
+    purpose: |
+      App mit Live-stdout starten (Diagnose per print, im Hintergrund laufen lassen).
+open_items:
+  - |
+    Commit der gesamten Arbeit (Robert hat noch nicht darum gebeten; Format „PREFIX(scope): …“).
+  - |
+    Umgang mit 16 Remote-Commits auf origin/main (pull/rebase vor Commit, Konflikte möglich).
+  - |
+    Frage an Robert: UI-Test-Target + Test-Startmodus (UITestFixture, Argument -uiTestFixture) ins echte Projekt übernehmen?
+  - |
+    Robert kündigte „zwei Dinge“ an, nannte aber nur eines – zweites nie geklärt.
+  - |
+    Vorbestehend: SortOrder vergleicht Namen mit < (Umlaute sortieren hinter Z); 8 fehlschlagende Duplikat-Tests.
+next_steps:
+  - step: |
+      Robert fragen, ob Links-Durchwischen „Zurück“ bei abgehakten Artikeln passt; ggf. feinjustieren.
+    why: |
+      Einzige offene Rückmeldung zur Wischgeste; Werte in SwipeRevealPhysics (fullSwipeDistance 180, 400 ms).
+  - step: |
+      Nach Freigabe: origin/main holen (16 Commits), Konflikte lösen, bauen, testen, committen.
+    why: |
+      Alles ist uncommitted; Verlustrisiko und wachsende Divergenz zu origin/main.
+  - step: |
+      Klären, ob die 14 Geräte-UI-Tests ins Projekt sollen.
+    why: |
+      Sie existieren nur im flüchtigen Scratchpad; ohne Übernahme gehen sie verloren.
+waiting_on:
+  - what: |
+      Rückmeldung zum Links-Durchwischen „Zurück“ und zum ungenannten „zweiten Ding“.
+    who: Robert
+    since: '2026-09-24'
+    detail: |
+      Version mit Links-Durchwischen um 09:24 auf das iPhone installiert.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer/Entwickler; testet auf iPhone 16 Pro Max (iOS 26.6.2).
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      main ist 16 Commits hinter origin/main; die große uncommittete Änderung kann beim Pull kollidieren.
+  - type: risk
+    detail: |
+      UI-Tests und Backups (tgz) liegen nur im sessiongebundenen Scratchpad /private/tmp/claude-501/… und können verschwinden.
+  - type: assumption
+    detail: |
+      Ungeprüft: iOS-17-Rückfallpfad der Wischgeste (SwiftUI DragGesture). Auf iOS 26 blockiert diese Variante das Scrollen;
+      iOS 17 nicht testbar (kein Simulator). Prüfbar mit iOS-17-Gerät/Simulator.
+  - type: assumption
+    detail: |
+      Ungeprüft: Realtime-Publication enthält is_unavailable automatisch (keine Spaltenliste). Prüfbar per Supabase-Dashboard/SQL.
+resources:
+  - type: file
+    ref: ~/Downloads/MyListUI
+    detail: |
+      Design-Paket (Quelle des Redesigns).
+  - type: file
+    ref: .remember/today-2026-09-24.md
+    detail: |
+      Kurzprotokoll der Session; stimmt mit dem Stand überein.
+  - type: file
+    ref: /private/tmp/claude-501/-Users-robertbogner-GitPrivate-Famlist/fb8abbe6-ee57-466c-8aaf-f001926f02d8/scratchpad
+    detail: |
+      uicopy/ (UI-Test-Target, FamlistUITests/SwipeUITests.swift, UITestFixture.swift), backup/*.tgz, pbx.py.
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe
+    detail: |
+      Supabase-MCP authentifiziert; Tools erst nach Session-Neustart verfügbar.
+next_session_prompt: |
+  Famlist (/Users/robertbogner/GitPrivate/Famlist): Das Hybrid-Redesign (Design-Paket ~/Downloads/MyListUI) ist
+  umgesetzt, auf Roberts iPhone installiert, aber NICHT committet; main ist 16 Commits hinter origin/main.
+  Lies zuerst das Handoff unter .claude/handoffs/ und prüfe git status. Frag Robert, ob das Links-Durchwischen
+  „Zurück“ bei abgehakten Artikeln passt und was sein angekündigtes „zweites Ding“ war. Wischlogik:
+  Features/ShoppingList/Services/SwipeRevealPhysics.swift (+Tests). Danach, nur auf Roberts Wunsch: origin/main
+  holen, Konflikte lösen, Unit-Tests (Scheme Famlist, iPhone 17 Pro Sim, 8 bekannte Duplikat-Fehlschläge) laufen
+  lassen und committen. Kläre, ob die Geräte-UI-Tests aus dem Scratchpad ins Projekt übernommen werden sollen.

@@ -32,6 +32,8 @@ struct EditCategorySheet: View {
 
     @State private var name = ""
     @State private var icon = "drop"
+    /// true, sobald der Nutzer selbst ein Icon gewählt hat → kein automatischer Vorschlag mehr.
+    @State private var iconTouched = false
     @FocusState private var nameFocused: Bool
 
     private var isFallback: Bool { category?.isFallback ?? false }
@@ -41,12 +43,11 @@ struct EditCategorySheet: View {
     var body: some View {
         let k = SheetTheme(appearance)
         let t = EKKTokens(appearance)
-        let choices = CategoryIconCatalog.designChoices
 
         EKKSheetStage(k: k, background: {
             DesignListScreen(appearance: appearance)
         }) {
-            SheetSurface(k: k, height: 594) {
+            SheetSurface(k: k, height: 704) {                // +110 für das gruppierte Icon-Raster
                 VStack(alignment: .leading, spacing: 0) {
                     SheetHeader(title: category == nil ? "Neue Kategorie" : "Kategorie bearbeiten", k: k, onClose: onClose)
 
@@ -76,15 +77,7 @@ struct EditCategorySheet: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         FieldLabel(text: "Icon", k: k)
-                        VStack(spacing: 8) {
-                            ForEach(0..<2, id: \.self) { row in
-                                HStack(spacing: 8) {
-                                    ForEach(0..<5, id: \.self) { col in
-                                        iconCell(choices[row * 5 + col], index: row * 5 + col, k: k)
-                                    }
-                                }
-                            }
-                        }
+                        iconGrid(k: k)
                     }
                     .padding(.top, 20)
 
@@ -117,24 +110,63 @@ struct EditCategorySheet: View {
         .animation(.easeOut(duration: 0.25), value: keyboardHeight)
         .onAppear {
             name = category?.name ?? ""
-            icon = category?.icon ?? "drop"
+            icon = category.map { CategoryIconCatalog.displayKey(name: $0.name, icon: $0.icon) } ?? "tag"
             if category == nil { nameFocused = true }
         }
     }
 
-    /// Icon-Taste: Höhe 56, Radius 16; normal Rahmen 1 fieldBorder auf field, gewählt Rahmen 2 ring auf ringSoft.
-    private func iconCell(_ key: String, index: Int, k: SheetTheme) -> some View {
+    /// Gruppiertes Icon-Raster (60 Icons, 8 Gruppen), scrollt innerhalb von 284 pt.
+    /// Oben/unten 14 pt weich ausgeblendet, damit sichtbar ist, dass es weitergeht.
+    private func iconGrid(k: SheetTheme) -> some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
+        return ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(alignment: .leading, spacing: 14, pinnedViews: []) {
+                    ForEach(CategoryIconCatalog.groups, id: \.title) { group in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(group.title.uppercased())
+                                .font(AppFont.dm(11, 600))
+                                .tracking(0.66)                              // 0.06em
+                                .foregroundStyle(k.sub)
+                                .padding(.leading, 4)
+                            LazyVGrid(columns: columns, spacing: 8) {
+                                ForEach(group.choices, id: \.key) { choice in
+                                    iconCell(choice, k: k).id(choice.key)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, 14)
+            }
+            .frame(height: 284)
+            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.05),
+                                         .init(color: .black, location: 0.95), .init(color: .clear, location: 1)],
+                                 startPoint: .top, endPoint: .bottom))
+            .padding(.top, -14)
+            .onAppear { proxy.scrollTo(icon, anchor: .center) }
+        }
+        .onChange(of: name) { _, newName in
+            // Neue Kategorie: passendes Icon vorschlagen, bis der Nutzer selbst wählt.
+            guard category == nil, !iconTouched, let suggestion = CategoryIconCatalog.suggestedKey(for: newName) else { return }
+            withAnimation(.easeOut(duration: 0.2)) { icon = suggestion }
+        }
+    }
+
+    /// Icon-Taste: Höhe 52, Radius 16; normal Rahmen 1 fieldBorder auf field, gewählt Rahmen 2 ring auf ringSoft.
+    private func iconCell(_ choice: CategoryIconCatalog.Choice, k: SheetTheme) -> some View {
+        let key = choice.key
         let isOn = key == icon
-        return Button(action: { icon = key }) {
+        return Button(action: { icon = key; iconTouched = true }) {
             SVGIcon(CategoryIconCatalog.icon(for: key), size: 24, color: k.accentText, lineWidth: 1.9)
                 .frame(maxWidth: .infinity)
-                .frame(height: 56)
+                .frame(height: 52)
                 .background(CSSBox(shape: RR(16), paint: .color(isOn ? k.ringSoft : k.field),
                                    border: isOn ? 2 : 1, borderColor: isOn ? k.ring : k.fieldBorder))
                 .contentShape(RR(16))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Icon \(index + 1)")
+        .accessibilityLabel(choice.label)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }

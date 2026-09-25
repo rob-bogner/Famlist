@@ -72,10 +72,10 @@ struct DesignListScreen: View {
 
             // position: absolute; left: 20; bottom: 34; 350 × 64
             DockView(appearance: appearance, accentHex: accentHex, active: .none, pill: dockPill, liveBlur: liveDockBlur)
-                .frame(width: 350, height: 64)
-                .padding(.leading, 20)
+                .frame(height: 64)
+                .padding(.horizontal, 20)
                 .padding(.bottom, 34)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .clipped()

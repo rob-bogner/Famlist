@@ -105,7 +105,8 @@ struct ShoppingListContent: View {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { listViewModel.toggleItemChecked(item) }
             },
             onDelete: {
-                withAnimation(.easeInOut(duration: 0.3)) { listViewModel.deleteItem(item) }
+                openRow = nil
+                listViewModel.stageDeletion(of: item)       // Rückgängig-Toast (5 s) statt sofort löschen
             },
             onEdit: { onEdit(item) },
             onToggleUnavailable: { listViewModel.toggleItemUnavailable(item) },

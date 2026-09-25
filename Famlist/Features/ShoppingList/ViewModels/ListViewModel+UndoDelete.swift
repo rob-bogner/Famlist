@@ -5,7 +5,7 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Löschen aus dem Dock mit Rückgängig: sofort ausblenden, nach 5 s wirklich löschen.
+ - Löschen aus dem Dock und per Wisch-Aktion mit Rückgängig: sofort ausblenden, nach 5 s wirklich löschen.
 
  🔰 Notes for Beginners:
  - `stageDeletion` blendet die Artikel über `pendingBulkDeleteIDs` aus (derselbe Schutz, der
@@ -31,10 +31,20 @@ extension ListViewModel {
 
     /// Blendet die Artikel sofort aus und startet den 5-s-Rückgängig-Zeitraum.
     func stageDeletion(_ scope: DeletionScope) {
+        stageDeletion(of: scope == .checked ? items.filter(\.isChecked) : items, scope: "\(scope)")
+    }
+
+    /// Einzelner Artikel (Wisch-Aktion „Löschen“): ebenfalls mit Rückgängig-Toast statt sofortigem Löschen.
+    func stageDeletion(of item: ItemModel) {
+        stageDeletion(of: [item], scope: "single")
+    }
+
+    /// Gemeinsamer Weg für Dock- und Einzel-Löschung.
+    func stageDeletion(of targetsIn: [ItemModel], scope: String) {
         commitPendingDeletion()
-        let targets = scope == .checked ? items.filter(\.isChecked) : items
+        let targets = targetsIn
         guard !targets.isEmpty else { return }
-        logVoid(params: (action: "stageDeletion", scope: "\(scope)", count: targets.count))
+        logVoid(params: (action: "stageDeletion", scope: scope, count: targets.count))
         UserLog.Data.itemsDeletedWithUndo(count: targets.count)
 
         let ids = Set(targets.map(\.id))

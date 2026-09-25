@@ -1,0 +1,242 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-24T16:37:38+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: 4c68b00
+    head_subject: 'TEST(ui): UI-Tests für die Wischgeste ins Projekt übernehmen'
+    uncommitted_changes: true
+summary: |
+  Das Sheet „Meine Listen“ ist im Hybrid-Design gebaut (Vorlage ~/Downloads/MyListUI 2) und auf Roberts iPhone
+  installiert, aber NICHT committet. Es wartet auf Roberts Gerätetest und seine Freigabe für Commit und Push.
+  Zuvor in dieser Session erledigt und auf main gepusht: Merge mit origin/main (9950418), Weichzeichner-Fix
+  (711e168) und 14 UI-Tests für die Wischgeste (4c68b00).
+  Außerdem erstellt: Design-System-Doku als claude.ai-Artifact „Famlist Hybrid“
+  (https://claude.ai/artifact/8WZrmU8tAKosSvXKvtHPvM), privat.
+goal: |
+  1) „Meine Listen“ exakt nach MyListsScreen.swift (MyListUI 2) umsetzen. Umbenennen, Löschen und
+     „Als Standard setzen“ sind per Wischgeste (Glas-Buttons) UND per Kontextmenü (lange drücken) erreichbar.
+  2) Eine Design-System-Doku erstellen. Robert hat die Frage nach „Theme“ so beantwortet.
+  Fertig, wenn Robert das Listen-Sheet auf dem Gerät abgenommen hat und der Stand committet und gepusht ist.
+current_state: |
+  Geprüft (24.09.2026, ~15:15): Build ist erfolgreich (Simulator und Gerät). Die App ist auf dem iPhone installiert.
+  ListsUITests: 9/9 bestanden (Simulator). Voller Testplan: 335 Unit-Tests + 23 UI-Tests, davon 2 Fehlschläge
+  (DeleteListTests.test_deleteList_onRemoteError_rollsBackList, SwipeUITests.test_C_left_fromThumbnail).
+  Beide bestanden danach einzeln 5 von 5 Läufen, sie scheitern also nur gelegentlich unter Last.
+  git status: 8 geänderte/gelöschte und 8 neue Dateien, alles uncommitted; main == origin/main (4c68b00).
+  Das Design-System-Artifact ist veröffentlicht (Version 2).
+  Ungeprüft: das Listen-Sheet auf dem Gerät; das Namens-Sheet mit Bildschirmtastatur (der Simulator zeigt keine).
+completed_work:
+  - |
+    Merge origin/main (16 Commits) in das Redesign: 9 Konflikte gelöst. Sharing, Pagination, Pull-to-Refresh,
+    Sync-Highlight, Retry und Suchsektionen ins neue UI übertragen. Gepusht: 3235bcc, 9950418.
+  - |
+    Pixelige Liste hinter Sheets behoben: .blur(opaque: false), ListBackground außerhalb des Weichzeichners
+    (711e168). Robert hat das auf dem Gerät abgenommen.
+  - |
+    UI-Target FamlistUITests mit SwipeUITests (14) und UITestFixture (nur DEBUG, -uiTestFixture) ins Projekt
+    übernommen (4c68b00); Gerät 14/14.
+  - |
+    „Meine Listen“ (uncommitted): MyListsSheet, ListSummaryCard, SwipeableListCard, ListNameSheet, ListNameMode,
+    ActiveListSheet .lists/.listName, SVGFilledIcon, Icon.listBullets/star, GlassActionButton (aus
+    SwipeableItemRow ausgelagert); ListsOverviewView per git rm entfernt; Fixture mit 3 Listen + Testprofil;
+    ListsUITests (9).
+  - |
+    Design-System-Artifact: 65 Tokens (Light/Dark), 16 Schriftstile, 2 TTF-Dateien, 34 SVG-Symbole als Uploads,
+    8 Komponenten (statische HTML-Vorschauen), README als Markenbuch, Titelseite.
+decisions:
+  - decision: |
+      Listen-Aktionen per Wischgeste UND Kontextmenü.
+    rationale: |
+      Roberts Antwort („Beides“). Links-Durchwischen löst nichts aus; Löschen nur für den Besitzer, mit Rückfrage.
+  - decision: |
+      SwipeableListCard hat eigene Wisch-Logik (Kopie aus SwipeableItemRow), kein gemeinsamer Helfer.
+    rationale: |
+      Die Wischwerte der Artikel sind auf dem Gerät eingestellt; ein Umbau ist riskant. Als Refactor-Kandidat vorgemerkt.
+  - decision: |
+      Neue Listen gehören session.currentProfile.id (Fallback defaultList.ownerId).
+    rationale: |
+      Die alte Übersicht nahm defaultList.ownerId; das ist falsch, wenn die Standard-Liste geteilt ist.
+      fetchAllLists ignoriert die ownerId (RLS), deshalb ändert sich beim Laden nichts.
+  - decision: |
+      „Theme“ = Design-System-Doku als Artifact (Typ Design System), Komponenten als statische HTML-Nachbauten.
+    rationale: |
+      Robert hat es gewählt; SwiftUI ist im Browser nicht lauffähig. Kontrastlücken der Quelle bleiben exakt und sind markiert.
+files:
+  - path: Famlist/Features/ShoppingList/Views/MyListsSheet.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Hybrid-Sheet „Meine Listen“ (Designhöhe 790), Löschen-Rückfrage, loadAllLists beim Erscheinen.
+  - path: Famlist/Features/ShoppingList/Components/SwipeableListCard.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Wischgeste: revealWidth 172 (Besitzer) / 88; leadingWidth 96 nur bei eigener Liste, die nicht Standard ist; Kontextmenü.
+  - path: Famlist/Features/ShoppingList/Components/ListSummaryCard.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Karte 76 hoch nach MyListsScreen; Personen-Symbol für geteilte Listen (Famlist-Ergänzung).
+  - path: Famlist/Features/ShoppingList/Views/ListNameSheet.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Neue Liste / Umbenennen; designHeight = 72+20+22+52+24+56+bottomInset, CTA unten angeheftet.
+  - path: Famlist/Shared/Components/Hybrid/GlassActionButton.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Aus SwipeableItemRow ausgelagert, Stile delete/edit/unavailable/favorite, columnHeight 94/76.
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      showListsOverview/System-Sheet entfernt; activeSheet .lists und .listName(mode); openLists().
+  - path: Famlist/Features/ShoppingList/Views/ListsOverviewView.swift
+    status: deleted
+    staged: true
+    session_change: true
+    note: |
+      Per git rm entfernt (ersetzt durch MyListsSheet/ListNameSheet).
+  - path: Famlist/App/UITestFixture.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      3 Listen (My List, Drogerie, WG-Einkauf geteilt) + currentProfile; kein listsRepository (bewusst).
+  - path: FamlistUITests/ListsUITests.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      9 UI-Tests für das Listen-Sheet (Wischwege 172/88/96, Kontextmenü, Wechsel, Namens-Sheet).
+  - path: Famlist.xcodeproj/project.pbxproj
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      8 neue Dateien eingetragen, ListsOverviewView entfernt (plutil -lint OK).
+  - path: Famlist/Core/DesignSystem/Hybrid/Icons/Icon.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      listBullets und star ergänzt (aus MyListUI 2, SVGIcons.swift). Dazu neu SVGFilledIcon.swift, ListNameMode.swift.
+checks:
+  - method: |
+      Neue UI-Tests des Listen-Sheets im Simulator (iPhone 17 Pro, iOS 26.5).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/ListsUITests
+    result: passed
+    detail: |
+      9/9, ca. 82 s, auf dem aktuellen Stand.
+  - method: |
+      Vollständiger Testplan (Unit + UI) im Simulator.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF'
+    result: failed
+    detail: |
+      2 Fehlschläge: DeleteListTests.test_deleteList_onRemoteError_rollsBackList (fester Sleep 100 ms, vorbestehend)
+      und SwipeUITests.test_C_left_fromThumbnail (knappster 60-pt-Wisch). Einzeln mit -test-iterations 5 beide 5/5 bestanden.
+  - method: |
+      Roberts Test des Listen-Sheets auf dem iPhone 16 Pro Max.
+    command: null
+    result: not_run
+    detail: |
+      Installiert gegen 15:15; Rückmeldung fehlt.
+  - method: |
+      Namens-Sheet mit Bildschirmtastatur (Höhe wächst mit keyboardHeight).
+    command: null
+    result: not_run
+    detail: |
+      Der Simulator hatte eine Hardware-Tastatur; nur auf dem Gerät prüfbar.
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'platform=iOS,id=00008140-000A64A201F1801C' -derivedDataPath <dd> -allowProvisioningUpdates && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <dd>/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone.
+  - command: |
+      xcodebuild test-without-building -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -derivedDataPath <dd> -only-testing:<Target>/<Klasse>/<test> -test-iterations 5
+    purpose: |
+      Einzelne Tests wiederholt laufen lassen, um gelegentliche Fehlschläge zu erkennen.
+open_items:
+  - |
+    Commit und Push des Listen-Sheets. Bisheriger Ablauf: auf feature/hybrid-redesign committen, main per
+    --ff-only nachziehen, beide pushen. Nur auf Roberts Wunsch.
+  - |
+    DeleteListTests: festen Sleep durch Warten auf das Ergebnis ersetzen (Test schlägt nur gelegentlich fehl).
+  - |
+    Design-System-Doku: fehlende Komponenten (SheetHeader, SearchResultCard, ListTopBar, ListSearchBar,
+    ListSectionHeader, SheetQuantityStepper, CategoryChipRow, UnitPickerMenu, PhotoAddTile, ProductImage-Kachel,
+    Undo/LeadingCheck-Aktion). Das Artifact ist privat; teilen nur über das Share-Menü.
+  - |
+    5 Remote-Testdateien (z. B. RemoteSyncHighlightTests) liegen im Ordner, sind aber in keinem Target (auch auf origin nicht).
+  - |
+    Refactor-Kandidat: gemeinsame Wisch-Logik für SwipeableItemRow und SwipeableListCard; ShoppingListView ca. 385 Zeilen (Mehr-Menü auslagern).
+next_steps:
+  - step: |
+      Robert nach seinem Gerätetest des Listen-Sheets fragen: Wischen, lange drücken, Anlegen, Umbenennen, Löschen, Standard.
+    why: |
+      Das ist das Fertig-Kriterium. Der Gerätetest und die Tastatur im Namens-Sheet sind ungeprüft.
+  - step: |
+      Nach Freigabe: Voll-Testplan laufen lassen, committen (z. B. FEAT(ui): „Meine Listen“ im Hybrid-Design), main vorspulen, pushen.
+    why: |
+      16 Dateien sind uncommitted.
+waiting_on:
+  - what: |
+      Gerätetest und Freigabe des Listen-Sheets.
+    who: Robert
+    since: '2026-09-24'
+    detail: |
+      Die App ist installiert; Robert soll anschließend sagen, ob committet werden soll.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer/Entwickler; testet auf dem iPhone 16 Pro Max.
+    contact: null
+risks:
+  - type: assumption
+    detail: |
+      Ungeprüft: contextMenu und die UIKit-Pan-Geste auf derselben Karte vertragen sich auf dem echten Gerät
+      (im Simulator per UI-Test bestätigt). Prüfbar durch Roberts Gerätetest.
+  - type: assumption
+    detail: |
+      Ungeprüft: Das Namens-Sheet bleibt mit der Bildschirmtastatur vollständig sichtbar. Prüfbar auf dem Gerät.
+  - type: risk
+    detail: |
+      Zwei Tests scheitern gelegentlich (siehe checks); ein roter Voll-Lauf ist nicht automatisch ein echter Fehler.
+resources:
+  - type: file
+    ref: ~/Downloads/MyListUI 2
+    detail: |
+      Neue Fassung des Design-Pakets mit MyListsScreen.swift und SVGFilledIcon/listBullets/star.
+  - type: url
+    ref: https://claude.ai/artifact/8WZrmU8tAKosSvXKvtHPvM
+    detail: |
+      Design-System „Famlist Hybrid“ (privat). Quelldateien in der alten Session unter scratchpad/ds (flüchtig).
+  - type: file
+    ref: .remember/today-2026-09-24.md
+    detail: |
+      Kurzprotokoll der Session; stimmt mit dem Stand überein.
+next_session_prompt: |
+  Famlist (/Users/robertbogner/GitPrivate/Famlist, main == origin/main 4c68b00): Das Sheet „Meine Listen“ im
+  Hybrid-Design ist gebaut und auf Roberts iPhone installiert, aber NICHT committet (16 Dateien, siehe git status).
+  Neu sind MyListsSheet, ListSummaryCard, SwipeableListCard, ListNameSheet, GlassActionButton sowie ListsUITests (9/9 grün).
+  Lies das jüngste Handoff unter .claude/handoffs/. Frag Robert zuerst nach seinem Gerätetest (Wischen, lange drücken,
+  Anlegen, Umbenennen, Löschen, Standard, Tastatur im Namens-Sheet). Danach, nur auf seinen Wunsch: vollen Testplan laufen
+  lassen (DeleteListTests und SwipeUITests test_C scheitern gelegentlich), auf feature/hybrid-redesign committen,
+  main --ff-only nachziehen, beide pushen. Design-System-Doku: https://claude.ai/artifact/8WZrmU8tAKosSvXKvtHPvM.
