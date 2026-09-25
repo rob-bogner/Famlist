@@ -32,8 +32,11 @@ struct SheetQuantityStepper: View {
                 SVGIcon(Icon.minus, size: 16, color: canDecrease ? k.icon : k.stepOffIcon, lineWidth: 2.6)
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(k.stepOff))
+                    .frame(width: 44, height: 44)             // Trefferfläche 44, Optik 40
+                    .contentShape(Circle())
             }
             .buttonStyle(.plain)
+            .padding(-2)                                      // 44er-Trefferfläche ohne Layout-Versatz
             .disabled(!canDecrease)
             .accessibilityLabel("Menge verringern")
 
@@ -55,8 +58,11 @@ struct SheetQuantityStepper: View {
                     }
                     .clipShape(Circle())
                     .background(CSSBox(shape: Circle(), paint: k.stepPaint, shadows: k.stepShadow))
+                    .frame(width: 44, height: 44)             // Trefferfläche 44, Optik 40
+                    .contentShape(Circle())
             }
             .buttonStyle(.plain)
+            .padding(-2)                                      // 44er-Trefferfläche ohne Layout-Versatz
             .disabled(quantity >= range.upperBound)
             .accessibilityLabel("Menge erhöhen")
         }

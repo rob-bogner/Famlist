@@ -64,11 +64,15 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     ///   - since: High-water mark timestamp. Items updated before or at this time are excluded.
     /// - Returns: Changed items (creates, updates, tombstones) since `since`.
     func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel]
+    /// Alle Artikel-IDs einer Liste auf dem Server (Abgleich nach langer Pause). nil = nicht unterstützt.
+    func fetchItemIds(listId: UUID) async throws -> Set<String>?
 }
 
 extension ItemsRepository {
     /// Standard: keine Realtime-Verbindung (Vorschau, Tests).
     func setReconnectHandler(_ handler: @escaping @MainActor (UUID) -> Void) {}
+    /// Standard: kein Abgleich der ID-Menge.
+    func fetchItemIds(listId: UUID) async throws -> Set<String>? { nil }
 }
 
 // MARK: - Preview/In-Memory Implementation
@@ -154,5 +158,10 @@ final class PreviewItemsRepository: ItemsRepository { // Final prevents subclass
     func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel] {
         let all = storage[listId] ?? []
         return all.filter { ($0.updatedAt ?? Date.distantPast) > since }
+    }
+
+    /// Alle IDs der Liste im Speicher (wie der Server: Löschmarkierungen zählen, solange sie da sind).
+    func fetchItemIds(listId: UUID) async throws -> Set<String>? {
+        Set((storage[listId] ?? []).map(\.id))
     }
 }

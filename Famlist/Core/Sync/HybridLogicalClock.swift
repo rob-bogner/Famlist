@@ -37,6 +37,9 @@ struct HybridLogicalClock: Codable, Equatable, Hashable {
     /// Unique identifier for the device/node that created this clock
     let nodeId: String
     
+    /// Grenze des Servers (items_lww_guard): höchstens 1 Tag in der Zukunft, in Millisekunden.
+    static let maxFutureDrift: Int64 = 86_400_000
+
     // MARK: - Initialization
     
     init(timestamp: Int64, counter: Int, nodeId: String) {
@@ -115,7 +118,11 @@ final class HybridLogicalClockGenerator {
         let now = Self.currentTimestamp()
         let storedTs = (defaults?.object(forKey: Self.lastTimestampKey) as? NSNumber)?.int64Value ?? 0
         let storedCounter = defaults?.integer(forKey: Self.lastCounterKey) ?? 0
-        self.lastHLC = storedTs >= now
+        // Ein Stand mehr als einen Tag in der Zukunft stammt von einer falsch gestellten Uhr. Der Server lehnt
+        // solche Zeitstempel ab; ihn zu behalten, ließe nach dem Korrigieren der Uhr jede Änderung weiter
+        // scheitern (Audit 2, Befund S6). Dann mit der echten Zeit neu beginnen.
+        let usable = storedTs >= now && storedTs <= now + HybridLogicalClock.maxFutureDrift
+        self.lastHLC = usable
             ? HybridLogicalClock(timestamp: storedTs, counter: storedCounter, nodeId: resolvedNode)
             : HybridLogicalClock(timestamp: now, counter: 0, nodeId: resolvedNode)
     }

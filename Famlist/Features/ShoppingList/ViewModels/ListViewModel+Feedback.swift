@@ -33,9 +33,9 @@ extension ListViewModel {
 
     // MARK: - Error Handling
 
-    /// Stores a user-presentable error string on the main actor.
+    /// Stores a user-presentable German error sentence on the main actor (ShoppingListView zeigt ihn als Toast).
     @MainActor
     internal func setError(_ error: Error) {
-        self.errorMessage = (error as NSError).localizedDescription
+        self.errorMessage = UserFacingError.message(for: error)
     }
 }

@@ -133,10 +133,12 @@ final class SwiftDataItemStore {
     }
 
     /// Artikel (alle Listen), deren Foto einen Storage-Pfad hat, aber noch nicht lokal vorliegt.
-    func itemsMissingImage(limit: Int) throws -> [ItemEntity] {
+    /// - Parameter excluding: schon fehlgeschlagene/laufende Artikel. Vorher lieferte die Abfrage immer dieselben
+    ///   ersten `limit` Artikel; waren die nicht ladbar, kamen alle weiteren Fotos nie an (Audit 2, S10).
+    func itemsMissingImage(limit: Int, excluding: Set<UUID> = []) throws -> [ItemEntity] {
         let descriptor = FetchDescriptor<ItemEntity>(predicate: #Predicate { $0.imagePath != nil })
         return Array(try context.fetch(descriptor)
-            .filter { $0.imageData == nil && $0.deletedAt == nil }
+            .filter { $0.imageData == nil && $0.deletedAt == nil && !excluding.contains($0.id) }
             .prefix(limit))
     }
 

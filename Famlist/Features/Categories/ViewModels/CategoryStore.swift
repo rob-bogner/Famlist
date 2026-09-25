@@ -34,6 +34,9 @@ final class CategoryStore: ObservableObject {
     @Published private(set) var categories: [CategoryDefinition] = CategoryDefinition.defaults
     @Published var errorMessage: String?
 
+    /// 1, wenn Änderungen noch nicht gesendet sind (Rückfrage beim Abmelden), sonst 0.
+    var unsentChangeCount: Int { pending.dirty || !pending.deletedIds.isEmpty ? 1 : 0 }
+
     private let repository: CategoryDefinitionsRepository?
     private let defaults: UserDefaults
     private var profileId: UUID?

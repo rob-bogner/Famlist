@@ -131,6 +131,10 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 priceBook?.clearLocal()
                 categoryStore?.resetLocal()
             }
+            // Rückfrage beim Abmelden: auch ungesendete Preise und Kategorien zählen.
+            self.sessionViewModel.countUnsentChanges { [weak priceBook, weak categoryStore] in
+                (priceBook?.pending.count ?? 0) + (categoryStore?.unsentChangeCount ?? 0)
+            }
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
             let itemsRepo = PreviewItemsRepository() // Items repo in memory.

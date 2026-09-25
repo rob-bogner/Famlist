@@ -65,7 +65,7 @@ extension ListViewModel {
             let me = try await profiles.myProfile()
             self.loadDefaultList(ownerId: me.id)
         } catch {
-            self.errorMessage = (error as NSError).localizedDescription
+            self.setError(error)
         }
     }
     

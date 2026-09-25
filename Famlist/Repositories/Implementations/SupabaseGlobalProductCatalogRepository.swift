@@ -43,20 +43,17 @@ final class SupabaseGlobalProductCatalogRepository: GlobalProductCatalogReposito
 
     // MARK: - GlobalProductCatalogRepository
 
-    /// Searches the global_product_catalog for products whose lowercased name contains the query.
-    /// Results are sorted by popularity (scans_n desc), then name alphabetically. Max 5 results.
+    /// Suche im globalen Katalog über die Datenbankfunktion `search_global_products` (Migration 020):
+    /// ab 3 Zeichen, Kandidaten per Trigramm-Index, davon die 5 beliebtesten. Vorher lief eine direkte
+    /// `ilike`-Abfrage im Mittel 2,8 s (bis 6,3 s) pro Tastendruck, weil Postgres den falschen Index wählte.
     func search(query: String) async throws -> [GlobalProductEntry] {
-        let results: [GlobalProductEntry] = try await client
-            .from("global_product_catalog")
-            .select("code,name,brand,category,measure,image_url,scans_n")
-            .ilike("name_lower", pattern: "%\(query.lowercased())%")
-            .order("scans_n", ascending: false)
-            .order("name_lower", ascending: true)
-            .limit(5)
-            .execute()
-            .value
-        return results
+        guard query.trimmingCharacters(in: .whitespacesAndNewlines).count >= Self.minimumQueryLength else { return [] }
+        struct Params: Encodable, Sendable { let p_query: String }
+        return try await client.rpcRows("search_global_products", params: Params(p_query: query))
     }
+
+    /// Kürzere Eingaben liefern im globalen Katalog zu viele Treffer; der Server sucht erst ab 3 Zeichen.
+    static let minimumQueryLength = 3
 
     /// Barcode-Scanner: Produkt zum EAN/UPC-Code (Primärschlüssel `code`).
     func product(code: String) async throws -> GlobalProductEntry? {

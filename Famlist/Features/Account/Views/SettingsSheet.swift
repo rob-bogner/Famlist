@@ -134,12 +134,14 @@ struct SettingsSheet: View {
                         .foregroundStyle(k.text)
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
-                    Text(session.currentUserEmail ?? "")
-                        .font(AppFont.dm(13, 400))
-                        .foregroundStyle(k.sub)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                        .truncationMode(.tail)
+                    if let email = session.currentUserEmail, !email.isEmpty {      // ohne E-Mail keine leere Zeile
+                        Text(email)
+                            .font(AppFont.dm(13, 400))
+                            .foregroundStyle(k.sub)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .truncationMode(.tail)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Text("Profil")

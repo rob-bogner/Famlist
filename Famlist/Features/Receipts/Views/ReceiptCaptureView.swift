@@ -160,7 +160,7 @@ struct ReceiptCaptureView: View {
             .accessibilityLabel("Foto aufnehmen")
             Spacer(minLength: 0)
             Spacer(minLength: 0)
-            glassButton(label: flow.pages.isEmpty ? "Noch keine Aufnahme" : "\(flow.pages.count) Aufnahmen prüfen",
+            glassButton(label: flow.pages.isEmpty ? "Noch keine Aufnahme" : (flow.pages.count == 1 ? "1 Aufnahme prüfen" : "\(flow.pages.count) Aufnahmen prüfen"),
                         action: onContinue) {
                 Text("\(flow.pages.count)")
                     .font(AppFont.dm(14, 700))

@@ -18,7 +18,7 @@
  ------------------------------------------------------------------------
  */
 
-import AVFoundation
+@preconcurrency import AVFoundation
 import UIKit
 
 /// `@unchecked Sendable`: Veränderlich ist nur `pending`, und das ausschließlich unter `lock`.
@@ -59,10 +59,11 @@ final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
 
     func capture() async -> UIImage? {
         guard session.isRunning else { return nil }
-        let settings = AVCapturePhotoSettings()
         return await withCheckedContinuation { continuation in
-            lock.withLock { pending[settings.uniqueID] = continuation }
             queue.async { [self] in
+                // Einstellungen entstehen auf der Kamera-Warteschlange (nicht thread-sicher, nicht Sendable).
+                let settings = AVCapturePhotoSettings()
+                lock.withLock { pending[settings.uniqueID] = continuation }
                 output.capturePhoto(with: settings, delegate: self)
             }
         }

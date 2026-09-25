@@ -152,7 +152,10 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     private func prepare(_ batch: [SyncOperation]) async -> ([SyncOperation], [ItemUpsertRequest]) {
         var operations: [SyncOperation] = []
         var requests: [ItemUpsertRequest] = []
-        for operation in batch {
+        let ids = batch.map(\.id)                 // vor dem ersten Warten (Foto-Upload) kopieren
+        for (id, operation) in zip(ids, batch) {
+            // Während eines Uploads kann die Warteschlange geleert worden sein (Abmelden) → nicht mehr anfassen.
+            guard operationQueue.contains(id) else { continue }
             guard var snapshot = try? operation.decodeItemSnapshot() else {
                 operationQueue.markFailed(operation.id, message: "snapshot unreadable")
                 continue
@@ -170,12 +173,14 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
                 continue
             }
             if operation.includesImage {
+                let sent = SentOperation(operation)
                 do {
                     snapshot.imagePath = try await uploadImage(of: snapshot)
                 } catch {
-                    handleFailure(of: operation, kind: SyncErrorClassifier.classify(error), error: error)
+                    handleFailure(of: sent, kind: SyncErrorClassifier.classify(error), error: error)
                     continue
                 }
+                guard operationQueue.contains(id) else { continue }
             }
             operations.append(operation)
             requests.append(ItemUpsertRequest(item: snapshot, includeImage: operation.includesImage))
@@ -184,7 +189,10 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     }
 
     /// Sendet einen Stapel. - Returns: false, wenn der Durchlauf abbrechen soll (offline/vorübergehend).
-    private func send(_ requests: [ItemUpsertRequest], for operations: [SyncOperation]) async -> Bool {
+    private func send(_ requests: [ItemUpsertRequest], for models: [SyncOperation]) async -> Bool {
+        // Werte VOR dem Warten kopieren: Wird die Warteschlange währenddessen geleert (Abmelden), wären die
+        // SwiftData-Objekte gelöscht, und schon das Lesen ihrer Felder kann abstürzen.
+        let operations = models.map(SentOperation.init)
         let monitorId = syncMonitor?.startOperation()
         let start = Date()
         do {
@@ -203,7 +211,13 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         }
     }
 
-    private func handle(_ result: ItemUpsertResult, for operation: SyncOperation) {
+    private func handle(_ result: ItemUpsertResult, for operation: SentOperation) {
+        // Antwort kam nach dem Abmelden bzw. nachdem die Liste vergessen wurde: nichts mehr anlegen,
+        // sonst stünden Artikel des alten Kontos wieder in der geleerten Datenbank (Audit 2, Befund S5).
+        guard operationQueue.contains(operation.id) else {
+            logVoid(params: (action: "send.resultDiscarded", itemId: operation.itemId))
+            return
+        }
         switch result.status {
         case .applied, .stale:
             operationQueue.markSuccess(operation.id)
@@ -215,7 +229,8 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
         }
     }
 
-    private func handleFailure(of operation: SyncOperation, kind: SyncErrorClassifier.Kind, error: Error) {
+    private func handleFailure(of operation: SentOperation, kind: SyncErrorClassifier.Kind, error: Error) {
+        guard operationQueue.contains(operation.id) else { return }
         switch kind {
         case .offline:
             operationQueue.deferOperation(operation.id, until: Date().addingTimeInterval(Self.offlineRetryDelay), error: error)

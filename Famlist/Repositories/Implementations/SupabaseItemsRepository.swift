@@ -64,6 +64,10 @@ final class SupabaseItemsRepository: ItemsRepository {
 
     /// Active continuations keyed by listId → unique observer token.
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
+    /// Geplantes, zusammengefasstes Neuladen je Liste (siehe scheduleRefresh).
+    private var pendingRefresh: [UUID: Task<Void, Never>] = [:]
+    /// 80 ms: für Nutzer nicht spürbar, fasst aber einen Stapel Realtime-Ereignisse zusammen.
+    static let refreshCoalescingDelay: UInt64 = 80_000_000
 
     // MARK: - Lifecycle
 
@@ -150,7 +154,19 @@ final class SupabaseItemsRepository: ItemsRepository {
         }
 
         // FAM-41: yield from SwiftData (local truth), not from a full remote refetch.
-        refreshLocalAndYield(listId)
+        scheduleRefresh(listId)
+    }
+
+    /// Fasst Neuladen zusammen: Viele Ereignisse kurz hintereinander (z. B. 200× „abgehakt“ von einem anderen
+    /// Gerät) laden die Liste danach EINMAL statt 200-mal komplett aus SwiftData (Audit 2, Befund Q4).
+    private func scheduleRefresh(_ listId: UUID) {
+        guard pendingRefresh[listId] == nil else { return }
+        pendingRefresh[listId] = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: Self.refreshCoalescingDelay)
+            guard let self else { return }
+            self.pendingRefresh[listId] = nil
+            self.refreshLocalAndYield(listId)
+        }
     }
 
     /// Reads the current list from SwiftData and yields it to all stream observers for this list.
@@ -171,7 +187,7 @@ final class SupabaseItemsRepository: ItemsRepository {
     func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] {
         var query = client
             .from("items")
-            .select()
+            .select(SupabaseItemRow.columns)
             .eq("list_id", value: listId.uuidString)
             .or("tombstone.is.false,tombstone.is.null")
 
@@ -203,7 +219,7 @@ final class SupabaseItemsRepository: ItemsRepository {
         var result: [ItemModel] = []
         var cursor: (updatedAt: String, id: String)?
         while true {
-            var query = client.from("items").select().eq("list_id", value: listId.uuidString)
+            var query = client.from("items").select(SupabaseItemRow.columns).eq("list_id", value: listId.uuidString)
             if let cursor {
                 query = query.or("updated_at.gt.\(cursor.updatedAt),and(updated_at.eq.\(cursor.updatedAt),id.gt.\(cursor.id))")
             } else {
@@ -220,6 +236,22 @@ final class SupabaseItemsRepository: ItemsRepository {
             cursor = (Self.filterSafeTimestamp(stamp), last.id.uuidString.lowercased())
         }
         return result
+    }
+
+    /// Alle Artikel-IDs einer Liste auf dem Server (nur die ID-Spalte, seitenweise nach ID).
+    /// Für den Abgleich nach langer Pause: Der Server löscht Löschmarkierungen nach 30 Tagen endgültig.
+    func fetchItemIds(listId: UUID) async throws -> Set<String>? {
+        struct IdRow: Decodable, Sendable { let id: UUID }
+        var ids: Set<String> = []
+        var after: String?
+        while true {
+            var query = client.from("items").select("id").eq("list_id", value: listId.uuidString)
+            if let after { query = query.gt("id", value: after) }
+            let rows: [IdRow] = try await query.order("id", ascending: true).limit(1000).execute().value
+            ids.formUnion(rows.map { $0.id.uuidString })
+            guard rows.count == 1000, let last = rows.last else { return ids }
+            after = last.id.uuidString.lowercased()
+        }
     }
 
     /// Postgres liefert „…+00:00“; ein „+“ im Filter würde als Leerzeichen gelesen. UTC → „Z“.

@@ -45,8 +45,8 @@ final class ItemImagePrefetcher {
         defer { isRunning = false }
         var failed: Set<UUID> = []
         while true {
-            let candidates = ((try? store.itemsMissingImage(limit: Self.batchLimit)) ?? [])
-                .filter { !inFlight.contains($0.id) && !failed.contains($0.id) }
+            let candidates = (try? store.itemsMissingImage(limit: Self.batchLimit,
+                                                           excluding: failed.union(inFlight))) ?? []
             guard !candidates.isEmpty else { break }
             let jobs = candidates.compactMap { entity in entity.imagePath.map { (entity.id, $0) } }
             let loaded = await download(jobs)
@@ -60,7 +60,8 @@ final class ItemImagePrefetcher {
             }
             try? store.save()
             if !loaded.isEmpty { onUpdate() }
-            if loaded.isEmpty { break }
+            // Kein Abbruch bei einer Runde ohne Erfolg: Fehlgeschlagene sind ausgeschlossen, die nächste Runde
+            // nimmt andere Artikel; die Schleife endet, wenn keine Kandidaten mehr übrig sind.
         }
     }
 

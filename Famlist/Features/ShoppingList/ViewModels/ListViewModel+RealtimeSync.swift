@@ -125,7 +125,10 @@ extension ListViewModel {
         // Liste zu Beginn festhalten: Wechselt der Nutzer währenddessen die Liste, darf die Zeitmarke
         // nicht unter der neuen Liste landen (Audit M2).
         let syncListId = listId
-        let since = loadLastSyncTimestamp(for: syncListId)
+        let lastSync = loadLastSyncTimestamp(for: syncListId)
+        // 5 s Überlappung: Zeilen, deren Transaktion kurz vor der Zeitmarke begann, aber erst danach sichtbar
+        // wurde, sonst nie nachgeladen (Audit 2, Befund S7). Doppelte Zeilen erkennt die HLC-Regel.
+        let since = lastSync == .distantPast ? lastSync : lastSync.addingTimeInterval(-5)
         logVoid(params: (action: "runIncrementalSync.start", listId: syncListId, since: since))
         do {
             let deltaItems = try await repository.fetchItemsSince(listId: syncListId, since: since)
@@ -133,17 +136,19 @@ extension ListViewModel {
             var highlightIDs: Set<String> = []
             for item in deltaItems {
                 // Eine Regel für alles (auch Löschmarkierungen): neuere HLC gewinnt.
-                let result = try itemStore.mergeRemote(item)
+                let result = try itemStore.mergeRemote(item, legacyImageKnown: false)
                 if result != .ignored, item.tombstone != true { highlightIDs.insert(item.id) }
             }
             try itemStore.save()
             if !suppressHighlight { markRecentlySynced(ids: highlightIDs) }
             // Zeitmarke erst nach erfolgreichem Speichern – über ALLE Zeilen, auch Löschmarkierungen.
-            if let newest = deltaItems.compactMap(\.updatedAt).max() {
+            if let newest = deltaItems.compactMap(\.updatedAt).max(), newest > lastSync {
                 saveLastSyncTimestamp(newest, for: syncListId)
             }
             refreshItemsFromStore()
             logVoid(params: (action: "runIncrementalSync.success", listId: syncListId, itemCount: deltaItems.count))
+            // Nach langer Pause: endgültig gelöschte Artikel entfernen (Audit 2, Befund S3).
+            if lastSync != .distantPast { await reconcileIfStale(listId: syncListId) }
         } catch {
             // Zeitmarke bleibt; der lokale Stand wird trotzdem angezeigt.
             refreshItemsFromStore()
@@ -164,6 +169,9 @@ extension ListViewModel {
 
     /// Signals that the app transitioned to background so realtime observation can pause to save resources.
     func handleAppDidEnterBackground() {
+        // Laufendes Rückgängig-Fenster festschreiben: Beendet das System die App im Hintergrund, wäre die
+        // Löschung sonst verloren und die Artikel beim nächsten Start wieder da (Audit 2, Befund S15).
+        _ = commitPendingDeletion()
         syncEngine?.pause()
         guard observeTask != nil else { return }
         logVoid(params: (

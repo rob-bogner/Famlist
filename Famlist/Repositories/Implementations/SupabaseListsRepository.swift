@@ -179,16 +179,13 @@ final class SupabaseListsRepository: ListsRepository {
             let removals = channel.broadcastStream(event: "member_removed")
 
             let task = Task {
-                do {
-                    try await channel.subscribeWithError()
-                    for await message in removals {
-                        if let listId = Self.listId(fromBroadcast: message) {
-                            continuation.yield(listId)
-                        }
+                // Anmelden mit Wiederholung wie bei den Listen-Kanälen; vorher blieb es nach einem
+                // Fehlschlag beim einen Versuch (Audit 2, Befund S12).
+                await SupabaseRealtimeManager.subscribeWithRetry(channel, listId: nil)
+                for await message in removals {
+                    if let listId = Self.listId(fromBroadcast: message) {
+                        continuation.yield(listId)
                     }
-                } catch {
-                    logVoid(params: (action: "observeMemberRemovals.subscribeError",
-                                     error: (error as NSError).localizedDescription))
                 }
                 continuation.finish()
             }

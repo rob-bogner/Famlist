@@ -24,6 +24,7 @@ enum LocalAccountData {
         "listSortSettings.",
         "manualItemOrder.",
         "fam24_last_sync_ts_",
+        "fam24_last_reconcile_",
         "fam24_pagination_cursor_",
         "categoryDefinitions."
     ]

@@ -37,6 +37,11 @@ enum SyncErrorClassifier {
         if ns.domain == NSURLErrorDomain { return classify(URLError(URLError.Code(rawValue: ns.code))) }
         if let http = error as? HTTPError { return classify(status: http.response.statusCode) }
         if let pg = error as? PostgrestError { return classify(postgrestCode: pg.code) }
+        // Storage meldet den HTTP-Status als Text. Vorher galt jeder Storage-Fehler als vorübergehend:
+        // ein zu großes Foto (413) wurde endlos neu hochgeladen (Audit 2, Befund S11).
+        if let storage = error as? StorageError {
+            return storage.statusCode.flatMap(Int.init).map { classify(status: $0) } ?? .transient
+        }
         if error is DecodingError || error is EncodingError { return .permanent }
         return .transient
     }

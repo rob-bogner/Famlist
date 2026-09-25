@@ -37,7 +37,7 @@ extension AppSessionViewModel {
                 try await authService.signInWithEmailOTP(email: email)
             } catch {
                 UserLog.Error.general(message: "Anmeldung mit Magic-Link fehlgeschlagen")
-                errorMessage = (error as NSError).localizedDescription
+                errorMessage = UserFacingError.message(for: error)
             }
         }
     }
@@ -65,7 +65,7 @@ extension AppSessionViewModel {
                 await handleAuthCompletion()
             } catch {
                 UserLog.Auth.loginFailed(reason: "Falsche E-Mail oder Passwort")
-                errorMessage = (error as NSError).localizedDescription
+                errorMessage = UserFacingError.message(for: error)
             }
         }
     }
@@ -89,7 +89,7 @@ extension AppSessionViewModel {
                 try await authService.signUpWithEmailPassword(email: email, password: password)
                 await handleAuthCompletion()
             } catch {
-                errorMessage = (error as NSError).localizedDescription
+                errorMessage = UserFacingError.message(for: error)
             }
         }
     }
@@ -156,7 +156,7 @@ extension AppSessionViewModel {
             UserLog.Data.loadingItems()
             self.isAuthenticated = true
         } catch {
-            self.errorMessage = (error as NSError).localizedDescription
+            self.errorMessage = UserFacingError.message(for: error)
             self.isAuthenticated = false
         }
     }

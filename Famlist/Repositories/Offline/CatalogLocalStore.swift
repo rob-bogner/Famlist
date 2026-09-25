@@ -84,12 +84,10 @@ final class CatalogLocalStore {
     }
 
     private static func read<T: Decodable>(_ type: T.Type, from url: URL) -> T? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(type, from: data)
+        LocalJSONFile.read(type, from: url)
     }
 
     private static func write<T: Encodable>(_ value: T, to url: URL) {
-        guard let data = try? JSONEncoder().encode(value) else { return }
-        try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        LocalJSONFile.write(value, to: url)
     }
 }

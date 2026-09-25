@@ -53,9 +53,11 @@ struct EditProfileSheet: View {
                                     .frame(width: 34, height: 34)
                                     .background(CSSBox(shape: Circle(), paint: .color(k.close), border: 3,
                                                        borderColor: k.sheetTopBorder))
+                                    .frame(width: 44, height: 44)     // Trefferfläche 44, Optik 34
                                     .contentShape(Circle())
                             }
                             .buttonStyle(.plain)
+                            .padding(-5)                              // 44er-Trefferfläche ohne Layout-Versatz
                             .offset(x: 2, y: 2)
                             .accessibilityLabel("Foto ändern")
                         }

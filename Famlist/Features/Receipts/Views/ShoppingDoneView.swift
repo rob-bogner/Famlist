@@ -195,7 +195,7 @@ struct ShoppingDoneView: View {
     /// Design-Text „alle 6 Artikel abgehakt“ nur, wenn wirklich alle abgehakt sind; sonst „2 von 6 Artikeln abgehakt“.
     static func checkedText(checked: Int, total: Int) -> String {
         if checked == total && total > 0 { return total == 1 ? "1 Artikel abgehakt" : "alle \(total) Artikel abgehakt" }
-        return "\(checked) von \(total) Artikeln abgehakt"
+        return "\(checked) von \(total) \(total == 1 ? "Artikel" : "Artikeln") abgehakt"
     }
 
     /// Kachel: Padding 16 + Rahmen 1 (content-box), Radius 22, Abstand 4; gleiche Höhe (Grid-Zeile).

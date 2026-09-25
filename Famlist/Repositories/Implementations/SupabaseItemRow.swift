@@ -40,6 +40,12 @@ struct SupabaseItemRow: Codable {
     let tombstone: Bool?
     let lastModifiedBy: String?
 
+    /// Spalten, die die App lädt. Ohne das alte Base64-Feld `imagedata` (bis 600 KB je Zeile; Fotos kommen
+    /// über `image_path` aus Storage – Audit 2, Befund Q7).
+    static let columns = "id,list_id,ownerpublicid,image_path,name,units,measure,price,isChecked,category,"
+        + "is_unavailable,productdescription,brand,created_at,updated_at,hlc_timestamp,hlc_counter,hlc_node_id,"
+        + "tombstone,last_modified_by"
+
     enum CodingKeys: String, CodingKey {
         case id
         case listId = "list_id"

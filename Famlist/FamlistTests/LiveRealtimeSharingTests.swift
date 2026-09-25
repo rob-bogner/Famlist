@@ -86,6 +86,12 @@ private final class LiveDevice {
     func visible(_ listId: UUID) -> [ItemEntity] { (try? store.fetchItems(listId: listId)) ?? [] }
 }
 
+/// Zählt Aufrufe des Wiederverbindungs-Handlers (Main Actor).
+@MainActor
+private final class CallCounter {
+    var count = 0
+}
+
 /// Sammelt Realtime-Ereignisse threadsicher, damit der Test darauf warten kann.
 private actor EventLog {
     private(set) var entries: [String] = []
@@ -265,6 +271,32 @@ final class LiveRealtimeSharingTests: XCTestCase {
         let tokens: [TokenRow] = try await owner.rpc("create_list_invite", params: ListParam(p_list_id: newListId)).execute().value
         let _: UUID = try await member.rpc("accept_list_invite", params: TokenParam(p_token: XCTUnwrap(tokens.first?.token))).execute().value
         return newListId
+    }
+
+    /// Verbindungsabbruch (Audit 2, Befund S1/S2): Nach der ersten Anmeldung UND nach jeder Wiederverbindung
+    /// meldet das Repository „nachladen“. Vorher erkannte die App die Wiederverbindung des SDK nicht.
+    @MainActor
+    func test_reconnect_triggersCatchUp_afterConnectionLoss() async throws {
+        let list = try await makeSharedList()
+        let deviceB = LiveDevice(client: member, node: "live-B")
+        let calls = CallCounter()
+        deviceB.repository.setReconnectHandler { reconnected in
+            if reconnected == list { calls.count += 1 }
+        }
+        let stream = deviceB.repository.observeItems(listId: list)
+        let observer = Task { for await _ in stream {} }
+        defer { observer.cancel() }
+
+        try await waitFor("erste Anmeldung meldet Nachladen", timeout: 15) { await MainActor.run { calls.count >= 1 } }
+        let afterFirst = calls.count
+
+        member.realtimeV2.disconnect()                           // Netzabbruch nachstellen
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+        await member.realtimeV2.connect()
+
+        try await waitFor("Wiederverbindung meldet Nachladen", timeout: 30) {
+            await MainActor.run { calls.count > afterFirst }
+        }
     }
 
     @MainActor

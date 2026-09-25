@@ -38,6 +38,7 @@ struct ListAccountSheet<Content: View>: View {
             .padding(.bottom, 34)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
+        .accessibilityAction(.escape, onClose)          // VoiceOver „Zurück“ wie HybridSheetLayer
     }
 }
 

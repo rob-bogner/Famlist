@@ -124,6 +124,11 @@ final class SyncOperationQueue {
     // MARK: - Queries
 
     /// Gibt es für den Artikel noch eine Operation (wartend oder unterwegs, nicht fehlgeschlagen)?
+    /// true, solange die Operation noch in der Warteschlange liegt (nicht durch Abmelden/Liste vergessen entfernt).
+    func contains(_ operationId: UUID) -> Bool {
+        fetch(id: operationId) != nil
+    }
+
     func hasPendingOperation(itemId: String) -> Bool {
         fetch(itemId: itemId).contains { !$0.hasFailed }
     }
@@ -217,7 +222,7 @@ final class SyncOperationQueue {
 
     private func fetchAll() -> [SyncOperation] {
         let descriptor = FetchDescriptor<SyncOperation>(sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)])
-        return (try? context.fetch(descriptor)) ?? []
+        return fetchOrLog(descriptor)
     }
 
     private func fetchPending() -> [SyncOperation] {
@@ -225,12 +230,12 @@ final class SyncOperationQueue {
             predicate: #Predicate { !$0.hasFailed },
             sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)]
         )
-        return (try? context.fetch(descriptor)) ?? []
+        return fetchOrLog(descriptor)
     }
 
     private func fetch(id: UUID) -> SyncOperation? {
         let descriptor = FetchDescriptor<SyncOperation>(predicate: #Predicate { $0.id == id })
-        return try? context.fetch(descriptor).first
+        return fetchOrLog(descriptor).first
     }
 
     private func fetch(itemId: String) -> [SyncOperation] {
@@ -238,7 +243,17 @@ final class SyncOperationQueue {
             predicate: #Predicate { $0.itemId == itemId },
             sortBy: [SortDescriptor(\SyncOperation.createdAt, order: .forward)]
         )
-        return (try? context.fetch(descriptor)) ?? []
+        return fetchOrLog(descriptor)
+    }
+
+    /// Lesefehler der Warteschlange protokollieren statt sie wie „leer“ aussehen zu lassen (Audit 2, Q10).
+    private func fetchOrLog(_ descriptor: FetchDescriptor<SyncOperation>) -> [SyncOperation] {
+        do {
+            return try context.fetch(descriptor)
+        } catch {
+            logVoid(params: (action: "operationQueue.fetchFailed", error: (error as NSError).localizedDescription))
+            return []
+        }
     }
 
     private func saveOrLog(_ action: String, operationId: UUID?) {

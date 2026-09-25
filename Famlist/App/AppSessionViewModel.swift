@@ -76,6 +76,8 @@ final class AppSessionViewModel: ObservableObject {
     // MARK: - Lightweight Toasts
 
     @Published var toastMessage: String? = nil
+    /// Gesetzt, wenn beim Abmelden noch Änderungen ungesendet sind → Einstellungen fragen nach.
+    @Published var unsentChangesBeforeSignOut: Int? = nil
     private var toastClearTask: Task<Void, Never>? = nil
     private var restoreTask: Task<Void, Never>? = nil
     
@@ -163,26 +165,11 @@ final class AppSessionViewModel: ObservableObject {
         signOutHandlers.append(handler)
     }
 
-    /// Abmelden: offene Änderungen möglichst noch senden, dann abmelden und IMMER alle lokalen Daten
-    /// des Kontos löschen – auch wenn der Server nicht erreichbar ist (Audit H5).
-    func signOut() {
-        guard let authService else { return }
-        if isLoading { return }
-        Task { @MainActor in
-            isLoading = true
-            defer { isLoading = false }
-            await listViewModel.commitPendingDeletion()?.value
-            await listViewModel.syncEngine?.resumeSync()          // letzte Änderungen senden, falls online
-            do {
-                try await authService.signOut()
-            } catch {
-                logVoid(params: ["action": "signOut", "status": "remoteFailed", "message": (error as NSError).localizedDescription])
-            }
-            resetLocalState()
-            UserLog.Auth.loggedOut()
-            isAuthenticated = false
-            errorMessage = nil
-        }
+    /// Zähler für noch nicht gesendete Änderungen weiterer Speicher (Preise, Kategorien – FamlistApp).
+    private(set) var unsentChangeCounters: [@MainActor () -> Int] = []
+
+    func countUnsentChanges(with counter: @escaping @MainActor () -> Int) {
+        unsentChangeCounters.append(counter)
     }
 
     /// Löscht alles, was zum abgemeldeten Konto gehört: Artikel, Listen, Warteschlangen, Fotos,

@@ -97,6 +97,9 @@ final class ReceiptFlowTests: XCTestCase {
         XCTAssertEqual(ShoppingDoneView.checkedText(checked: 1, total: 1), "1 Artikel abgehakt")
         XCTAssertEqual(ShoppingDoneView.checkedText(checked: 2, total: 6), "2 von 6 Artikeln abgehakt")
         XCTAssertEqual(ShoppingDoneView.checkedText(checked: 0, total: 0), "0 von 0 Artikeln abgehakt")
+        XCTAssertEqual(ShoppingDoneView.checkedText(checked: 0, total: 1), "0 von 1 Artikel abgehakt")
+        XCTAssertEqual(ProgressHero.itemWord(total: 1), "Artikel")
+        XCTAssertEqual(ProgressHero.itemWord(total: 2), "Artikeln")
     }
 
     func test_suggestedName_forNewItems() {

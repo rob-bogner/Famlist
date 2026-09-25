@@ -11,7 +11,7 @@
  🔰 Notes for Beginners:
  - Das Design zeigt nur 0 % (Punkt am Anfang) und 100 % (voller Balken).
    Zwischenwerte füllen den Balken anteilig mit demselben Verlauf.
- - Texte wie im Design: „0 von 0 Artikeln“, „0 von 1 Artikeln“, „1 von 1 Artikel“.
+ - Texte: „0 von 0 Artikeln“, „0 von 1 Artikel“, „1 von 1 Artikel“ (bei Gesamt = 1 Einzahl, Audit 25.09.2026).
    Singular nur, wenn genau ein Artikel da ist und er erledigt ist.
 
  📝 Last Change:
@@ -41,9 +41,12 @@ struct ProgressHero: View {
         .background { decoration }
         .background(CSSBox(shape: RR(28), paint: t.heroBg, shadows: t.heroShadow))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Fortschritt: \(checked) von \(total) Artikeln erledigt, \(percent) Prozent"
+        .accessibilityLabel("Fortschritt: \(checked) von \(total) \(Self.itemWord(total: total)) erledigt, \(percent) Prozent"
                             + (totalPrice.map { ", \(PriceDisplaySetting.euro($0)) gesamt" } ?? ""))
     }
+
+    /// „von 1 Artikel“ (Einzahl), sonst „von n Artikeln“.
+    static func itemWord(total: Int) -> String { total == 1 ? "Artikel" : "Artikeln" }
 
     private var headerRow: some View {
         HStack(spacing: 14) {
@@ -61,7 +64,7 @@ struct ProgressHero: View {
                 Text("Fortschritt")
                     .font(AppFont.dm(13, 600))
                     .foregroundStyle(Color.rgba(255, 255, 255, 0.86))
-                Text("\(checked) von \(total) \(checked == 1 && total == 1 ? "Artikel" : "Artikeln")")
+                Text("\(checked) von \(total) \(Self.itemWord(total: total))")
                     .font(AppFont.dm(16, 600))
                     .foregroundStyle(Color.white)
                 if let totalPrice {

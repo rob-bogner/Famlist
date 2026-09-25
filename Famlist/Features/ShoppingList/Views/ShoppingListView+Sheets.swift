@@ -46,8 +46,11 @@ extension ShoppingListView {
                         .accessibilityHidden(true)
                 }
                 sheetView(sheet, k: k, maxHeight: maxHeight, insets: insets)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityAddTraits(.isModal)                  // VoiceOver bleibt im obersten Sheet
+                    .accessibilityAction(.escape) { escape(sheet) }
                     .id(sheet.id)
-                    .transition(sheet.isPopup ? .opacity.combined(with: .scale(scale: 0.96)) : .move(edge: .bottom))
+                    .transition(sheetTransition(sheet))
                     .zIndex(1)
             }
         }
@@ -59,6 +62,23 @@ extension ShoppingListView {
             Button("Abbrechen", role: .cancel) {}
         } message: { _ in
             Text("Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.")
+        }
+    }
+
+    /// „Bewegung reduzieren“: nur ein-/ausblenden statt von unten einfahren bzw. skalieren.
+    private func sheetTransition(_ sheet: ActiveListSheet) -> AnyTransition {
+        if reduceMotion { return .opacity }
+        return sheet.isPopup ? .opacity.combined(with: .scale(scale: 0.96)) : .move(edge: .bottom)
+    }
+
+    /// VoiceOver-Geste „Zurück“ (Z mit zwei Fingern): wie der Schließen-Knopf des obersten Sheets.
+    private func escape(_ sheet: ActiveListSheet) {
+        switch sheet {
+        case .receiptCapture, .receiptReview, .shoppingDone, .shoppingDoneOffer: closeReceiptFlow()
+        case .editCatalog: hideKeyboard(); activeSheet = .manageItems
+        case .editProfile: hideKeyboard(); activeSheet = .settings
+        default:
+            if let base = sheet.baseSheet { hideKeyboard(); activeSheet = base } else { closeSheet() }
         }
     }
 

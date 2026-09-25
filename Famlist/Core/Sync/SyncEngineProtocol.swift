@@ -57,6 +57,8 @@ protocol SyncEngineProtocol: AnyObject {
 
     /// Processes any pending queue entries (called on connectivity restore).
     func resumeSync() async
+    /// Zahl der noch nicht gesendeten Artikel-Änderungen (Rückfrage beim Abmelden).
+    var pendingOperations: Int { get }
 
     /// Resets a permanently-failed item and re-queues it for sync.
     func retryItem(_ item: ItemModel) async
@@ -87,6 +89,7 @@ protocol SyncEngineProtocol: AnyObject {
 }
 
 extension SyncEngineProtocol {
+    var pendingOperations: Int { 0 }
     /// Standard: kein Beobachter (Previews, Test-Spies).
     func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void) {}
     func setSyncEventObserver(_ observer: @escaping @MainActor (SyncEvent) -> Void) {}

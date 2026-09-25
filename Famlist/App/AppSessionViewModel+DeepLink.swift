@@ -43,7 +43,7 @@ extension AppSessionViewModel {
                 try await authService.handleOpenURL(url)
                 await self.handleAuthCompletion()
             } catch {
-                self.errorMessage = (error as NSError).localizedDescription
+                self.errorMessage = UserFacingError.message(for: error)
             }
         }
     }

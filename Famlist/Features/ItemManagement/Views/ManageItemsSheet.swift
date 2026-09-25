@@ -122,12 +122,25 @@ struct ManageItemsSheet: View {
         HStack(spacing: 12) {
             SVGIcon(Icon.search, size: 20, color: k.sub, lineWidth: 2)
             // input::placeholder { color: inherit; opacity: 1 } → Platzhalter in sub
-            TextField("", text: $vm.query, prompt: Text("Gespeicherte Artikel durchsuchen").foregroundStyle(k.sub))
+            // Eigener Platzhalter statt `prompt`: Bei großer Schrift schrumpft er bis zur Designgröße 15,
+            // statt abgeschnitten zu werden (Muster ListSearchBar).
+            TextField("", text: $vm.query)
                 .font(AppFont.dm(15, 400))
                 .foregroundStyle(k.sub)
                 .tint(k.accent)
                 .submitLabel(.search)
                 .accessibilityLabel("Gespeicherte Artikel durchsuchen")
+                .overlay(alignment: .leading) {
+                    if vm.query.isEmpty {
+                        Text("Gespeicherte Artikel durchsuchen")
+                            .font(AppFont.dm(15, 400))
+                            .foregroundStyle(k.sub)
+                            .lineLimit(1)
+                            .minimumScaleFactor(1 / AppFont.maxScale)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
         }
         .padding(.horizontal, 17)                                   // 1 border + 16 padding
         .frame(height: 50)

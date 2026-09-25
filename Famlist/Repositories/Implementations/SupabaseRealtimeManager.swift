@@ -50,6 +50,12 @@ final class SupabaseRealtimeManager {
     private var sessions: [UUID: Task<Void, Never>] = [:]
     private var channels: [UUID: RealtimeChannelV2] = [:]
 
+    /// Wird der Manager freigegeben, enden seine Sitzungen. Sonst hielten sich die Aufgaben selbst am Leben und
+    /// meldeten Kanäle (auch gelöschter Listen) immer wieder an – in Tests beobachtet (Audit 2).
+    deinit {
+        for task in sessions.values { task.cancel() }
+    }
+
     init(client: SupabaseClienting) {
         self.client = client
     }
@@ -62,7 +68,7 @@ final class SupabaseRealtimeManager {
     /// Startet die Beobachtung einer Liste.
     /// - Parameters:
     ///   - onEvent: Jede Artikeländerung.
-    ///   - onResubscribed: Nach einer Wiederverbindung (nicht beim ersten Anmelden) – Verpasstes nachholen.
+    ///   - onResubscribed: Nach jeder erfolgreichen Anmeldung (auch der ersten) – Verpasstes nachholen.
     func setupRealtimeChannel(
         for listId: UUID,
         onEvent: @escaping @MainActor @Sendable (RealtimeEvent) async -> Void,
@@ -94,36 +100,60 @@ final class SupabaseRealtimeManager {
         }
     }
 
-    /// Meldet an und hält die Verbindung: Nach jedem erneuten „subscribed“ wird Verpasstes nachgeholt;
-    /// scheitert das Anmelden, wird mit wachsender Wartezeit erneut versucht.
+    /// Meldet an und hält die Verbindung. Nach JEDER erfolgreichen Anmeldung wird Verpasstes nachgeholt:
+    /// - beim ersten Mal, weil das Start-Nachladen oft fertig ist, bevor der Kanal steht (Audit 2, Befund S2);
+    /// - nach jeder Wiederverbindung. Das SDK meldet den Kanal nach einem Abbruch selbst wieder an und
+    ///   springt dabei von „subscribing“ direkt auf „subscribed“ – vorher wartete die App auf
+    ///   „unsubscribed“ und holte deshalb nie nach (Audit 2, Befund S1).
+    /// Bleibt der Kanal „unsubscribed“ (das SDK gibt auf), meldet die App ihn selbst neu an.
     private static func keepSubscribed(_ channel: RealtimeChannelV2, statuses: AsyncStream<RealtimeChannelStatus>,
                                        listId: UUID, onResubscribed: @escaping @MainActor @Sendable () async -> Void) async {
-        var delay: TimeInterval = 1
-        while !Task.isCancelled {
-            do {
-                try await channel.subscribeWithError()
-                logVoid(params: (action: "realtime.subscribed", listId: listId))
-                break
-            } catch {
-                logVoid(params: (action: "realtime.subscribeError", listId: listId, retryIn: delay,
-                                 error: String(describing: error)))
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                delay = min(delay * 2, maxRetryDelay)
-            }
-        }
+        await subscribeWithRetry(channel, listId: listId)
+        guard !Task.isCancelled else { return }
+        await onResubscribed()
         var wasSubscribed = true
         for await status in statuses {
             guard !Task.isCancelled else { return }
-            if status == .subscribed {
+            switch status {
+            case .subscribed:
                 if !wasSubscribed {
                     logVoid(params: (action: "realtime.resubscribed", listId: listId))
                     await onResubscribed()
                 }
                 wasSubscribed = true
-            } else if status == .unsubscribed {
+            case .unsubscribed:
+                wasSubscribed = false
+                await resubscribeIfAbandoned(channel, listId: listId)
+            case .subscribing, .unsubscribing:
                 wasSubscribed = false
             }
         }
+    }
+
+    /// Anmelden mit wachsender Wartezeit (1 s … maxRetryDelay), bis es klappt oder die Beobachtung endet.
+    static func subscribeWithRetry(_ channel: RealtimeChannelV2, listId: UUID?) async {
+        var delay: TimeInterval = 1
+        while !Task.isCancelled {
+            do {
+                try await channel.subscribeWithError()
+                logVoid(params: (action: "realtime.subscribed", listId: listId as Any))
+                return
+            } catch {
+                logVoid(params: (action: "realtime.subscribeError", listId: listId as Any, retryIn: delay,
+                                 error: String(describing: error)))
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                delay = min(delay * 2, maxRetryDelay)
+            }
+        }
+    }
+
+    /// Gibt dem SDK 5 s für die eigene Neuanmeldung; steht der Kanal danach noch auf „unsubscribed“,
+    /// meldet die App ihn selbst an. Beim Schließen der Liste ist die Aufgabe abgebrochen → nichts tun.
+    private static func resubscribeIfAbandoned(_ channel: RealtimeChannelV2, listId: UUID) async {
+        try? await Task.sleep(nanoseconds: 5_000_000_000)
+        guard !Task.isCancelled, channel.status == .unsubscribed else { return }
+        logVoid(params: (action: "realtime.resubscribeAbandoned", listId: listId))
+        await subscribeWithRetry(channel, listId: listId)
     }
 
     /// Wandelt eine Broadcast-Nachricht in ein RealtimeEvent (nil = unbekanntes Format).

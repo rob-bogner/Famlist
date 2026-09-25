@@ -3,7 +3,7 @@
 
  Famlist
  Created on: 27.11.2023
- Last updated on: 24.09.2026
+ Last updated on: 25.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -37,6 +37,8 @@ struct ShoppingListView: View {
     @EnvironmentObject var priceBook: PriceBook
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
+    /// Bedienungshilfe „Bewegung reduzieren“: Sheets/Overlays nur ein-/ausblenden, keine Federn.
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     @StateObject var keyboard = KeyboardObserver()
     @State var activeSheet: ActiveListSheet?
@@ -54,6 +56,8 @@ struct ShoppingListView: View {
     @State var manageItemsVM: ManageItemsViewModel?
     /// Ablauf „Kassenzettel“: lebt von der Aufnahme bis „Einkauf erledigt“.
     @State var receiptFlow: ReceiptFlowViewModel?
+    /// Fehlermeldung des ListViewModels als Toast (blendet nach 3 s aus).
+    @State var errorToast: String?
 
     var appearance: Appearance { Appearance(colorScheme) }
 
@@ -71,15 +75,19 @@ struct ShoppingListView: View {
                     .blur(radius: backgroundBlur, opaque: false)
                     .background { ListBackground(t: t) }
                     .allowsHitTesting(activeSheet == nil && activeOverlay == nil)
+                    // VoiceOver: Hinter offenen Sheets/Overlays ist die Liste nicht erreichbar (wie beim Tippen).
+                    .accessibilityHidden(activeSheet != nil || activeOverlay != nil)
                 overlayLayer(t: t, insets: insets)
                 sheetLayer(k: k, maxHeight: screenHeight - 54, insets: insets)   // Design: 54 pt Luft über dem höchsten Sheet
+                errorToastView(insets: insets)
             }
             .environment(\.hybridHosted, true)
             .environment(\.hybridScreenWidth, geo.size.width)
         }
         .ignoresSafeArea(.keyboard)
-        .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)
-        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: activeOverlay)
+        .animation(motion(.spring(response: 0.4, dampingFraction: 0.88)), value: activeSheet)
+        .animation(motion(.spring(response: 0.35, dampingFraction: 0.82)), value: activeOverlay)
+        .onChange(of: listViewModel.errorMessage) { _, message in showError(message) }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active: listViewModel.handleAppDidBecomeActive()
@@ -179,12 +187,13 @@ struct LayoutShift {
 /// Schließt eine offene Wisch-Zeile, sobald der Nutzer die Liste scrollt (iOS 18+, wie in Mail).
 private struct CloseSwipedRowOnScroll: ViewModifier {
     @Binding var openRow: OpenSwipeRow?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         if #available(iOS 18.0, *) {
             content.onScrollPhaseChange { _, phase in
                 if phase == .interacting, openRow != nil {
-                    withAnimation(SwipeableItemRow.snap) { openRow = nil }
+                    withAnimation(SwipeableItemRow.snap(reduceMotion: reduceMotion)) { openRow = nil }
                 }
             }
         } else {

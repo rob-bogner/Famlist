@@ -52,7 +52,7 @@ extension ListViewModel {
 
             // Per HLC abgleichen: ausstehende lokale Änderungen bleiben erhalten (Audit M2).
             for item in items {
-                try itemStore.mergeRemote(item)
+                try itemStore.mergeRemote(item, legacyImageKnown: false)
             }
             try itemStore.save()
 

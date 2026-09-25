@@ -47,8 +47,11 @@ struct FocusedSearchField: View {
                     SVGIcon(Icon.close, size: 14, color: k.icon, lineWidth: 2.6)
                         .frame(width: 40, height: 40)
                         .background(Circle().fill(k.close))
+                        .frame(width: 44, height: 44)         // Trefferfläche 44, Optik 40
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .padding(-2)                                  // 44er-Trefferfläche ohne Layout-Versatz
                 .accessibilityLabel("Suche leeren")
             }
         }

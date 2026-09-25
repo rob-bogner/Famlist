@@ -67,7 +67,7 @@ struct ManageCategoriesSheet: View {
                             .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
                             .padding(.top, 16)
 
-                            EKKSectionLabel(text: "\(store.categories.count) Kategorien", k: k)
+                            EKKSectionLabel(text: store.categories.count == 1 ? "1 Kategorie" : "\(store.categories.count) Kategorien", k: k)
                                 .padding(.top, 20)
 
                             VStack(spacing: 8) {

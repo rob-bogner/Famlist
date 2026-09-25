@@ -71,6 +71,14 @@ struct SwipeableItemRow: View {
     /// Einheitliche Feder für Öffnen, Schließen und Zurückschnappen.
     static let snap = Animation.spring(response: 0.34, dampingFraction: 0.84)
 
+    /// „Bewegung reduzieren“: Einrasten ohne Nachfedern.
+    static func snap(reduceMotion: Bool) -> Animation {
+        reduceMotion ? .easeInOut(duration: 0.25) : snap
+    }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var snapAnimation: Animation { Self.snap(reduceMotion: reduceMotion) }
+
     var body: some View {
         let progress = physics.revealProgress(offset: cardOffset)
         let leading = physics.leadingProgress(offset: cardOffset)
@@ -137,7 +145,7 @@ struct SwipeableItemRow: View {
     }
 
     private func close() {
-        withAnimation(Self.snap) {
+        withAnimation(snapAnimation) {
             if openRow?.id == item.id { openRow = nil }
         }
     }
@@ -157,7 +165,7 @@ struct SwipeableItemRow: View {
             isArmed = false
             isArmedTrailing = false
             if let other = openRow, other.id != item.id {
-                withAnimation(Self.snap) { openRow = nil }
+                withAnimation(snapAnimation) { openRow = nil }
             }
         }
         var transaction = Transaction()
@@ -181,12 +189,12 @@ struct SwipeableItemRow: View {
         }
         let armed = rest != .trailing && offset >= physics.fullSwipeDistance
         if armed != isArmed {
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) { isArmed = armed }
+            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.25, dampingFraction: 0.6)) { isArmed = armed }
             UIImpactFeedbackGenerator(style: armed ? .medium : .light).impactOccurred()
         }
         let armedTrailing = physics.trailingFullSwipe && rest != .leading && offset <= -physics.fullSwipeDistance
         if armedTrailing != isArmedTrailing {
-            withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) { isArmedTrailing = armedTrailing }
+            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.25, dampingFraction: 0.6)) { isArmedTrailing = armedTrailing }
             UIImpactFeedbackGenerator(style: armedTrailing ? .medium : .light).impactOccurred()
         }
     }
@@ -199,7 +207,7 @@ struct SwipeableItemRow: View {
                                            minOffset: minOffset, maxOffset: maxOffset,
                                            pullBackFromMin: now - minOffsetTime, pullBackFromMax: now - maxOffsetTime)
         let outcome = physics.release(from: rest, drag)
-        withAnimation(Self.snap) {
+        withAnimation(snapAnimation) {
             isDragging = false
             isArmed = false
             isArmedTrailing = false

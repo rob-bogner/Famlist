@@ -38,6 +38,6 @@ enum ItemIdentity {
 
     /// Vergleichsschlüssel für Namen – dieselbe Normalisierung wie `UUID.deterministicItemID`.
     nonisolated static func normalizedKey(_ name: String) -> String {
-        name.lowercased().trimmingCharacters(in: .whitespaces)
+        name.precomposedStringWithCanonicalMapping.lowercased().trimmingCharacters(in: .whitespaces)
     }
 }

@@ -120,7 +120,7 @@ struct ReceiptReviewSheet: View {
                     Text(storeAndDate)
                         .font(AppFont.dm(13, 400))
                         .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
-                    Text("\(flow.lines.count) Positionen erkannt")
+                    Text(flow.lines.count == 1 ? "1 Position erkannt" : "\(flow.lines.count) Positionen erkannt")
                         .font(AppFont.dm(15, 600))
                         .foregroundStyle(Color.white)
                 }
