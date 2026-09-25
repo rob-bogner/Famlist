@@ -96,6 +96,22 @@ final class OfflineStartUITests: XCTestCase {
         // 3. Offline hinzufügen
         createNew(offline)
         XCTAssertTrue(app.buttons["\(offline) abhaken"].waitForExistence(timeout: 5), "offline sofort sichtbar")
+
+        // 3b. Abmelden mit ungesendeter Änderung → Rückfrage statt stillem Verwerfen (Audit 2, S4)
+        app.buttons["Mehr"].tap()
+        let settings = app.buttons["Einstellungen"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 5), "Menü")
+        settings.tap()
+        let signOut = app.buttons["Abmelden"]
+        XCTAssertTrue(signOut.waitForExistence(timeout: 5), "Einstellungen")
+        signOut.tap()
+        let warning = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "noch nicht gesendet")).firstMatch
+        XCTAssertTrue(warning.waitForExistence(timeout: 10), "Rückfrage zu ungesendeten Änderungen")
+        XCTAssertTrue(app.buttons["Trotzdem abmelden"].exists, "bewusstes Verwerfen möglich")
+        // iOS 26 zeigt keinen eigenen Abbrechen-Knopf: Tippen neben die Sprechblase bricht ab (Titel des Sheets).
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        XCTAssertTrue(warning.waitForNonExistence(timeout: 5), "Rückfrage geschlossen")
+        XCTAssertFalse(app.buttons["Weiter mit E-Mail"].waitForExistence(timeout: 2), "weiter angemeldet")
         app.terminate()
 
         // 4. Wieder online: offline angelegter Artikel bleibt (und wird gesendet)
