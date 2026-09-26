@@ -20,7 +20,7 @@
  - Die Apple Watch bekommt diese Änderungen in Phase 4 über den remoteChangeHandler weitergeleitet.
 
  📝 Last Change:
- - Initial creation (Watch-Plan Phase 3).
+ - Weiterleitung an die Apple Watch, Übernahme von Uhr-Änderungen (Watch-Plan Phase 4).
  ------------------------------------------------------------------------
  */
 
@@ -32,8 +32,8 @@ extension ListViewModel {
 
     /// Vordergrund: Kanäle aller Listen öffnen (aufgerufen aus startObserving).
     internal func startAllListsSync() {
-        repository.setRemoteChangeHandler { [weak self] changedList, _ in
-            self?.handleRemoteListChange(changedList)
+        repository.setRemoteChangeHandler { [weak self] changedList, itemIds in
+            self?.handleRemoteListChange(changedList, itemIds: itemIds)
         }
         isAllListsSyncActive = true
         updateAllListsSync()
@@ -81,19 +81,34 @@ extension ListViewModel {
             let delta = try await repository.fetchItemsSince(listId: syncListId, since: Self.deltaStart(after: lastSync))
             // Inzwischen abgemeldet oder Zugriff verloren → nichts mehr übernehmen.
             guard isAllListsSyncActive, allLists.contains(where: { $0.id == syncListId }) else { return }
-            let changed = try applyDelta(delta, listId: syncListId, lastSync: lastSync)
+            let changes = try applyDelta(delta, listId: syncListId, lastSync: lastSync)
             if syncListId == listId { refreshItemsFromStore() }        // inzwischen geöffnet
             updateListItemCount(syncListId)
-            logVoid(params: (action: "syncListInBackground", listId: syncListId, rows: delta.count, changed: changed.count))
+            if !changes.all.isEmpty { remoteChangeForwarder?(syncListId, changes.all) }
+            logVoid(params: (action: "syncListInBackground", listId: syncListId, rows: delta.count,
+                             changed: changes.all.count))
         } catch {
             logVoid(params: (action: "syncListInBackground.error", listId: syncListId,
                              error: (error as NSError).localizedDescription))
         }
     }
 
-    /// Realtime hat Änderungen einer Liste übernommen (auch der geöffneten): Zähler in „Meine Listen“.
-    internal func handleRemoteListChange(_ changedList: UUID) {
+    /// Realtime hat Änderungen einer Liste übernommen (auch der geöffneten): Zähler in „Meine Listen“,
+    /// Weiterleitung an die Uhr.
+    internal func handleRemoteListChange(_ changedList: UUID, itemIds: Set<String> = []) {
         updateListItemCount(changedList)
+        if !itemIds.isEmpty { remoteChangeForwarder?(changedList, itemIds) }
+    }
+
+    /// Artikel von der Apple Watch wurden übernommen (WatchBridge): geöffnete Liste neu zeigen (mit
+    /// Hervorhebung wie bei anderen Geräten), Zähler aktualisieren.
+    func handleItemsMergedFromWatch(_ items: [ItemModel]) {
+        let byList = Dictionary(grouping: items) { $0.listId.flatMap(UUID.init(uuidString:)) }
+        if let active = byList[listId] {
+            refreshItemsFromStore()
+            markRecentlySynced(ids: Set(active.filter { $0.tombstone != true }.map(\.id)))
+        }
+        byList.keys.compactMap { $0 }.forEach(updateListItemCount)
     }
 
     /// Zähler einer Liste aus SwiftData neu lesen (nur für bekannte Listen).

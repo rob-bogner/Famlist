@@ -132,8 +132,9 @@ extension ListViewModel {
         do {
             let deltaItems = try await repository.fetchItemsSince(listId: syncListId, since: since)
             guard !Task.isCancelled, syncListId == listId else { return }
-            let highlightIDs = try applyDelta(deltaItems, listId: syncListId, lastSync: lastSync)
-            if !suppressHighlight { markRecentlySynced(ids: highlightIDs) }
+            let changes = try applyDelta(deltaItems, listId: syncListId, lastSync: lastSync)
+            if !suppressHighlight { markRecentlySynced(ids: changes.visible) }
+            if !changes.all.isEmpty { remoteChangeForwarder?(syncListId, changes.all) }
             updateListItemCount(syncListId)
             refreshItemsFromStore()
             logVoid(params: (action: "runIncrementalSync.success", listId: syncListId, itemCount: deltaItems.count))
@@ -155,18 +156,22 @@ extension ListViewModel {
     }
 
     /// Übernimmt Delta-Zeilen einer Liste per HLC (auch Löschmarkierungen: neuere HLC gewinnt), speichert und
-    /// rückt die Zeitmarke erst DANACH vor – über alle Zeilen. Liefert die sichtbar geänderten Artikel-IDs.
-    internal func applyDelta(_ deltaItems: [ItemModel], listId syncListId: UUID, lastSync: Date) throws -> Set<String> {
-        var changedIDs: Set<String> = []
+    /// rückt die Zeitmarke erst DANACH vor – über alle Zeilen.
+    /// - Returns: `visible` = geänderte, nicht gelöschte Artikel (Hervorhebung); `all` = alle geänderten
+    ///   (auch Löschungen, zum Weiterleiten an die Uhr).
+    internal func applyDelta(_ deltaItems: [ItemModel], listId syncListId: UUID,
+                             lastSync: Date) throws -> (visible: Set<String>, all: Set<String>) {
+        var visible: Set<String> = [], all: Set<String> = []
         for item in deltaItems {
-            let result = try itemStore.mergeRemote(item, legacyImageKnown: false)
-            if result != .ignored, item.tombstone != true { changedIDs.insert(item.id) }
+            guard try itemStore.mergeRemote(item, legacyImageKnown: false) != .ignored else { continue }
+            all.insert(item.id)
+            if item.tombstone != true { visible.insert(item.id) }
         }
         try itemStore.save()
         if let newest = deltaItems.compactMap(\.updatedAt).max(), newest > lastSync {
             saveLastSyncTimestamp(newest, for: syncListId)
         }
-        return changedIDs
+        return (visible, all)
     }
 
     // MARK: - App Lifecycle

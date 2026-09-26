@@ -17,7 +17,7 @@
  - The wrapper lets the rest of the app avoid importing Supabase types everywhere.
 
  📝 Last Change:
- - Replace local debug shims with Support/Logger and add safe init/auth logs (no secrets); keep client behavior unchanged.
+ - invokeFunction für Edge Functions (watch-session, Watch-Plan Phase 4, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -138,6 +138,9 @@ protocol SupabaseClienting: Sendable { // Protocol to hide concrete Supabase typ
     func rpcRows<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> [R]
     /// Ruft eine Postgres-Funktion mit Parametern auf, die einen einzelnen Wert liefert (z. B. uuid, boolean).
     func rpcValue<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> R
+    /// Ruft eine Edge Function (POST, ohne Inhalt) mit der Sitzung des Nutzers auf und dekodiert die Antwort.
+    /// Fehlerstatus kommen als `FunctionsError.httpError(code:data:)`.
+    func invokeFunction<R: Decodable & Sendable>(_ name: String) async throws -> R
 }
 
 extension SupabaseClienting {
@@ -148,6 +151,9 @@ extension SupabaseClienting {
     func rpcRows<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> [R] { [] }
     func rpcValue<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> R {
         throw PostgrestError(message: "rpcValue(\(function)) not available in this client")
+    }
+    func invokeFunction<R: Decodable & Sendable>(_ name: String) async throws -> R {
+        throw URLError(.unsupportedURL)
     }
 }
 
@@ -234,6 +240,10 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
 
     func rpcValue<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> R {
         try await client.rpc(function, params: params).execute().value
+    }
+
+    func invokeFunction<R: Decodable & Sendable>(_ name: String) async throws -> R {
+        try await client.functions.invoke(name, options: FunctionInvokeOptions(method: .post))
     }
 
     func storageDownload(bucket: String, path: String) async throws -> Data {

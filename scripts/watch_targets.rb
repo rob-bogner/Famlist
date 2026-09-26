@@ -150,8 +150,9 @@ end
 wanted_paths = wanted.map { |rel| File.join(ROOT, rel) }
 wanted.each do |rel|
   ref = file_ref(project, rel) or abort("Datei nicht im Projekt: #{rel}")
-  next if watch.source_build_phase.files_references.include?(ref)
-  watch.source_build_phase.add_file_reference(ref, true)
+  phase = rel.end_with?('.swift') ? watch.source_build_phase : watch.resources_build_phase
+  next if phase.files_references.include?(ref)
+  phase.add_file_reference(ref, true)
   puts "  + #{rel}"
 end
 # Nicht mehr gelistete geteilte Dateien (außerhalb von FamlistWatch/) wieder entfernen.

@@ -2,7 +2,7 @@
 
 Stand 26.09.2026 · Phase 0 (Bestandsaufnahme und Plan) · Auftrag: `design-handoff/WATCH_PROMPT.md`
 
-Status: **Phasen 1–3 gebaut (26.09.2026).** Phase 3: Migrationen 022 und 023 sowie Edge Function `watch-session` sind live (Freigabe Robert, 17:38).
+Status: **Phasen 1–4 gebaut (26.09.2026).** Phase 3: Migrationen 022 und 023 sowie Edge Function `watch-session` sind live (Freigabe Robert, 17:38).
 
 ---
 

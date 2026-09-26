@@ -89,3 +89,27 @@ Famlist/Core/DesignSystem/Hybrid/Rendering/Paint.swift
 Famlist/Core/DesignSystem/Hybrid/Rendering/CSSRadialGradient.swift
 Famlist/Core/DesignSystem/Hybrid/Rendering/CSSLinearGradient.swift
 Famlist/Core/DesignSystem/Hybrid/Rendering/GlossEllipse.swift
+
+# Verbindung iPhone ↔ Uhr (Phase 4)
+Famlist/Core/Watch/WatchMessage.swift
+Famlist/Core/Watch/WatchApplicationContext.swift
+Famlist/Core/Watch/WatchTransport.swift
+Famlist/Core/Watch/WatchConnectivityService.swift
+
+# Artikelstamm offline zuerst („Oft gekauft“, Phase 4/5)
+Famlist/Repositories/Implementations/OfflineItemCatalogRepository.swift
+Famlist/Repositories/Offline/CatalogLocalStore.swift
+Famlist/Repositories/Offline/CatalogOperation.swift
+Famlist/Repositories/Offline/LocalJSONFile.swift
+
+# Kategorien in Ladenweg-Reihenfolge (Abschnitte der Liste)
+Famlist/Features/ItemManagement/Models/ItemCategory.swift
+Famlist/Features/Categories/Models/CategoryDefinition.swift
+Famlist/Features/Categories/Services/CategoryResolver.swift
+Famlist/Features/Categories/Services/CategoryIconCatalog.swift
+Famlist/Features/Onboarding/Design/EKKIcon.swift
+Famlist/Repositories/Protocols/CategoryDefinitionsRepository.swift
+Famlist/Repositories/Implementations/SupabaseCategoryDefinitionsRepository.swift
+
+# Übersetzungen (Einheiten „Stück“, „Packung“ …) – Ressource, keine Quelle
+Famlist/Shared/Resources/Localizable.xcstrings

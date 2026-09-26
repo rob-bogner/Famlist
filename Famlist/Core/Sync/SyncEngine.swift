@@ -73,6 +73,8 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
     private var queueProcessingTimer: Timer?
     private var isProcessingQueue = false
     private(set) var localWriteObserver: (@MainActor () -> Void)?
+    /// Erhält die eben lokal geschriebenen Artikel (Sofort-Weg zur Uhr bzw. zum iPhone, Watch-Plan §2).
+    private(set) var writtenItemsObserver: (@MainActor ([ItemModel]) -> Void)?
     private var syncEventObserver: (@MainActor (SyncEvent) -> Void)?
 
     // MARK: - Initialization
@@ -114,6 +116,10 @@ final class SyncEngine: ObservableObject, SyncEngineProtocol {
 
     func setSyncEventObserver(_ observer: @escaping @MainActor (SyncEvent) -> Void) {
         syncEventObserver = observer
+    }
+
+    func setWrittenItemsObserver(_ observer: @escaping @MainActor ([ItemModel]) -> Void) {
+        writtenItemsObserver = observer
     }
 
     // MARK: - Queue Processing

@@ -36,6 +36,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     private let categoryStore: CategoryStore // Kategorien des Nutzers (Ladenweg), Redesign „Hybrid“ Phase 6.
     private let priceBook: PriceBook // Preise aus Kassenzetteln (offline zuerst), Redesign „Hybrid“ Phase 7.
     private let receiptArchive: ReceiptArchive // Kassenzettel-Archiv (Fotos, offline zuerst), Migration 021.
+    private let watchBridge: WatchBridge? // Apple Watch: Anmeldung, Sofort-Weg, Konto (Watch-Plan §2).
+    private let watchService: WatchConnectivityService? // WCSession – früh aktiviert (Wecken im Hintergrund).
 
     // MARK: - Init (Dependency Composition)
     /// Initializes repositories and view models for the app.
@@ -119,6 +121,18 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             lvm.configure(syncOrchestrator: syncOrchestrator, pageLoader: pageLoader)
             self.listViewModel = lvm
 
+            // Apple Watch (Watch-Plan §2): Sitzung früh aktivieren, damit eine Nachricht der Uhr, die die App im
+            // Hintergrund weckt, ankommt. Sofort-Weg in beide Richtungen.
+            let watchService = WatchConnectivityService()
+            let bridge = WatchBridge(transport: watchService, client: client, itemStore: itemStore)
+            watchService.delegate = bridge
+            bridge.onItemsMerged = { [weak lvm] items in lvm?.handleItemsMergedFromWatch(items) }
+            syncEngine.setWrittenItemsObserver { [weak bridge] items in bridge?.forward(items) }
+            lvm.remoteChangeForwarder = { [weak bridge] listId, ids in bridge?.forwardStored(listId: listId, itemIds: ids) }
+            watchService.activate()
+            self.watchService = watchService
+            self.watchBridge = bridge
+
             // Create the session VM that coordinates auth and default list bootstrap.
             self.sessionViewModel = AppSessionViewModel(client: client, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm)
             self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client),
@@ -136,6 +150,9 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 categoryStore?.resetLocal()
                 receiptArchive?.clearLocal()
             }
+            // Apple Watch: Anmelden/Kontowechsel und Abmelden an die Uhr melden.
+            bridge.observeSignIn(self.sessionViewModel.$isAuthenticated.eraseToAnyPublisher()) { client.auth.currentUser?.id }
+            self.sessionViewModel.onSignOut { [weak bridge] in bridge?.accountDidChange(userId: nil) }
             // Rückfrage beim Abmelden: auch ungesendete Preise, Kassenzettel und Kategorien zählen.
             self.sessionViewModel.countUnsentChanges { [weak priceBook, weak categoryStore, weak receiptArchive] in
                 (priceBook?.pending.count ?? 0) + (categoryStore?.unsentChangeCount ?? 0)
@@ -165,6 +182,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             self.categoryStore = CategoryStore(repository: nil)
             self.priceBook = PriceBook(repository: nil) // Ohne Supabase bleiben Preise in der lokalen Warteschlange.
             self.receiptArchive = ReceiptArchive(repository: nil) // Ohne Supabase bleiben Bons lokal.
+            self.watchService = nil
+            self.watchBridge = nil
         }
     }
 

@@ -153,6 +153,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// true im Vordergrund nach startObserving: Kanäle ALLER Listen offen (ListViewModel+AllListsSync).
     internal var isAllListsSyncActive = false
 
+    /// Von außen übernommene Artikel (Realtime, Delta) je Liste weiterreichen – an die Apple Watch
+    /// (WatchBridge, verdrahtet in FamlistApp). nil = keine Uhr.
+    internal var remoteChangeForwarder: (@MainActor (UUID, Set<String>) -> Void)?
+
     /// Sync orchestrator used by loadNextPage() to serialise page fetches with Realtime events.
     internal var syncOrchestrator: SyncOrchestrator?
 

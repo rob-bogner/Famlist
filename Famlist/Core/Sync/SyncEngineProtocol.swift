@@ -86,6 +86,8 @@ protocol SyncEngineProtocol: AnyObject {
 
     /// Sync-Ereignisse für Nutzer-Logs im ViewModel.
     func setSyncEventObserver(_ observer: @escaping @MainActor (SyncEvent) -> Void)
+    /// Eben lokal geschriebene Artikel (Sofort-Weg zum anderen Gerät).
+    func setWrittenItemsObserver(_ observer: @escaping @MainActor ([ItemModel]) -> Void)
 }
 
 extension SyncEngineProtocol {
@@ -93,6 +95,7 @@ extension SyncEngineProtocol {
     /// Standard: kein Beobachter (Previews, Test-Spies).
     func setLocalWriteObserver(_ observer: @escaping @MainActor () -> Void) {}
     func setSyncEventObserver(_ observer: @escaping @MainActor (SyncEvent) -> Void) {}
+    func setWrittenItemsObserver(_ observer: @escaping @MainActor ([ItemModel]) -> Void) {}
     func resetForSignOut() {}
     func forgetList(_ listId: UUID) {}
     func pause() {}
