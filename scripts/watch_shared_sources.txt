@@ -41,6 +41,7 @@ Famlist/Repositories/Protocols/ItemsRepository.swift
 Famlist/Repositories/Protocols/ImageStorage.swift
 Famlist/Repositories/Implementations/SupabaseItemsRepository.swift
 Famlist/Repositories/Implementations/SupabaseItemsRepository+CRUD.swift
+Famlist/Repositories/Implementations/SupabaseItemsRepository+Fetch.swift
 Famlist/Repositories/Implementations/SupabaseItemRow.swift
 Famlist/Repositories/Implementations/SupabaseRealtimeManager.swift
 Famlist/Repositories/Models/AuthError.swift
@@ -70,6 +71,7 @@ Famlist/Repositories/Protocols/ProfilesRepository.swift
 Famlist/Repositories/Implementations/SupabaseProfilesRepository.swift
 Famlist/Repositories/Protocols/ItemCatalogRepository.swift
 Famlist/Repositories/Implementations/SupabaseItemCatalogRepository.swift
+Famlist/Repositories/Models/ItemCatalogEntry+Usage.swift
 
 # Original-SVG-Icons
 Famlist/Core/DesignSystem/Hybrid/Icons/Icon.swift

@@ -17,7 +17,7 @@
  - AsyncStream publishes live updates; SwiftUI lists update automatically when data changes.
 
  📝 Last Change:
- - Einzelne Schreibmethoden durch upsertItems (HLC-geprüft, gebündelt) ersetzt (Audit 25.09.2026).
+ - Delta-Abfrage für mehrere Listen, Realtime für alle Listen (Watch-Plan Phase 3, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -64,6 +64,16 @@ protocol ItemsRepository { // Protocol ensures the app can switch data sources w
     ///   - since: High-water mark timestamp. Items updated before or at this time are excluded.
     /// - Returns: Changed items (creates, updates, tombstones) since `since`.
     func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel]
+    /// Wie `fetchItemsSince(listId:since:)`, aber für mehrere Listen in EINEM Aufruf (Apple Watch:
+    /// Abfrage aller Listen alle 10 s). Eine gemeinsame Zeitmarke – neu hinzugekommene Listen fragt der
+    /// Aufrufer getrennt mit `.distantPast` ab.
+    func fetchItemsSince(listIds: [UUID], since: Date) async throws -> [ItemModel]
+    /// Hält die Realtime-Kanäle dieser Listen offen – auch ohne Beobachter (iPhone: alle Listen synchron,
+    /// nicht nur die geöffnete). Leere Menge = nur noch Kanäle mit Beobachtern. Aufrufe ersetzen die Menge.
+    func keepListsInSync(_ listIds: Set<UUID>)
+    /// Meldet jede per Realtime übernommene Änderung (Liste, Artikel-IDs) – für Listen ohne Beobachter
+    /// die einzige Nachricht darüber (Zähler in „Meine Listen“, später Weiterleitung an die Uhr).
+    func setRemoteChangeHandler(_ handler: @escaping @MainActor (UUID, Set<String>) -> Void)
     /// Alle Artikel-IDs einer Liste auf dem Server (Abgleich nach langer Pause). nil = nicht unterstützt.
     func fetchItemIds(listId: UUID) async throws -> Set<String>?
 }
@@ -73,6 +83,16 @@ extension ItemsRepository {
     func setReconnectHandler(_ handler: @escaping @MainActor (UUID) -> Void) {}
     /// Standard: kein Abgleich der ID-Menge.
     func fetchItemIds(listId: UUID) async throws -> Set<String>? { nil }
+    /// Standard: je Liste einzeln abfragen (Test-Doubles).
+    func fetchItemsSince(listIds: [UUID], since: Date) async throws -> [ItemModel] {
+        var result: [ItemModel] = []
+        for listId in listIds { result += try await fetchItemsSince(listId: listId, since: since) }
+        return result
+    }
+    /// Standard: keine Realtime-Verbindung (Vorschau, Tests).
+    func keepListsInSync(_ listIds: Set<UUID>) {}
+    /// Standard: keine Realtime-Verbindung (Vorschau, Tests).
+    func setRemoteChangeHandler(_ handler: @escaping @MainActor (UUID, Set<String>) -> Void) {}
 }
 
 // MARK: - Preview/In-Memory Implementation

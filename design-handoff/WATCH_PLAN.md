@@ -2,7 +2,7 @@
 
 Stand 26.09.2026 · Phase 0 (Bestandsaufnahme und Plan) · Auftrag: `design-handoff/WATCH_PROMPT.md`
 
-Status: **Entscheidungen von Robert eingearbeitet (26.09.2026, 16:32), wartet auf Freigabe zum Bau.**
+Status: **Phasen 1–3 gebaut (26.09.2026).** Phase 3: Migrationen 022 und 023 sowie Edge Function `watch-session` sind live (Freigabe Robert, 17:38).
 
 ---
 
@@ -142,8 +142,11 @@ Status: **Entscheidungen von Robert eingearbeitet (26.09.2026, 16:32), wartet au
 | Nr. | Änderung | Inhalt |
 |---|---|---|
 | Migration 022 | `migrations/022_catalog_usage.sql` | `item_catalog` bekommt `use_count int not null default 0` und `last_used_at timestamptz`. Dazu kommen ein Index für die Sortierung und die RPC `catalog_note_use(p_names text[])`. Die RPC zählt atomar für den angemeldeten Nutzer hoch, damit zwei Geräte sich nicht gegenseitig Zählungen überschreiben. Einträge ohne Treffer ignoriert sie. RLS bleibt wie in Migration 019. Prüfskript: `migrations/tests/022_catalog_usage_check.sql`. |
-| Edge Function | `watch-session` | Die Function prüft den JWT (`verify_jwt: true`) und liest die E-Mail des Nutzers aus dem Token. Mit `generateLink` (magiclink) erzeugt sie einen Code und gibt **nur** `hashed_token` zurück. Pro Nutzer ist höchstens 1 Aufruf je 10 s erlaubt. Die Quelle kommt nach `supabase/functions/watch-session/` ins Repo. |
-| Client | Zähler | `ListViewModel.addItem` und das Hinzufügen auf der Uhr legen über die vorhandene Offline-Warteschlange des Artikelstamms einen Auftrag „benutzt“ ab. Ohne Netz wird er nachgesendet. |
+| Edge Function | `watch-session` | Die Function prüft den JWT (`verify_jwt: true`) und holt Konto und E-Mail mit `auth.getUser(jwt)` vom Auth-Server, nie aus der Anfrage. Mit `generateLink` (magiclink) erzeugt sie einen Code, prüft, dass er zum selben Konto gehört, und gibt **nur** `hashed_token` zurück. Pro Nutzer ist höchstens 1 Aufruf je 10 s erlaubt (sonst 429). Die Quelle liegt in `supabase/functions/watch-session/index.ts`. |
+| Migration 023 | `migrations/023_watch_session.sql` | Die Aufruf-Grenze braucht einen Zeitpunkt je Konto, der zwischen Aufrufen erhalten bleibt; Edge Functions laufen in mehreren Instanzen ohne gemeinsamen Speicher. Tabelle `private.watch_session_requests` und RPC `watch_session_claim(p_user)` (atomar, nur `service_role`). Prüfskript: dasselbe wie für 022. |
+| Client | Zähler | `ListViewModel.addItem` (auch „Menge +1“ bei gleichem Namen) und der Sammel-Import legen über die Offline-Warteschlange des Artikelstamms einen Auftrag `noteUse` ab, immer nach dem Speichern des Eintrags. Ohne Netz wird er nachgesendet; die lokale Kopie zählt sofort mit. Die Uhr nutzt in Phase 5 denselben Weg. |
+| Client | Delta aller Listen | `fetchItemsSince(listIds:since:)`: ein Aufruf je Seite mit `list_id IN (…)`, eine gemeinsame Zeitmarke. Neu hinzugekommene Listen fragt die Uhr getrennt ab `.distantPast` ab. |
+| Client | Realtime aller Listen (iPhone) | Ein Kanal je Liste, solange die App im Vordergrund ist (`keepListsInSync`). Nach jeder (Wieder-)Anmeldung holt die App das Delta dieser Liste in SwiftData; Änderungen meldet `setRemoteChangeHandler` (gebündelt, ohne Echos der eigenen Änderungen). Höchstens 90 Listen (Supabase: 100 Kanäle je Verbindung, belegt in der Doku „Realtime Quotas“). |
 
 **„Oft gekauft“** zeigt die ersten 8 Einträge des Artikelstamms, sortiert nach `use_count` absteigend und dann nach `last_used_at`. Die Detailzeile zeigt die Kategorie, sonst die Menge, wie im Design („Milchprodukte“, „10 Stück“). Weil der Zähler bei 0 beginnt, ist die Liste anfangs nach `last_used_at` sortiert oder leer. Das ist unvermeidbar, denn es gibt keine historischen Daten.
 
@@ -223,7 +226,7 @@ Offene Blocker gibt es derzeit keine.
 |---|---|---|
 | Die Edge Function arbeitet mit dem Service-Schlüssel | Ein Fehler darin könnte Sitzungen für fremde Konten erzeugen | Die E-Mail kommt **nur** aus dem geprüften JWT, nie aus der Anfrage; dazu Aufruf-Grenze und ein Live-Test mit falschem Token |
 | Die Uhr-Sitzung wird widerrufen (z. B. „überall abmelden“) | Die Uhr kann nicht mehr senden | Die Warteschlange bleibt liegen, die Uhr fordert beim nächsten Kontakt mit dem iPhone einen neuen Code an, und nichts geht verloren |
-| Mehr Realtime-Kanäle auf dem iPhone (einer je Liste) | Mehr Last und Akkuverbrauch | Die Kanäle laufen nur im Vordergrund wie heute; Supabase erlaubt laut eigenen Angaben 100 Kanäle je Verbindung (*unverifiziert, prüfe ich in Phase 3*) |
+| Mehr Realtime-Kanäle auf dem iPhone (einer je Liste) | Mehr Last und Akkuverbrauch | Die Kanäle laufen nur im Vordergrund wie heute. Supabase erlaubt 100 Kanäle je Verbindung (geprüft 26.09.2026, Doku „Realtime Reports/Quotas“); die App abonniert höchstens 90 Listen. Kanal-Anmeldungen: Free-Plan 100 je Sekunde je Projekt. |
 | Abfrage alle 10 s auf der Uhr | Akku | Nur solange die App sichtbar ist, ein Aufruf für alle Listen, und die Antwort ist bei 0 Änderungen leer |
 | Geteilte Dateien brechen den iOS-Build | Rückschritt im iPhone-Target | Nach jeder Phase laufen alle 606 Unit- und 40 UI-Tests |
 | Automatische Signierung muss App Group und App-IDs erst registrieren | Der erste Geräte-Build scheitert | `-allowProvisioningUpdates`; zur Not legt Robert die Gruppe im Developer-Portal an |

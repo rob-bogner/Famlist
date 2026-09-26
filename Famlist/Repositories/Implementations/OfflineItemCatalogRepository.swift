@@ -19,7 +19,7 @@
  - Wieder online: `reconnect` (ConnectivityMonitor.$isOnline) löst das Senden aus.
 
  📝 Last Change:
- - Fotos aus Storage lokal vorhalten, alte Base64-Fotos umziehen (Audit 25.09.2026, Migration 016).
+ - Zähl-Auftrag noteUse („Oft gekauft“, Migration 022, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -53,6 +53,10 @@ final class OfflineItemCatalogRepository: ItemCatalogRepository {
     func save(_ entry: ItemCatalogEntry) async throws { await enqueue(.save(entry)) }
     func update(_ entry: ItemCatalogEntry) async throws { await enqueue(.update(entry)) }
     func delete(id: String) async throws { await enqueue(.delete(id: id)) }
+    func noteUse(names: [String], at date: Date) async throws {
+        guard !names.isEmpty else { return }
+        await enqueue(.noteUse(names: names, at: date))
+    }
 
     private func enqueue(_ operation: CatalogOperation) async {
         store.append(operation)
@@ -160,6 +164,7 @@ final class OfflineItemCatalogRepository: ItemCatalogRepository {
         case .save(let entry): try await remote.save(entry)
         case .update(let entry): try await remote.update(entry)
         case .delete(let id): try await remote.delete(id: id)
+        case .noteUse(let names, let date): try await remote.noteUse(names: names, at: date)
         }
     }
 

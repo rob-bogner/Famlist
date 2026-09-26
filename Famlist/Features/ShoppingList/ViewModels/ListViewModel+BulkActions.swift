@@ -235,6 +235,7 @@ extension ListViewModel {
         }
 
         let lvm = self
+        noteCatalogUse(names: result.targets.map(\.item.name))   // „Oft gekauft“ (Migration 022)
 
         Task {
             await syncEngine.applyBulkItems(result.targets)

@@ -29,7 +29,7 @@ import UIKit
 @testable import Famlist
 
 /// Sitzungsspeicher im RAM – je Client eigener, damit zwei Konten parallel angemeldet bleiben.
-private final class MemoryAuthStorage: AuthLocalStorage, @unchecked Sendable {
+final class MemoryAuthStorage: AuthLocalStorage, @unchecked Sendable {
     private var values: [String: Data] = [:]
     private let lock = NSLock()
     func store(key: String, value: Data) throws { lock.withLock { values[key] = value } }
@@ -39,7 +39,7 @@ private final class MemoryAuthStorage: AuthLocalStorage, @unchecked Sendable {
 
 /// Dünne Fassade um einen echten SupabaseClient – damit laufen die App-Klassen (Repository, Realtime-Manager,
 /// SyncEngine) unverändert gegen das echte Backend, je Konto mit eigenem Client.
-private final class LiveTestClient: SupabaseClienting {
+final class LiveTestClient: SupabaseClienting {
     let client: SupabaseClient
     init(_ client: SupabaseClient) { self.client = client }
     var auth: any AuthClienting { client.auth }

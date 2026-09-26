@@ -3,7 +3,7 @@
 
  Famlist
  Created on: 12.03.2026
- Last updated on: 12.03.2026
+ Last updated on: 26.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -19,7 +19,7 @@
  - No explicit owner filter needed in queries; RLS handles it automatically.
 
  📝 Last Change:
- - Fotos in Storage statt Base64 (Migration 016); fetchAll seitenweise (Audit 25.09.2026).
+ - Zähler für „Oft gekauft“: Spalten use_count/last_used_at, noteUse über RPC catalog_note_use (Migration 022).
  ------------------------------------------------------------------------
  */
 
@@ -43,7 +43,9 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
 
     /// Security: nur die Spalten, die die UI braucht.
     /// image_data nur noch für den Umzug alter Fotos nach Storage (Migration 016).
-    private static let columns = "id,owner_public_id,name,brand,category,product_description,measure,price,image_data,image_path,barcode"
+    private static let columns = "id,owner_public_id,name,brand,category,product_description,measure,price,image_data,image_path,barcode,use_count,last_used_at"
+    /// Höchstzahl Namen je Aufruf von catalog_note_use (Grenze der RPC).
+    static let noteUseChunkSize = 200
     /// Seitengröße für fetchAll (PostgREST liefert sonst höchstens `max_rows` Zeilen – ohne Hinweis).
     static let pageSize = 500
 
@@ -131,6 +133,16 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
             .execute()
     }
 
+    /// Zählt atomar auf dem Server (use_count + n). Große Mengen (Sammel-Import) in Teilen zu 200 Namen.
+    func noteUse(names: [String], at date: Date) async throws {
+        var rest = names[...]
+        while !rest.isEmpty {
+            let chunk = Array(rest.prefix(Self.noteUseChunkSize))
+            rest = rest.dropFirst(chunk.count)
+            let _: Int = try await client.rpcValue("catalog_note_use", params: NoteUseParams(names: chunk, usedAt: date))
+        }
+    }
+
     func find(barcode: String) async throws -> ItemCatalogEntry? {
         let rows: [ItemCatalogEntry] = try await client
             .from("item_catalog")
@@ -140,6 +152,17 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
             .execute()
             .value
         return rows.first
+    }
+}
+
+/// Parameter der RPC catalog_note_use (Migration 022).
+private struct NoteUseParams: Encodable, Sendable {
+    let names: [String]
+    let usedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case names = "p_names"
+        case usedAt = "p_used_at"
     }
 }
 

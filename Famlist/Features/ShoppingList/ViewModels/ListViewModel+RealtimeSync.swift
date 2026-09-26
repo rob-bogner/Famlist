@@ -3,7 +3,7 @@
 
  Famlist
  Created on: 18.10.2025
- Last updated on: 17.03.2026
+ Last updated on: 26.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -21,8 +21,9 @@
  - SyncOrchestrator buffers Realtime handlers that arrive during an active page load.
 
  📝 Last Change:
- - Delta-Abgleich über mergeRemote (HLC), Zeitmarke je Liste und erst nach dem Speichern,
-   Abbruch beim Listenwechsel (Audit 25.09.2026).
+ - Alle Listen synchron (ListViewModel+AllListsSync): Wiederverbindung jeder Liste holt nach, Kanäle
+   aller Listen starten mit der Beobachtung und pausieren im Hintergrund. Übernahme des Deltas in
+   applyDelta ausgelagert (Watch-Plan Phase 3, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -43,11 +44,11 @@ extension ListViewModel {
         observeTask?.cancel()
         loadLocalSnapshot()
         hasObservedActiveList = true
-        // Nach einem Realtime-Abbruch Verpasstes nachholen (Audit M4).
+        // Nach einem Realtime-Abbruch Verpasstes nachholen (Audit M4) – für jede Liste, nicht nur die geöffnete.
         repository.setReconnectHandler { [weak self] reconnectedList in
-            guard let self, reconnectedList == self.listId else { return }
-            Task { await self.runIncrementalSync() }
+            self?.handleChannelResubscribed(reconnectedList)
         }
+        startAllListsSync()
         // Restore persisted cursor so pagination continues from where it left off after app restart.
         if currentCursor == nil {
             currentCursor = PaginationCursor.load(listId: listId)
@@ -126,25 +127,14 @@ extension ListViewModel {
         // nicht unter der neuen Liste landen (Audit M2).
         let syncListId = listId
         let lastSync = loadLastSyncTimestamp(for: syncListId)
-        // 5 s Überlappung: Zeilen, deren Transaktion kurz vor der Zeitmarke begann, aber erst danach sichtbar
-        // wurde, sonst nie nachgeladen (Audit 2, Befund S7). Doppelte Zeilen erkennt die HLC-Regel.
-        let since = lastSync == .distantPast ? lastSync : lastSync.addingTimeInterval(-5)
+        let since = Self.deltaStart(after: lastSync)
         logVoid(params: (action: "runIncrementalSync.start", listId: syncListId, since: since))
         do {
             let deltaItems = try await repository.fetchItemsSince(listId: syncListId, since: since)
             guard !Task.isCancelled, syncListId == listId else { return }
-            var highlightIDs: Set<String> = []
-            for item in deltaItems {
-                // Eine Regel für alles (auch Löschmarkierungen): neuere HLC gewinnt.
-                let result = try itemStore.mergeRemote(item, legacyImageKnown: false)
-                if result != .ignored, item.tombstone != true { highlightIDs.insert(item.id) }
-            }
-            try itemStore.save()
+            let highlightIDs = try applyDelta(deltaItems, listId: syncListId, lastSync: lastSync)
             if !suppressHighlight { markRecentlySynced(ids: highlightIDs) }
-            // Zeitmarke erst nach erfolgreichem Speichern – über ALLE Zeilen, auch Löschmarkierungen.
-            if let newest = deltaItems.compactMap(\.updatedAt).max(), newest > lastSync {
-                saveLastSyncTimestamp(newest, for: syncListId)
-            }
+            updateListItemCount(syncListId)
             refreshItemsFromStore()
             logVoid(params: (action: "runIncrementalSync.success", listId: syncListId, itemCount: deltaItems.count))
             // Nach langer Pause: endgültig gelöschte Artikel entfernen (Audit 2, Befund S3).
@@ -155,6 +145,28 @@ extension ListViewModel {
             logVoid(params: (action: "runIncrementalSync.error", listId: syncListId,
                              error: (error as NSError).localizedDescription))
         }
+    }
+
+    /// Beginn des Delta-Fensters. 5 s Überlappung: Zeilen, deren Transaktion kurz vor der Zeitmarke begann,
+    /// aber erst danach sichtbar wurde, sonst nie nachgeladen (Audit 2, Befund S7). Doppelte Zeilen erkennt
+    /// die HLC-Regel.
+    nonisolated static func deltaStart(after lastSync: Date) -> Date {
+        lastSync == .distantPast ? lastSync : lastSync.addingTimeInterval(-5)
+    }
+
+    /// Übernimmt Delta-Zeilen einer Liste per HLC (auch Löschmarkierungen: neuere HLC gewinnt), speichert und
+    /// rückt die Zeitmarke erst DANACH vor – über alle Zeilen. Liefert die sichtbar geänderten Artikel-IDs.
+    internal func applyDelta(_ deltaItems: [ItemModel], listId syncListId: UUID, lastSync: Date) throws -> Set<String> {
+        var changedIDs: Set<String> = []
+        for item in deltaItems {
+            let result = try itemStore.mergeRemote(item, legacyImageKnown: false)
+            if result != .ignored, item.tombstone != true { changedIDs.insert(item.id) }
+        }
+        try itemStore.save()
+        if let newest = deltaItems.compactMap(\.updatedAt).max(), newest > lastSync {
+            saveLastSyncTimestamp(newest, for: syncListId)
+        }
+        return changedIDs
     }
 
     // MARK: - App Lifecycle
@@ -173,6 +185,7 @@ extension ListViewModel {
         // Löschung sonst verloren und die Artikel beim nächsten Start wieder da (Audit 2, Befund S15).
         _ = commitPendingDeletion()
         syncEngine?.pause()
+        stopAllListsSync()                                  // Kanäle aller Listen nur im Vordergrund
         guard observeTask != nil else { return }
         logVoid(params: (
             action: "pauseRealtimeSync",
