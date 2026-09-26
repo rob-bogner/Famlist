@@ -7,7 +7,8 @@
 # - FamlistWatchTests  Unit-Tests der Watch-App
 # - Geteilte Dateien:  scripts/watch_shared_sources.txt – dieselben Dateien wie im iOS-Target
 #                      (Target-Mitgliedschaft statt Kopie, design-handoff/WATCH_PLAN.md §2).
-# Die Widget-Erweiterung folgt in Phase 6 (sie braucht die Widget-Views als Einstieg).
+# - FamlistWatchWidgets WidgetKit-Erweiterung (Smart Stack, 2 Komplikationen), eingebettet in die Uhr-App;
+#                      mitkompilierte Dateien: scripts/watch_widget_sources.txt
 #
 # Benötigt das Gem xcodeproj (1.23.0 auf diesem Mac vorhanden).
 
@@ -16,10 +17,12 @@ require 'xcodeproj'
 ROOT = File.expand_path('..', __dir__)
 PROJECT_PATH = File.join(ROOT, 'Famlist.xcodeproj')
 SHARED_LIST = File.join(__dir__, 'watch_shared_sources.txt')
+WIDGET_LIST = File.join(__dir__, 'watch_widget_sources.txt')
 
 TEAM = 'YHSZ8G8RWJ'
 WATCH_NAME = 'FamlistWatch'
 TESTS_NAME = 'FamlistWatchTests'
+WIDGETS_NAME = 'FamlistWatchWidgets'
 WATCH_BUNDLE_ID = 'com.roxo.famlist.watchkitapp'
 DEPLOYMENT = '10.0'
 
@@ -143,6 +146,45 @@ unless tests
   tests.add_dependency(watch)
   add_folder(project, tests, 'FamlistWatchTests')
   puts "Target #{TESTS_NAME} angelegt."
+end
+
+# ---------------------------------------------------------------- Widget-Erweiterung
+
+widgets = project.targets.find { |t| t.name == WIDGETS_NAME }
+unless widgets
+  widgets = project.new_target(:app_extension, WIDGETS_NAME, :watchos, DEPLOYMENT)
+  widgets.build_configurations.each do |config|
+    common_watch_settings(config)
+    s = config.build_settings
+    s['PRODUCT_BUNDLE_IDENTIFIER'] = "#{WATCH_BUNDLE_ID}.widgets"
+    s['INFOPLIST_FILE'] = 'FamlistWatchWidgets/Info.plist'
+    s['GENERATE_INFOPLIST_FILE'] = 'YES'
+    s['INFOPLIST_KEY_CFBundleDisplayName'] = 'Famlist'
+    s['CODE_SIGN_ENTITLEMENTS'] = 'FamlistWatchWidgets/FamlistWatchWidgets.entitlements'
+    s['SKIP_INSTALL'] = 'YES'
+    s['ENABLE_PREVIEWS'] = 'YES'
+    s['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
+    s['LD_RUNPATH_SEARCH_PATHS'] = ['$(inherited)', '@executable_path/Frameworks', '@executable_path/../../Frameworks']
+  end
+  add_folder(project, widgets, 'FamlistWatchWidgets')
+  %w[Famlist/Resources/Fonts/Outfit-Variable.ttf Famlist/Resources/Fonts/DMSans-Variable.ttf].each do |font|
+    ref = file_ref(project, font) or abort("Schrift fehlt im Projekt: #{font}")
+    widgets.resources_build_phase.add_file_reference(ref, true)
+  end
+  embed = watch.copy_files_build_phases.find { |p| p.name == 'Embed Foundation Extensions' } ||
+          watch.new_copy_files_build_phase('Embed Foundation Extensions')
+  embed.dst_subfolder_spec = '13'
+  embed.add_file_reference(widgets.product_reference, true).settings = { 'ATTRIBUTES' => ['RemoveHeadersOnCopy'] }
+  watch.add_dependency(widgets)
+  puts "Target #{WIDGETS_NAME} angelegt."
+end
+
+widget_wanted = File.readlines(WIDGET_LIST).map(&:strip).reject { |l| l.empty? || l.start_with?('#') }
+widget_wanted.each do |rel|
+  ref = file_ref(project, rel) or abort("Datei nicht im Projekt: #{rel}")
+  next if widgets.source_build_phase.files_references.include?(ref)
+  widgets.source_build_phase.add_file_reference(ref, true)
+  puts "  + #{rel} (Widgets)"
 end
 
 # ---------------------------------------------------------------- Geteilte Quellen abgleichen

@@ -14,7 +14,7 @@
  - DEBUG: `-watchDesignScreen <name>` zeigt einen Screen mit Beispieldaten (Pixelvergleich).
 
  📝 Last Change:
- - Echte Daten: WatchAppEnvironment, WatchListViewModel, WatchRootView (Watch-Plan Phase 5).
+ - Widgets (App Group), Hintergrund-Aktualisierung (Watch-Plan Phase 6).
  ------------------------------------------------------------------------
  */
 
@@ -30,7 +30,7 @@ struct FamlistWatchApp: App {
     init() {
         let environment = WatchAppEnvironment()
         _environment = StateObject(wrappedValue: environment)
-        _model = StateObject(wrappedValue: WatchListViewModel(sync: environment.sync))
+        _model = StateObject(wrappedValue: WatchListViewModel(sync: environment.sync, widgets: WatchWidgetPublisher()))
     }
 
     var body: some Scene {
@@ -39,11 +39,24 @@ struct FamlistWatchApp: App {
                 .task { await environment.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     environment.sync.setActive(phase == .active)
+                    if phase == .background { environment.scheduleBackgroundRefresh() }
                 }
-                .onOpenURL { url in
-                    if let route = WatchRoute.path(for: url) { path = route }
+                .onOpenURL(perform: open)
+                #if DEBUG
+                // `-watchOpenURL famlist://watch/add`: wie ein Tipp auf die Komplikation (Simulator kann es nicht).
+                .task {
+                    if let link = UserDefaults.standard.string(forKey: "watchOpenURL"), let url = URL(string: link) { open(url) }
                 }
+                #endif
         }
+        .backgroundTask(.appRefresh) { _ in
+            await WatchAppEnvironment.performBackgroundRefresh()
+        }
+    }
+
+    /// Deep Link der Komplikationen: Navigationsstapel setzen.
+    private func open(_ url: URL) {
+        if let route = WatchRoute.path(for: url) { path = route }
     }
 
     @ViewBuilder private var content: some View {

@@ -6,7 +6,7 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Nur DEBUG: zeigt einen Screen mit den Beispieldaten aus Watch*.dc.html für den Pixelvergleich.
-   Start: xcrun simctl launch <uhr> com.roxo.famlist.watchkitapp -watchDesignScreen list|item|add|done|lists
+   Start: xcrun simctl launch <uhr> com.roxo.famlist.watchkitapp -watchDesignScreen list|item|add|done|lists|face
  ------------------------------------------------------------------------
  */
 
@@ -33,6 +33,8 @@ struct WatchDesignGallery: View {
                 WatchDoneScreen(count: 6, listName: "My List")
             case "lists":
                 WatchListsScreen(lists: WatchSampleData.lists)
+            case "face":
+                WatchFaceGallery()
             default:
                 WatchListScreen(title: "My List", checked: 2, total: 6, sections: WatchSampleData.sections)
             }

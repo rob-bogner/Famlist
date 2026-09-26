@@ -19,8 +19,8 @@ xcodebuild build -project $ROOT/Famlist.xcodeproj -scheme FamlistWatch \
 $SIMCTL boot $SIM 2>/dev/null || true
 $SIMCTL install $SIM $DD/Build/Products/Debug-watchsimulator/FamlistWatch.app
 
-typeset -A REF=(list WatchList item WatchItem add WatchAdd done WatchDone lists WatchLists)
-for screen in list item add done lists; do
+typeset -A REF=(list WatchList item WatchItem add WatchAdd done WatchDone lists WatchLists face WatchFace)
+for screen in list item add done lists face; do
   $SIMCTL terminate $SIM com.roxo.famlist.watchkitapp 2>/dev/null || true
   $SIMCTL launch $SIM com.roxo.famlist.watchkitapp -watchDesignScreen $screen >/dev/null
   sleep 3

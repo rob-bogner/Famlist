@@ -14,12 +14,13 @@
    Kontext mit anderem Konto → ebenso, danach neu anmelden.
 
  📝 Last Change:
- - Initial creation (Watch-Plan Phase 4).
+ - Hintergrund-Aktualisierung für Widgets (Watch-Plan Phase 6).
  ------------------------------------------------------------------------
  */
 
 import Combine
 import Foundation
+import WatchKit
 
 @MainActor
 final class WatchAppEnvironment: ObservableObject, WatchTransportDelegate {
@@ -27,6 +28,11 @@ final class WatchAppEnvironment: ObservableObject, WatchTransportDelegate {
     let session: WatchSessionManager
     let sync: WatchSyncCoordinator
     private var sessionSubscription: AnyCancellable?
+    private var started = false
+    /// Laufende Umgebung – für die Hintergrund-Aktualisierung (SwiftUI-Szene ruft sie ohne View-Kontext auf).
+    private(set) static weak var current: WatchAppEnvironment?
+    /// Wunschabstand der Hintergrund-Aktualisierung; watchOS teilt die tatsächlichen Läufe selbst zu.
+    static let backgroundRefreshInterval: TimeInterval = 15 * 60
 
     init(processInfo: ProcessInfo = .processInfo) {
         let isUnitTestHost = processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -56,6 +62,7 @@ final class WatchAppEnvironment: ObservableObject, WatchTransportDelegate {
         self.transport = transport
         self.session = session
         self.sync = sync
+        Self.current = self
         transport.delegate = self
         session.onAccountReset = { [weak sync] in sync?.reset() }
         // Frisch angemeldet: sofort abfragen, Artikelstamm laden.
@@ -68,10 +75,30 @@ final class WatchAppEnvironment: ObservableObject, WatchTransportDelegate {
         }
     }
 
-    /// App-Start: Verbindung zum iPhone aktivieren, Sitzung wiederherstellen oder anfragen.
+    /// App-Start: Verbindung zum iPhone aktivieren, Sitzung wiederherstellen oder anfragen (einmal).
     func start() async {
+        guard !started else { return }
+        started = true
         transport.activate()
         await session.restore()
+    }
+
+    /// Hintergrund-Aktualisierung (Komplikationen, Smart Stack): abfragen, senden, nächsten Lauf planen.
+    /// Das ViewModel schreibt den Widget-Stand, sobald sich etwas geändert hat.
+    static func performBackgroundRefresh() async {
+        guard let environment = current else { return }
+        await environment.start()
+        await environment.sync.pull()
+        await environment.sync.engine.resumeSync()
+        environment.scheduleBackgroundRefresh()
+    }
+
+    /// Nächsten Hintergrundlauf anfragen (App verlässt den Vordergrund oder Lauf beendet).
+    func scheduleBackgroundRefresh() {
+        let date = Date().addingTimeInterval(Self.backgroundRefreshInterval)
+        WKApplication.shared().scheduleBackgroundRefresh(withPreferredDate: date, userInfo: nil) { error in
+            if let error { logVoid(params: (action: "watch.scheduleRefresh.error", error: error.localizedDescription)) }
+        }
     }
 
     // MARK: - WatchTransportDelegate

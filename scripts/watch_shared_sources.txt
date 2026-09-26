@@ -113,3 +113,13 @@ Famlist/Repositories/Implementations/SupabaseCategoryDefinitionsRepository.swift
 
 # Übersetzungen (Einheiten „Stück“, „Packung“ …) – Ressource, keine Quelle
 Famlist/Shared/Resources/Localizable.xcstrings
+
+# Widget-Ansichten (Phase 6): auch in der Uhr-App für die DEBUG-Galerie „face“ (Pixelvergleich)
+FamlistWatchWidgets/WatchSmartStackView.swift
+FamlistWatchWidgets/WatchRingComplicationView.swift
+FamlistWatchWidgets/WatchAddComplicationView.swift
+FamlistWatchWidgets/WatchSmartStackWidget.swift
+FamlistWatchWidgets/WatchRingWidget.swift
+FamlistWatchWidgets/WatchAddWidget.swift
+FamlistWatchWidgets/WatchWidgetProvider.swift
+FamlistWatchWidgets/WatchWidgetEntry.swift

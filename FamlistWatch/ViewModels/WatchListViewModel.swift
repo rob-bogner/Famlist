@@ -16,7 +16,7 @@
  - Die Screens bekommen nur Anzeigewerte, nie SwiftData-Objekte.
 
  📝 Last Change:
- - Initial creation (Watch-Plan Phase 5).
+ - Widget-Stand bei jeder Änderung (Watch-Plan Phase 6).
  ------------------------------------------------------------------------
  */
 
@@ -38,15 +38,18 @@ final class WatchListViewModel: ObservableObject {
 
     let sync: WatchSyncCoordinator
     let defaults: UserDefaults
+    /// Smart Stack und Komplikationen (App Group); nil in Tests ohne Widgets.
+    private let widgets: WatchWidgetPublisher?
     /// Modelle der aktiven Liste (Grundlage für Aktionen).
     private(set) var items: [ItemModel] = []
     private var subscription: AnyCancellable?
 
     static let activeListKey = "watch.activeListId"
 
-    init(sync: WatchSyncCoordinator, defaults: UserDefaults = .standard) {
+    init(sync: WatchSyncCoordinator, defaults: UserDefaults = .standard, widgets: WatchWidgetPublisher? = nil) {
         self.sync = sync
         self.defaults = defaults
+        self.widgets = widgets
         subscription = sync.$revision.sink { [weak self] _ in
             Task { @MainActor in self?.rebuild() }
         }
@@ -69,6 +72,8 @@ final class WatchListViewModel: ObservableObject {
         checkedCount = items.filter(\.isChecked).count
         frequent = ItemCatalogEntry.frequentlyUsed(sync.catalog.store.entries ?? []).map(Self.frequentItem)
         pendingChanges = sync.engine.pendingOperations
+        widgets?.publish(active == nil ? .empty
+                         : WatchWidgetState(listName: title, open: totalCount - checkedCount, total: totalCount))
     }
 
     /// Anzeige des Screens „Artikel“.

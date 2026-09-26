@@ -1,0 +1,28 @@
+# Dateien, die die Widget-Erweiterung FamlistWatchWidgets mitkompiliert (keine Kopie).
+# Pflege: Zeile ergänzen/entfernen, dann ruby scripts/watch_targets.rb
+
+# Uhr-Design (Farben, Schriften, Icons, Ring, Balken)
+FamlistWatch/Design/Theme/WatchTheme.swift
+FamlistWatch/Design/Theme/WatchFont.swift
+FamlistWatch/Design/Theme/WatchRGB.swift
+FamlistWatch/Design/Theme/WatchIcon.swift
+FamlistWatch/Design/Theme/View+WatchLineHeight.swift
+FamlistWatch/Design/Components/WatchRing.swift
+FamlistWatch/Design/Components/WatchProgressBar.swift
+FamlistWatch/Services/WatchWidgetState.swift
+
+# Original-SVG-Icons und CSS-Bausteine des iOS-Targets
+Famlist/Core/DesignSystem/Hybrid/Icons/Icon.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGElement.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGFilledIcon.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGIcon.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGIconShape.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGPathParser.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSPrimitives.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/RGB.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSBox.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/BoxShadow.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/Paint.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSRadialGradient.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSLinearGradient.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/GlossEllipse.swift
