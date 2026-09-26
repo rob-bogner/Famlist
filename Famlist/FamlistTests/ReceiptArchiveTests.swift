@@ -201,6 +201,20 @@ final class ReceiptArchiveTests: XCTestCase {
         XCTAssertEqual(archive.receipts.map(\.storeName), ["Aldi"], "Ohne Netz bleibt der letzte Stand")
     }
 
+    /// Live-Test 26.09.2026: Bon nach „Löschen“ wieder da, weil eine ältere Server-Antwort den Stand überschrieb.
+    func test_refresh_ignoresStaleFetch_whenDeletedMeanwhile() async throws {
+        let repo = InMemoryReceiptsRepository()
+        let archive = makeArchive(repo)
+        let saved = await archive.archive(draft())
+        let receipt = try XCTUnwrap(saved)
+        await archive.flush()
+        repo.duringFetch = { await archive.delete(archive.receipts[0]) }
+
+        await archive.refresh()
+        XCTAssertFalse(archive.receipts.contains { $0.id == receipt.id }, "gelöschter Bon bleibt weg")
+        XCTAssertTrue(repo.receipts.isEmpty)
+    }
+
     func test_clearLocal_removesEverything() async throws {
         let repo = InMemoryReceiptsRepository()
         repo.failWith = URLError(.notConnectedToInternet)

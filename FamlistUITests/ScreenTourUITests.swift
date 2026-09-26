@@ -30,7 +30,8 @@ final class ScreenTourUITests: XCTestCase {
     static let screens = ["signIn", "profileSetup", "acceptInvite"]
     static let overlays = ["menu", "sort", "copy", "delete", "copied", "undo"]
     static let sheets = ["search", "newItem", "edit", "productImage", "lists", "barcode", "createList",
-                         "listOptions", "shareMembers", "settings", "editProfile", "deleteAccount",
+                         "listOptions", "shareMembers", "settings", "receiptArchive", "receiptDetail",
+                         "editProfile", "deleteAccount",
                          "manageCategories", "editCategory", "receiptCapture", "receiptReview",
                          "shoppingDone", "priceHistory", "manageItems", "importClipboard"]
 

@@ -36,12 +36,19 @@ final class InMemoryReceiptsRepository: ReceiptsRepository {
     private(set) var receipts: [ArchivedReceipt]
     private(set) var photos: [String: Data] = [:]
     var failWith: Error?
+    /// Läuft, nachdem `fetchAll` seinen Stand gelesen hat, und vor der Antwort (simuliert eine langsame Antwort).
+    var duringFetch: (() async -> Void)?
 
     init(_ receipts: [ArchivedReceipt] = []) { self.receipts = receipts }
 
     func fetchAll() async throws -> [ArchivedReceipt] {
         try check()
-        return receipts.sorted { ($0.purchasedAt, $0.createdAt) > ($1.purchasedAt, $1.createdAt) }
+        let snapshot = receipts.sorted { ($0.purchasedAt, $0.createdAt) > ($1.purchasedAt, $1.createdAt) }
+        if let hook = duringFetch {
+            duringFetch = nil
+            await hook()
+        }
+        return snapshot
     }
 
     func uploadPhoto(_ data: Data, path: String) async throws {

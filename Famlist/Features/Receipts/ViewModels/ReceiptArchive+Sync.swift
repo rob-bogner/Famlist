@@ -71,6 +71,7 @@ extension ReceiptArchive {
     /// Nach Erfolg: Fotos in den Cache (Anlegen) bzw. lokal löschen (Löschen), Anzeige aktualisieren.
     private func finish(_ operation: ReceiptArchiveLocalStore.Operation) {
         let receipt = operation.receipt
+        mutations += 1
         switch operation {
         case .create:
             store.movePendingPhotosToCache(paths: receipt.photoPaths)

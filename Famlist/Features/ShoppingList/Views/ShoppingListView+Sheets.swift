@@ -29,6 +29,10 @@ extension ShoppingListView {
                     // Design: das darunterliegende Sheet (Meine Listen / Einstellungen) weichgezeichnet + eigene Abdunkelung
                     ZStack(alignment: .bottom) {
                         k.scrim
+                        if let lower = base.baseSheet {             // Detail → Archiv → Einstellungen
+                            sheetView(lower, k: k, maxHeight: maxHeight, insets: insets)
+                            overlayScrim(for: base)
+                        }
                         sheetView(base, k: k, maxHeight: maxHeight, insets: insets)
                     }
                     .blur(radius: 3, opaque: false)
@@ -152,6 +156,7 @@ extension ShoppingListView {
         case .settings:
             SettingsSheet(appearance: appearance, onClose: closeSheet,
                           onEditProfile: { activeSheet = .editProfile },
+                          onOpenReceipts: { activeSheet = .receiptArchive },
                           onDeleteAccount: { deleteAccountError = nil; activeSheet = .deleteAccount })
         case .editProfile:
             EditProfileSheet(appearance: appearance, onClose: { hideKeyboard(); activeSheet = .settings })
@@ -170,7 +175,8 @@ extension ShoppingListView {
             DeleteAccountDialog(appearance: appearance, isWorking: isDeletingAccount, errorText: deleteAccountError,
                                 onConfirm: deleteAccount, onCancel: { activeSheet = .settings })
                 .offset(y: insets.topShift)
-        case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory, .itemPriceHistory, .shoppingDoneOffer:
+        case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory, .itemPriceHistory, .shoppingDoneOffer,
+             .receiptArchive, .receiptDetail:
             receiptSheetView(sheet, k: k)
         case .listName(let mode):
             ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {

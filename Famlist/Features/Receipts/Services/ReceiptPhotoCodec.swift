@@ -11,12 +11,14 @@
  - Der Bucket `receipt-images` nimmt höchstens 1,5 MB je Foto an (Migration 021). Ist das JPEG größer,
    wird die Qualität schrittweise gesenkt; ein Bon bleibt dabei lesbar.
  - Kleinere Bilder werden nicht vergrößert.
+ - `thumbnail` erzeugt Vorschaubilder für das Archiv, ohne das ganze Foto zu dekodieren.
 
  📝 Last Change:
  - Initial creation (Kassenzettel-Archiv).
  ------------------------------------------------------------------------
  */
 
+import ImageIO
 import UIKit
 
 enum ReceiptPhotoCodec {
@@ -35,6 +37,17 @@ enum ReceiptPhotoCodec {
             q -= 0.1
         }
         return nil
+    }
+
+    /// Vorschaubild direkt aus den JPEG-Daten (ImageIO), ohne das ganze Foto zu dekodieren:
+    /// ein 2000-px-Bon bräuchte sonst ~12 MB Speicher je Zeile im Archiv.
+    static func thumbnail(from data: Data, maxPixel: Int) -> UIImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                        kCGImageSourceCreateThumbnailWithTransform: true,
+                                        kCGImageSourceThumbnailMaxPixelSize: maxPixel]
+        guard let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return UIImage(cgImage: cg)
     }
 
     /// Verkleinert so, dass die lange Kante höchstens `maxLongEdge` Pixel hat (Maßstab 1 = echte Pixel).

@@ -11,6 +11,7 @@
  - Offline-First: `archive` schreibt die Fotos sofort als Dateien und legt einen Auftrag in die
    Warteschlange. Der Bon erscheint gleich im Archiv (`isPending`); hochgeladen wird im Hintergrund,
    bei fehlendem Netz später (Reconnect wie PriceBook). Siehe ReceiptArchive+Sync.swift.
+ - Fotos laden: ReceiptArchive+Photos.swift (lokal zuerst, sonst Server, dann Cache).
  - Schalter „Fotos der Bons speichern“ aus → `archive` tut nichts (ReceiptArchiveSetting).
  - Löschen entfernt Fotos und Eintrag; Preispunkte (PriceBook) sind davon unabhängig und bleiben.
 
@@ -35,6 +36,11 @@ final class ReceiptArchive: ObservableObject {
     let store: ReceiptArchiveLocalStore
     private let defaults: UserDefaults
     var flushTask: Task<Void, Never>?
+    /// Zählt lokale Änderungen (anlegen, hochgeladen, löschen). Ändert er sich während `refresh` lädt,
+    /// ist die Server-Antwort veraltet und würde z. B. einen gerade gelöschten Bon zurückbringen.
+    var mutations = 0
+    /// Dekodierte Bilder (Vorschau und Detail); iOS leert den Cache bei Speicherdruck selbst.
+    let images = NSCache<NSString, UIImage>()
     private var reconnectSubscription: AnyCancellable?
 
     init(repository: ReceiptsRepository?, store: ReceiptArchiveLocalStore = ReceiptArchiveLocalStore(),
@@ -76,6 +82,7 @@ final class ReceiptArchive: ObservableObject {
         }
         let receipt = Self.receipt(id: id, draft: draft, paths: paths, bytes: encoded.reduce(0) { $0 + $1.count })
         store.enqueue(.create(receipt))
+        mutations += 1
         publish()
         UserLog.Data.receiptArchived(store: receipt.storeName, photos: paths.count)
         Task { await flush() }
@@ -92,25 +99,25 @@ final class ReceiptArchive: ObservableObject {
     // MARK: - Laden
 
     /// Archiv öffnen: erst Warteschlange senden, dann Server-Stand laden. Ohne Netz bleibt der letzte Stand.
+    /// Ändert sich lokal etwas, während geladen wird, gilt die Antwort als veraltet → neu laden (höchstens 3-mal).
     func refresh() async {
         guard let repository else { return }
         isLoading = true
         defer { isLoading = false }
-        await flush()
-        do {
-            store.setCache(try await repository.fetchAll())
-            publish()
-        } catch {
-            logVoid(params: (action: "receiptArchive.refreshFailed", error: (error as NSError).localizedDescription))
+        for _ in 0..<3 {
+            await flush()
+            let before = mutations
+            do {
+                let fetched = try await repository.fetchAll()
+                guard before == mutations else { continue }
+                store.setCache(fetched)
+                publish()
+                return
+            } catch {
+                logVoid(params: (action: "receiptArchive.refreshFailed", error: (error as NSError).localizedDescription))
+                return
+            }
         }
-    }
-
-    /// Foto-Daten: lokal (Warteschlange oder Cache), sonst vom Server laden und zwischenspeichern.
-    func photoData(path: String) async -> Data? {
-        if let local = store.photo(path: path) { return local }
-        guard let repository, let data = try? await repository.downloadPhoto(path: path) else { return nil }
-        store.cachePhoto(data, path: path)
-        return data
     }
 
     // MARK: - Löschen
@@ -124,6 +131,7 @@ final class ReceiptArchive: ObservableObject {
         if !wasQueued || flushTask != nil { store.enqueue(.delete(receipt.withPending(false))) }
         if wasQueued && flushTask == nil { store.removePhotos(paths: receipt.photoPaths) }
         store.removeFromCache(id: receipt.id)
+        mutations += 1
         publish()
         UserLog.Data.receiptArchiveDeleted(store: receipt.storeName)
         await flush()

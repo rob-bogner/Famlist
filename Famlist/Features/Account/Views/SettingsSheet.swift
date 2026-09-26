@@ -6,7 +6,7 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Sheet „Einstellungen“ (Höhe 790): Profilkarte (einziger Weg zu „Profil bearbeiten“),
-   Erscheinungsbild System/Hell/Dunkel, Benachrichtigungen, Abmelden, Konto löschen.
+   Erscheinungsbild System/Hell/Dunkel, Liste, Kassenzettel, Benachrichtigungen, Abmelden, Konto löschen.
 
  🔰 Notes for Beginners:
  - Vorlage: SettingsScreen in design-handoff/MyListUI/Screens/AccountScreens.swift (Settings.dc.html).
@@ -15,7 +15,7 @@
    (siehe design-handoff/PLAN.md, Risiko R5).
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 4).
+ - Abschnitt „Kassenzettel“: „Fotos der Bons speichern“ und „Gespeicherte Kassenzettel“ (Archiv).
  ------------------------------------------------------------------------
  */
 
@@ -25,9 +25,12 @@ struct SettingsSheet: View {
     @EnvironmentObject var session: AppSessionViewModel
     @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    @AppStorage(ReceiptArchiveSetting.storageKey) private var saveReceipts = ReceiptArchiveSetting.defaultValue
+    @EnvironmentObject var receiptArchive: ReceiptArchive
     let appearance: Appearance
     var onClose: () -> Void = {}
     var onEditProfile: () -> Void = {}
+    var onOpenReceipts: () -> Void = {}
     var onDeleteAccount: () -> Void = {}
 
     private var choice: ListAccountAppearanceChoice { ListAccountAppearanceChoice(rawValue: appearanceRaw) ?? .system }
@@ -60,6 +63,7 @@ struct SettingsSheet: View {
             }
         }
         .task { if session.avatarImage == nil { await session.loadAvatar() } }
+        .task { await receiptArchive.refresh() }                // Anzahl und Größe der Bons aktuell halten
     }
 
     @ViewBuilder
@@ -83,6 +87,8 @@ struct SettingsSheet: View {
         }
         .padding(.top, 10)
 
+        receiptSection(t: t, k: k)
+
         ListAccountSectionLabel(text: "Benachrichtigungen", t: t)
             .padding(.top, 22)
         SettingsGroup(t: t) {
@@ -98,6 +104,30 @@ struct SettingsSheet: View {
         .padding(.top, 10)
 
         accountSection(t: t)
+    }
+
+    /// Kassenzettel (Settings.dc.html): Schalter „Fotos der Bons speichern“, Zeile „Gespeicherte Kassenzettel“ → Archiv.
+    @ViewBuilder
+    private func receiptSection(t: ListAccountTokens, k: SheetTheme) -> some View {
+        ListAccountSectionLabel(text: "Kassenzettel", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            SettingsRow(t: t, title: "Fotos der Bons speichern", titleColor: k.text,
+                        subtitle: "In Famlist, sichtbar für alle in der Liste", hasTopLine: false) {
+                ListAccountToggle(t: t, isOn: $saveReceipts, label: "Fotos der Bons speichern")
+            }
+            Button(action: onOpenReceipts) {
+                SettingsRow(t: t, title: "Gespeicherte Kassenzettel", titleColor: k.text,
+                            subtitle: ReceiptArchiveSetting.summary(count: receiptArchive.receipts.count,
+                                                                    bytes: receiptArchive.totalBytes),
+                            hasTopLine: true) {
+                    SVGIcon(Icon.chevronRight, size: 18, color: k.sub, lineWidth: 2.2)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Gespeicherte Kassenzettel ansehen")
+        }
+        .padding(.top, 10)
     }
 
     /// Konto: Abmelden, Konto löschen.
@@ -209,65 +239,12 @@ struct SettingsSheet: View {
     }
 }
 
-/// Gruppe: Radius 20, card, Rahmen 1 cardBorder, overflow hidden, kein Schatten.
-private struct SettingsGroup<Content: View>: View {
-    let t: ListAccountTokens
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        VStack(spacing: 0) {
-            content()
-        }
-        .padding(1)                                          // Rahmen
-        .clipShape(RR(20))
-        .background(CSSBox(shape: RR(20), paint: t.card, border: 1, borderColor: t.cardBorder))
-    }
-}
-
-/// Zeile: min. 56 (inkl. border-top 1 bei Folgezeilen), padding 8 14, gap 12;
-/// Titel 15/500, darunter optional 12 sub (gap 2), rechts optional Schalter.
-private struct SettingsRow<Trailing: View>: View {
-    let t: ListAccountTokens
-    let title: String
-    let titleColor: Color
-    let subtitle: String?
-    let hasTopLine: Bool
-    @ViewBuilder let trailing: () -> Trailing
-
-    var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(AppFont.dm(15, 500))
-                    .foregroundStyle(titleColor)
-                    .fixedSize(horizontal: false, vertical: true)        // umbrechen statt abschneiden
-                if let subtitle {
-                    Text(subtitle)
-                        .font(AppFont.dm(12, 400))
-                        .foregroundStyle(t.k.sub)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            trailing()
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 14)
-        .frame(minHeight: hasTopLine ? 55 : 56)
-        .padding(.top, hasTopLine ? 1 : 0)
-        .overlay(alignment: .top) {
-            if hasTopLine {
-                Rectangle().fill(t.line).frame(height: 1)
-            }
-        }
-        .contentShape(Rectangle())
-    }
-}
-
 #Preview("Einstellungen", traits: .fixedLayout(width: 390, height: 844)) {
     SettingsSheet(appearance: .light).environmentObject(PreviewMocks.makeAppSessionViewModel())
+        .environmentObject(ReceiptArchive.preview())
 }
 
 #Preview("Einstellungen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
     SettingsSheet(appearance: .dark).environmentObject(PreviewMocks.makeAppSessionViewModel())
+        .environmentObject(ReceiptArchive.preview())
 }

@@ -52,6 +52,10 @@ enum Icon {
     static let duplicate: [SVGElement] = [.rect(8, 8, 12, 12, 3),
                                           .path("M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2")]
     static let trash: [SVGElement] = [.path("M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 11.2a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8L17.5 7M10 11v5M14 11v5")]
+    /// Teilen (ReceiptDetail.dc.html): Pfeil nach oben aus der Schale.
+    static let shareUp: [SVGElement] = [.path("M12 3v12M7.5 7.5 12 3l4.5 4.5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6")]
+    /// Vollbild (ReceiptDetail.dc.html): Pfeile in die Ecken.
+    static let expand: [SVGElement] = [.path("M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7")]
     static let plus: [SVGElement] = [.path("M12 5v14M5 12h14")]
     static let minus: [SVGElement] = [.path("M5 12h14")]
     static let close: [SVGElement] = [.path("M6 6l12 12M18 6L6 18")]

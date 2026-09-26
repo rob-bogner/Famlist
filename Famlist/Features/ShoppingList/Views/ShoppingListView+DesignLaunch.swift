@@ -60,6 +60,8 @@ extension ShoppingListView {
         case "listOptions": return listViewModel.defaultList.map { .listOptions($0) }
         case "shareMembers": return listViewModel.defaultList.map { .shareMembers($0) }
         case "settings": return .settings
+        case "receiptArchive": return .receiptArchive
+        case "receiptDetail": return receiptArchive.receipts.first.map { .receiptDetail($0) }
         case "editProfile": return .editProfile
         case "deleteAccount": return .deleteAccount
         case "manageCategories": return .manageCategories

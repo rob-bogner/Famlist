@@ -74,9 +74,30 @@ extension ShoppingListView {
                              onFinish: finishShopping,
                              onKeep: closeReceiptFlow,
                              onScan: openReceiptCapture)
+        case .receiptArchive:
+            let access = receiptArchiveViewModel()
+            ReceiptArchiveSheet(archive: receiptArchive, appearance: appearance,
+                                currentUserId: session.currentProfile?.id, ownedListIds: access.ownedListIds,
+                                onBack: { activeSheet = .settings }, onClose: closeSheet,
+                                onOpen: { activeSheet = .receiptDetail($0) })
+        case .receiptDetail(let receipt):
+            ReceiptDetailSheet(receipt: receipt, archive: receiptArchive, appearance: appearance,
+                               canDelete: receiptArchiveViewModel().canDelete(receipt),
+                               onBack: { activeSheet = .receiptArchive }, onClose: closeSheet,
+                               onDelete: {
+                                   activeSheet = .receiptArchive
+                                   Task { await receiptArchive.delete(receipt) }
+                               })
         default:
             EmptyView()
         }
+    }
+
+    /// Archiv-Anzeige: Löschen dürfen Ersteller und Besitzer der Liste (Migration 021).
+    func receiptArchiveViewModel() -> ReceiptArchiveViewModel {
+        let me = session.currentProfile?.id
+        let owned = Set(listViewModel.allLists.filter { $0.ownerId == me }.map(\.id))
+        return ReceiptArchiveViewModel(archive: receiptArchive, currentUserId: me, ownedListIds: owned)
     }
 
     /// ☰ → „Kassenzettel scannen“: neuer Ablauf mit den Artikeln der Liste als Zuordnungs-Kandidaten.

@@ -107,8 +107,16 @@ enum UITestFixture {
         ? .designSample
         : PriceBook(repository: InMemoryPricePointsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
 
-    /// Kassenzettel-Archiv im Speicher, Dateien in einem eigenen Ordner (bei jedem Start leer).
+    /// Kassenzettel-Archiv im Speicher, Dateien in einem eigenen Ordner (bei jedem Start leer);
+    /// im Design-Modus die Bons aus ReceiptArchive.dc.html.
     static let receiptArchive: ReceiptArchive = {
+        if designMode {                     // Bons von „Rob“ gehören dem Fixture-Konto → „Löschen“ sichtbar
+            return .preview(ArchivedReceipt.designSamples.map { sample in
+                var receipt = sample
+                if receipt.creatorName == "Rob" { receipt.createdBy = ownerId }
+                return receipt
+            })
+        }
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("uiTestFixture-receipts", isDirectory: true)
         try? FileManager.default.removeItem(at: root)
         let store = ReceiptArchiveLocalStore(directory: root.appendingPathComponent("support"),
