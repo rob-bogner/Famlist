@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Watch – Listen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#000;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<!-- Apple Watch 46 mm: 208 × 248 pt · watchOS ist immer dunkel -->
+<div style="width: 208px; height: 248px; position: relative; overflow: hidden; background: radial-gradient(120% 70% at 50% 110%, {{w.glow}}, rgba(0,0,0,0) 60%), #000000; color: #FFFFFF; font-family: 'DM Sans', system-ui, sans-serif">
+<div style="position: absolute; left: 14px; right: 14px; top: 10px; height: 22px; display: flex; align-items: center; justify-content: space-between">
+<span style="font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: {{w.accentText}}">Listen</span>
+<span style="font-size: 15px; font-weight: 600; color: #FFFFFF">9:41</span>
+</div>
+<div style="position: absolute; left: 12px; right: 12px; top: 38px; bottom: 0px; display: flex; flex-direction: column; gap: 6px; overflow: hidden">
+<div style="height: 56px; box-sizing: border-box; padding: 0 12px; border-radius: 18px; background: {{w.card}}; border: 1px solid {{w.cardBorder}}; box-shadow: {{w.cardShadow}}; display: flex; align-items: center; gap: 10px; flex-shrink: 0"><svg width="30" height="30" viewBox="0 0 30 30" style="flex-shrink: 0"><circle cx="15.0" cy="15.0" r="13.25" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="3.5"></circle><circle cx="15.0" cy="15.0" r="13.25" fill="none" stroke="{{w.accentText}}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="83.25" stroke-dashoffset="55.50" transform="rotate(-90 15.0 15.0)"></circle></svg><span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">My List</span><span style="font-size: 12px; color: {{w.sub}}; white-space: nowrap">4 von 6 offen</span></span><svg width="14" height="14" viewBox="0 0 24 24" fill="{{w.accentText}}" stroke="none" style="flex-shrink: 0"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z"></path></svg></div>
+<div style="height: 56px; box-sizing: border-box; padding: 0 12px; border-radius: 18px; background: {{w.card}}; border: 1px solid {{w.cardBorder}}; box-shadow: {{w.cardShadow}}; display: flex; align-items: center; gap: 10px; flex-shrink: 0"><svg width="30" height="30" viewBox="0 0 30 30" style="flex-shrink: 0"><circle cx="15.0" cy="15.0" r="13.25" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="3.5"></circle><circle cx="15.0" cy="15.0" r="13.25" fill="none" stroke="{{w.accentText}}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="83.25" stroke-dashoffset="83.25" transform="rotate(-90 15.0 15.0)"></circle></svg><span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Drogerie</span><span style="font-size: 12px; color: {{w.sub}}; white-space: nowrap">3 offen</span></span></div>
+<div style="height: 56px; box-sizing: border-box; padding: 0 12px; border-radius: 18px; background: {{w.card}}; border: 1px solid {{w.cardBorder}}; box-shadow: {{w.cardShadow}}; display: flex; align-items: center; gap: 10px; flex-shrink: 0"><svg width="30" height="30" viewBox="0 0 30 30" style="flex-shrink: 0"><circle cx="15.0" cy="15.0" r="13.25" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="3.5"></circle><circle cx="15.0" cy="15.0" r="13.25" fill="none" stroke="{{w.accentText}}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="83.25" stroke-dashoffset="0.00" transform="rotate(-90 15.0 15.0)"></circle></svg><span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Getränke</span><span style="font-size: 12px; color: {{w.sub}}; white-space: nowrap">erledigt</span></span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1FC2CC","options":["#1FC2CC","#4C8DFF","#8B6CFF","#FF8A4C"]},"$preview":{"width":208,"height":248}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#1FC2CC';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, 0.5);
+    const w = {
+      accent, accentText: light, glow: rgba(accent, 0.16),
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08))', cardBorder: 'rgba(255,255,255,0.08)',
+      cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+      sub: 'rgba(255,255,255,0.6)', faint: 'rgba(255,255,255,0.4)', line: 'rgba(255,255,255,0.12)',
+      track: 'rgba(255,255,255,0.14)', ring: rgba(accent, 0.55),
+      fill: 'linear-gradient(90deg, ' + light + ', ' + accent + ')',
+      fab: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      fabShadow: 'inset 0 -3px 8px rgba(0,30,34,0.3), 0 0 14px ' + rgba(accent, 0.35),
+      checkFill: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 55%, ' + deep + ' 100%)',
+      glassBtn: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))', glassBorder: 'rgba(255,255,255,0.16)',
+      chip: rgba(accent, 0.2), chipText: light
+    };
+    return { w };
+  }
+}
+</script>
+</body>
+</html>

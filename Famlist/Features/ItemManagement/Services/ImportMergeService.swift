@@ -10,8 +10,7 @@
    local SwiftData store (createNew / reactivate / update).
 
  🛠 Includes:
- - ImportTarget: three-case enum describing the required write operation.
- - ImportMergeService.merge(): stateless, fully unit-testable.
+ - ImportMergeService.merge(): stateless, fully unit-testable (ImportTarget → ImportTarget.swift).
 
  🔰 Notes for Beginners:
  - No ViewModel or SyncEngine dependency — pass in [ItemModel] from the caller.
@@ -19,31 +18,11 @@
    so reactivation decisions are correct.
 
  📝 Last Change:
- - Initial creation (FAM-XX): Bulk-Import Merge Refactor.
+ - ImportTarget in eigene Datei ausgelagert (eine Type je Datei; die Watch-App kompiliert sie mit, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
 import Foundation
-
-// MARK: - ImportTarget
-
-/// Describes the write operation required for one canonical import item.
-enum ImportTarget {
-    /// ID not present in the local store → create a new entity.
-    case createNew(ItemModel)
-    /// ID present but soft-deleted (`deletedAt != nil`) → reactivate the entity
-    /// with fresh imported data. `units` = importedUnits (NOT old + imported).
-    case reactivate(ItemModel)
-    /// ID present and active → increment `units` by the imported amount.
-    case update(ItemModel)
-
-    /// The merged ItemModel for this target.
-    var item: ItemModel {
-        switch self {
-        case .createNew(let m), .reactivate(let m), .update(let m): return m
-        }
-    }
-}
 
 // MARK: - ImportMergeService
 

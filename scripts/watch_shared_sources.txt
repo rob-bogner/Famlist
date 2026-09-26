@@ -1,0 +1,83 @@
+# Dateien des iOS-Targets, die das Watch-Target mitkompiliert (keine Kopie).
+# Pflege: Zeile ergänzen/entfernen, dann ruby scripts/watch_targets.rb
+
+# Sync-Kern
+Famlist/Core/Sync/BackoffCalculator.swift
+Famlist/Core/Sync/CRDTMetadata.swift
+Famlist/Core/Sync/HybridLogicalClock.swift
+Famlist/Core/Sync/ItemIdentity.swift
+Famlist/Core/Sync/ItemSyncPolicy.swift
+Famlist/Core/Sync/OperationQueue.swift
+Famlist/Core/Sync/PaginationCursor.swift
+Famlist/Core/Sync/RealtimeEventProcessor.swift
+Famlist/Core/Sync/SentOperation.swift
+Famlist/Core/Sync/SyncEngine+Images.swift
+Famlist/Core/Sync/SyncEngine+LocalChanges.swift
+Famlist/Core/Sync/SyncEngine.swift
+Famlist/Core/Sync/SyncEngineError.swift
+Famlist/Core/Sync/SyncEngineProtocol.swift
+Famlist/Core/Sync/SyncErrorClassifier.swift
+Famlist/Core/Sync/SyncMonitor.swift
+Famlist/Core/Sync/SyncOperation.swift
+Famlist/Core/Sync/SyncOrchestrator.swift
+Famlist/Core/Sync/SyncStatus.swift
+Famlist/Core/Sync/UUID+DeterministicItemID.swift
+
+# Modelle und Speicher
+Famlist/Models/ItemEntity+Mapping.swift
+Famlist/Models/ItemEntity.swift
+Famlist/Models/ListEntity+Mapping.swift
+Famlist/Models/ListEntity.swift
+Famlist/Core/Storage/SwiftDataItemStore.swift
+Famlist/Core/Storage/SwiftDataListStore.swift
+Famlist/Core/Storage/PersistenceController.swift
+Famlist/Features/ItemManagement/Models/ItemModel.swift
+Famlist/Features/ShoppingList/Lists/Models/ListModel.swift
+
+# Supabase und Repositories
+Famlist/Core/Networking/SupabaseClient.swift
+Famlist/App/SimulatedOffline.swift
+Famlist/Repositories/Protocols/ItemsRepository.swift
+Famlist/Repositories/Protocols/ImageStorage.swift
+Famlist/Repositories/Implementations/SupabaseItemsRepository.swift
+Famlist/Repositories/Implementations/SupabaseItemsRepository+CRUD.swift
+Famlist/Repositories/Implementations/SupabaseItemRow.swift
+Famlist/Repositories/Implementations/SupabaseRealtimeManager.swift
+Famlist/Repositories/Models/AuthError.swift
+Famlist/Repositories/Models/ItemUpsertResult.swift
+Famlist/Repositories/Models/List.swift
+Famlist/Repositories/Models/ListMember.swift
+Famlist/Repositories/Models/Profile.swift
+
+# Logging
+Famlist/Core/Utils/Logger.swift
+Famlist/Core/Extensions/Measure.swift
+Famlist/Core/Utils/UserLog+Auth.swift
+Famlist/Core/Utils/UserLog+Data.swift
+Famlist/Core/Utils/UserLog+DataLists.swift
+Famlist/Core/Utils/UserLog+Error.swift
+Famlist/Core/Utils/UserLog+Sync.swift
+Famlist/Core/Utils/UserLog+UI.swift
+Famlist/Core/Utils/UserLogger.swift
+Famlist/Core/Utils/ProductImageCodec.swift
+Famlist/Features/ItemManagement/Models/ImportTarget.swift
+Famlist/Features/ShoppingList/Services/MeasureCanonicalizer.swift
+
+# Listen, Profil (Favorit), Artikelstamm (Oft gekauft)
+Famlist/Repositories/Protocols/ListsRepository.swift
+Famlist/Repositories/Implementations/SupabaseListsRepository.swift
+Famlist/Repositories/Protocols/ProfilesRepository.swift
+Famlist/Repositories/Implementations/SupabaseProfilesRepository.swift
+Famlist/Repositories/Protocols/ItemCatalogRepository.swift
+Famlist/Repositories/Implementations/SupabaseItemCatalogRepository.swift
+
+# Original-SVG-Icons
+Famlist/Core/DesignSystem/Hybrid/Icons/Icon.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGElement.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGFilledIcon.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGIcon.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGIconShape.swift
+Famlist/Core/DesignSystem/Hybrid/Icons/SVGPathParser.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSPrimitives.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/RGB.swift
+Famlist/Features/Sharing/Models/InviteError.swift
