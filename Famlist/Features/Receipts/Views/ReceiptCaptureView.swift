@@ -164,8 +164,7 @@ struct ReceiptCaptureView: View {
             PhotosPicker(selection: $picked, maxSelectionCount: 6, matching: .images) {
                 SVGIcon(EKKIcon.gallery, size: 22, color: .white, lineWidth: 1.9)
                     .frame(width: 48, height: 48)
-                    .background(CSSBox(shape: Circle(), paint: .color(.rgba(255, 255, 255, 0.14)), border: 1,
-                                       borderColor: .rgba(255, 255, 255, 0.28)))
+                    .background(GlassCircleBackground(style: .neutralDark, appearance: .dark, accent: AccentScale(Appearance.dark.defaultAccent, .dark), size: 48))
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
@@ -215,12 +214,11 @@ struct ReceiptCaptureView: View {
             .padding(.leading, 16)
             .padding(.trailing, 12)
             .frame(height: 52)
-            .background(alignment: .top) {
+            .background {
                 if enabled {
-                    GlossEllipse(opacity: 0.4)
-                        .frame(height: 18)
-                        .padding(.horizontal, 14)
-                        .padding(.top, 2)
+                    PillGlassReflection(topInset: 11, topOffset: 2, topHeight: 18, topOpacity: 0.4,
+                                        glowInset: 22, glowOffset: 2, glowHeight: 6,
+                                        glowOpacity: 0.14, glowBlur: 2.5)
                 }
             }
             .clipShape(Capsule())
@@ -240,14 +238,13 @@ struct ReceiptCaptureView: View {
                                     : "Prüfen – erst ein Foto aufnehmen")
     }
 
-    /// Glas-Kreis 48 (border-box): weiß .14, Rahmen 1 weiß .28.
+    /// Glas-Knopf 48, neutral dunkel (Kamera, Canvas-Token gnd).
     private func glassButton<Label: View>(label: String, action: @escaping () -> Void,
                                           @ViewBuilder content: () -> Label) -> some View {
         Button(action: action) {
             content()
                 .frame(width: 48, height: 48)
-                .background(CSSBox(shape: Circle(), paint: .color(.rgba(255, 255, 255, 0.14)), border: 1,
-                                   borderColor: .rgba(255, 255, 255, 0.28)))
+                .background(GlassCircleBackground(style: .neutralDark, appearance: .dark, accent: AccentScale(Appearance.dark.defaultAccent, .dark), size: 48))
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)

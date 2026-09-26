@@ -48,10 +48,7 @@ private struct DesignRoundHeaderButton: View {
 
     var body: some View {
         Button(action: {}) {
-            SVGIcon(icon, size: 20, color: t.icon, lineWidth: 1.9)
-                .frame(width: 44, height: 44)
-                .background(CSSBox(shape: Circle(), paint: t.round, border: 1, borderColor: t.roundBorder, shadows: t.roundShadow))
-                .contentShape(Circle())
+            RoundHeaderIcon(t: t, icon: icon)          // neutraler Glas-Knopf wie im Listenkopf
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

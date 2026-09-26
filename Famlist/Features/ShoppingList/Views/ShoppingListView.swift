@@ -23,7 +23,7 @@
    das exakt die Design-Abstände; `topShift`/`dockShift` gleichen andere Geräte aus.
 
  📝 Last Change:
- - Redesign „Hybrid“ (Handoff 24.09.2026): DockView, Kontext-Menü, Dock-Menüs, Toasts.
+ - Plus im Dock → Eingabe über der Tastatur (InlineAddOverlay), Suchleiste oben → Listenfilter.
  ------------------------------------------------------------------------
  */
 
@@ -64,6 +64,16 @@ struct ShoppingListView: View {
     /// Scroll-Weg der Liste; nur CollapsingListHeader liest ihn (sonst würde die ganze Liste je Frame neu berechnet).
     @State var listScroll = ListScrollState()
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    /// Hinzufügen über das Plus im Dock: Eingabe über der Tastatur (InlineAddOverlay, Canvas AddInline).
+    @State var isAddOpen = false
+    /// Vorbelegung der Eingabe (Brücke aus dem Filter: „„milch“ zur Liste hinzufügen“).
+    @State var addPrefill = ""
+    /// Suchleiste oben filtert die Liste (Canvas SearchInline).
+    @State var isFiltering = false
+    @State var filterQuery = ""
+    /// Zum Hochscrollen der Liste, bevor der Filter aufgeht (Feld liegt dann genau an der Stelle der Suchleiste).
+    @State var listScrollProxy: ScrollViewProxy?
+    static let listTopID = "shoppingListTop"
 
     var appearance: Appearance { Appearance(colorScheme) }
 
@@ -82,8 +92,18 @@ struct ShoppingListView: View {
                     .background { ListBackground(t: t) }
                     .allowsHitTesting(activeSheet == nil && activeOverlay == nil)
                     // VoiceOver: Hinter offenen Sheets/Overlays ist die Liste nicht erreichbar (wie beim Tippen).
-                    .accessibilityHidden(activeSheet != nil || activeOverlay != nil)
+                    .accessibilityHidden(activeSheet != nil || activeOverlay != nil || isAddOpen)
                 overlayLayer(t: t, insets: insets)
+                if isAddOpen, let catalog = listViewModel.catalogRepository {
+                    InlineAddOverlay(catalogRepository: catalog,
+                                     globalCatalogRepository: listViewModel.globalCatalogRepository,
+                                     appearance: appearance, keyboardHeight: keyboard.height,
+                                     initialQuery: addPrefill,
+                                     onClose: closeAdd,
+                                     onCreateNew: { activeSheet = .newItem(initialName: $0) },
+                                     onScan: openScanner)
+                        .transition(.opacity)
+                }
                 sheetLayer(k: k, maxHeight: screenHeight - 54, insets: insets)   // Design: 54 pt Luft über dem höchsten Sheet
                 errorToastView(insets: insets)
             }
@@ -110,6 +130,7 @@ struct ShoppingListView: View {
         #if DEBUG
         .onAppear { applyDesignLaunchState() }
         #endif
+        .onChange(of: listViewModel.listId) { _, _ in exitFilter() }   // Filter gilt nur für die aktuelle Liste
         .onChange(of: listViewModel.shoppingCompletedEvent) { _, event in
             if let event { offerShoppingDone(for: event) }
         }
@@ -130,12 +151,14 @@ struct ShoppingListView: View {
     /// Sheet: 3 pt (SheetScreen), Overlay: 2 pt (OverlayScrim), sonst scharf.
     private var backgroundBlur: CGFloat {
         if activeSheet != nil { return 3 }
+        if isAddOpen { return 2 }                             // AddInline: backdrop-filter blur(2px)
         return activeOverlay == nil ? 0 : 2
     }
 
     // MARK: - List Layer
 
     private func listLayer(t: ListTheme) -> some View {
+      ScrollViewReader { proxy in
         ScrollView {
             VStack(spacing: 0) {
                 // Kopf außerhalb des LazyVStack: bleibt beim weiten Scrollen erhalten und wird oben gehalten.
@@ -148,14 +171,22 @@ struct ShoppingListView: View {
                     filter: $listViewModel.itemFilter,
                     scroll: listScroll,
                     onShowLists: openLists,
-                    onSearch: openSearch,
-                    onScan: openScanner,
-                    onMenu: { open(.menu) })
+                    onSearch: openFilter,
+                    onMenu: { open(.menu) },
+                    isFiltering: isFiltering,
+                    filterQuery: $filterQuery,
+                    onExitFilter: exitFilter)
+                    .id(Self.listTopID)
                 ShoppingListContent(
                     t: t,
                     openRow: $openRow,
                     onEdit: { activeSheet = .edit($0) },
-                    onShowImage: { activeSheet = .productImage($0) }
+                    onShowImage: { activeSheet = .productImage($0) },
+                    filterQuery: isFiltering ? filterQuery : "",
+                    onAddFromFilter: { query in
+                        exitFilter()
+                        openAdd(prefill: query)
+                    }
                 )
             }
             .padding(.horizontal, 20)
@@ -172,14 +203,49 @@ struct ShoppingListView: View {
         .scrollIndicators(.hidden)
         .refreshable { await listViewModel.pullToRefresh() }   // FAM-40
         .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
+        .onAppear { listScrollProxy = proxy }
+      }
     }
 
     // MARK: - Navigation Helpers
 
-    /// Opens the search sheet, or the new-item form when no catalog is configured (preview / fallback).
-    func openSearch() {
+    /// Suchleiste / Such-Knopf: Filter-Modus. Erst ganz nach oben, damit das Feld an der Stelle der Suchleiste liegt.
+    func openFilter() {
         openRow = nil
-        activeSheet = listViewModel.catalogRepository == nil ? .newItem(initialName: "") : .search
+        let needsScroll = listScroll.offset > 1
+        withAnimation(motion(.easeOut(duration: 0.25))) {
+            listScrollProxy?.scrollTo(Self.listTopID, anchor: .top)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (needsScroll ? 0.3 : 0)) {
+            withAnimation(motion(.easeOut(duration: 0.2))) { isFiltering = true }
+        }
+    }
+
+    /// ✕ im Filterfeld, leeres Feld ohne Fokus oder Listenwechsel.
+    func exitFilter() {
+        guard isFiltering || !filterQuery.isEmpty else { return }
+        hideKeyboard()
+        withAnimation(motion(.easeOut(duration: 0.2))) {
+            filterQuery = ""
+            isFiltering = false
+        }
+    }
+
+    /// Plus im Dock: Eingabe über der Tastatur. Ohne Katalog (Vorschau) direkt „Neuer Artikel“.
+    func openAdd(prefill: String = "") {
+        openRow = nil
+        activeOverlay = nil
+        guard listViewModel.catalogRepository != nil else {
+            activeSheet = .newItem(initialName: prefill)
+            return
+        }
+        addPrefill = prefill
+        withAnimation(motion(.easeOut(duration: 0.2))) { isAddOpen = true }
+    }
+
+    func closeAdd() {
+        hideKeyboard()
+        withAnimation(motion(.easeOut(duration: 0.2))) { isAddOpen = false }
     }
 
     /// Scan-Knopf im Suchfeld → Barcode-Scanner (SPEC §3.2).

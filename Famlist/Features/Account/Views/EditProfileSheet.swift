@@ -47,12 +47,12 @@ struct EditProfileSheet: View {
                     ListAccountAvatar(t: t, initial: session.currentProfile?.initial ?? "?", size: 88, fontSize: 34,
                                       image: session.avatarImage)
                         .overlay(alignment: .bottomTrailing) {
-                            // right −2, bottom −2, 34 × 34, Rahmen 3 (sheetBorder), Hintergrund close
+                            // right −2, bottom −2, 34 × 34, neutraler Glas-Knopf (Token gn)
                             PhotosPicker(selection: $photo, matching: .images) {
                                 SVGIcon(ListAccountIcon.camera, size: 16, color: t.accentText, lineWidth: 2)
                                     .frame(width: 34, height: 34)
-                                    .background(CSSBox(shape: Circle(), paint: .color(k.close), border: 3,
-                                                       borderColor: k.sheetTopBorder))
+                                    .background(GlassCircleBackground(style: .neutral, appearance: k.appearance,
+                                                                      accent: k.a, size: 34))
                                     .frame(width: 44, height: 44)     // Trefferfläche 44, Optik 34
                                     .contentShape(Circle())
                             }

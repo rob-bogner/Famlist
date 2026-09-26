@@ -78,6 +78,7 @@ struct DockView: View {
             .padding(4)
             .frame(maxWidth: .infinity)            // Leiste wächst mit der Bildschirmbreite (Design 390 → 276)
             .frame(height: 62)
+            .background { glassReflections }       // Spiegelungen liegen unter den Knöpfen (Dock.dc.html)
             .clipShape(Pill)                       // overflow: hidden (Padding-Box, Radius 31)
             .padding(1)                            // border 1
             .frame(height: 64)
@@ -94,6 +95,35 @@ struct DockView: View {
     }
 }
 
+// MARK: - Glas
+
+extension DockView {
+    /// Wie beim Plus-Knopf (Dock.dc.html): Glanz oben als Pille mit runden Enden – links/rechts 14, top 3, Höhe 26,
+    /// Radius 13, weiß .32 → 0, blur 1; Lichtschein unten – links/rechts 36, unten 3, Höhe 8, Radius 4, weiß .14, blur 3.
+    /// Werte ab Rahmen, hier −1.
+    var glassReflections: some View {
+        ZStack {
+            Capsule()
+                .fill(LinearGradient(stops: [stop(.rgba(255, 255, 255, 0.32), 0), stop(.rgba(255, 255, 255, 0), 1)],
+                                     startPoint: .top, endPoint: .bottom))
+                .frame(height: 26)
+                .blur(radius: 1)
+                .padding(.horizontal, 13)
+                .padding(.top, 2)
+                .frame(maxHeight: .infinity, alignment: .top)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(Color.rgba(255, 255, 255, 0.14))
+                .frame(height: 8)
+                .blur(radius: 3)
+                .padding(.horizontal, 35)
+                .padding(.bottom, 2)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Tokens
 
 /// Leisten-Tokens aus Dock.dc.html (in beiden Modi dunkles Glas).
@@ -104,12 +134,12 @@ private struct DockTokens {
 
     init(_ appearance: Appearance) {
         if appearance == .dark {
-            nav = .rgba(22, 36, 39, 0.78)
+            nav = .rgba(8, 17, 19, 0.88)
             navBorder = .rgba(255, 255, 255, 0.1)
             navShadow = [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.1)),
                          .drop(0, 24, 44, -12, .rgba(0, 0, 0, 0.85))]
         } else {
-            nav = .rgba(15, 27, 29, 0.84)
+            nav = .rgba(6, 14, 16, 0.9)
             navBorder = .rgba(255, 255, 255, 0.1)
             navShadow = [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.12)),
                          .drop(0, 20, 36, -12, .rgba(12, 30, 33, 0.5))]

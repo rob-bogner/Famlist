@@ -30,6 +30,8 @@ import SwiftUI
 struct ItemCard: View {
     let t: ListTheme
     let item: ItemModel
+    /// Filter-Modus: Suchbegriff im Namen markieren (Akzenttext auf Akzent .16 / .22).
+    var highlight: String = ""
     var onToggleChecked: () -> Void = {}
     var onTapImage: () -> Void = {}
     /// Plays the one-shot glow for items just applied from Realtime / IncrementalSync.
@@ -43,6 +45,16 @@ struct ItemCard: View {
 
     private var dimmed: Bool { item.isChecked || item.isUnavailable }
 
+    private var highlightedName: AttributedString {
+        var text = AttributedString(item.name)
+        let q = ListTextFilter.normalized(highlight)
+        if !q.isEmpty, let range = text.range(of: q, options: ListTextFilter.options) {
+            text[range].foregroundColor = t.accentText
+            text[range].backgroundColor = t.a.base.color(t.isDark ? 0.22 : 0.16)
+        }
+        return text
+    }
+
     var body: some View {
         HStack(spacing: 16) {
             ItemThumbnailTile(t: t, image: item.image)
@@ -50,7 +62,7 @@ struct ItemCard: View {
                 .opacity(dimmed ? 0.55 : 1)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text(item.name)
+                Text(highlightedName)
                     .font(AppFont.outfit(19, 600))
                     .foregroundStyle(t.text)
                     .strikethrough(item.isChecked, color: t.text)

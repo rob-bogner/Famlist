@@ -5,10 +5,10 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Grüne Abhak-Aktion (abgehakt: gelbes „Zurück“) links hinter der Artikel-Karte in SwipeableItemRow.
+ - Grüne Abhak-Aktion (abgehakt: rotes „Löschen“) links hinter der Artikel-Karte in SwipeableItemRow.
 
  📝 Last Change:
- - Aus SwipeableItemRow.swift ausgelagert (Audit 25.09.2026).
+ - Abgehakte Artikel: Rechts-Wischen löscht (rot, Papierkorb) statt „Zurück“ – „Zurück“ bleibt links.
  ------------------------------------------------------------------------
  */
 
@@ -16,8 +16,8 @@ import SwiftUI
 
 // MARK: - Leading Check Action
 
-/// Grüne Abhak-Aktion links hinter der Karte (Rechts-Wischen). Abgehakt: gelbes „Zurück“.
-/// Nicht im Design gezeichnet – Stil der Glas-Aktionen, Farben Grün #6EE7A8 → #22C55E → #15803D.
+/// Grüne Abhak-Aktion links hinter der Karte (Rechts-Wischen). Abgehakt: rotes „Löschen“.
+/// Stil der Glas-Aktionen: Grün #6EE7A8 → #22C55E → #15803D, Rot wie der Löschen-Knopf links.
 struct LeadingCheckAction: View {
     let t: ListTheme
     let isChecked: Bool
@@ -27,13 +27,13 @@ struct LeadingCheckAction: View {
 
     var body: some View {
         let colors = isChecked
-            ? ("#FFE38A", "#F5B521", "#C98A06", Color.rgba(201, 138, 6, 0.7))
+            ? ("#FF8A80", "#E5484D", "#B4232A", Color.rgba(229, 72, 77, 0.6))
             : ("#6EE7A8", "#22C55E", "#15803D", Color.rgba(34, 197, 94, 0.6))
         VStack(spacing: 6) {
             Button(action: action) { circle(colors) }
                 .buttonStyle(.plain)
                 .accessibilityHidden(true)
-            Text(isChecked ? "Zurück" : "Abhaken")
+            Text(isChecked ? "Löschen" : "Abhaken")
                 .font(AppFont.dm(12, 600))
                 .foregroundStyle(t.sub)
                 .fixedSize()
@@ -44,8 +44,8 @@ struct LeadingCheckAction: View {
     }
 
     private func circle(_ colors: (String, String, String, Color)) -> some View {
-            SVGIcon(isChecked ? Icon.undo : Icon.check, size: 22,
-                    color: isChecked ? .hex("#4A3300") : .white, lineWidth: 2.4)
+            SVGIcon(isChecked ? Icon.trashAction : Icon.check, size: 22,
+                    color: .white, lineWidth: isChecked ? 2.1 : 2.4)
                 .frame(width: 56, height: 56)
                 .background(alignment: .top) {
                     GlossEllipse(opacity: 0.6)
@@ -72,7 +72,7 @@ struct LeadingCheckAction: View {
         .background(Color.hex("#F4F8F8"))
 }
 
-#Preview("Abhaken beim Wischen – Dark") {
+#Preview("Löschen beim Wischen – Dark") {
     LeadingCheckAction(t: ListTheme(.dark), isChecked: true, progress: 1, isArmed: true, action: {})
         .padding(20)
         .background(Color.hex("#0A1416"))

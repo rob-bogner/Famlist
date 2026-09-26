@@ -38,7 +38,7 @@ struct DesignListEmptyState: View {
                 .foregroundStyle(t.text)
 
             // max-width 250, 14 px, line-height 1.45 (= 20,3), zentriert
-            Text("Füge Artikel über die Suche oder das Plus hinzu.")
+            Text("Füge Artikel über das Plus unten rechts hinzu.")
                 .font(AppFont.dm(14, 400))
                 .foregroundStyle(t.sub)
                 .multilineTextAlignment(.center)

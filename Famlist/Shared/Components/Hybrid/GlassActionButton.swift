@@ -5,15 +5,16 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Glas-Aktion hinter wischbaren Karten: Knopf 64 × 52, Radius 20, darunter Beschriftung 12/600,
+ - Glas-Aktion hinter wischbaren Karten, darunter Beschriftung 12/600,
    in einer 76 breiten Spalte (Artikel-Karten 94 hoch, Listen-Karten 76 hoch).
+ - Artikel-Karten: runder Knopf 56 × 56 (wie „Zurück“), Listen-Karten: 64 × 52, Radius 20.
 
  🔰 Notes for Beginners:
  - Radialer Verlauf in drei Tönen + Glanz-Ellipse + farbiger Schein; Farben je Stil.
  - Der Knopf selbst ist für VoiceOver versteckt – die Karten bieten dieselben Aktionen als Accessibility-Actions.
 
  📝 Last Change:
- - Aus SwipeableItemRow herausgelöst, damit auch die Listen-Karten („Meine Listen“) ihn nutzen.
+ - `isRound`: runde Knöpfe für die Wisch-Aktionen der Artikel-Karten (Canvas „Wisch-Aktionen“).
  ------------------------------------------------------------------------
  */
 
@@ -39,29 +40,34 @@ struct GlassActionButton: View {
     let icon: [SVGElement]
     let labelColor: Color
     var columnHeight: CGFloat = 94
+    /// Rund 56 × 56 wie der „Zurück“-Knopf (Artikel-Karten); sonst 64 × 52, Radius 20.
+    var isRound = false
     let action: () -> Void
+
+    /// Radius 28 bei 56 × 56 = Kreis; CSSBox braucht eine InsettableShape.
+    private var shape: RoundedRectangle { RR(isRound ? 28 : 20) }
 
     var body: some View {
         let (c1, c2, c3, glow) = style.colors
         VStack(spacing: 6) {
             Button(action: action) {
                 SVGIcon(icon, size: 22, color: .white, lineWidth: 2.1)
-                    .frame(width: 64, height: 52)
+                    .frame(width: isRound ? 56 : 64, height: isRound ? 56 : 52)
                     .background(alignment: .top) {
-                        GlossEllipse(opacity: 0.5)
+                        GlossEllipse(opacity: isRound ? 0.65 : 0.5)
                             .frame(height: 20)
-                            .padding(.horizontal, 8)
-                            .padding(.top, 2)
+                            .padding(.horizontal, isRound ? 10 : 8)
+                            .padding(.top, isRound ? 3 : 2)
                     }
-                    .clipShape(RR(20))
+                    .clipShape(shape)
                     .background(CSSBox(
-                        shape: RR(20),
+                        shape: shape,
                         paint: .radialCircle(UnitPoint(x: 0.32, y: 0.2),
                                              [stop(.hex(c1), 0), stop(.hex(c2), 0.55), stop(.hex(c3), 1)]),
                         shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.5)),
                                   .inner(0, -3, 8, 0, .rgba(0, 0, 0, 0.18)),
                                   .drop(0, 10, 20, -8, glow)]))
-                    .contentShape(RR(20))
+                    .contentShape(shape)
             }
             .buttonStyle(.plain)
             .accessibilityHidden(true)
@@ -79,7 +85,7 @@ struct GlassActionButton: View {
 
 #Preview {
     HStack(spacing: 8) {
-        GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: .gray) {}
+        GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: .gray, isRound: true) {}
         GlassActionButton(style: .edit, title: "Umbenennen", icon: Icon.pencil, labelColor: .gray, columnHeight: 76) {}
         GlassActionButton(style: .favorite, title: "Standard", icon: Icon.star, labelColor: .gray, columnHeight: 76) {}
     }
@@ -88,7 +94,7 @@ struct GlassActionButton: View {
 
 #Preview("Dark") {
     HStack(spacing: 8) {
-        GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: SheetTheme(.dark).sub) {}
+        GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: SheetTheme(.dark).sub, isRound: true) {}
         GlassActionButton(style: .edit, title: "Umbenennen", icon: Icon.pencil, labelColor: SheetTheme(.dark).sub, columnHeight: 76) {}
         GlassActionButton(style: .favorite, title: "Standard", icon: Icon.star, labelColor: SheetTheme(.dark).sub, columnHeight: 76) {}
     }

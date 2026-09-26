@@ -11,7 +11,7 @@
  - `RoundHeaderIcon` ist nur die Optik. So kann derselbe Look als Button oder als Menu-Label dienen.
 
  📝 Last Change:
- - Aus ListScreen des Design-Pakets MyListUI übernommen.
+ - Optik jetzt neutraler Glas-Knopf (GlassOrb) wie im Canvas.
  ------------------------------------------------------------------------
  */
 
@@ -21,11 +21,12 @@ import SwiftUI
 struct RoundHeaderIcon: View {
     let t: ListTheme
     let icon: [SVGElement]
+    var lineWidth: CGFloat = 1.9
 
+    /// Neutraler Glas-Knopf 44 (Canvas Hybrid: ☰ und Suche im Listenkopf).
     var body: some View {
-        SVGIcon(icon, size: 20, color: t.icon, lineWidth: 1.9)
-            .frame(width: 44, height: 44)
-            .background(CSSBox(shape: Circle(), paint: t.round, border: 1, borderColor: t.roundBorder, shadows: t.roundShadow))
+        GlassOrb(style: .neutral, appearance: t.appearance, accent: t.a, icon: icon, size: 44,
+                 iconSize: 20, lineWidth: lineWidth)
             .contentShape(Circle())
     }
 }

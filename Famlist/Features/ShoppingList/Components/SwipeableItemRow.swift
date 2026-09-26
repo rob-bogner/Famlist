@@ -6,8 +6,9 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Artikel-Zeile mit eigenen Wisch-Aktionen (Höhe 94):
-   • offen:     Karte −256 → Löschen / Bearbeiten / Nicht verfügbar (64 × 52, Radius 20, Spalten 76, Abstand 8)
+   • offen:     Karte −256 → Löschen / Bearbeiten / Nicht verfügbar (rund 56, Spalten 76, Abstand 8)
    • abgehakt:  Karte −86  → gelber „Zurück“-Knopf 56 in einer 76 breiten Spalte
+   • rechts:    offen → grünes „Abhaken“, abgehakt → rotes „Löschen“
 
  🔰 Notes for Beginners:
  - SwiftUI-`.swipeActions` lässt sich nicht im Design-Look gestalten, deshalb eine eigene Geste
@@ -15,7 +16,8 @@
  - Physik (Gummiband, Schnell-Wisch, Schwelle) steckt testbar in SwipeRevealPhysics.
  - Die Aktionen blenden mit dem Wischweg stufenlos ein; beim Überschreiten der Schwelle gibt es Haptik.
  - Rechts-Wischen zweistufig: bis 96 pt und loslassen → Karte bleibt rechts offen, Button antippbar;
-   weiter bis 180 pt → Button wächst, Haptik, beim Loslassen Abhaken bzw. Zurück auf die Liste.
+   weiter bis 180 pt → Button wächst, Haptik, beim Loslassen Abhaken bzw. (abgehakt) Löschen.
+ - Löschen läuft über `onDelete` → Rückgängig-Toast der Liste.
  - Abgehakte Artikel: auch nach links zweistufig – „Zurück“ antippen oder bis 180 pt durchwischen.
  - Es ist immer höchstens eine Zeile offen (`openRow` gehört der Liste, inklusive Seite).
  - Tippen auf eine offene Karte schließt sie wieder.
@@ -23,7 +25,7 @@
 
  📝 Last Change:
  - Glas-Aktionen nach GlassActionButton ausgelagert (gemeinsam mit den Listen-Karten).
- - LeadingCheckAction und UndoActionButton in eigene Dateien ausgelagert (Audit 25.09.2026).
+ - Abgehakte Artikel: Rechts-Wischen löscht (gleiche Zwei-Stufen-Mechanik wie Abhaken).
  ------------------------------------------------------------------------
  */
 
@@ -35,6 +37,8 @@ import QuartzCore
 struct SwipeableItemRow: View {
     let t: ListTheme
     let item: ItemModel
+    /// Filter-Modus: Suchbegriff im Namen markieren.
+    var highlight: String = ""
     @Binding var openRow: OpenSwipeRow?
     var onToggleChecked: () -> Void = {}
     var onDelete: () -> Void = {}
@@ -84,7 +88,7 @@ struct SwipeableItemRow: View {
         let leading = physics.leadingProgress(offset: cardOffset)
         ZStack(alignment: .topTrailing) {
             LeadingCheckAction(t: t, isChecked: item.isChecked, progress: leading, isArmed: isArmed) {
-                perform(onToggleChecked)
+                perform(leadingAction)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .opacity(Double(leading))
@@ -93,7 +97,7 @@ struct SwipeableItemRow: View {
                 .opacity(Double(progress))
                 .scaleEffect(0.86 + 0.14 * progress, anchor: .trailing)
                 .allowsHitTesting(rest == .trailing && !isDragging)
-            ItemCard(t: t, item: item, onToggleChecked: onToggleChecked, onTapImage: onTapImage,
+            ItemCard(t: t, item: item, highlight: highlight, onToggleChecked: onToggleChecked, onTapImage: onTapImage,
                      isRecentlySynced: isRecentlySynced, onRetry: onRetry)
                 .overlay {
                     if rest != .closed && !isDragging {
@@ -118,12 +122,12 @@ struct SwipeableItemRow: View {
             UndoActionButton(t: t, isArmed: isArmedTrailing) { perform(onToggleChecked) }
         } else {
             HStack(spacing: 8) {
-                GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: t.sub) { perform(onDelete) }
-                GlassActionButton(style: .edit, title: "Bearbeiten", icon: Icon.pencil, labelColor: t.sub) { perform(onEdit) }
+                GlassActionButton(style: .delete, title: "Löschen", icon: Icon.trashAction, labelColor: t.sub, isRound: true) { perform(onDelete) }
+                GlassActionButton(style: .edit, title: "Bearbeiten", icon: Icon.pencil, labelColor: t.sub, isRound: true) { perform(onEdit) }
                 GlassActionButton(style: .unavailable,
                                   title: item.isUnavailable ? "Verfügbar" : "Nicht verfügbar",
                                   icon: item.isUnavailable ? Icon.restore : Icon.unavailable,
-                                  labelColor: t.sub) { perform(onToggleUnavailable) }
+                                  labelColor: t.sub, isRound: true) { perform(onToggleUnavailable) }
             }
         }
     }
@@ -132,12 +136,16 @@ struct SwipeableItemRow: View {
     private var accessibilityActionList: some View {
         if item.isChecked {
             Button("Zurück auf die Liste", action: onToggleChecked)
+            Button("Löschen", action: onDelete)
         } else {
             Button("Bearbeiten", action: onEdit)
             Button(item.isUnavailable ? "Wieder verfügbar" : "Nicht verfügbar", action: onToggleUnavailable)
             Button("Löschen", action: onDelete)
         }
     }
+
+    /// Rechts-Wischen: offen → abhaken, abgehakt → löschen.
+    private var leadingAction: () -> Void { item.isChecked ? onDelete : onToggleChecked }
 
     private func perform(_ action: @escaping () -> Void) {
         close()
@@ -219,8 +227,9 @@ struct SwipeableItemRow: View {
                 openRow = OpenSwipeRow(id: item.id, rest: newRest)
             }
         }
-        // Beide Durchwisch-Aktionen schalten den Abhak-Zustand um (Abhaken bzw. Zurück auf die Liste).
-        if outcome == .triggerLeading || outcome == .triggerTrailing { onToggleChecked() }
+        // Rechts durchgewischt: abhaken bzw. (abgehakt) löschen. Links durchgewischt: zurück auf die Liste.
+        if outcome == .triggerLeading { leadingAction() }
+        if outcome == .triggerTrailing { onToggleChecked() }
     }
 }
 

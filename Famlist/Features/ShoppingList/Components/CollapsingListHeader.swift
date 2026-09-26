@@ -19,7 +19,7 @@
    Beim Hochscrollen geht er erst in der letzten Übergangsstrecke vor dem Listenanfang wieder auf.
 
  📝 Last Change:
- - Initial creation (ersetzt den separat einfahrenden kompakten Kopf).
+ - Filter-Modus (Suchleiste filtert die Liste), Knöpfe ☰/Suche als neutrale Glas-Knöpfe.
  ------------------------------------------------------------------------
  */
 
@@ -37,8 +37,11 @@ struct CollapsingListHeader: View {
     private var scrollOffset: CGFloat { scroll.offset }
     var onShowLists: () -> Void = {}
     var onSearch: () -> Void = {}
-    var onScan: () -> Void = {}
     var onMenu: () -> Void = {}
+    /// Filter-Modus (Canvas SearchInline): nur Titelzeile + aktives Filterfeld, kein Fortschritt, keine Tabs.
+    var isFiltering = false
+    var filterQuery: Binding<String> = .constant("")
+    var onExitFilter: () -> Void = {}
 
     @State private var heroHeight: CGFloat = 128
     @State private var tabsHeight: CGFloat = 43
@@ -59,9 +62,13 @@ struct CollapsingListHeader: View {
         return min(max(offset / range, 0), 1)
     }
 
-    private var p: CGFloat { Self.progress(offset: scrollOffset, range: Self.collapseRange(heroHeight: heroHeight)) }
+    private var p: CGFloat {
+        isFiltering ? 0 : Self.progress(offset: scrollOffset, range: Self.collapseRange(heroHeight: heroHeight))
+    }
     private var fullHeight: CGFloat {
-        Self.rowHeight + Self.gap + Self.searchHeight + Self.gap + heroHeight + Self.gap + tabsHeight
+        isFiltering
+            ? Self.rowHeight + Self.gap + Self.searchHeight
+            : Self.rowHeight + Self.gap + Self.searchHeight + Self.gap + heroHeight + Self.gap + tabsHeight
     }
     private func lerp(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * p }
     /// Teilbereich von p auf 0…1 abbilden (für gestaffeltes Ein-/Ausblenden).
@@ -73,13 +80,18 @@ struct CollapsingListHeader: View {
 
         VStack(spacing: 0) {
             topRow
-            searchBlock
-            heroBlock
-                .padding(.top, Self.gap)
-            ListFilterTabs(t: t, selection: $filter)
-                .padding(.top, Self.gap)
-                .background { GeometryReader { g in Color.clear.onAppear { tabsHeight = g.size.height }
-                    .onChange(of: g.size.height) { _, h in tabsHeight = h } } }
+            if isFiltering {
+                ListFilterField(t: t, query: filterQuery, onClear: onExitFilter, onFocusLostWhileEmpty: onExitFilter)
+                    .padding(.top, Self.gap)
+            } else {
+                searchBlock
+                heroBlock
+                    .padding(.top, Self.gap)
+                ListFilterTabs(t: t, selection: $filter)
+                    .padding(.top, Self.gap)
+                    .background { GeometryReader { g in Color.clear.onAppear { tabsHeight = g.size.height }
+                        .onChange(of: g.size.height) { _, h in tabsHeight = h } } }
+            }
         }
         .background(alignment: .top) {
             // Deckt beim Scrollen die Karten darunter ab (auch hinter der Statusleiste), unten weicher Übergang.
@@ -129,11 +141,7 @@ struct CollapsingListHeader: View {
                 // Such-Knopf links neben ☰ (Abstand 10) – blendet in der zweiten Hälfte ein
                 let s = phase(0.45, 0.9)
                 Button(action: onSearch) {
-                    SVGIcon(Icon.search, size: 20, color: t.icon, lineWidth: 2)
-                        .frame(width: 44, height: 44)
-                        .background(CSSBox(shape: Circle(), paint: t.round, border: 1, borderColor: t.roundBorder,
-                                           shadows: t.roundShadow))
-                        .contentShape(Circle())
+                    RoundHeaderIcon(t: t, icon: Icon.search, lineWidth: 2)
                 }
                 .buttonStyle(.plain)
                 .scaleEffect(0.7 + 0.3 * s)
@@ -141,7 +149,7 @@ struct CollapsingListHeader: View {
                 .offset(x: -54)
                 .allowsHitTesting(s > 0.5)
                 .accessibilityHidden(s < 0.5)
-                .accessibilityLabel("Artikel suchen oder hinzufügen")
+                .accessibilityLabel("In dieser Liste filtern")
             }
         }
         .frame(height: Self.rowHeight)
@@ -152,7 +160,7 @@ struct CollapsingListHeader: View {
     /// Suchleiste + Abstand klappen linear auf 0 zusammen, die Leiste blendet in der ersten Hälfte aus.
     private var searchBlock: some View {
         let fade = 1 - phase(0, 0.5)
-        return ListSearchBar(t: t, action: onSearch, onScan: onScan)
+        return ListSearchBar(t: t, action: onSearch)
             .padding(.top, Self.gap)
             .opacity(fade)
             .frame(height: (Self.gap + Self.searchHeight) * (1 - p), alignment: .bottom)
