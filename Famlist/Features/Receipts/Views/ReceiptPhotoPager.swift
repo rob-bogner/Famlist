@@ -90,7 +90,7 @@ struct ReceiptPhotoPager: View {
             Button(action: onFullscreen) {
                 SVGIcon(Icon.expand, size: 16, color: .white, lineWidth: 2.2)
                     .frame(width: 36, height: 36)
-                    .background(Circle().fill(Color.rgba(0, 0, 0, 0.55)))
+                    .background(GlassCircleBackground(style: .neutralDark, appearance: .dark, accent: AccentScale(Appearance.dark.defaultAccent, .dark), size: 36))   // Glas neutral dunkel (Token gnd)
                     .contentShape(Circle().inset(by: -4))
             }
             .buttonStyle(.plain)

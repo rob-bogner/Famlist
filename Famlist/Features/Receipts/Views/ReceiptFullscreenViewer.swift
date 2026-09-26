@@ -86,7 +86,7 @@ struct ReceiptFullscreenViewer: View {
         Button(action: onClose) {
             SVGIcon(Icon.close, size: 18, color: .white, lineWidth: 2.2)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(Color.rgba(0, 0, 0, 0.55)))
+                .background(GlassCircleBackground(style: .neutralDark, appearance: .dark, accent: AccentScale(Appearance.dark.defaultAccent, .dark), size: 44))   // Glas neutral dunkel (Token gnd)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Schließen")

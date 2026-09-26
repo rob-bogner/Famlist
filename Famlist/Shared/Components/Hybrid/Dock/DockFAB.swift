@@ -49,7 +49,7 @@ struct DockFAB: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Neuer Artikel")
+        .accessibilityLabel("Artikel hinzufügen")
     }
 }
 

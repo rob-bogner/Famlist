@@ -65,7 +65,7 @@ struct DeleteAccountDialog: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Pill.fill(t.danger))
+                    .background(GlassPillBackground(style: .danger, appearance: k.appearance, accent: k.a, height: 52))
                     .contentShape(Pill)
                 }
                 .buttonStyle(.plain)

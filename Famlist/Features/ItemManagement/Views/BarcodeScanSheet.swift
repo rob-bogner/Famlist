@@ -128,14 +128,13 @@ struct BarcodeScanSheet: View {
         return "Barcode in den Rahmen halten"
     }
 
-    /// Glas-Knopf 48 (border-box): Rahmen 1 rgba(255,255,255,.28), Fläche rgba(255,255,255,.14), Icon 20 weiß.
+    /// Glas-Knopf 48, neutral dunkel (Kamera, Canvas-Token gnd), Icon 20 weiß.
     private func glassButton(_ icon: [SVGElement], lineWidth: CGFloat, label: String,
                              action: @escaping () -> Void) -> some View {
         Button(action: action) {
             SVGIcon(icon, size: 20, color: .white, lineWidth: lineWidth)
                 .frame(width: 48, height: 48)
-                .background(CSSBox(shape: Circle(), paint: .color(.rgba(255, 255, 255, 0.14)),
-                                   border: 1, borderColor: .rgba(255, 255, 255, 0.28)))
+                .background(GlassCircleBackground(style: .neutralDark, appearance: .dark, accent: AccentScale(Appearance.dark.defaultAccent, .dark), size: 48))
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -179,7 +178,7 @@ struct BarcodeScanSheet: View {
                         .font(AppFont.dm(13, 600))
                         .foregroundStyle(k.accentText)
                         .frame(width: 56, height: 56)
-                        .background(CSSBox(shape: Circle(), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                        .background(GlassCircleBackground(style: .neutral, appearance: k.appearance, accent: k.a, size: 56))
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)

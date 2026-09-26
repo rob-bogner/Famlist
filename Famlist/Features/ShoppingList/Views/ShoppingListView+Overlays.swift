@@ -61,14 +61,16 @@ extension ShoppingListView {
                  liveBlur: true,                   // backdrop-filter des Designs: Leiste ist nur zu 78/84 % deckend
                  onCheck: dockCheck, onSort: { toggle(.sort) }, onCopy: { toggle(.copy) },
                  onDelete: { toggle(.delete) }, onAdd: openNewItem)
+            // Filter-Modus und Hinzufügen: Dock blendet aus (Canvas SearchInline / AddInline).
+            .opacity(isFiltering || isAddOpen ? 0 : 1)
             .frame(height: 64)
             .padding(.horizontal, 20)                     // volle Breite: links und rechts 20
             .padding(.bottom, insets.dockBottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .ignoresSafeArea()
             .blur(radius: activeSheet != nil ? 3 : (activeOverlay == .menu ? 2 : 0), opaque: false)
-            .allowsHitTesting(activeSheet == nil && activeOverlay != .menu)
-            .accessibilityHidden(activeSheet != nil || activeOverlay == .menu)
+            .allowsHitTesting(activeSheet == nil && activeOverlay != .menu && !isFiltering && !isAddOpen)
+            .accessibilityHidden(activeSheet != nil || activeOverlay == .menu || isFiltering || isAddOpen)
             .animation(motion(.spring(response: 0.35, dampingFraction: 0.82)), value: dockActive)
     }
 
@@ -217,10 +219,9 @@ extension ShoppingListView {
         withAnimation(motion(.spring(response: 0.3, dampingFraction: 0.7))) { listViewModel.toggleAllItems() }
     }
 
+    /// Plus im Dock → Eingabe über der Tastatur (InlineAddOverlay).
     func openNewItem() {
-        openRow = nil
-        activeOverlay = nil
-        activeSheet = .newItem(initialName: "")
+        openAdd()
     }
 
     private func copyText(_ scope: ListClipboardFormatter.Scope) -> String {

@@ -46,12 +46,7 @@ struct ListAccountIconCTA: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 56)
-        .background(alignment: .top) {
-            GlossEllipse(opacity: 0.45)
-                .frame(height: 22)
-                .padding(.horizontal, 24)
-                .padding(.top, 2)
-        }
+        .background { PillGlassReflection() }
         .clipShape(Pill)
         .background(CSSBox(shape: Pill, paint: k.ctaPaint, shadows: k.ctaShadow))
         .contentShape(Pill)

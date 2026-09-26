@@ -138,7 +138,7 @@ struct SignInView: View {
                 }
                 .padding(.vertical, 4)
 
-                // Mit Apple anmelden: 56, Pille, Rahmen 1 (innen), Icon 18 × 20 + 10 + Text
+                // Mit Apple anmelden: 56, Glas-Pille (Schwarz hell / Weiß dunkel), Icon 18 × 20 + 10 + Text
                 Button(action: signInWithApple) {
                     HStack(spacing: 10) {
                         SVGIconShape(elements: EKKIcon.apple)
@@ -151,7 +151,7 @@ struct SignInView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(CSSBox(shape: Pill, paint: .color(t.appleBg), border: 1, borderColor: k.fieldBorder))
+                    .background(GlassPillBackground(style: .apple, appearance: k.appearance, accent: k.a, height: 56))
                     .contentShape(Pill)
                 }
                 .buttonStyle(.plain)

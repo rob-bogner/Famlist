@@ -110,14 +110,14 @@ struct ReceiptDetailSheet: View {
         return HStack(spacing: 10) {
             ShareLink(items: shareFiles) {
                 buttonLabel("Teilen", icon: Icon.shareUp, color: k.text)
-                    .background(CSSBox(shape: Pill, paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                    .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 52))
             }
             .buttonStyle(.plain)
             .disabled(shareFiles.isEmpty)
             if canDelete {
                 Button(action: { confirmDelete = true }) {
                     buttonLabel("Löschen", icon: Icon.trash, color: t.danger)
-                        .background(Capsule().fill(t.dangerSoft))
+                        .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 52))
                 }
                 .buttonStyle(.plain)
             }

@@ -162,16 +162,16 @@ private struct DesignSwipeActions: View {
                 VStack(spacing: 6) {
                     Button(action: {}) {
                         SVGIcon(a.icon, size: 22, color: .white, lineWidth: 2.1)
-                            .frame(width: 64, height: 52)
+                            .frame(width: 56, height: 56)
                             .background(alignment: .top) {
-                                GlossEllipse(opacity: 0.5)
+                                GlossEllipse(opacity: 0.65)
                                     .frame(height: 20)
-                                    .padding(.horizontal, 8)
-                                    .padding(.top, 2)
+                                    .padding(.horizontal, 10)
+                                    .padding(.top, 3)
                             }
-                            .clipShape(RR(20))
+                            .clipShape(Circle())
                             .background(CSSBox(
-                                shape: RR(20),
+                                shape: Circle(),
                                 paint: .radialCircle(UnitPoint(x: 0.32, y: 0.2),
                                                      [stop(.hex(a.c1), 0), stop(.hex(a.c2), 0.55), stop(.hex(a.c3), 1)]),
                                 shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.5)),

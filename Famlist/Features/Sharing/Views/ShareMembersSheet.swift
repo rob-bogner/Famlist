@@ -162,7 +162,7 @@ struct ShareMembersSheet: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(CSSBox(shape: Pill, paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 52))
                 .contentShape(Pill)
             }
             .buttonStyle(.plain)
@@ -212,7 +212,7 @@ struct ShareMembersSheet: View {
             Button(action: copyID) {
                 SVGIcon(copiedID ? Icon.check : ListAccountIcon.copy, size: 18, color: t.accentText, lineWidth: 2)
                     .frame(width: 44, height: 44)
-                    .background(CSSBox(shape: Circle(), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                    .background(GlassCircleBackground(style: .neutral, appearance: k.appearance, accent: k.a, size: 44))
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)

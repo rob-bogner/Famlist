@@ -36,9 +36,11 @@ struct MenuOverlayScreen: View {
         return OverlayStage(appearance: appearance, accentHex: accentHex, onDismiss: onClose) {
             // Aktiver Menü-Knopf bleibt über der Abdunkelung: rechts 20, oben 62, 44 (border-box), Rahmen 1,5
             Button(action: onClose) {
+                // Neutraler Glas-Knopf mit Akzent-Ring (aktiv), Canvas MenuOverlay.
                 SVGIcon(Icon.close, size: 20, color: k.accentText, lineWidth: 2)
                     .frame(width: 44, height: 44)
-                    .background(CSSBox(shape: Circle(), paint: .color(k.btn), border: 1.5, borderColor: k.btnRing))
+                    .background(GlassCircleBackground(style: .neutral, appearance: appearance, accent: k.a, size: 44))
+                    .overlay(Circle().stroke(k.btnRing, lineWidth: 1.5).padding(-0.75))
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
