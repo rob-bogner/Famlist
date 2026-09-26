@@ -51,6 +51,87 @@ final class ReceiptFlowTests: XCTestCase {
         XCTAssertEqual(flow.savableCount, 2, "Neue Artikel werden nur nach Bestätigung gespeichert")
     }
 
+    // MARK: - Nicht auf dem Bon gefunden
+
+    private func makeMissingFlow(_ repo: InMemoryPricePointsRepository = InMemoryPricePointsRepository()) -> ReceiptFlowViewModel {
+        let flow = ReceiptFlowViewModel(
+            listItemNames: ["Kerrygold, original irische Butter", "Kokosmilch", "Bananen", "Toastbrot"],
+            checkedItems: [ItemModel(name: "Kerrygold, original irische Butter"), ItemModel(name: "Bananen"),
+                           ItemModel(name: "Toastbrot")],
+            catalog: nil, priceBook: PriceBook(repository: repo, defaults: defaults))
+        flow.recognize = { _ in self.bon }
+        flow.addPage(UIImage())
+        return flow
+    }
+
+    func test_missingItems_areCheckedItemsWithoutBonLine() async {
+        let flow = makeMissingFlow()
+        await flow.process()
+        XCTAssertEqual(flow.missingItems.map(\.name), ["Bananen", "Toastbrot"])
+        XCTAssertEqual(flow.unassignedLines.map(\.raw), ["FAIRGL.VM SCHOKO"])
+    }
+
+    func test_assignLine_removesItemFromMissing_andSavesPrice() async {
+        let repo = InMemoryPricePointsRepository()
+        let flow = makeMissingFlow(repo)
+        await flow.process()
+        let bananen = flow.missingItems[0]
+        let line = flow.lineSuggestions(for: bananen)[0]
+        flow.assignLine(line.id, to: bananen)
+        XCTAssertEqual(flow.missingItems.map(\.name), ["Toastbrot"])
+        XCTAssertTrue(flow.unassignedLines.isEmpty)
+        await flow.savePrices()
+        XCTAssertTrue(repo.stored.contains { $0.itemName == "Bananen" && $0.price == Decimal(string: "3.49") })
+    }
+
+    func test_manualPrice_isSaved_notBought_isSkipped() async {
+        let repo = InMemoryPricePointsRepository()
+        let flow = makeMissingFlow(repo)
+        await flow.process()
+        let before = flow.savableCount
+        flow.setManualPrice(Decimal(string: "1.19")!, for: flow.missingItems[0])      // Bananen
+        flow.markNotBought(flow.missingItems[1])                                      // Toastbrot
+        XCTAssertEqual(flow.savableCount, before + 1)
+        await flow.savePrices()
+        XCTAssertTrue(repo.stored.contains { $0.itemName == "Bananen" && $0.price == Decimal(string: "1.19") })
+        XCTAssertFalse(repo.stored.contains { $0.itemName == "Toastbrot" })
+    }
+
+    func test_clearResolution_undoesDecision() async {
+        let flow = makeMissingFlow()
+        await flow.process()
+        let toast = flow.missingItems[1]
+        flow.markNotBought(toast)
+        flow.clearResolution(for: toast)
+        XCTAssertNil(flow.missingResolutions[toast.id])
+    }
+
+    /// „Zurück“ aus „Kassenzettel prüfen“: Aufnahmen bleiben, Ergebnis wird verworfen und neu erkannt.
+    func test_backToCapture_keepsPages_andReprocesses() async {
+        let flow = makeFlow(InMemoryPricePointsRepository())
+        await flow.process()
+        flow.backToCapture()
+        XCTAssertEqual(flow.phase, .capturing)
+        XCTAssertTrue(flow.lines.isEmpty)
+        XCTAssertNil(flow.storeName)
+        XCTAssertEqual(flow.pages.count, 1)
+
+        flow.addPage(UIImage())
+        await flow.process()
+        XCTAssertEqual(flow.phase, .review)
+        XCTAssertEqual(flow.lines.count, 3)
+    }
+
+    /// Mini-Ansicht: ✕ löscht genau die gewählte Aufnahme; ungültiger Index ändert nichts.
+    func test_removePage() {
+        let flow = makeFlow(InMemoryPricePointsRepository())
+        flow.addPage(UIImage())
+        flow.removePage(at: 0)
+        XCTAssertEqual(flow.pages.count, 1)
+        flow.removePage(at: 5)
+        XCTAssertEqual(flow.pages.count, 1)
+    }
+
     func test_corrections_assign_confirmNew_ignore() async {
         let flow = makeFlow(InMemoryPricePointsRepository())
         await flow.process()
@@ -97,9 +178,63 @@ final class ReceiptFlowTests: XCTestCase {
         XCTAssertEqual(ShoppingDoneView.checkedText(checked: 1, total: 1), "1 Artikel abgehakt")
         XCTAssertEqual(ShoppingDoneView.checkedText(checked: 2, total: 6), "2 von 6 Artikeln abgehakt")
         XCTAssertEqual(ShoppingDoneView.checkedText(checked: 0, total: 0), "0 von 0 Artikeln abgehakt")
+        XCTAssertEqual(ShoppingDoneView.checkedText(checked: 0, total: 1), "0 von 1 Artikel abgehakt")
+        XCTAssertEqual(ProgressHero.itemWord(total: 1), "Artikel")
+        XCTAssertEqual(ProgressHero.itemWord(total: 2), "Artikeln")
     }
 
     func test_suggestedName_forNewItems() {
         XCTAssertEqual(ReceiptFlowViewModel.suggestedName("KOKOSM. 400ML"), "Kokosm. 400ml")
+    }
+
+    // MARK: - Artikelpreise aktualisieren
+
+    private func makePriceFlow(listPrices: [String: Double], bon: [String]) -> ReceiptFlowViewModel {
+        let flow = ReceiptFlowViewModel(listItemNames: ["Kerrygold, original irische Butter", "Kokosmilch"],
+                                        listPrices: listPrices, catalog: nil,
+                                        priceBook: PriceBook(repository: InMemoryPricePointsRepository(), defaults: defaults))
+        flow.apply(ReceiptParser.parse(lines: bon))
+        return flow
+    }
+
+    func test_priceChanges_onlyDifferingKnownArticles() {
+        let flow = makePriceFlow(listPrices: ["Kerrygold, original irische Butter": 2.29, "kokosmilch ": 1.39], bon: bon)
+        XCTAssertEqual(flow.priceChanges, [ReceiptPriceChange(name: "Kerrygold, original irische Butter", price: 2.49)],
+                       "Kokosmilch hat schon 1,39 €; die Schokolade ist ein neuer Artikel")
+    }
+
+    func test_priceChanges_articleWithoutPrice_counts() {
+        let flow = makePriceFlow(listPrices: ["Kokosmilch": 0], bon: bon)
+        XCTAssertEqual(flow.priceChanges.map(\.name), ["Kokosmilch"])
+    }
+
+    func test_priceChanges_ignoredAndConfirmedNewLines_excluded() {
+        let flow = makePriceFlow(listPrices: ["Kerrygold, original irische Butter": 1.0, "Kokosmilch": 1.0], bon: bon)
+        flow.ignore(flow.lines[0].id)
+        flow.confirmNew(flow.lines[2].id)
+        XCTAssertEqual(flow.priceChanges.map(\.name), ["Kokosmilch"])
+    }
+
+    func test_priceChanges_useUnitPrice() {
+        let flow = makePriceFlow(listPrices: ["Kokosmilch": 1.39], bon: ["KOKOSM. 400ML   2,58 A", "2 Stk x 1,29"])
+        XCTAssertEqual(flow.priceChanges, [ReceiptPriceChange(name: "Kokosmilch", price: 1.29)])
+    }
+
+    func test_savePrices_storesUnitPrice() async {
+        let repo = InMemoryPricePointsRepository()
+        let flow = ReceiptFlowViewModel(listItemNames: ["Kokosmilch"], catalog: nil,
+                                        priceBook: PriceBook(repository: repo, defaults: defaults))
+        flow.apply(ReceiptParser.parse(lines: ["KOKOSM. 400ML   2,58 A", "2 Stk x 1,29"]))
+        await flow.savePrices()
+        XCTAssertEqual(repo.stored.map(\.price), [Decimal(string: "1.29")])
+    }
+
+    func test_priceChangeMessage_listsAtMostFive() {
+        let changes = (1...7).map { ReceiptPriceChange(name: "Artikel \($0)", price: 1.5) }
+        let text = ReceiptFlowViewModel.priceChangeMessage(changes)
+        XCTAssertTrue(text.hasPrefix("Bei 7 Artikeln weicht"))
+        XCTAssertTrue(text.contains("Artikel 5: 1,50"), "Euro-Format mit geschütztem Leerzeichen")
+        XCTAssertFalse(text.contains("Artikel 6:"))
+        XCTAssertTrue(text.hasSuffix("und 2 weitere"))
     }
 }

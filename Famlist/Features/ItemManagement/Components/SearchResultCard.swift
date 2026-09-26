@@ -53,6 +53,7 @@ struct SearchResultCard: View {
                         .font(AppFont.dm(13, 400))
                         .foregroundStyle(k.sub)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -121,4 +122,21 @@ struct SearchResultCard: View {
             ? .linear(150, [stop(k.a.base.color(0.22), 0), stop(k.a.base.color(0.06), 1)])
             : .linear(150, [stop(.hex("#F2F7F7"), 0), stop(.hex("#E4EEEF"), 1)])
     }
+}
+
+#Preview("SearchResultCard") {
+    SearchResultCard(k: SheetTheme(.light), result: SearchResult(
+        entry: ItemCatalogEntry(id: "preview-1", ownerPublicId: "owner", name: "Butter", brand: "Kerrygold",
+                                category: nil, productDescription: nil, measure: "pack", price: 2.49, imageData: nil),
+        source: .personal, imageUrl: nil))
+        .padding(20)
+}
+
+#Preview("SearchResultCard – Dark") {
+    SearchResultCard(k: SheetTheme(.dark), result: SearchResult(
+        entry: ItemCatalogEntry(id: "preview-1", ownerPublicId: "owner", name: "Butter", brand: "Kerrygold",
+                                category: nil, productDescription: nil, measure: "pack", price: 2.49, imageData: nil),
+        source: .personal, imageUrl: nil))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

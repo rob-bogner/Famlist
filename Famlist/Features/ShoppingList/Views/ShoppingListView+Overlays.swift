@@ -15,7 +15,7 @@
    auf Geräten, deren Safe Area vom Referenzgerät (oben 62, unten 34) abweicht.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“).
+ - Fehler-Toast, VoiceOver-Modalität und „Bewegung reduzieren“ (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -46,6 +46,10 @@ extension ShoppingListView {
             dock(t: t, insets: insets)
                 .zIndex(dockOnTop ? 2 : 0)
             overlayContent(insets: insets)
+                .accessibilityElement(children: .contain)
+                // ☰ deckt das Dock ab → modal. Dock-Menüs lassen das Dock bedienbar (wie beim Tippen).
+                .accessibilityAddTraits(activeOverlay == .menu ? .isModal : [])
+                .accessibilityAction(.escape, closeOverlay)
                 .zIndex(3)
             toasts(insets: insets)
                 .zIndex(4)
@@ -57,14 +61,17 @@ extension ShoppingListView {
                  liveBlur: true,                   // backdrop-filter des Designs: Leiste ist nur zu 78/84 % deckend
                  onCheck: dockCheck, onSort: { toggle(.sort) }, onCopy: { toggle(.copy) },
                  onDelete: { toggle(.delete) }, onAdd: openNewItem)
+            // Filter-Modus und Hinzufügen: Dock blendet aus (Canvas SearchInline / AddInline).
+            .opacity(isFiltering || isAddOpen ? 0 : 1)
             .frame(height: 64)
             .padding(.horizontal, 20)                     // volle Breite: links und rechts 20
             .padding(.bottom, insets.dockBottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .ignoresSafeArea()
             .blur(radius: activeSheet != nil ? 3 : (activeOverlay == .menu ? 2 : 0), opaque: false)
-            .allowsHitTesting(activeSheet == nil && activeOverlay != .menu)
-            .animation(.spring(response: 0.35, dampingFraction: 0.82), value: dockActive)
+            .allowsHitTesting(activeSheet == nil && activeOverlay != .menu && !isFiltering && !isAddOpen)
+            .accessibilityHidden(activeSheet != nil || activeOverlay == .menu || isFiltering || isAddOpen)
+            .animation(motion(.spring(response: 0.35, dampingFraction: 0.82)), value: dockActive)
     }
 
     @ViewBuilder
@@ -77,14 +84,14 @@ extension ShoppingListView {
                               onClose: closeOverlay,
                               onSelect: handleMenu)
                 .offset(y: insets.topShift)
-                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
+                .transition(overlayTransition(anchor: .topTrailing))
         case .sort:
             SortMenuScreen(appearance: appearance, settings: listViewModel.sortSettings,
-                           onSelect: { listViewModel.setSortOrder($0); UserLog.Data.sortChanged(to: $0.rawValue) },
+                           onSelect: { listViewModel.setSortOrder($0) },
                            onToggleDoneAtBottom: { listViewModel.setDoneAtBottom($0) },
                            onDismiss: closeOverlay)
                 .offset(y: insets.dockShift)
-                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottomLeading)))
+                .transition(overlayTransition(anchor: .bottomLeading))
         case .copy:
             CopyChoiceScreen(appearance: appearance,
                              openCount: listViewModel.uncheckedItems.count,
@@ -92,7 +99,7 @@ extension ShoppingListView {
                              previewText: copyText(.open),
                              onSelect: copy, onDismiss: closeOverlay)
                 .offset(y: insets.dockShift)
-                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottomLeading)))
+                .transition(overlayTransition(anchor: .bottomLeading))
         case .delete:
             DeleteChoiceScreen(appearance: appearance,
                                checkedCount: listViewModel.checkedItemCount,
@@ -101,7 +108,7 @@ extension ShoppingListView {
                                onDeleteAll: { stageDeletion(.all) },
                                onDismiss: closeOverlay)
                 .offset(y: insets.dockShift)
-                .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .bottomLeading)))
+                .transition(overlayTransition(anchor: .bottomLeading))
         case nil:
             EmptyView()
         }
@@ -117,7 +124,7 @@ extension ShoppingListView {
                 .padding(.bottom, insets.dockBottom + 80)       // Design: unten 114 bei Dock-Unterkante 34
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .ignoresSafeArea()
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(toastTransition)
         } else if let copied, activeSheet == nil {
             CopyDoneToast(k: k, count: copied.count, scope: copied.scope)
                 .padding(.horizontal, 20)
@@ -125,8 +132,52 @@ extension ShoppingListView {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(toastTransition)
         }
+    }
+
+    /// Fehler des ListViewModels (z. B. Liste offline duplizieren) über allen Ebenen, damit er auch
+    /// über einem offenen Sheet sichtbar ist. Position wie der Rückgängig-Toast.
+    @ViewBuilder
+    func errorToastView(insets: LayoutShift) -> some View {
+        if let errorToast {
+            StatusToast(text: errorToast, isError: true, appearance: appearance)
+                .padding(.horizontal, 20)
+                .padding(.bottom, insets.dockBottom + 80)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .transition(toastTransition)
+                .zIndex(5)
+        }
+    }
+
+    /// Zeigt die Meldung 3 s lang und setzt danach `errorMessage` zurück (wie AcceptInviteView).
+    func showError(_ message: String?) {
+        guard let message else { return }
+        withAnimation(motion(.spring(response: 0.35, dampingFraction: 0.85))) { errorToast = message }
+        AccessibilityNotification.Announcement(message).post()
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            guard errorToast == message else { return }
+            withAnimation(motion(.easeOut(duration: 0.25))) { errorToast = nil }
+            if listViewModel.errorMessage == message { listViewModel.errorMessage = nil }
+        }
+    }
+
+    // MARK: - Motion
+
+    /// „Bewegung reduzieren“: Feder durch sanftes Ein-/Ausblenden ersetzen; sonst unverändert.
+    func motion(_ animation: Animation) -> Animation {
+        reduceMotion ? .easeInOut(duration: 0.25) : animation
+    }
+
+    private func overlayTransition(anchor: UnitPoint) -> AnyTransition {
+        reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96, anchor: anchor))
+    }
+
+    private var toastTransition: AnyTransition {
+        reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
     }
 
     // MARK: - Dock State
@@ -165,13 +216,12 @@ extension ShoppingListView {
     /// „Alle abhaken“ / „Zurücksetzen“. Ist ein Dock-Menü offen, springt nur die Pille zurück.
     private func dockCheck() {
         guard activeOverlay == nil else { closeOverlay(); return }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { listViewModel.toggleAllItems() }
+        withAnimation(motion(.spring(response: 0.3, dampingFraction: 0.7))) { listViewModel.toggleAllItems() }
     }
 
+    /// Plus im Dock → Eingabe über der Tastatur (InlineAddOverlay).
     func openNewItem() {
-        openRow = nil
-        activeOverlay = nil
-        activeSheet = .newItem(initialName: "")
+        openAdd()
     }
 
     private func copyText(_ scope: ListClipboardFormatter.Scope) -> String {
@@ -184,14 +234,14 @@ extension ShoppingListView {
         let ordered = listViewModel.visibleSectionsIgnoringFilter.flatMap(\.items)
         let count = ListClipboardFormatter.items(ordered, scope: scope).count
         UIPasteboard.general.string = copyText(scope)
-        UserLog.Data.listCopied(title: listViewModel.defaultList?.title ?? "", count: count)
+        listViewModel.noteListCopied(count: count)
         let result = CopyResult(count: count, scope: scope)
         activeOverlay = nil
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { copied = result }
+        withAnimation(motion(.spring(response: 0.35, dampingFraction: 0.82))) { copied = result }
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             if copied?.id == result.id {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { copied = nil }
+                withAnimation(motion(.spring(response: 0.35, dampingFraction: 0.82))) { copied = nil }
             }
         }
     }
@@ -209,7 +259,7 @@ extension ShoppingListView {
         case .manageItems: openManageItems()
         case .manageCategories: activeSheet = .manageCategories
         case .receipt: openReceiptCapture()
-        case .importClipboard: showImport = true
+        case .importClipboard: activeSheet = .importClipboard
         case .settings: activeSheet = .settings
         }
     }

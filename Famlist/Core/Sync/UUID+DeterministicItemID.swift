@@ -44,7 +44,9 @@ extension UUID {
     ///   - name: Display name of the item (case-insensitive, whitespace-trimmed).
     /// - Returns: A stable UUID v5-style identifier.
     static func deterministicItemID(listId: UUID, name: String) -> UUID {
-        let normalizedName = name.lowercased().trimmingCharacters(in: .whitespaces)
+        // NFC: „ü“ als ein Zeichen oder als „u“ + Trema ergibt dieselbe ID (eingefügter Text aus anderen Apps
+        // ist oft zerlegt). Getippter Text ist bereits NFC – bestehende IDs bleiben gleich (Audit 2, S14).
+        let normalizedName = name.precomposedStringWithCanonicalMapping.lowercased().trimmingCharacters(in: .whitespaces)
         let input = "\(listId.uuidString):\(normalizedName)"
         let hash = SHA256.hash(data: Data(input.utf8))
 

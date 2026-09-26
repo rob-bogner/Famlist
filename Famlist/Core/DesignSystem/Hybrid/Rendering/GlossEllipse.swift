@@ -29,3 +29,17 @@ struct GlossEllipse: View {
             .allowsHitTesting(false)
     }
 }
+
+#Preview("GlossEllipse") {
+    GlossEllipse(opacity: 0.6)
+        .frame(width: 120, height: 40)
+        .padding(20)
+        .background(Color.hex("#0FA3AE"))
+}
+
+#Preview("GlossEllipse – Dark") {
+    GlossEllipse(opacity: 0.35)
+        .frame(width: 120, height: 40)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

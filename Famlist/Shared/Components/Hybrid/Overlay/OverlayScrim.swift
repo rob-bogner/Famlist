@@ -38,3 +38,17 @@ struct OverlayScrim<Background: View>: View {
         }
     }
 }
+
+#Preview("OverlayScrim", traits: .fixedLayout(width: 390, height: 844)) {
+    OverlayScrim(color: OverlayTheme(.light).scrim) {
+        DesignListScreen(appearance: .light)
+    }
+    .ignoresSafeArea()
+}
+
+#Preview("OverlayScrim – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    OverlayScrim(color: OverlayTheme(.dark).scrim) {
+        DesignListScreen(appearance: .dark)
+    }
+    .ignoresSafeArea()
+}

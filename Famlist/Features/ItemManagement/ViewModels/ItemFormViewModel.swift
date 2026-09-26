@@ -127,7 +127,7 @@ final class ItemFormViewModel: ObservableObject {
     ///   - ownerPublicId: Optional owner public ID to preserve when editing
     func toItemModel(existingId: String? = nil, listId: String? = nil, ownerPublicId: String? = nil) -> ItemModel {
         let sanitizedName = ItemInputValidator.sanitizedName(name)
-        let imageBase64 = selectedImage?.toBase64()
+        let imageBase64 = selectedImage.flatMap(ProductImageCodec.encode)
         
         return ItemModel(
             id: existingId ?? UUID().uuidString,

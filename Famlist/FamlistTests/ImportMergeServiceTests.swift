@@ -213,6 +213,16 @@ final class ImportMergeServiceTests: XCTestCase {
         XCTAssertEqual(item.units, 2)  // 1 existing + 1 imported
     }
 
+    /// Schon abgehakt (gekauft) und erneut importiert → wieder offen mit der importierten Menge (Audit M8).
+    func test_merge_checkedItem_reopensWithImportedUnits() {
+        var bought = activeItem(name: "Milch", units: 3)
+        bought.isChecked = true
+        let result = merge(selected: [parsedItem("Milch", units: 2)], localItems: [bought])
+        guard case .reactivate(let item) = result.targets.first else { return XCTFail("Expected .reactivate") }
+        XCTAssertEqual(item.units, 2)
+        XCTAssertFalse(item.isChecked)
+    }
+
     func test_merge_existingActiveItem_pendingCreate_producesUpdate() {
         var local = activeItem(name: "Milch", units: 1)
         // pendingCreate is active (no deletedAt) → should still produce .update
@@ -313,5 +323,24 @@ final class ImportMergeServiceTests: XCTestCase {
         let brotTarget = result.targets.first { $0.item.name.lowercased() == "brot" }
         XCTAssertNotNil(brotTarget)
         XCTAssertEqual(brotTarget?.item.units, 1)
+    }
+
+    // MARK: - Abgleich über den Namen (Audit 25.09.2026)
+
+    func test_merge_existingWithOtherId_matchedByName_noDuplicate() {
+        let legacy = ItemModel(id: UUID().uuidString, name: "Milch", units: 1, listId: testListId.uuidString)
+        let result = merge(selected: [parsedItem("milch ", units: 2)], localItems: [legacy])
+        guard case .update(let item) = result.targets.first else { return XCTFail("Expected .update") }
+        XCTAssertEqual(item.id, legacy.id, "vorhandener Artikel wird erhöht, kein zweites „Milch“")
+        XCTAssertEqual(item.units, 3)
+    }
+
+    func test_merge_renamedItemOnCanonicalId_isNotOverwritten() {
+        let canonical = UUID.deterministicItemID(listId: testListId, name: "Milch").uuidString
+        let renamed = ItemModel(id: canonical, name: "Hafermilch", units: 1, listId: testListId.uuidString)
+        let result = merge(selected: [parsedItem("Milch")], localItems: [renamed])
+        guard case .createNew(let item) = result.targets.first else { return XCTFail("Expected .createNew") }
+        XCTAssertNotEqual(item.id, canonical, "Hafermilch darf nicht überschrieben werden")
+        XCTAssertEqual(item.name, "Milch")
     }
 }

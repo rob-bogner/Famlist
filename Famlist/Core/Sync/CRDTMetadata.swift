@@ -10,15 +10,13 @@
  
  🛠 Includes:
  - CRDTMetadata struct with HLC, tombstone flag, and modifier info
- - Field-level metadata for fine-grained CRDT
  
  🔰 Notes for Beginners:
- - This metadata enables Last-Write-Wins Element-Set (LWW-Element-Set) CRDT
- - Each field can have its own HLC for field-level conflict resolution
+ - Last-Writer-Wins über die ganze Zeile (ItemSyncPolicy); die neuere HLC gewinnt.
  - Tombstones mark deleted items while preserving causal history
  
  📝 Last Change:
- - Initial implementation for CRDT-based sync architecture
+ - Ungenutzte feldweise CRDT-Typen entfernt (Audit 25.09.2026).
  ------------------------------------------------------------------------
 */
 
@@ -61,47 +59,3 @@ struct CRDTMetadata: Codable, Equatable, Hashable {
         )
     }
 }
-
-/// Field-level CRDT metadata for fine-grained conflict resolution
-/// Each field of an item can be independently versioned
-struct FieldMetadata: Codable, Equatable, Hashable {
-    /// Field name (e.g., "name", "units", "isChecked")
-    let fieldName: String
-    
-    /// HLC for this specific field
-    var hlc: HybridLogicalClock
-    
-    /// Who last modified this field
-    var lastModifiedBy: String
-    
-    init(fieldName: String, hlc: HybridLogicalClock, lastModifiedBy: String) {
-        self.fieldName = fieldName
-        self.hlc = hlc
-        self.lastModifiedBy = lastModifiedBy
-    }
-}
-
-/// Container for field-level metadata (optional advanced feature)
-struct FieldLevelCRDT: Codable, Equatable, Hashable {
-    /// Dictionary mapping field names to their metadata
-    var fields: [String: FieldMetadata]
-    
-    init(fields: [String: FieldMetadata] = [:]) {
-        self.fields = fields
-    }
-    
-    /// Updates metadata for a specific field
-    mutating func updateField(_ fieldName: String, hlc: HybridLogicalClock, modifiedBy: String) {
-        fields[fieldName] = FieldMetadata(
-            fieldName: fieldName,
-            hlc: hlc,
-            lastModifiedBy: modifiedBy
-        )
-    }
-    
-    /// Gets the HLC for a specific field, or nil if not tracked
-    func getHLC(for fieldName: String) -> HybridLogicalClock? {
-        return fields[fieldName]?.hlc
-    }
-}
-

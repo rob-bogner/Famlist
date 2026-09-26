@@ -10,10 +10,12 @@
 
  🔰 Notes for Beginners:
  - Gespeichert per @AppStorage (UserDefaults) unter `storageKey`; Standard ist „an“ (Design: prices = true).
- - `lineTotal` rechnet Preis × Menge; die Fortschrittskarte summiert das über alle Artikel.
+ - `lineTotal` rechnet Preis × Stückzahl; die Fortschrittskarte summiert das über alle Artikel.
+ - Bei Gewicht, Volumen und Länge (g, kg, ml, l, cm, m) ist die Menge die Größe EINER Packung
+   („500 g Hackfleisch“), keine Stückzahl: Dann zählt der Preis einmal.
 
  📝 Last Change:
- - Neu angelegt (Preise in Liste und Fortschrittskarte, Design Hybrid/Settings).
+ - Gewicht/Volumen/Länge nicht mehr mit der Menge multipliziert (Audit H8: „500 g“ zu 4,99 € ergab 2.495 €).
  ------------------------------------------------------------------------
  */
 
@@ -34,8 +36,21 @@ enum PriceDisplaySetting {
         items.reduce(0) { $0 + lineTotal($1) }
     }
 
-    /// Preis × Menge eines Artikels; mindestens Menge 1.
+    /// Preis × Stückzahl eines Artikels (siehe `multiplier`).
     static func lineTotal(_ item: ItemModel) -> Double {
-        max(item.price, 0) * Double(max(item.units, 1))
+        max(item.price, 0) * Double(multiplier(for: item))
+    }
+
+    /// Wie oft der Preis zählt: Stückzahl bei Zähl-Einheiten, 1 bei Gewicht/Volumen/Länge.
+    static func multiplier(for item: ItemModel) -> Int {
+        isMeasuredAmount(item.measure) ? 1 : max(item.units, 1)
+    }
+
+    /// true für Einheiten, bei denen die Menge eine Größe ist (g, kg, ml, l, cm, m).
+    static func isMeasuredAmount(_ measure: String) -> Bool {
+        switch Measure.fromExternal(measure) {
+        case .g, .kg, .ml, .l, .cm, .m: return true
+        default: return false
+        }
     }
 }

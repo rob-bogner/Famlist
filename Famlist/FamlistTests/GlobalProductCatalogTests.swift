@@ -217,7 +217,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Mi"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertEqual(sut.personalResults.count, 2)
         XCTAssertTrue(sut.personalResults.allSatisfy { $0.source == .personal })
@@ -230,7 +230,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Br"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertTrue(sut.personalResults.isEmpty)
         XCTAssertEqual(sut.globalResults.count, 2)
@@ -243,7 +243,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Mi"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         // No dedup across collections — both show all results independently
         XCTAssertEqual(sut.personalResults.count, 1)
@@ -258,7 +258,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "PP"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertLessThanOrEqual(sut.personalResults.count, 5)
     }
@@ -269,7 +269,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "PP"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         // Global results are independent — full 6 should appear
         XCTAssertEqual(sut.globalResults.count, 6)
@@ -284,7 +284,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         vmNoGlobal.searchText = "Br"
         vmNoGlobal.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await vmNoGlobal.searchTask?.value
 
         XCTAssertEqual(vmNoGlobal.personalResults.count, 1)
         XCTAssertTrue(vmNoGlobal.globalResults.isEmpty)
@@ -298,7 +298,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Milch"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         // Personal results should still appear despite global error
         XCTAssertFalse(sut.personalResults.isEmpty)
@@ -312,7 +312,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Milch"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertTrue(sut.personalResults.isEmpty)
         XCTAssertTrue(sut.globalResults.isEmpty)
@@ -327,7 +327,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Mi"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertNil(sut.personalResults.first?.imageUrl)
     }
@@ -338,7 +338,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Nu"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertEqual(sut.globalResults.first?.imageUrl, "https://example.com/img.jpg")
     }
@@ -349,7 +349,7 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
 
         sut.searchText = "Ap"
         sut.onSearchTextChanged()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        await sut.searchTask?.value
 
         XCTAssertEqual(sut.globalResults.count, 1)
         XCTAssertNil(sut.globalResults.first?.imageUrl)

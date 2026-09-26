@@ -86,42 +86,45 @@ extension AppSessionViewModel {
 
     // MARK: - Einladung
 
-    /// Lädt Einladenden und Listendaten für „Einladung annehmen“.
+    /// Lädt Einladenden und Listendaten für „Einladung annehmen“ (RPC invite_preview_by_token).
+    /// Ohne Verbindung bleibt der Titel aus dem Link stehen, und die Chips entfallen.
     func loadInvitePreview(_ invite: InvitePayload) async {
-        let inviter = try? await profiles.profileByPublicId(invite.inviterPublicId)
-        let row = try? await lists.invitePreview(listId: invite.listId)
-        invitePreview = InvitePreviewInfo(listId: invite.listId,
-                                          inviterName: inviter?.displayName ?? invite.inviterPublicId,
-                                          listName: row?.title ?? invite.listTitle,
-                                          itemCount: row?.itemCount,
-                                          memberCount: row?.memberCount)
+        do {
+            guard let row = try await lists.invitePreview(token: invite.token) else {
+                errorMessage = InviteError.invalidOrExpired.errorDescription
+                invitePreview = InvitePreviewInfo(token: invite.token, listId: nil, inviterName: nil,
+                                                  listName: invite.listTitle, itemCount: nil, memberCount: nil)
+                return
+            }
+            invitePreview = InvitePreviewInfo(token: invite.token, listId: row.listId, inviterName: row.inviterName,
+                                              listName: row.title, itemCount: row.itemCount, memberCount: row.memberCount)
+        } catch {
+            invitePreview = InvitePreviewInfo(token: invite.token, listId: nil, inviterName: nil,
+                                              listName: invite.listTitle, itemCount: nil, memberCount: nil)
+        }
     }
 
     /// „Einladung annehmen“: Mitglied werden und die Liste sofort öffnen.
     func acceptInviteAndOpen(_ invite: InvitePayload) async {
         guard let me = currentProfile else { return }
+        let listId: UUID
         do {
-            if !listViewModel.allLists.contains(where: { $0.id == invite.listId }) {
-                try await lists.addMember(listId: invite.listId, profileId: me.id)
-                UserLog.Data.listJoined()
-            }
-        } catch let error as NSError where error.code == 23505 {
-            // bereits Mitglied – kein Fehler
+            listId = try await lists.acceptInvite(token: invite.token)
+            UserLog.Data.listJoined()
         } catch {
-            errorMessage = "Einladung konnte nicht angenommen werden."
+            errorMessage = (InviteError.from(error) ?? .acceptFailed).errorDescription
             return
         }
         if let all = try? await lists.fetchAllLists(for: me.id) {
             listViewModel.allLists = all
-            if let joined = all.first(where: { $0.id == invite.listId }) { listViewModel.switchToList(joined) }
+            if let joined = all.first(where: { $0.id == listId }) { listViewModel.switchToList(joined) }
         }
         pendingInvite = nil
         invitePreview = nil
     }
 
-    /// „Ablehnen“: Einladung verwerfen, nichts wird gespeichert.
     func declineInvite() {
-        logVoid(params: (action: "declineInvite", listId: pendingInvite?.listId.uuidString ?? ""))
+        logVoid(params: (action: "declineInvite", hasInvite: pendingInvite != nil))
         pendingInvite = nil
         invitePreview = nil
     }

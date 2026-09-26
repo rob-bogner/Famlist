@@ -24,92 +24,23 @@ final class SupabaseListsRepository: ListsRepository {
     }
 
     func ensureDefaultListExists(for owner: UUID) async throws -> List {
-        // Fetch
-        let fetched: [List] = try await client
-            .from("lists")
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .eq("owner_id", value: owner.uuidString)
-            .eq("is_default", value: true)
-            .limit(1)
-            .execute()
-            .value
-        if let row = fetched.first {
-            return logResult(params: (owner: owner, hit: true), result: row)
-        }
-        // Insert when none exists - explicitly set owner_id to avoid RLS violations
-        struct NewList: Codable {
-            let owner_id: String
-            let title: String
-            let is_default: Bool
-        }
-        let insert = NewList(owner_id: owner.uuidString, title: "My List", is_default: true)
-        let inserted: List = try await client
-            .from("lists")
-            .insert(insert)
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .single()
-            .execute()
-            .value
-        return logResult(params: (owner: owner, created: true), result: inserted)
+        let model = try await ensureDefaultList(id: UUID(), for: owner)
+        return List(id: model.id, owner_id: model.ownerId, title: model.title, is_default: model.isDefault,
+                    created_at: model.createdAt, updated_at: model.updatedAt)
     }
 
-    /// Fetches the default list as an app-level ListModel; creates it if missing.
+    /// Standardliste atomar sicherstellen (RPC ensure_default_list, Migration 018): höchstens eine je Besitzer,
+    /// auch wenn zwei Geräte gleichzeitig starten.
+    func ensureDefaultList(id: UUID, for owner: UUID) async throws -> ListModel {
+        struct Params: Encodable, Sendable { let p_id: UUID }
+        let rows: [ListRow] = try await client.rpcRows("ensure_default_list", params: Params(p_id: id))
+        guard let row = rows.first else { throw URLError(.cannotParseResponse) }
+        return logResult(params: (owner: owner, requestedId: id), result: row.model)
+    }
+
+    /// Fetches the default list as an app-level ListModel; creates it if missing (atomar, siehe oben).
     func fetchDefaultList(for ownerId: UUID) async throws -> ListModel {
-        // Row mapping for precise column selection
-        struct ListRow: Codable {
-            let id: UUID
-            let owner_id: UUID
-            let title: String
-            let is_default: Bool
-            let created_at: Date
-            let updated_at: Date?
-        }
-        // Helper to map DB row -> ListModel with updatedAt fallback
-        func map(_ r: ListRow) -> ListModel {
-            ListModel(
-                id: r.id,
-                ownerId: r.owner_id,
-                title: r.title,
-                isDefault: r.is_default,
-                createdAt: r.created_at,
-                updatedAt: r.updated_at ?? r.created_at
-            )
-        }
-        // 1) Try fetch default for owner
-        let fetched: [ListRow] = try await client
-            .from("lists")
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .eq("owner_id", value: ownerId.uuidString)
-            .eq("is_default", value: true)
-            .limit(1)
-            .execute()
-            .value
-        if let row = fetched.first {
-            let result = map(row)
-            let finalResult = logResult(params: (ownerId: ownerId, hit: true), result: result)
-            UserLog.Data.listLoaded(name: result.title, itemCount: 0)
-            return finalResult
-        }
-        
-        UserLog.Data.loadingList()
-        // 2) Not found -> insert default with explicit owner_id to avoid RLS violations.
-        struct NewList: Codable {
-            let owner_id: String
-            let title: String
-            let is_default: Bool
-        }
-        let payload = NewList(owner_id: ownerId.uuidString, title: "My List", is_default: true)
-        let inserted: ListRow = try await client
-            .from("lists")
-            .insert(payload)
-            .select("id, owner_id, title, is_default, created_at, updated_at")
-            .single()
-            .execute()
-            .value
-        let result = map(inserted)
-        let finalResult = logResult(params: (ownerId: ownerId, created: true), result: result)
-        UserLog.Data.listLoaded(name: result.title, itemCount: 0)
-        return finalResult
+        try await ensureDefaultList(id: UUID(), for: ownerId)
     }
 
     func observeLists(for owner: UUID) -> AsyncStream<[List]> {
@@ -135,20 +66,24 @@ final class SupabaseListsRepository: ListsRepository {
     }
 
     func createList(for owner: UUID, title: String) async throws -> List {
+        try await createList(id: UUID(), for: owner, title: title)
+    }
+
+    /// Anlegen mit einer auf dem Gerät vergebenen ID (Offline-First, OfflineListsRepository).
+    func createList(id: UUID, for owner: UUID, title: String) async throws -> List {
         struct NewList: Codable {
+            let id: UUID
             let owner_id: UUID
             let title: String
         }
         let value: List = try await client
             .from("lists")
-            .insert(NewList(owner_id: owner, title: title))
+            .insert(NewList(id: id, owner_id: owner, title: title))
             .select()
             .single()
             .execute()
             .value
-        let result = logResult(params: (owner: owner, title: title), result: value)
-        UserLog.Data.listCreated(name: title)
-        return result
+        return logResult(params: (owner: owner, title: title), result: value)
     }
 
     func fetchAllLists(for ownerId: UUID) async throws -> [ListModel] {
@@ -210,32 +145,15 @@ final class SupabaseListsRepository: ListsRepository {
         logVoid(params: (action: "deleteList", listId: listId))
     }
 
+    /// Standardliste in EINER Transaktion umstellen (RPC set_default_list, Migration 018).
     func setDefaultList(listId: UUID, ownerId: UUID) async throws {
-        struct UnsetPatch: Codable { let is_default: Bool; let updated_at: Date }
-        struct SetPatch: Codable { let is_default: Bool; let updated_at: Date }
-        _ = try await client
-            .from("lists")
-            .update(UnsetPatch(is_default: false, updated_at: Date()))
-            .eq("owner_id", value: ownerId.uuidString)
-            .execute()
-        _ = try await client
-            .from("lists")
-            .update(SetPatch(is_default: true, updated_at: Date()))
-            .eq("id", value: listId.uuidString)
-            .execute()
-        logVoid(params: (listId: listId, ownerId: ownerId))
+        struct Params: Encodable, Sendable { let p_list_id: UUID }
+        let _: Bool = try await client.rpcValue("set_default_list", params: Params(p_list_id: listId))
+        logVoid(params: (action: "setDefaultList", listId: listId))
     }
 
-    func addMember(listId: UUID, profileId: UUID) async throws {
-        struct LM: Codable {
-            let list_id: UUID
-            let profile_id: UUID
-        }
-        _ = try await client
-            .from("list_members")
-            .insert(LM(list_id: listId, profile_id: profileId))
-            .execute()
-        logVoid(params: (listId: listId, profileId: profileId))
+    func leaveList(listId: UUID, profileId: UUID) async throws {
+        try await removeMember(listId: listId, profileId: profileId)
     }
 
     func removeMember(listId: UUID, profileId: UUID) async throws {
@@ -248,37 +166,26 @@ final class SupabaseListsRepository: ListsRepository {
         logVoid(params: (listId: listId, profileId: profileId))
     }
 
+    /// „Du wurdest aus einer Liste entfernt“ kommt als privater Broadcast an `user:<id>`
+    /// (Trigger on_list_member_removed, Migration 014). Postgres Changes auf list_members
+    /// gingen nicht: DELETE-Events lassen sich dort nicht filtern und erreichten alle Nutzer.
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> {
         AsyncStream { [weak self] continuation in
             guard let self else { continuation.finish(); return }
 
-            let channelId = "private:list_members:\(userId.uuidString)"
-            let channel = client.realtime.channel(channelId)
-
-            let deletions = channel.postgresChange(
-                DeleteAction.self,
-                schema: "public",
-                table: "list_members",
-                filter: .eq("profile_id", value: userId.uuidString)
-            )
+            let channel = client.realtime.channel("user:\(userId.uuidString.lowercased())") {
+                $0.isPrivate = true
+            }
+            let removals = channel.broadcastStream(event: "member_removed")
 
             let task = Task {
-                do {
-                    try await channel.subscribeWithError()
-                    for await deletion in deletions {
-                        // PK (list_id, profile_id) ist immer im oldRecord enthalten
-                        if let raw = deletion.oldRecord["list_id"],
-                           let listIdString: String = {
-                               let s = String(describing: raw)
-                               return s == "<null>" ? nil : s.replacingOccurrences(of: "AnyJSON.", with: "")
-                           }(),
-                           let listId = UUID(uuidString: listIdString) {
-                            continuation.yield(listId)
-                        }
+                // Anmelden mit Wiederholung wie bei den Listen-Kanälen; vorher blieb es nach einem
+                // Fehlschlag beim einen Versuch (Audit 2, Befund S12).
+                await SupabaseRealtimeManager.subscribeWithRetry(channel, listId: nil)
+                for await message in removals {
+                    if let listId = Self.listId(fromBroadcast: message) {
+                        continuation.yield(listId)
                     }
-                } catch {
-                    logVoid(params: (action: "observeMemberRemovals.subscribeError",
-                                     error: (error as NSError).localizedDescription))
                 }
                 continuation.finish()
             }
@@ -290,57 +197,86 @@ final class SupabaseListsRepository: ListsRepository {
         }
     }
 
+    /// Liest `list_id` aus einer Broadcast-Nachricht. realtime.send liefert
+    /// `{"event": …, "payload": {"list_id": …}}`; zur Sicherheit wird auch die oberste Ebene geprüft.
+    nonisolated static func listId(fromBroadcast message: JSONObject) -> UUID? {
+        let inner = message["payload"]?.objectValue ?? message
+        guard let raw = inner["list_id"]?.stringValue else { return nil }
+        return UUID(uuidString: raw)
+    }
+
     func fetchMembers(listId: UUID) async throws -> [ListMember] {
-        // 1. Hole profile_ids + added_at aus list_members
-        struct MemberRow: Codable {
-            let profile_id: UUID
-            let added_at: Date
-        }
-        let memberRows: [MemberRow] = try await client
-            .from("list_members")
-            .select("profile_id, added_at")
-            .eq("list_id", value: listId.uuidString)
-            .execute()
-            .value
-
-        guard !memberRows.isEmpty else { return [] }
-
-        // 2. Hole Profil-Daten für alle profile_ids
-        // Kein PostgREST-Join möglich (kein FK profile_id → profiles.id) → zwei Queries
-        struct ProfileRow: Codable {
-            let id: UUID
+        // Ein Join über den Fremdschlüssel list_members.profile_id → profiles.id.
+        struct ProfileRow: Decodable {
             let public_id: String?
             let username: String?
             let full_name: String?
         }
-        let profileIds = memberRows.map { $0.profile_id.uuidString }
-        let profileRows: [ProfileRow] = try await client
-            .from("profiles")
-            .select("id, public_id, username, full_name")
-            .in("id", values: profileIds)
+        struct MemberRow: Decodable {
+            let profile_id: UUID
+            let added_at: Date
+            let profiles: ProfileRow?
+        }
+        let rows: [MemberRow] = try await client
+            .from("list_members")
+            .select("profile_id, added_at, profiles(public_id, username, full_name)")
+            .eq("list_id", value: listId.uuidString)
+            .order("added_at", ascending: true)
             .execute()
             .value
 
-        // 3. Join in Memory
-        let profileMap = Dictionary(uniqueKeysWithValues: profileRows.map { ($0.id, $0) })
-        let result = memberRows.compactMap { member -> ListMember? in
-            guard let profile = profileMap[member.profile_id] else { return nil }
-            return ListMember(
-                id: member.profile_id,
-                publicId: profile.public_id ?? "",
-                username: profile.username,
-                fullName: profile.full_name,
-                addedAt: member.added_at
+        let result = rows.map { row in
+            ListMember(
+                id: row.profile_id,
+                publicId: row.profiles?.public_id ?? "",
+                username: row.profiles?.username,
+                fullName: row.profiles?.full_name,
+                addedAt: row.added_at
             )
         }
         return logResult(params: (listId: listId, count: result.count), result: result)
     }
 
-    // MARK: - Einladung (Phase 5)
+    // MARK: - Einladung (Migration 014)
 
-    func invitePreview(listId: UUID) async throws -> InvitePreviewRow? {
+    func createInvite(listId: UUID) async throws -> String {
         struct Params: Encodable, Sendable { let p_list_id: UUID }
-        let rows: [InvitePreviewRow] = try await client.rpcRows("invite_preview", params: Params(p_list_id: listId))
+        struct Row: Decodable { let token: String }
+        let rows: [Row] = try await client.rpcRows("create_list_invite", params: Params(p_list_id: listId))
+        guard let token = rows.first?.token else { throw InviteError.unavailable }
+        logVoid(params: (action: "createInvite", listId: listId))
+        return token
+    }
+
+    func invitePreview(token: String) async throws -> InvitePreviewRow? {
+        struct Params: Encodable, Sendable { let p_token: String }
+        let rows: [InvitePreviewRow] = try await client.rpcRows("invite_preview_by_token", params: Params(p_token: token))
         return rows.first
+    }
+
+    func acceptInvite(token: String) async throws -> UUID {
+        struct Params: Encodable, Sendable { let p_token: String }
+        do {
+            let listId: UUID = try await client.rpcValue("accept_list_invite", params: Params(p_token: token))
+            logVoid(params: (action: "acceptInvite", listId: listId))
+            return listId
+        } catch {
+            throw InviteError.from(error) ?? error
+        }
+    }
+}
+
+/// Zeile der Tabelle lists (RPC-Antworten).
+private struct ListRow: Decodable {
+    let id: UUID
+    let owner_id: UUID
+    let title: String
+    let is_default: Bool
+    let created_at: Date
+    let updated_at: Date?
+
+    var model: ListModel {
+        ListModel(id: id, ownerId: owner_id, title: title, isDefault: is_default,
+                  createdAt: created_at, updatedAt: updated_at ?? created_at)
     }
 }

@@ -8,13 +8,11 @@
  📄 File Overview:
  - Supabase-backed implementation of ItemsRepository.
  - Core class: dependencies, Realtime observation, fetchAndYield, pagination, incremental sync.
- - CRUD operations live in SupabaseItemsRepository+CRUD.swift.
- - Suppression state is encapsulated in RealtimeGate.swift.
+ - Der einzige Schreibweg (upsertItems) liegt in SupabaseItemsRepository+CRUD.swift.
 
  🛠 Includes:
  - observeItems: AsyncStream backed by Realtime subscriptions.
  - processRealtimeEvent: routes INSERT/UPDATE/DELETE to RealtimeEventProcessor; no full refetch.
- - fetchAndYield: full remote fetch (App-Start / Pull-to-Refresh only).
  - fetchItems(cursor:limit:): composite-cursor paged fetch (FAM-79).
  - fetchItemsSince(since:): delta fetch for IncrementalSync (FAM-41).
  - refreshLocalAndYield: reads from SwiftData and yields to stream observers.
@@ -24,92 +22,15 @@
  - SyncOrchestrator buffers Realtime handlers during active page loads (FAM-79).
 
  📝 Last Change:
- - FAM-79/FAM-41: Granular Realtime, composite-cursor pagination, incremental sync.
+ - SupabaseItemRow nach SupabaseItemRow.swift ausgelagert (Audit 25.09.2026).
+ - RealtimeGate entfernt: Er verwarf während „Alle abhaken“ bis zu 5 s lang auch FREMDE Änderungen.
+   Eigene Echos sind mit der HLC-Regel unschädlich (gleiche HLC → ignoriert). Delta-Abgleich
+   lädt seitenweise statt unbegrenzt (Audit 25.09.2026).
  ------------------------------------------------------------------------
 */
 
 import Foundation
 import Supabase
-
-// MARK: - Shared Row Type
-
-/// Shared Codable struct for mapping Supabase rows to ItemModel.
-/// Extracted from fetchAndYield() so it can be reused by fetchItems() and fetchItemsSince().
-private struct ItemRow: Codable {
-    let id: UUID
-    let listId: UUID
-    let ownerPublicId: String?
-    let imageData: String?
-    let name: String
-    let units: Int
-    let measure: String
-    let price: Double
-    let isChecked: Bool
-    let isUnavailable: Bool? // nil until migration 005 is applied
-    let category: String?
-    let productDescription: String?
-    let brand: String?
-    let createdAt: String?
-    let updatedAt: String?
-    let hlcTimestamp: Int64?
-    let hlcCounter: Int?
-    let hlcNodeId: String?
-    let tombstone: Bool?
-    let lastModifiedBy: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case listId = "list_id"
-        case ownerPublicId = "ownerpublicid"
-        case imageData = "imagedata"
-        case name, units, measure, price, isChecked, category
-        case isUnavailable = "is_unavailable"
-        case productDescription = "productdescription"
-        case brand
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-        case hlcTimestamp = "hlc_timestamp"
-        case hlcCounter = "hlc_counter"
-        case hlcNodeId = "hlc_node_id"
-        case tombstone
-        case lastModifiedBy = "last_modified_by"
-    }
-
-    func toItemModel() -> ItemModel {
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let isoFormatterBasic = ISO8601DateFormatter()
-
-        func parseDate(_ str: String?) -> Date? {
-            guard let str else { return nil }
-            return isoFormatter.date(from: str) ?? isoFormatterBasic.date(from: str)
-        }
-
-        return ItemModel(
-            id: id.uuidString,
-            imageUrl: nil,
-            imageData: imageData,
-            name: name,
-            units: units,
-            measure: measure,
-            price: price,
-            isChecked: isChecked,
-            isUnavailable: isUnavailable ?? false,
-            category: category,
-            productDescription: productDescription,
-            brand: brand,
-            listId: listId.uuidString,
-            ownerPublicId: ownerPublicId,
-            createdAt: parseDate(createdAt),
-            updatedAt: parseDate(updatedAt),
-            hlcTimestamp: hlcTimestamp,
-            hlcCounter: hlcCounter,
-            hlcNodeId: hlcNodeId,
-            tombstone: tombstone,
-            lastModifiedBy: lastModifiedBy
-        )
-    }
-}
 
 // MARK: - SupabaseItemsRepository
 
@@ -128,31 +49,37 @@ final class SupabaseItemsRepository: ItemsRepository {
     /// Local SwiftData store — used to yield locally-sourced snapshots after Realtime events.
     private let itemStore: SwiftDataItemStore
 
-    /// Suppression gate shared between the observation and CRUD layers.
-    let gate: RealtimeGate
-
     /// Orchestrator that serialises PageLoader and Realtime event processing.
     /// Optional for backward compatibility (nil in tests that don't inject it).
     var syncOrchestrator: SyncOrchestrator?
 
     // MARK: - State
 
+    /// Meldung „Realtime wieder verbunden“ an die Liste (Delta-Abgleich).
+    private var reconnectHandler: (@MainActor (UUID) -> Void)?
+
+    func setReconnectHandler(_ handler: @escaping @MainActor (UUID) -> Void) {
+        reconnectHandler = handler
+    }
+
     /// Active continuations keyed by listId → unique observer token.
     private var continuations: [UUID: [UUID: AsyncStream<[ItemModel]>.Continuation]] = [:]
+    /// Geplantes, zusammengefasstes Neuladen je Liste (siehe scheduleRefresh).
+    private var pendingRefresh: [UUID: Task<Void, Never>] = [:]
+    /// 80 ms: für Nutzer nicht spürbar, fasst aber einen Stapel Realtime-Ereignisse zusammen.
+    static let refreshCoalescingDelay: UInt64 = 80_000_000
 
     // MARK: - Lifecycle
 
     init(
         client: SupabaseClienting,
         itemStore: SwiftDataItemStore,
-        conflictResolver: ConflictResolver,
         syncOrchestrator: SyncOrchestrator? = nil
     ) {
         self.client = client
         self.itemStore = itemStore
         self.realtimeManager = SupabaseRealtimeManager(client: client)
-        self.eventProcessor = RealtimeEventProcessor(conflictResolver: conflictResolver, itemStore: itemStore)
-        self.gate = RealtimeGate()
+        self.eventProcessor = RealtimeEventProcessor(itemStore: itemStore)
         self.syncOrchestrator = syncOrchestrator
     }
 
@@ -169,9 +96,11 @@ final class SupabaseItemsRepository: ItemsRepository {
             // Set up Realtime subscription if this is the first observer for this list.
             if self.continuations[listId]?.count == 1 {
                 Task {
-                    await self.realtimeManager.setupRealtimeChannel(for: listId) { [weak self] event in
-                        await self?.processRealtimeEvent(event, listId: listId)
-                    }
+                    await self.realtimeManager.setupRealtimeChannel(
+                        for: listId,
+                        onEvent: { [weak self] event in await self?.processRealtimeEvent(event, listId: listId) },
+                        onResubscribed: { [weak self] in self?.reconnectHandler?(listId) }
+                    )
                 }
             }
 
@@ -198,37 +127,8 @@ final class SupabaseItemsRepository: ItemsRepository {
 
     // MARK: - Realtime Event Processing
 
-    /// Routes a Realtime event to the event processor, respecting suppression state and SyncOrchestrator buffering.
+    /// Routes a Realtime event to the event processor, respecting SyncOrchestrator buffering.
     func processRealtimeEvent(_ event: RealtimeEvent, listId: UUID) async {
-        // Crash-recovery: clear a stale lock before checking suppression.
-        let staleCleared = gate.checkAndClearStaleLock()
-        if staleCleared {
-            logVoid(params: (action: "processRealtimeEvent.staleLockRecovered", listId: listId))
-        }
-
-        // EVENT COUNTER: decrement for batch-triggered updates; skip further processing.
-        if gate.isSuppressing && gate.expectedEvents > 0 {
-            if case .update = event {
-                gate.decrementEventCounter(for: listId)
-            }
-            logVoid(params: (
-                action: "processRealtimeEvent.skipped",
-                reason: "waitingForBatchEvents",
-                listId: listId
-            ))
-            return
-        }
-
-        // PESSIMISTIC LOCK: ignore all Realtime events during bulk operations.
-        if gate.isSuppressing {
-            logVoid(params: (
-                action: "processRealtimeEvent.skipped",
-                reason: "batchOperationInProgress",
-                listId: listId
-            ))
-            return
-        }
-
         // Extract a stable item id for SyncOrchestrator coalescing.
         let itemId = extractItemId(from: event) ?? UUID().uuidString
 
@@ -254,7 +154,19 @@ final class SupabaseItemsRepository: ItemsRepository {
         }
 
         // FAM-41: yield from SwiftData (local truth), not from a full remote refetch.
-        refreshLocalAndYield(listId)
+        scheduleRefresh(listId)
+    }
+
+    /// Fasst Neuladen zusammen: Viele Ereignisse kurz hintereinander (z. B. 200× „abgehakt“ von einem anderen
+    /// Gerät) laden die Liste danach EINMAL statt 200-mal komplett aus SwiftData (Audit 2, Befund Q4).
+    private func scheduleRefresh(_ listId: UUID) {
+        guard pendingRefresh[listId] == nil else { return }
+        pendingRefresh[listId] = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: Self.refreshCoalescingDelay)
+            guard let self else { return }
+            self.pendingRefresh[listId] = nil
+            self.refreshLocalAndYield(listId)
+        }
     }
 
     /// Reads the current list from SwiftData and yields it to all stream observers for this list.
@@ -268,31 +180,6 @@ final class SupabaseItemsRepository: ItemsRepository {
         }
     }
 
-    // MARK: - Full Fetch (App-Start / Pull-to-Refresh)
-
-    /// Fetches all live items for a list from Supabase and broadcasts them to observers.
-    /// Called only on App-Start and Pull-to-Refresh — not after individual Realtime events (FAM-41).
-    func fetchAndYield(_ listId: UUID) async {
-        do {
-            let rows: [ItemRow] = try await client
-                .from("items")
-                .select()
-                .eq("list_id", value: listId.uuidString)
-                .order("created_at", ascending: true)
-                .execute()
-                .value
-            let mapped = rows.map { $0.toItemModel() }
-            yield(listId, mapped)
-            logVoid(params: (listId: listId, itemsCount: mapped.count))
-        } catch {
-            logVoid(params: (
-                listId: listId,
-                note: "fetchAndYield.error",
-                error: String(describing: error)
-            ))
-        }
-    }
-
     // MARK: - Pagination (FAM-79)
 
     /// Fetches a page of non-tombstoned items sorted by (created_at ASC, id ASC) using a composite cursor.
@@ -300,7 +187,7 @@ final class SupabaseItemsRepository: ItemsRepository {
     func fetchItems(listId: UUID, cursor: PaginationCursor?, limit: Int) async throws -> [ItemModel] {
         var query = client
             .from("items")
-            .select()
+            .select(SupabaseItemRow.columns)
             .eq("list_id", value: listId.uuidString)
             .or("tombstone.is.false,tombstone.is.null")
 
@@ -310,7 +197,7 @@ final class SupabaseItemsRepository: ItemsRepository {
             query = query.or("created_at.gt.\(isoDate),and(created_at.eq.\(isoDate),id.gt.\(uuidStr))")
         }
 
-        let rows: [ItemRow] = try await query
+        let rows: [SupabaseItemRow] = try await query
             .order("created_at", ascending: true)
             .order("id", ascending: true)
             .limit(limit)
@@ -322,21 +209,54 @@ final class SupabaseItemsRepository: ItemsRepository {
 
     // MARK: - Incremental Sync (FAM-41)
 
-    /// Fetches items (including tombstoned) whose updated_at is strictly after `since`.
-    /// Used by IncrementalSync to pull only changes since the last successful sync.
+    /// Seitengröße des Delta-Abgleichs (PostgREST liefert ohne Limit höchstens `max_rows` Zeilen – ohne Hinweis).
+    static let deltaPageSize = 500
+
+    /// Fetches items (including tombstoned) whose updated_at is after `since`, seitenweise bis zum Ende.
+    /// Folgeseiten nutzen einen Schlüssel-Cursor (updated_at, id) mit dem exakten Zeitstempel des Servers
+    /// (Mikrosekunden), damit bei gleichen Zeitstempeln an der Seitengrenze keine Zeile verloren geht.
     func fetchItemsSince(listId: UUID, since: Date) async throws -> [ItemModel] {
-        let sinceISO = PaginationCursor.postgrestFormatter.string(from: since)
+        var result: [ItemModel] = []
+        var cursor: (updatedAt: String, id: String)?
+        while true {
+            var query = client.from("items").select(SupabaseItemRow.columns).eq("list_id", value: listId.uuidString)
+            if let cursor {
+                query = query.or("updated_at.gt.\(cursor.updatedAt),and(updated_at.eq.\(cursor.updatedAt),id.gt.\(cursor.id))")
+            } else {
+                query = query.gt("updated_at", value: PaginationCursor.postgrestFormatter.string(from: since))
+            }
+            let rows: [SupabaseItemRow] = try await query
+                .order("updated_at", ascending: true)
+                .order("id", ascending: true)
+                .limit(Self.deltaPageSize)
+                .execute()
+                .value
+            result += rows.map { $0.toItemModel() }
+            guard rows.count == Self.deltaPageSize, let last = rows.last, let stamp = last.updatedAt else { break }
+            cursor = (Self.filterSafeTimestamp(stamp), last.id.uuidString.lowercased())
+        }
+        return result
+    }
 
-        let rows: [ItemRow] = try await client
-            .from("items")
-            .select()
-            .eq("list_id", value: listId.uuidString)
-            .gt("updated_at", value: sinceISO)
-            .order("updated_at", ascending: true)
-            .execute()
-            .value
+    /// Alle Artikel-IDs einer Liste auf dem Server (nur die ID-Spalte, seitenweise nach ID).
+    /// Für den Abgleich nach langer Pause: Der Server löscht Löschmarkierungen nach 30 Tagen endgültig.
+    func fetchItemIds(listId: UUID) async throws -> Set<String>? {
+        struct IdRow: Decodable, Sendable { let id: UUID }
+        var ids: Set<String> = []
+        var after: String?
+        while true {
+            var query = client.from("items").select("id").eq("list_id", value: listId.uuidString)
+            if let after { query = query.gt("id", value: after) }
+            let rows: [IdRow] = try await query.order("id", ascending: true).limit(1000).execute().value
+            ids.formUnion(rows.map { $0.id.uuidString })
+            guard rows.count == 1000, let last = rows.last else { return ids }
+            after = last.id.uuidString.lowercased()
+        }
+    }
 
-        return rows.map { $0.toItemModel() }
+    /// Postgres liefert „…+00:00“; ein „+“ im Filter würde als Leerzeichen gelesen. UTC → „Z“.
+    static func filterSafeTimestamp(_ raw: String) -> String {
+        raw.hasSuffix("+00:00") ? String(raw.dropLast(6)) + "Z" : raw
     }
 
     // MARK: - Helpers

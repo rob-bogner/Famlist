@@ -8,7 +8,8 @@
  📄 File Overview: Bridges ItemEntity <-> ItemModel for the local-first data pipeline.
  🛠 Includes: Helper methods to convert between SwiftData entities and the existing ItemModel struct.
  🔰 Notes for Beginners: Use these helpers to keep mapping logic consistent across repositories and sync jobs.
- 📝 Last Change: isUnavailable in toItemModel/apply/make gemappt.
+ 📝 Last Change: apply(model:) ohne Sonderregeln – ob eine Remote-Zeile gewinnt, entscheidet allein
+   ItemSyncPolicy (HLC-Vergleich). Löschmarkierung und Sichtbarkeit (deletedAt) laufen synchron.
  ------------------------------------------------------------------------
 */
 
@@ -21,7 +22,7 @@ extension ItemEntity {
     func toItemModel() -> ItemModel {
         ItemModel(
             id: id.uuidString,
-            imageUrl: nil,
+            imagePath: imagePath,
             imageData: imageData,
             name: name,
             units: units,
@@ -46,26 +47,55 @@ extension ItemEntity {
         )
     }
 
-    /// Applies fields from an ItemModel onto the existing SwiftData entity and marks as synced.
-    ///
-    /// **Tombstone guard (FAM-69):** Items in `pendingDelete` state are intentionally skipped.
-    /// A Realtime snapshot may arrive before the remote deletion is confirmed by the server.
-    /// Updating such an entity would resurrect it in the UI and violate Offline-First delete semantics.
-    /// The SyncEngine's queued `.delete` operation will call `purge(id:)` once the server confirms.
-    ///
-    /// **Synced-tombstone guard (FAM-XX):** Items whose remote deletion has already been confirmed
-    /// (`tombstone == true && syncStatus == .synced`) must not be reactivated by a subsequent
-    /// local `upsert()` call — e.g. when re-adding an item whose deterministic UUID collides with
-    /// the still-persisted tombstone entity. Only an explicit `pendingRecovery` transition may
-    /// restore such an item.
-    ///
-    /// - Parameter model: Source ItemModel typically fetched from Supabase.
-    func apply(model: ItemModel) {
-        guard syncStatus != .pendingDelete else { return }
-        guard !(tombstone == true && syncStatus == .synced) else { return }
+    /// HLC dieser Zeile; fehlende Werte (Altbestand) zählen als Epoche 0 und verlieren jeden Vergleich.
+    var hlc: HybridLogicalClock {
+        HybridLogicalClock(timestamp: hlcTimestamp ?? 0, counter: hlcCounter ?? 0, nodeId: hlcNodeId ?? "")
+    }
 
-        self.ownerPublicId = model.ownerPublicId
-        self.imageData = model.imageData
+    /// Übernimmt Inhalt und CRDT-Felder einer gewonnenen Remote-Zeile und markiert sie als synchron.
+    /// Ob die Zeile gewinnt, entscheidet vorher `ItemSyncPolicy` – hier gibt es keine Sonderregeln mehr.
+    /// - Parameters:
+    ///   - imagePathKnown: Die Quelle enthält `image_path` (Realtime, Delta, RPC-Antwort: ja).
+    ///   - legacyImageKnown: Die Quelle enthält das alte Base64-Feld `imagedata` (Delta/Seitenladen: ja;
+    ///     Realtime-UPDATE ohne Änderung daran und RPC-Antwort: nein).
+    func apply(model: ItemModel, imagePathKnown: Bool = true, legacyImageKnown: Bool = true) {
+        assignContent(from: model, includeImage: false)
+        applyRemoteImage(model, pathKnown: imagePathKnown, legacyKnown: legacyImageKnown)
+        if let newCreatedAt = model.createdAt { self.createdAt = newCreatedAt }
+        if let newUpdatedAt = model.updatedAt { self.updatedAt = newUpdatedAt }
+        self.hlcTimestamp = model.hlcTimestamp ?? 0
+        self.hlcCounter = model.hlcCounter ?? 0
+        self.hlcNodeId = model.hlcNodeId ?? ""
+        self.lastModifiedBy = model.lastModifiedBy
+        setTombstone(model.tombstone ?? false)
+        self.syncStatus = .synced
+    }
+
+    /// Foto einer Remote-Zeile: Neuer Pfad → lokale Kopie verwerfen (der Prefetcher lädt nach).
+    /// Gleicher Pfad → lokale Kopie behalten. Kein Pfad → altes Base64 übernehmen bzw. Foto entfernt.
+    private func applyRemoteImage(_ model: ItemModel, pathKnown: Bool, legacyKnown: Bool) {
+        if pathKnown, let path = model.imagePath {
+            if path != imagePath {             // neues Foto: lokale Kopie verwerfen, Prefetcher lädt nach
+                imagePath = path
+                imageData = nil
+            }
+        } else if legacyKnown {                // altes Format (Base64) oder Foto entfernt
+            imagePath = nil
+            imageData = model.imageData
+        } else if pathKnown, imagePath != nil {
+            imagePath = nil                    // Foto auf einem anderen Gerät entfernt
+            imageData = nil
+        }
+    }
+
+    /// Schreibt die sichtbaren Felder eines Artikels (ohne CRDT- und Sync-Felder).
+    /// - Parameter includeImage: Foto (Base64 und Pfad) mit übernehmen.
+    func assignContent(from model: ItemModel, includeImage: Bool = true) {
+        if ownerPublicId == nil { self.ownerPublicId = model.ownerPublicId }
+        if includeImage {
+            self.imageData = model.imageData
+            self.imagePath = model.imagePath
+        }
         self.name = model.name
         self.units = model.units
         self.measure = model.measure
@@ -75,35 +105,16 @@ extension ItemEntity {
         self.category = model.category
         self.productDescription = model.productDescription
         self.brand = model.brand
-        if let newListIdString = model.listId, let newListId = UUID(uuidString: newListIdString) {
-            self.listId = newListId
+    }
+
+    /// Löschmarkierung setzen; `deletedAt` blendet den Artikel in allen Abfragen aus.
+    func setTombstone(_ isTombstoned: Bool) {
+        tombstone = isTombstoned
+        if isTombstoned {
+            if deletedAt == nil { deletedAt = Date() }
+        } else {
+            deletedAt = nil
         }
-        if let newCreatedAt = model.createdAt {
-            self.createdAt = newCreatedAt
-        }
-        if let newUpdatedAt = model.updatedAt {
-            self.updatedAt = newUpdatedAt
-        }
-        
-        // Apply CRDT metadata if present
-        if let hlcTimestamp = model.hlcTimestamp {
-            self.hlcTimestamp = hlcTimestamp
-        }
-        if let hlcCounter = model.hlcCounter {
-            self.hlcCounter = hlcCounter
-        }
-        if let hlcNodeId = model.hlcNodeId {
-            self.hlcNodeId = hlcNodeId
-        }
-        if let tombstone = model.tombstone {
-            self.tombstone = tombstone
-        }
-        if let lastModifiedBy = model.lastModifiedBy {
-            self.lastModifiedBy = lastModifiedBy
-        }
-        
-        self.deletedAt = nil
-        self.setSyncStatus(.synced)
     }
 
     /// Creates a new ItemEntity mirroring the provided ItemModel.
@@ -142,6 +153,8 @@ extension ItemEntity {
             tombstone: model.tombstone ?? false,
             lastModifiedBy: model.lastModifiedBy
         )
+        entity.imagePath = model.imagePath
+        entity.setTombstone(model.tombstone ?? false)
         return entity
     }
 }

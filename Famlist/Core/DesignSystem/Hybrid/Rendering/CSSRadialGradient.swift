@@ -61,3 +61,18 @@ struct CSSRadialGradient: View {
         .allowsHitTesting(false)
     }
 }
+
+#Preview("CSSRadialGradient") {
+    CSSRadialGradient(center: UnitPoint(x: 0.3, y: 0.3), extent: .circleFarthestCorner,
+                      stops: [stop(.hex("#0FA3AE"), 0), stop(.hex("#FFFFFF"), 1)])
+        .frame(width: 240, height: 140)
+        .padding(20)
+}
+
+#Preview("CSSRadialGradient – Dark") {
+    CSSRadialGradient(center: UnitPoint(x: 0.3, y: 0.3), extent: .ellipse(rx: 0.6, ry: 0.8),
+                      stops: [stop(.hex("#1FC2CC"), 0), stop(.hex("#0A1416"), 1)])
+        .frame(width: 240, height: 140)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

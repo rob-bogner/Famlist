@@ -6,11 +6,11 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Regression tests for FAM-69: Soft-Delete Tombstone semantics.
- - Ensures `apply(model:)` never resurrects locally-deleted items
-   and `setSyncStatus(.synced)` never clears `deletedAt`.
+ - Ältere Stände holen gelöschte Artikel nie zurück (Abgleich per HLC in mergeRemote);
+   neuere Stände (erneutes Anlegen) schon. `setSyncStatus(.synced)` löscht `deletedAt` nicht.
 
  📝 Last Change:
- - FAM-68: Added test_toItemModel_includesCRDTFields (mapping gap fix).
+ - Sonderregeln aus apply() in die HLC-Regel verlagert; Tests entsprechend (Audit 25.09.2026).
  ------------------------------------------------------------------------
 */
 
@@ -79,37 +79,37 @@ final class ItemEntityTombstoneTests: XCTestCase {
 
     // MARK: - AC 2: pendingDelete items survive a Realtime snapshot (apply guard)
 
-    func test_apply_pendingDelete_doesNotResurrectItem() {
-        // Given: item is in pendingDelete state with a tombstone timestamp
-        let entity = makeEntity(syncStatus: .pendingDelete)
-        let deletionDate = Date(timeIntervalSinceNow: -5)
-        entity.deletedAt = deletionDate
-        let originalName = entity.name
-
-        // When: a Realtime snapshot arrives with the (still-live) server version
-        let remoteModel = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
-        entity.apply(model: remoteModel)
-
-        // Then: deletedAt and syncStatus must be unchanged — item stays hidden
-        XCTAssertEqual(entity.deletedAt, deletionDate, "apply() must not clear deletedAt for pendingDelete items")
-        XCTAssertEqual(entity.syncStatus, .pendingDelete, "syncStatus must remain pendingDelete")
-        XCTAssertEqual(entity.name, originalName, "no field should be overwritten for a pendingDelete item")
+    /// Gelöschter Artikel mit HLC 2000; der Abgleich läuft wie in der App über mergeRemote (ItemSyncPolicy).
+    private func mergeOlderSnapshot(into entity: ItemEntity, times: Int = 1) throws {
+        let store = SwiftDataItemStore(context: context)
+        var model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
+        model.hlcTimestamp = 1_000; model.hlcCounter = 0; model.hlcNodeId = "remote"
+        for _ in 0..<times { XCTAssertEqual(try store.mergeRemote(model), .ignored) }
     }
 
-    func test_apply_pendingDelete_multipleSnapshots_itemRemainsDeleted() {
-        // Given: item pendingDelete
+    private func markDeleted(_ entity: ItemEntity, status: ItemEntity.SyncStatus, at date: Date) {
+        entity.hlcTimestamp = 2_000; entity.hlcCounter = 0; entity.hlcNodeId = "local"
+        entity.tombstone = true
+        entity.deletedAt = date
+        entity.syncStatus = status
+    }
+
+    /// Ein älterer Server-Stand (noch nicht gelöscht) darf eine ausstehende Löschung nicht zurückholen.
+    func test_olderSnapshot_doesNotResurrectPendingDelete() throws {
         let entity = makeEntity(syncStatus: .pendingDelete)
-        entity.deletedAt = Date()
+        let deletionDate = Date(timeIntervalSinceNow: -5)
+        markDeleted(entity, status: .pendingDelete, at: deletionDate)
+        try mergeOlderSnapshot(into: entity)
+        XCTAssertEqual(entity.deletedAt, deletionDate)
+        XCTAssertEqual(entity.syncStatus, .pendingDelete)
+        XCTAssertEqual(entity.name, "Milch")
+    }
 
-        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
-
-        // When: multiple snapshots arrive before the delete is confirmed
-        entity.apply(model: model)
-        entity.apply(model: model)
-        entity.apply(model: model)
-
-        // Then: still deleted
-        XCTAssertNotNil(entity.deletedAt, "item must remain soft-deleted across multiple snapshots")
+    func test_olderSnapshots_repeatedly_pendingDeleteStaysDeleted() throws {
+        let entity = makeEntity(syncStatus: .pendingDelete)
+        markDeleted(entity, status: .pendingDelete, at: Date())
+        try mergeOlderSnapshot(into: entity, times: 3)
+        XCTAssertNotNil(entity.deletedAt)
         XCTAssertEqual(entity.syncStatus, .pendingDelete)
     }
 
@@ -148,45 +148,23 @@ final class ItemEntityTombstoneTests: XCTestCase {
 
     // MARK: - FAM-XX: Synced-tombstone guard — Re-Add nach bestätigter Remote-Löschung
 
-    /// AC: Entity mit syncStatus=.synced + tombstone=true darf durch apply() NICHT reaktiviert werden.
-    func test_apply_syncedTombstone_doesNotReactivateItem() {
-        // Given: Item wurde remote gelöscht und Löschung ist lokal bestätigt
+    /// Eine bestätigte Löschung bleibt, wenn später ein älterer Stand eintrifft.
+    func test_olderSnapshot_doesNotReactivateSyncedTombstone() throws {
         let deletionDate = Date(timeIntervalSinceNow: -60)
         let entity = makeEntity(syncStatus: .synced)
-        entity.tombstone = true
-        entity.deletedAt = deletionDate
-        let originalName = entity.name
-
-        // When: Re-Add landet via deterministischer UUID auf derselben Entity
-        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
-        entity.apply(model: model)
-
-        // Then: Entity darf nicht reaktiviert werden
-        XCTAssertEqual(entity.deletedAt, deletionDate, "apply() darf deletedAt für synced+tombstone Entities nicht löschen")
-        XCTAssertEqual(entity.tombstone, true, "tombstone muss true bleiben")
-        XCTAssertEqual(entity.syncStatus, .synced, "syncStatus darf nicht verändert werden")
-        XCTAssertEqual(entity.name, originalName, "Felder dürfen nicht überschrieben werden")
+        markDeleted(entity, status: .synced, at: deletionDate)
+        try mergeOlderSnapshot(into: entity)
+        XCTAssertEqual(entity.deletedAt, deletionDate)
+        XCTAssertEqual(entity.tombstone, true)
+        XCTAssertEqual(entity.name, "Milch")
     }
 
-    /// AC: Mehrere apply()-Aufrufe reaktivieren eine synced-tombstone Entity nicht kumulativ.
-    func test_apply_syncedTombstone_multipleSnapshots_itemRemainsDeleted() {
-        // Given
-        let deletionDate = Date(timeIntervalSinceNow: -120)
+    func test_olderSnapshots_repeatedly_syncedTombstoneStaysDeleted() throws {
         let entity = makeEntity(syncStatus: .synced)
-        entity.tombstone = true
-        entity.deletedAt = deletionDate
-
-        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
-
-        // When: wiederholte upsert()-Aufrufe
-        entity.apply(model: model)
-        entity.apply(model: model)
-        entity.apply(model: model)
-
-        // Then: weiterhin gelöscht
-        XCTAssertNotNil(entity.deletedAt, "Entity muss nach mehrfachem apply() gelöscht bleiben")
+        markDeleted(entity, status: .synced, at: Date(timeIntervalSinceNow: -120))
+        try mergeOlderSnapshot(into: entity, times: 3)
+        XCTAssertNotNil(entity.deletedAt)
         XCTAssertEqual(entity.tombstone, true)
-        XCTAssertEqual(entity.syncStatus, .synced)
     }
 
     /// AC: Normales apply() auf aktive (nicht tombstoned) Entity bleibt weiterhin funktional.
@@ -207,23 +185,16 @@ final class ItemEntityTombstoneTests: XCTestCase {
         XCTAssertEqual(entity.syncStatus, .synced)
     }
 
-    /// AC: Bestehender pendingDelete-Guard bleibt durch den neuen Guard unverändert wirksam.
-    func test_apply_pendingDelete_guardRemainsEffective_afterNewGuard() {
-        // Given: Item lokal zum Löschen vorgemerkt, Bestätigung vom Server noch ausstehend
-        let deletionDate = Date(timeIntervalSinceNow: -10)
-        let entity = makeEntity(syncStatus: .pendingDelete)
-        entity.tombstone = nil  // tombstone noch nicht gesetzt (nur lokal pending)
-        entity.deletedAt = deletionDate
-        let originalName = entity.name
-
-        // When: Realtime-Snapshot des noch-aktiven Server-Zustands trifft ein
-        let model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
-        entity.apply(model: model)
-
-        // Then: pendingDelete-Guard schützt weiterhin
-        XCTAssertEqual(entity.deletedAt, deletionDate, "pendingDelete-Guard muss weiterhin greifen")
-        XCTAssertEqual(entity.syncStatus, .pendingDelete)
-        XCTAssertEqual(entity.name, originalName)
+    /// Ein NEUERER Stand (jemand hat den Artikel danach wieder angelegt) gewinnt dagegen – wie auf dem Server.
+    func test_newerSnapshot_revivesTombstone() throws {
+        let entity = makeEntity(syncStatus: .synced)
+        markDeleted(entity, status: .synced, at: Date())
+        var model = makeModel(id: entity.id.uuidString, listId: entity.listId.uuidString)
+        model.hlcTimestamp = 3_000; model.hlcCounter = 0; model.hlcNodeId = "remote"; model.tombstone = false
+        XCTAssertEqual(try SwiftDataItemStore(context: context).mergeRemote(model), .applied)
+        XCTAssertNil(entity.deletedAt)
+        XCTAssertEqual(entity.tombstone, false)
+        XCTAssertEqual(entity.name, "Milch Updated")
     }
 
     // MARK: - setSyncStatus boundary cases

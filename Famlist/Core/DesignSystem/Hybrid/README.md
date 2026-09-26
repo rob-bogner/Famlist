@@ -57,7 +57,7 @@ Diese Regeln sind überall umgesetzt und sollten bei Änderungen beibehalten wer
 |---|---|
 | `box-shadow` blur B | Gauß-Radius **B / 2** |
 | `box-shadow` spread | Form um den spread-Wert vergrößern oder verkleinern (`inset(by: -spread)`) |
-| `box-shadow` außen | wird unter der Box ausgestanzt, genau wie in CSS (`CSSBox`) |
+| `box-shadow` außen | wird unter der Box ausgestanzt, genau wie in CSS (`CSSBox`). Gezeichnet als CALayer-Schatten mit `shadowPath` (Radius B / 2), nicht mit `.blur`: `.blur` wird bei jeder Änderung der Box neu gerechnet und lässt z. B. den mitklappenden Listenkopf stottern |
 | `box-shadow: inset …` | wird nur innerhalb des Rahmens gezeichnet (Padding-Box) |
 | mehrere Schatten | der zuerst genannte liegt oben |
 | `filter: blur(X)` | `.blur(radius: X)` |

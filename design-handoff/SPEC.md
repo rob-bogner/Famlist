@@ -115,7 +115,8 @@ Jede Zeile hat eine Light- und eine Dark-Variante, außer bei den Kamera-Screens
       - Automatische Zuordnung zu Artikeln mit Status „Zugeordnet“, „Zuordnung prüfen“ oder „Neuer Artikel?“
       - Laden und Datum
       - Summe
-    - „Preise speichern“ legt Preispunkte an.
+    - „Preise speichern“ legt Preispunkte an. Weicht ein Bon-Preis vom gespeicherten Artikelpreis ab, fragt die App, ob die Bon-Preise die Artikelpreise ersetzen sollen (Liste und Artikelstamm).
+    - Kassenzettel-Archiv (design-handoff/KASSENZETTEL_ARCHIV.md): Ist „Fotos der Bons speichern“ an (Einstellungen → Kassenzettel, Standard an), legt „Preise speichern“ den Bon mit allen Fotos im Archiv ab – offline zuerst, sichtbar für alle Mitglieder der Liste. Archiv: Einstellungen → „Gespeicherte Kassenzettel“; Detail mit Fotos, Summe, Teilen, Löschen (Preise bleiben).
     - Einkauf erledigt zeigt die Summe und die Anzahl gespeicherter Preise. Dann „Abgehakte löschen & fertig“ oder „Liste behalten“.
     - Preisverlauf pro Artikel:
       - Tiefster, Schnitt und Höchster Preis
@@ -150,10 +151,12 @@ Jede Zeile hat eine Light- und eine Dark-Variante, außer bei den Kamera-Screens
 
 ## 5. Noch nicht gestaltet – NICHT umsetzen
 
-- Live-Gesamtkosten in der Liste
 - Avatar „wer hat was“ an Artikeln
-- Link „Preisverlauf“ in „Artikel bearbeiten“
 
-Diese drei Punkte kommen später mit eigenem Design. Bis dahin gilt: kein eigenes UI dafür erfinden.
+Dieser Punkt kommt später mit eigenem Design. Bis dahin gilt: kein eigenes UI dafür erfinden.
+
+**Von Robert freigegeben (25.09.2026), obwohl nicht gestaltet:** Live-Gesamtkosten in der Fortschrittskarte,
+Preis auf jeder Artikelkarte (abschaltbar: Einstellungen → „Preise anzeigen“) und der Link „Preisverlauf“ in
+„Artikel bearbeiten“. Umsetzung und Abweichungen: PLAN.md §9.
 
 **Übergangslösung für den Preisverlauf:** Der Screen wird gebaut. Bis der Link gestaltet ist, erreicht man ihn über das System-Kontextmenü (langer Druck) auf einen Artikel in „Artikel verwalten“, Eintrag „Preisverlauf“.

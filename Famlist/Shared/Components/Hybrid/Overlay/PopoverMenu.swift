@@ -46,3 +46,27 @@ struct PopoverMenu<Content: View>: View {
         }
     }
 }
+
+#Preview("PopoverMenu") {
+    let k = OverlayTheme(.light)
+    PopoverMenu(k: k, width: 270, pointerLeft: 120) {
+        PopoverMenuHeading(text: "Sortieren nach", k: k)
+        PopoverMenuRow(k: k, icon: Icon.sort, title: "Name", trailing: .check, isSelected: true)
+        PopoverMenuDivider(k: k)
+        PopoverMenuRow(k: k, icon: Icon.star, title: "Favoriten")
+    }
+    .padding(40)
+    .background(Color.hex("#F4F7F7"))
+}
+
+#Preview("PopoverMenu – Dark") {
+    let k = OverlayTheme(.dark)
+    PopoverMenu(k: k, width: 270, pointerLeft: 120) {
+        PopoverMenuHeading(text: "Sortieren nach", k: k)
+        PopoverMenuRow(k: k, icon: Icon.sort, title: "Name", trailing: .check, isSelected: true)
+        PopoverMenuDivider(k: k)
+        PopoverMenuRow(k: k, icon: Icon.star, title: "Favoriten")
+    }
+    .padding(40)
+    .background(Color.hex("#0A1416"))
+}

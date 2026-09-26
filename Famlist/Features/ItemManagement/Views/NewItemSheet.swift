@@ -120,3 +120,12 @@ struct NewItemSheet: View {
     .ignoresSafeArea()
     .environmentObject(PreviewMocks.makeListViewModelWithSamples())
 }
+
+#Preview("Dark") {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        NewItemSheet(initialName: "Milch", k: SheetTheme(.dark), maxHeight: 790, keyboardHeight: 0, onClose: {})
+    }
+    .ignoresSafeArea()
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}

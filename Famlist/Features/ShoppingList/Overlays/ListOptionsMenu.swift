@@ -56,6 +56,7 @@ struct ListOptionsMenu: View {
                         .textCase(.uppercase)
                         .foregroundStyle(k.sub)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .padding(.top, 10)
                         .padding(.horizontal, 12)
                         .padding(.bottom, 6)

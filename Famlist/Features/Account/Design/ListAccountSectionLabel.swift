@@ -34,3 +34,14 @@ struct ListAccountSectionLabel: View {
             .accessibilityAddTraits(.isHeader)
     }
 }
+
+#Preview("ListAccountSectionLabel") {
+    ListAccountSectionLabel(text: "Mitglieder", t: ListAccountTokens(.light))
+        .padding(20)
+}
+
+#Preview("ListAccountSectionLabel – Dark") {
+    ListAccountSectionLabel(text: "Mitglieder", t: ListAccountTokens(.dark))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

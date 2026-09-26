@@ -25,7 +25,9 @@ struct SVGIcon: View {
     let color: Color
     let lineWidth: CGFloat
 
-    init(_ elements: [SVGElement], size: CGFloat, color: Color, lineWidth: CGFloat) {
+    // nonisolated: Das init speichert nur Werte (kein Main-Actor-Zustand); so darf das Icon auch in
+    // nicht isolierten Label-Closures stehen (z. B. PhotosPicker).
+    nonisolated init(_ elements: [SVGElement], size: CGFloat, color: Color, lineWidth: CGFloat) {
         self.elements = elements
         self.size = size
         self.color = color
@@ -37,4 +39,15 @@ struct SVGIcon: View {
             .stroke(color, style: StrokeStyle(lineWidth: lineWidth * size / 24, lineCap: .round, lineJoin: .round))
             .frame(width: size, height: size)
     }
+}
+
+#Preview("SVGIcon") {
+    SVGIcon(Icon.chevronDown, size: 48, color: .hex("#0FA3AE"), lineWidth: 2)
+        .padding(20)
+}
+
+#Preview("SVGIcon – Dark") {
+    SVGIcon(Icon.chevronDown, size: 48, color: .hex("#1FC2CC"), lineWidth: 2)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

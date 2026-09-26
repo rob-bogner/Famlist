@@ -33,6 +33,10 @@ struct ProfileSetupView: View {
     @State private var photo: PhotosPickerItem?
     @State private var isSaving = false
     @FocusState private var usernameFocused: Bool
+    /// Unterkanten der beiden Eingabefelder im Scroll-Bereich (ohne Tastatur-Verschiebung) und Bildschirmhöhe.
+    @State private var usernameBottom: CGFloat = 0
+    @State private var nameBottom: CGFloat = 0
+    @State private var screenHeight: CGFloat = 0
 
     var body: some View {
         let appearance = Appearance(colorScheme)
@@ -43,6 +47,10 @@ struct ProfileSetupView: View {
         ZStack(alignment: .top) {
             EKKScreenBackground(t: t)
 
+            // Knopf unten, solange Platz ist; sonst (iPhone SE, große Schrift) scrollt der Screen,
+            // statt dass der Knopf das Namensfeld überdeckt.
+            GeometryReader { geo in
+            ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // Schritt-Anzeige
                 HStack(spacing: 0) {
@@ -77,6 +85,9 @@ struct ProfileSetupView: View {
                     .padding(.top, 28)
 
                 usernameField(k: k, t: t)
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.scrollSpace)).maxY } action: {
+                        usernameBottom = $0
+                    }
                     .padding(.top, 28)
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -86,9 +97,12 @@ struct ProfileSetupView: View {
                         .textContentType(.name)
                         .submitLabel(.done)
                 }
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.scrollSpace)).maxY } action: {
+                    nameBottom = $0
+                }
                 .padding(.top, 14)
 
-                Spacer(minLength: 0)
+                Spacer(minLength: 24)
 
                 CTAButton(title: isSaving ? "Wird gespeichert …" : "Los geht’s", k: k,
                           isEnabled: check == .available && !isSaving, action: submit)
@@ -96,8 +110,15 @@ struct ProfileSetupView: View {
             .padding(.horizontal, 24)
             .padding(.top, 70)
             .padding(.bottom, 34)
-            .offset(y: keyboard.height > 0 ? -min(keyboard.height, 200) : 0)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(minHeight: geo.size.height, alignment: .top)
+            }
+            .coordinateSpace(name: Self.scrollSpace)
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+            .onAppear { screenHeight = geo.size.height }
+            .onChange(of: geo.size.height) { _, height in screenHeight = height }
+            }
+            .offset(y: -keyboardLift)
             .animation(.easeOut(duration: 0.25), value: keyboard.height)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -121,11 +142,25 @@ struct ProfileSetupView: View {
         }
     }
 
+    nonisolated private static let scrollSpace = "profileSetupScroll"
+
+    /// Verschiebung bei offener Tastatur: wie bisher bis zu 200 pt (844-pt-Geräte unverändert); reicht das nicht
+    /// (iPhone SE, große Schrift), so weit, dass das fokussierte Feld 16 pt über der Tastatur liegt.
+    private var keyboardLift: CGFloat {
+        guard keyboard.height > 0 else { return 0 }
+        guard screenHeight > 0 else { return min(keyboard.height, 200) }
+        let fieldBottom = usernameFocused ? usernameBottom : nameBottom
+        let needed = fieldBottom + 16 - (screenHeight - keyboard.height)
+        return max(min(keyboard.height, 200), needed)
+    }
+
     /// Foto: 112 + 2 × 1,5 Rahmen (content-box) = 115, gestrichelt; mit Foto das Bild im Kreis.
     private func photoButton(k: SheetTheme, t: EKKTokens) -> some View {
-        PhotosPicker(selection: $photo, matching: .images) {
+        // Vor dem Label lesen: Das Label-Closure von PhotosPicker ist nicht an den Main Actor gebunden.
+        let avatar = session.avatarImage
+        return PhotosPicker(selection: $photo, matching: .images) {
             Group {
-                if let image = session.avatarImage {
+                if let image = avatar {
                     Image(uiImage: image).resizable().scaledToFill()
                         .frame(width: 115, height: 115)
                         .clipShape(Circle())

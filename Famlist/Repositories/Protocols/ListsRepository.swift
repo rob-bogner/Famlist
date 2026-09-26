@@ -25,6 +25,8 @@
 import Foundation // Provides UUID and Date.
 
 /// List-related operations for sharing and creation.
+/// @MainActor wie ItemsRepository: Die Offline-Schicht (OfflineListsRepository) hält Zustand auf dem Main Actor.
+@MainActor
 protocol ListsRepository {
     /// Get or create default list.
     /// - Parameter owner: The owner UUID.
@@ -42,12 +44,6 @@ protocol ListsRepository {
     ///   - title: The list title.
     /// - Returns: The newly created list.
     func createList(for owner: UUID, title: String) async throws -> List
-    
-    /// Add a member to list.
-    /// - Parameters:
-    ///   - listId: The list UUID.
-    ///   - profileId: The profile UUID to add.
-    func addMember(listId: UUID, profileId: UUID) async throws
     
     /// Remove a member from list.
     /// - Parameters:
@@ -91,8 +87,25 @@ protocol ListsRepository {
     ///   - ownerId: The owner UUID (needed to clear previous default).
     func setDefaultList(listId: UUID, ownerId: UUID) async throws
 
-    /// Einladung annehmen: Titel, Artikel- und Mitgliederzahl einer Liste, die man noch nicht lesen darf (RPC invite_preview).
-    func invitePreview(listId: UUID) async throws -> InvitePreviewRow?
+    /// Einladungs-Token für den Link erzeugen (RPC create_list_invite, Migration 014).
+    /// Liefert einen eigenen, noch mindestens 7 Tage gültigen Token wieder, statt jedes Mal einen neuen.
+    func createInvite(listId: UUID) async throws -> String
+
+    /// Einladung annehmen: Liste, Einladender, Artikel- und Mitgliederzahl (RPC invite_preview_by_token).
+    /// nil = Token ungültig, abgelaufen oder widerrufen.
+    func invitePreview(token: String) async throws -> InvitePreviewRow?
+
+    /// Einladung annehmen (RPC accept_list_invite). Gibt die Listen-ID zurück; mehrfaches Annehmen ist unschädlich.
+    func acceptInvite(token: String) async throws -> UUID
+
+    /// Anlegen mit einer auf dem Gerät vergebenen ID (Offline-First).
+    func createList(id: UUID, for owner: UUID, title: String) async throws -> List
+
+    /// Standardliste sicherstellen (RPC ensure_default_list); `id` gilt, falls noch keine existiert.
+    func ensureDefaultList(id: UUID, for owner: UUID) async throws -> ListModel
+
+    /// Geteilte Liste verlassen (eigene Mitgliedschaft).
+    func leaveList(listId: UUID, profileId: UUID) async throws
 }
 
 /// Convenience API to retrieve the default list as a strongly-typed ListModel.
@@ -117,19 +130,42 @@ extension ListsRepository {
 }
 
 extension ListsRepository {
-    /// Einladung annehmen: Titel, Artikel- und Mitgliederzahl einer Liste, die man noch nicht lesen darf.
-    func invitePreview(listId: UUID) async throws -> InvitePreviewRow? { nil }
+    /// Anlegen mit einer auf dem Gerät vergebenen ID (Offline-First). Standard: ID des Servers.
+    func createList(id: UUID, for owner: UUID, title: String) async throws -> List {
+        try await createList(for: owner, title: title)
+    }
+
+    /// Standardliste sicherstellen; `id` wird verwendet, falls noch keine existiert.
+    func ensureDefaultList(id: UUID, for owner: UUID) async throws -> ListModel {
+        try await fetchDefaultList(for: owner)
+    }
+
+    /// Geteilte Liste verlassen. Standard: eigene Mitgliedschaft löschen.
+    func leaveList(listId: UUID, profileId: UUID) async throws {
+        try await removeMember(listId: listId, profileId: profileId)
+    }
 }
 
-/// Zeile aus der RPC `invite_preview` (Migration 010).
+extension ListsRepository {
+    // Standard-Implementierungen für Test-Doubles und Vorschauen.
+    func createInvite(listId: UUID) async throws -> String { throw InviteError.unavailable }
+    func invitePreview(token: String) async throws -> InvitePreviewRow? { nil }
+    func acceptInvite(token: String) async throws -> UUID { throw InviteError.invalidOrExpired }
+}
+
+/// Zeile aus der RPC `invite_preview_by_token` (Migration 014).
 struct InvitePreviewRow: Decodable, Equatable {
+    let listId: UUID
     let title: String
     let itemCount: Int
     let memberCount: Int
+    let inviterName: String?
 
     enum CodingKeys: String, CodingKey {
         case title
+        case listId = "list_id"
         case itemCount = "item_count"
         case memberCount = "member_count"
+        case inviterName = "inviter_name"
     }
 }

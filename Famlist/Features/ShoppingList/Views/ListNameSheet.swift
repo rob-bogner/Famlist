@@ -89,3 +89,15 @@ struct ListNameSheet: View {
     .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
                                            lists: PreviewListsRepository(), listViewModel: listVM))
 }
+
+#Preview("Dark") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        ListNameSheet(mode: .create, k: SheetTheme(.dark), maxHeight: 790, keyboardHeight: 0, onDone: {})
+    }
+    .ignoresSafeArea()
+    .environmentObject(listVM)
+    .environmentObject(AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
+                                           lists: PreviewListsRepository(), listViewModel: listVM))
+}

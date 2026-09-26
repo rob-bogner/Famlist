@@ -37,12 +37,13 @@ struct PaginationCursor: Codable, Equatable {
     // MARK: - PostgREST formatting
 
     /// ISO8601 string with fractional seconds and UTC timezone, compatible with PostgREST timestamptz filters.
-    var createdAtISO: String {
+    @MainActor var createdAtISO: String {
         Self.postgrestFormatter.string(from: createdAt)
     }
 
     // Shared formatter — ISO8601 with fractional seconds required by Supabase/PostgREST.
-    static let postgrestFormatter: ISO8601DateFormatter = {
+    // @MainActor: ISO8601DateFormatter ist nicht Sendable; alle Nutzer (Repository, ListViewModel) laufen auf dem Main Actor.
+    @MainActor static let postgrestFormatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         f.timeZone = TimeZone(identifier: "UTC")!

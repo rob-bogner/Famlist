@@ -25,7 +25,10 @@
 import UIKit // UIKit provides UIImage and Data types used for caching.
 
 /// Simple, shared in-memory cache for decoded images.
-final class ImageCache { // Final so it isn't subclassed; single-purpose utility.
+// @unchecked Sendable ist sicher: Der einzige Zustand ist die unveränderliche Referenz auf NSCache, und NSCache
+// ist laut Apple-Doku threadsicher (Hinzufügen, Entfernen und Abfragen von beliebigen Threads ohne eigenes Lock).
+// Die Limits werden nur einmal im privaten init gesetzt.
+final class ImageCache: @unchecked Sendable { // Final so it isn't subclassed; single-purpose utility.
     static let shared = ImageCache() // Singleton instance used across the app.
     private let cache = NSCache<NSString, UIImage>() // NSCache automatically clears entries under memory pressure.
     private init() {

@@ -107,3 +107,18 @@ struct PriceHistoryChart: View {
         .allowsHitTesting(false)
     }
 }
+
+#Preview("PriceHistoryChart") {
+    let t = ItemExtraTokens(.light)
+    PriceHistoryChart(line: t.line, areaFill: t.areaFill, accent: SheetTheme(.light).accent, dotFill: t.dotFill)
+        .frame(height: 160)
+        .padding(20)
+}
+
+#Preview("PriceHistoryChart – Dark") {
+    let t = ItemExtraTokens(.dark)
+    PriceHistoryChart(line: t.line, areaFill: t.areaFill, accent: SheetTheme(.dark).accent, dotFill: t.dotFill)
+        .frame(height: 160)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

@@ -14,7 +14,8 @@
  - Die Bons sind so aufgebaut, wie Vision die Zeilen liefert: Text und Preis in einer Zeile.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 7).
+ - 25.09.2026: Audit-Fixes – Tests für Rabatte mit nachgestelltem/alleinstehendem Minus,
+   Summenwörter nur als ganzes Wort, Gewichtszeilen mit Endpreis.
  ------------------------------------------------------------------------
  */
 
@@ -161,5 +162,92 @@ extension ReceiptParserTests {
     func test_skipWords_onlyWholeWords() {
         let r = ReceiptParser.parse(lines: ["BARILLA SPAGHETTI   1,49 A", "Geg. BAR   5,00"])
         XCTAssertEqual(r.lines.map(\.raw), ["BARILLA SPAGHETTI"])
+    }
+}
+
+// MARK: - Audit-Fixes
+
+extension ReceiptParserTests {
+    func test_discount_trailingMinus_reducesPreviousLine() {
+        let r = ReceiptParser.parse(lines: ["Butter   2,49 A", "Rabatt   0,50-", "Milch   1,00 A"])
+        XCTAssertEqual(r.lines.map(\.raw), ["Butter", "Milch"])
+        XCTAssertEqual(r.lines.map(\.price), [d("1.99"), d("1.00")])
+    }
+
+    func test_discount_trailingMinus_withTaxLetter() {
+        let r = ReceiptParser.parse(lines: ["Butter   2,49 A", "Preisvorteil   0,50- A"])
+        XCTAssertEqual(r.lines.map(\.price), [d("1.99")])
+    }
+
+    func test_discount_standaloneMinusLine() {
+        let r = ReceiptParser.parse(lines: ["Butter   2,49 A", "-0,50"])
+        XCTAssertEqual(r.lines.map(\.price), [d("1.99")])
+    }
+
+    func test_discount_withLabel_leadingMinus() {
+        let r = ReceiptParser.parse(lines: ["Butter   2,49 A", "Rabatt -0,50"])
+        XCTAssertEqual(r.lines.map(\.price), [d("1.99")])
+    }
+
+    func test_discount_neverBelowZero() {
+        let r = ReceiptParser.parse(lines: ["Kaugummi   0,30 A", "Rabatt   -0,50"])
+        XCTAssertEqual(r.lines.map(\.price), [d("0")])
+    }
+
+    func test_totalWords_onlyWholeWords() {
+        let r = ReceiptParser.parse(lines: ["SUMMERROLLS   3,99 A", "TOTALSCHADEN SPRAY   1,00 A",
+                                            "GESAMTKORN BROT   2,50 A", "SUMME EUR   7,49"])
+        XCTAssertEqual(r.lines.map(\.raw), ["SUMMERROLLS", "TOTALSCHADEN SPRAY", "GESAMTKORN BROT"])
+        XCTAssertEqual(r.total, d("7.49"))
+    }
+
+    func test_totalWords_compoundTotalsStillRecognized() {
+        XCTAssertEqual(ReceiptParser.parse(lines: ["Brot   2,50 A", "GESAMTSUMME   2,50"]).total, d("2.50"))
+        XCTAssertEqual(ReceiptParser.parse(lines: ["Brot   2,50 A", "Gesamtbetrag EUR 2,50"]).total, d("2.50"))
+    }
+
+    func test_weightLine_withEndPrice_assignedToNameLineBefore() {
+        let bon = ["EDEKA", "Tomaten Rispe", "0,512 kg x 9,99 EUR/kg   5,11 A", "Brot Dinkel   3,20 A"]
+        let r = ReceiptParser.parse(lines: bon)
+        XCTAssertEqual(r.lines.map(\.raw), ["Tomaten Rispe", "Brot Dinkel"])
+        XCTAssertEqual(r.lines.map(\.price), [d("5.11"), d("3.20")])
+    }
+
+    func test_weightLine_withEndPrice_afterPricedLine_noDuplicate() {
+        let r = ReceiptParser.parse(lines: ["Tomaten   5,11 A", "0,512 kg x 9,99 EUR/kg   5,11 A"])
+        XCTAssertEqual(r.lines.map(\.raw), ["Tomaten"])
+        XCTAssertEqual(r.lines.map(\.price), [d("5.11")])
+    }
+
+    // MARK: - Mengenzeilen
+
+    func test_quantityLine_afterPosition_setsQuantity() {
+        let r = ReceiptParser.parse(lines: ["BANANEN   2,58 B", "2 Stk x 1,29", "KOKOSM. 400ML   1,39 B"])
+        XCTAssertEqual(r.lines.map(\.raw), ["BANANEN", "KOKOSM. 400ML"])
+        XCTAssertEqual(r.lines.map(\.quantity), [2, 1])
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: r.lines[0].price, quantity: r.lines[0].quantity), d("1.29"))
+    }
+
+    func test_quantityLine_beforePosition_setsQuantityOfNext() {
+        let r = ReceiptParser.parse(lines: ["BROT   2,50 A", "3 x 0,99", "JOGHURT   2,97 A"])
+        XCTAssertEqual(r.lines.map(\.raw), ["BROT", "JOGHURT"], "„3 x 0,99“ ist keine eigene Position")
+        XCTAssertEqual(r.lines.map(\.quantity), [1, 3])
+    }
+
+    func test_quantityLine_amountDoesNotMatch_keepsQuantityOne() {
+        let r = ReceiptParser.parse(lines: ["BROT   2,50 A", "2 Stk x 1,29", "MILCH   1,19 A"])
+        XCTAssertEqual(r.lines.map(\.quantity), [1, 1])
+    }
+
+    func test_quantityLine_withDiscount_keepsQuantity() {
+        let r = ReceiptParser.parse(lines: ["BANANEN   2,58 B", "2 Stk x 1,29", "Rabatt   -0,50"])
+        XCTAssertEqual(r.lines.map(\.price), [d("2.08")])
+        XCTAssertEqual(r.lines.map(\.quantity), [2])
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: d("2.08"), quantity: 2), d("1.04"))
+    }
+
+    func test_unitPrice_roundsToCents() {
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: d("1.00"), quantity: 3), d("0.33"))
+        XCTAssertEqual(ParsedReceipt.unitPrice(price: d("2.49"), quantity: 1), d("2.49"))
     }
 }

@@ -16,7 +16,7 @@
    beim Abmelden und wenn die App in den Hintergrund geht.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Dock „Löschen“).
+ - Festschreiben gebündelt und abwartbar (Audit 25.09.2026, H2).
  ------------------------------------------------------------------------
  */
 
@@ -76,23 +76,24 @@ extension ListViewModel {
         }
     }
 
-    /// Schreibt eine offene Löschung fest (Tombstones über die SyncEngine).
-    func commitPendingDeletion() {
-        guard let pending = pendingDeletion else { return }
+    /// Schreibt eine offene Löschung fest (Tombstones über die SyncEngine, gebündelt).
+    /// - Returns: Aufgabe, die nach dem lokalen Schreiben endet (addItem wartet darauf, damit ein
+    ///   sofortiges Neu-Anlegen desselben Artikels die neuere HLC bekommt).
+    @discardableResult
+    func commitPendingDeletion() -> Task<Void, Never>? {
+        guard let pending = pendingDeletion else { return nil }
         pendingDeletionTask?.cancel()
         pendingDeletionTask = nil
         withAnimation(.easeInOut(duration: 0.25)) { pendingDeletion = nil }
-        guard pending.listId == listId else {
-            // Liste wurde bereits gewechselt: direkt über die SyncEngine löschen.
-            let engine = syncEngine
-            Task { for item in pending.items { await engine?.deleteItem(item) } }
-            return
+        guard let engine = syncEngine else { return nil }
+        let targets = pending.items
+        let isActiveList = pending.listId == listId
+        return Task {
+            await engine.deleteItems(targets)
+            if isActiveList {
+                self.pendingBulkDeleteIDs.subtract(targets.map(\.id))
+                self.refreshItemsFromStore()
+            }
         }
-        isBulkMutationActive = true
-        isBulkDeleting = true
-        pending.items.forEach { deleteItem($0) }
-        isBulkDeleting = false
-        refreshItemsFromStore()
-        isBulkMutationActive = false
     }
 }

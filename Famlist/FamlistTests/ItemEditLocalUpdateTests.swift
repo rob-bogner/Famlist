@@ -56,10 +56,24 @@ final class ItemEditLocalUpdateTests: XCTestCase {
         sut.items = [butter]
         var edited = butter
         edited.hlcTimestamp = nil                  // Formular kennt keine HLC-Felder
-        edited.name = "Kerrygold Butter"
+        edited.brand = "Kerrygold"
         sut.updateItem(edited, updateCatalog: false)
-        XCTAssertEqual(sut.items.first?.name, "Kerrygold Butter")
+        XCTAssertEqual(sut.items.first?.brand, "Kerrygold")
         XCTAssertEqual(sut.items.first?.hlcTimestamp, 42, "CRDT-Felder bleiben unverändert")
+    }
+
+    /// Umbenennen: Die ID hängt am Namen (ADR-005). Der Artikel bekommt die ID des neuen Namens,
+    /// damit späteres Hinzufügen des alten Namens ihn nicht überschreibt (Audit H3).
+    func test_updateItem_rename_movesToIdOfNewName() {
+        let oldId = UUID.deterministicItemID(listId: listId, name: "Milch").uuidString
+        let milk = ItemModel(id: oldId, name: "Milch", units: 2, listId: listId.uuidString)
+        sut.items = [milk]
+        var edited = milk
+        edited.name = "Hafermilch"
+        sut.updateItem(edited, updateCatalog: false)
+        XCTAssertEqual(sut.items.map(\.name), ["Hafermilch"])
+        XCTAssertEqual(sut.items.first?.id, UUID.deterministicItemID(listId: listId, name: "Hafermilch").uuidString)
+        XCTAssertEqual(sut.items.first?.units, 2)
     }
 
     // MARK: - Doppelt hinzufügen

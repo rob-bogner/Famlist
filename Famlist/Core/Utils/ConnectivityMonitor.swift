@@ -23,7 +23,7 @@ final class ConnectivityMonitor: ObservableObject { // ObservableObject lets Swi
     static let shared = ConnectivityMonitor() // Static singleton to keep monitor lifetime tied to app lifecycle.
 
     /// Indicates whether the current network path is considered online (.satisfied).
-    @Published private(set) var isOnline: Bool = true // Published property emits changes to subscribers.
+    @Published private(set) var isOnline: Bool = !SimulatedOffline.isActive // Published property emits changes to subscribers.
 
     private let monitor: NWPathMonitor // Underlying system reachability monitor.
     private let queue: DispatchQueue // Serial queue where NWPathMonitor delivers updates.
@@ -35,7 +35,8 @@ final class ConnectivityMonitor: ObservableObject { // ObservableObject lets Swi
         monitor.pathUpdateHandler = { [weak self] path in // Receive connectivity changes from the monitor.
             guard let self else { return } // Ensure self still exists.
             Task { @MainActor in // Hop back to main actor to update published state safely.
-                self.isOnline = path.status == .satisfied // Update online flag when path is satisfied.
+                // DEBUG-Startargument -simulateOffline: immer „offline“ (UI-Test des Offline-Starts).
+                self.isOnline = path.status == .satisfied && !SimulatedOffline.isActive
             }
         }
         monitor.start(queue: queue) // Begin monitoring on the dedicated queue.

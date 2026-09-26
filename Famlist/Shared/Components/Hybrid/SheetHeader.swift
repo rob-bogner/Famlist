@@ -22,6 +22,8 @@ struct SheetHeader: View {
     let title: String
     let k: SheetTheme
     var onClose: () -> Void = {}
+    /// Optionaler Zurück-Knopf links vom Titel (ReceiptReview.dc.html: 44 rund, Abstand 12). nil = keiner.
+    var onBack: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +31,11 @@ struct SheetHeader: View {
                 .fill(k.grabber)
                 .frame(width: 40, height: 5)
             HStack(spacing: 0) {
+                if let onBack {
+                    CircleCloseButton(k: k, size: 44, iconSize: 18, lineWidth: 2.2, icon: Icon.chevronLeft, action: onBack)
+                        .accessibilityLabel("Zurück")
+                        .padding(.trailing, 12)
+                }
                 Text(title)
                     .font(AppFont.outfit(22, 600))
                     .tracking(-0.22)                 // -0.01em × 22
@@ -41,4 +48,15 @@ struct SheetHeader: View {
             .padding(.top, 12)
         }
     }
+}
+
+#Preview("SheetHeader") {
+    SheetHeader(title: "Artikel bearbeiten", k: SheetTheme(.light))
+        .padding(20)
+}
+
+#Preview("SheetHeader – Dark") {
+    SheetHeader(title: "Artikel bearbeiten", k: SheetTheme(.dark))
+        .padding(20)
+        .background(Color.hex("#0A1416"))
 }

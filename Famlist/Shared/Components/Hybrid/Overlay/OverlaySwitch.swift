@@ -45,3 +45,20 @@ struct OverlaySwitch: View {
         .accessibilityValue(isOn ? "An" : "Aus")
     }
 }
+
+#Preview("OverlaySwitch") {
+    HStack(spacing: 16) {
+        OverlaySwitch(k: OverlayTheme(.light))
+        OverlaySwitch(k: OverlayTheme(.light), isOn: false)
+    }
+    .padding(20)
+}
+
+#Preview("OverlaySwitch – Dark") {
+    HStack(spacing: 16) {
+        OverlaySwitch(k: OverlayTheme(.dark))
+        OverlaySwitch(k: OverlayTheme(.dark), isOn: false)
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
+}

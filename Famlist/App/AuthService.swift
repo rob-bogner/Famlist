@@ -88,15 +88,29 @@ final class AuthService {
     /// Tries to restore a persisted Supabase session on app launch.
     /// - Returns: The restored session if available, nil otherwise.
     func restoreSession() async throws {
-        let session = try await client.auth.session
-        _ = logResult(params: ["hasSession": true], result: session.user.id)
+        do {
+            let session = try await client.auth.session
+            _ = logResult(params: ["hasSession": true], result: session.user.id)
+        } catch where SyncErrorClassifier.classify(error) != .permanent && client.auth.currentUser != nil {
+            // Ohne Netz lässt sich ein abgelaufenes Token nicht erneuern. Die gespeicherte Sitzung gilt
+            // trotzdem: Die App startet offline aus den lokalen Daten, das SDK erneuert später (Audit K6).
+            logVoid(params: ["action": "restoreSession.offline"])
+        }
     }
+
+    /// ID des angemeldeten Nutzers aus der gespeicherten Sitzung (ohne Netz).
+    var currentUserId: UUID? { client.auth.currentUser?.id }
     
     /// Signs the user out from Supabase and clears local state.
     /// - Throws: Error if sign-out fails.
+    /// Abmelden auf allen Geräten; ohne Netz wenigstens lokal (die Sitzung wird auf jeden Fall entfernt).
     func signOut() async throws {
-        UserLog.Auth.loggedOut()
-        try await client.auth.signOut(scope: .global)
+        do {
+            try await client.auth.signOut(scope: .global)
+        } catch {
+            try? await client.auth.signOut(scope: .local)
+            throw error
+        }
         logVoid(params: ["action": "signOut", "status": "ok"])
     }
     
@@ -107,7 +121,8 @@ final class AuthService {
     /// - Throws: Error if session extraction fails.
     func handleOpenURL(_ url: URL) async throws {
         _ = try await client.auth.session(from: url)
-        logVoid(params: ["openURL": url.absoluteString])
+        // Die URL enthält Anmelde-Tokens: nur Schema und Host loggen.
+        logVoid(params: ["openURL": "\(url.scheme ?? "-")://\(url.host ?? "-")"])
     }
 }
 

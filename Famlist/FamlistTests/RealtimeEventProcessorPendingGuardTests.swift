@@ -5,14 +5,15 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Regression tests for two bugs in RealtimeEventProcessor.processUpdate():
-   1. Missing pending-status guard: a Realtime UPDATE echo must not overwrite an
-      entity that has .pendingUpdate or .pendingCreate (in-flight local mutation).
-   2. HLC null-timestamp fallback: a Supabase payload with null hlc_timestamp must
-      always lose CRDT resolution against any valid local HLC (epoch=0 fallback).
+ - Realtime-Ereignisse werden per HLC abgeglichen (ItemSyncPolicy), wie auf dem Server:
+   1. Das eigene Echo (gleiche HLC) und ältere Stände ändern nichts – ausstehende Änderungen bleiben.
+   2. Neuere Stände anderer Geräte gewinnen, auch gegen ältere ausstehende lokale Änderungen.
+   3. Löschmarkierungen blenden aus, bleiben lokal erhalten und schützen vor späten, älteren Updates.
+   4. Fehlende HLC im Ereignis (null) verliert immer (Epoche 0).
 
  📝 Last Change:
- - FAM-XX: Initial creation.
+ - Auf Last-Writer-Wins umgestellt (Audit 25.09.2026). Vorher verwarf die App auch NEUERE Stände,
+   solange eine eigene Änderung ausstand – die Geräte liefen dann dauerhaft auseinander.
  ------------------------------------------------------------------------
 */
 
@@ -28,7 +29,7 @@ private func makeUpdatePayload(
     listId: UUID,
     name: String = "Tee",
     units: Int = 1,
-    hlcTimestamp: Int64? = 9_999_999_999_999,  // very high → would win if not guarded
+    hlcTimestamp: Int64? = 9_999_999_999_999,
     hlcCounter: Int = 0,
     hlcNodeId: String = "remote-node",
     tombstone: Bool = false
@@ -57,8 +58,6 @@ private func makeUpdatePayload(
 @MainActor
 final class RealtimeEventProcessorPendingGuardTests: XCTestCase {
 
-    // MARK: - Setup
-
     private var container: ModelContainer!
     private var context: ModelContext!
     private var itemStore: SwiftDataItemStore!
@@ -68,14 +67,10 @@ final class RealtimeEventProcessorPendingGuardTests: XCTestCase {
 
     override func setUp() async throws {
         let schema = Schema([ItemEntity.self, ListEntity.self])
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        container = try ModelContainer(for: schema, configurations: [config])
+        container = try ModelContainer(for: schema, configurations: [ModelConfiguration(isStoredInMemoryOnly: true)])
         context = ModelContext(container)
         itemStore = SwiftDataItemStore(context: context)
-        sut = RealtimeEventProcessor(
-            conflictResolver: ConflictResolver(),
-            itemStore: itemStore
-        )
+        sut = RealtimeEventProcessor(itemStore: itemStore)
     }
 
     override func tearDown() async throws {
@@ -85,178 +80,131 @@ final class RealtimeEventProcessorPendingGuardTests: XCTestCase {
         container = nil
     }
 
-    // MARK: - Helpers
-
     @discardableResult
-    private func insertEntity(
-        id: UUID,
-        units: Int,
-        syncStatus: ItemEntity.SyncStatus,
-        hlcTimestamp: Int64 = 1_000
-    ) throws -> ItemEntity {
-        let entity = ItemEntity(
-            id: id,
-            listId: listId,
-            ownerPublicId: nil,
-            imageData: nil,
-            name: "Tee",
-            units: units,
-            measure: "pkg",
-            price: 0,
-            isChecked: false,
-            category: nil,
-            productDescription: nil,
-            brand: nil,
-            syncStatus: syncStatus
-        )
-        entity.hlcTimestamp = hlcTimestamp
-        entity.hlcCounter   = 0
-        entity.hlcNodeId    = "local-node"
+    private func insertEntity(id: UUID, units: Int, syncStatus: ItemEntity.SyncStatus,
+                              hlcTimestamp: Int64 = 1_000, nodeId: String = "local-node") throws -> ItemEntity {
+        let entity = ItemEntity(id: id, listId: listId, ownerPublicId: nil, imageData: nil, name: "Tee",
+                                units: units, measure: "pkg", price: 0, isChecked: false, category: nil,
+                                productDescription: nil, brand: nil, syncStatus: syncStatus,
+                                hlcTimestamp: hlcTimestamp, hlcCounter: 0, hlcNodeId: nodeId)
         context.insert(entity)
         try context.save()
         return entity
     }
 
-    // MARK: - Pending Guard: .pendingUpdate must not be overwritten
+    // MARK: - Eigene Echos und ältere Stände
 
-    /// AC: A Realtime UPDATE echo with a very high HLC must NOT overwrite an entity
-    /// that has .pendingUpdate (in-flight local mutation).
-    /// Without the guard, units=3 (local) was replaced with units=1 (remote echo).
-    func test_processUpdate_pendingUpdate_isNotOverwrittenByRealtimeEcho() async throws {
-        // Given: local entity with .pendingUpdate, units=3 (user just incremented)
+    func test_ownEcho_sameHLC_changesNothing() async throws {
         let itemId = UUID()
         try insertEntity(id: itemId, units: 3, syncStatus: .pendingUpdate, hlcTimestamp: 5_000)
+        let echo = makeUpdatePayload(id: itemId, listId: listId, units: 3, hlcTimestamp: 5_000, hlcNodeId: "local-node")
 
-        // Remote echo carries units=1 with a higher HLC (would normally win CRDT)
-        let payload = makeUpdatePayload(
-            id: itemId, listId: listId, units: 1, hlcTimestamp: 9_999_999_999_999
-        )
+        await sut.processUpdate(echo, listId: listId)
 
-        // When
-        await sut.processUpdate(payload, listId: listId)
-
-        // Then: entity must still have units=3
-        guard let entity = try itemStore.fetchItem(id: itemId) else {
-            return XCTFail("Entity must still exist after processUpdate()")
-        }
-        XCTAssertEqual(entity.units, 3,
-                       ".pendingUpdate entity must not be overwritten by Realtime echo regardless of HLC")
-        XCTAssertEqual(entity.syncStatus, .pendingUpdate,
-                       "syncStatus must remain .pendingUpdate")
+        let entity = try XCTUnwrap(itemStore.fetchItem(id: itemId))
+        XCTAssertEqual(entity.units, 3)
+        XCTAssertEqual(entity.syncStatus, .pendingUpdate, "Bestätigung kommt von der SyncEngine, nicht vom Echo")
     }
 
-    // MARK: - Pending Guard: .pendingCreate must not be overwritten
+    func test_olderRemote_doesNotOverwritePendingLocal() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 3, syncStatus: .pendingUpdate, hlcTimestamp: 5_000)
+        let stale = makeUpdatePayload(id: itemId, listId: listId, units: 1, hlcTimestamp: 4_000)
 
-    /// AC: A Realtime INSERT/UPDATE echo must NOT overwrite a .pendingCreate entity.
-    func test_processUpdate_pendingCreate_isNotOverwrittenByRealtimeEcho() async throws {
-        // Given: local entity with .pendingCreate, units=2
+        await sut.processUpdate(stale, listId: listId)
+
+        let entity = try XCTUnwrap(itemStore.fetchItem(id: itemId))
+        XCTAssertEqual(entity.units, 3)
+        XCTAssertEqual(entity.syncStatus, .pendingUpdate)
+    }
+
+    // MARK: - Neuere Stände gewinnen
+
+    func test_newerRemote_winsOverOlderPendingLocal() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 3, syncStatus: .pendingUpdate, hlcTimestamp: 5_000)
+        let newer = makeUpdatePayload(id: itemId, listId: listId, units: 8, hlcTimestamp: 6_000)
+
+        await sut.processUpdate(newer, listId: listId)
+
+        let entity = try XCTUnwrap(itemStore.fetchItem(id: itemId))
+        XCTAssertEqual(entity.units, 8)
+        XCTAssertEqual(entity.syncStatus, .synced)
+        XCTAssertEqual(entity.hlcTimestamp, 6_000)
+    }
+
+    func test_newerRemote_updatesSyncedEntity() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
+
+        await sut.processUpdate(makeUpdatePayload(id: itemId, listId: listId, units: 4, hlcTimestamp: 2_000), listId: listId)
+
+        XCTAssertEqual(try XCTUnwrap(itemStore.fetchItem(id: itemId)).units, 4)
+    }
+
+    func test_unknownItem_isInserted() async throws {
+        let itemId = UUID()
+        await sut.processInsertion(makeUpdatePayload(id: itemId, listId: listId, units: 2, hlcTimestamp: 2_000), listId: listId)
+        let entity = try XCTUnwrap(itemStore.fetchItem(id: itemId))
+        XCTAssertEqual(entity.units, 2)
+        XCTAssertEqual(entity.syncStatus, .synced)
+    }
+
+    // MARK: - HLC fehlt (null)
+
+    func test_nullRemoteHLC_alwaysLosesAgainstLocal() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 3, syncStatus: .synced, hlcTimestamp: 1)
+        let payload = makeUpdatePayload(id: itemId, listId: listId, units: 1, hlcTimestamp: nil)
+
+        await sut.processUpdate(payload, listId: listId)
+
+        XCTAssertEqual(try XCTUnwrap(itemStore.fetchItem(id: itemId)).units, 3)
+    }
+
+    // MARK: - Löschmarkierungen
+
+    func test_newerRemoteTombstone_hidesItem_keepsTombstone_andBlocksOlderUpdates() async throws {
+        let itemId = UUID()
+        try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
+
+        await sut.processUpdate(makeUpdatePayload(id: itemId, listId: listId, hlcTimestamp: 3_000, tombstone: true),
+                                listId: listId)
+        XCTAssertTrue(try itemStore.fetchItems(listId: listId).isEmpty, "ausgeblendet")
+        XCTAssertEqual(try XCTUnwrap(itemStore.fetchItem(id: itemId)).tombstone, true, "bleibt lokal erhalten")
+
+        await sut.processUpdate(makeUpdatePayload(id: itemId, listId: listId, units: 9, hlcTimestamp: 2_000),
+                                listId: listId)
+        XCTAssertTrue(try itemStore.fetchItems(listId: listId).isEmpty, "älteres Update holt nicht zurück")
+    }
+
+    func test_olderRemoteTombstone_doesNotDeleteNewerLocalReAdd() async throws {
         let itemId = UUID()
         try insertEntity(id: itemId, units: 2, syncStatus: .pendingCreate, hlcTimestamp: 5_000)
 
-        // Remote carries units=1 with a very high HLC
-        let payload = makeUpdatePayload(
-            id: itemId, listId: listId, units: 1, hlcTimestamp: 9_999_999_999_999
-        )
+        await sut.processUpdate(makeUpdatePayload(id: itemId, listId: listId, hlcTimestamp: 4_000, tombstone: true),
+                                listId: listId)
 
-        // When
-        await sut.processUpdate(payload, listId: listId)
-
-        // Then: entity must still have units=2
-        guard let entity = try itemStore.fetchItem(id: itemId) else {
-            return XCTFail("Entity must still exist after processUpdate()")
-        }
-        XCTAssertEqual(entity.units, 2,
-                       ".pendingCreate entity must not be overwritten by Realtime echo")
-        XCTAssertEqual(entity.syncStatus, .pendingCreate,
-                       "syncStatus must remain .pendingCreate")
+        XCTAssertEqual(try itemStore.fetchItems(listId: listId).count, 1)
     }
 
-    // MARK: - .synced entity IS updated by a later remote HLC
-
-    /// AC: A .synced entity must still be updated when the remote HLC is newer.
-    func test_processUpdate_syncedEntity_isUpdatedWhenRemoteHLCIsNewer() async throws {
-        // Given: .synced entity with units=1, local HLC=1000
+    func test_newerRemoteReAdd_revivesTombstonedItem() async throws {
         let itemId = UUID()
-        try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
+        let entity = try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
+        entity.setTombstone(true)
+        try context.save()
 
-        // Remote carries units=5, newer HLC
-        let payload = makeUpdatePayload(
-            id: itemId, listId: listId, units: 5, hlcTimestamp: 2_000
-        )
+        await sut.processUpdate(makeUpdatePayload(id: itemId, listId: listId, units: 2, hlcTimestamp: 2_000), listId: listId)
 
-        // When
-        await sut.processUpdate(payload, listId: listId)
-
-        // Then: entity must have units=5
-        guard let entity = try itemStore.fetchItem(id: itemId) else {
-            return XCTFail("Entity must still exist after processUpdate()")
-        }
-        XCTAssertEqual(entity.units, 5,
-                       ".synced entity must be updated when remote HLC is newer")
+        XCTAssertEqual(try itemStore.fetchItems(listId: listId).first?.units, 2)
     }
 
-    // MARK: - HLC null fallback: epoch=0 always loses
+    // MARK: - DELETE (Zeile auf dem Server endgültig entfernt)
 
-    /// AC: When a Supabase Realtime payload has NO hlc_timestamp field (null),
-    /// parseItemFromPayload() must treat it as epoch=0, which always loses to any
-    /// valid local HLC.  The previous fallback used current-time ms which could
-    /// TIE with or beat the freshly-generated local HLC, causing stale echoes to win.
-    func test_processUpdate_nullHlcTimestamp_losesToAnyValidLocalHLC() async throws {
-        // Given: .synced entity with a modest local HLC (1_000 ms > epoch 0)
+    func test_hardDelete_purgesLocalRow() async throws {
         let itemId = UUID()
-        try insertEntity(id: itemId, units: 3, syncStatus: .synced, hlcTimestamp: 1_000)
-
-        // Remote payload with NO hlc_timestamp key (simulates null in Supabase)
-        let payload = makeUpdatePayload(
-            id: itemId, listId: listId, units: 1, hlcTimestamp: nil  // key omitted
-        )
-
-        // When
-        await sut.processUpdate(payload, listId: listId)
-
-        // Then: local value must win — remote epoch=0 < local hlc=1000
-        guard let entity = try itemStore.fetchItem(id: itemId) else {
-            return XCTFail("Entity must still exist after processUpdate()")
-        }
-        XCTAssertEqual(entity.units, 3,
-                       "Remote payload with null hlcTimestamp (epoch=0) must lose CRDT resolution — local units must be preserved")
-    }
-
-    // MARK: - Tombstone path is unaffected by the pending guard
-
-    /// AC: A Realtime UPDATE with tombstone=true on a .synced entity must still purge the item.
-    /// The pending guard must not block the tombstone path (it returns early before the guard).
-    func test_processUpdate_tombstone_syncedEntity_isPurged() async throws {
-        // Given: .synced entity
-        let itemId = UUID()
-        try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
-
-        // Remote tombstone with newer HLC
-        let payload = makeUpdatePayload(
-            id: itemId, listId: listId, units: 1, hlcTimestamp: 2_000, tombstone: true
-        )
-
-        // When
-        await sut.processUpdate(payload, listId: listId)
-
-        // Then: entity must be purged
-        let entity = try? itemStore.fetchItem(id: itemId)
-        XCTAssertNil(entity, "Tombstone on .synced entity must purge the local record")
-    }
-
-    // MARK: - Menge als Text / AnyJSON
-
-    /// AC: Kommt `units` nicht als Int (AnyJSON-Wrapper oder Text „4“), darf die Menge nicht auf 1 zurückfallen.
-    func test_processUpdate_unitsAsText_isParsed() async throws {
-        let itemId = UUID()
-        try insertEntity(id: itemId, units: 1, syncStatus: .synced, hlcTimestamp: 1_000)
-        var payload = makeUpdatePayload(id: itemId, listId: listId, units: 1, hlcTimestamp: 2_000)
-        var record = payload["record"] as? [String: Any] ?? [:]
-        record["units"] = "4"
-        payload["record"] = record
-
-        await sut.processUpdate(payload, listId: listId)
-
-        XCTAssertEqual(try itemStore.fetchItem(id: itemId)?.units, 4)
+        try insertEntity(id: itemId, units: 1, syncStatus: .synced)
+        await sut.processDeletion(["old_record": ["id": itemId.uuidString]], listId: listId)
+        XCTAssertNil(try itemStore.fetchItem(id: itemId))
     }
 }

@@ -14,9 +14,11 @@
    „Als neuen Artikel speichern“, „Ignorieren“. Ignorierte Positionen sind gedimmt.
  - Tippen auf die Summen-Karte ändert den Laden (System-Eingabe), falls er nicht erkannt wurde.
  - Während der Texterkennung zeigt der Inhalt einen Ladekreis.
+ - „Preise speichern“: Weichen Bon-Preise von gespeicherten Artikelpreisen ab, fragt ein System-Dialog
+   (nicht gestaltet), ob sie als neue Artikelpreise übernommen werden. Der Preisverlauf wird immer gespeichert.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 7).
+ - Rückfrage „Artikelpreise aktualisieren?“ vor dem Speichern.
  ------------------------------------------------------------------------
  */
 
@@ -26,13 +28,25 @@ struct ReceiptReviewSheet: View {
     @ObservedObject var flow: ReceiptFlowViewModel
     let appearance: Appearance
     var onClose: () -> Void = {}
+    /// „Zurück“: zurück zu „Kassenzettel fotografieren“ (Aufnahmen bleiben). nil = kein Knopf.
+    var onBack: (() -> Void)? = nil
     /// Nach „Preise speichern“ (→ „Einkauf erledigt“).
     var onSaved: () -> Void = {}
+    /// „Preise übernehmen“: Bon-Preise als neue Artikelpreise speichern.
+    var onUpdateItemPrices: ([ReceiptPriceChange]) -> Void = { _ in }
+    /// „Nicht gekauft“ / „Rückgängig“: Artikel auf der Liste wieder öffnen bzw. erneut abhaken.
+    var onSetItemBought: (ItemModel, Bool) -> Void = { _, _ in }
+    /// Höhe der Tastatur (KeyboardObserver): Inhalt endet darüber, damit das Preisfeld sichtbar bleibt.
+    var keyboardHeight: CGFloat = 0
 
     @State private var correcting: ReceiptReviewLine?
     @State private var editingStore = false
     @State private var storeDraft = ""
     @State private var isSaving = false
+    @State private var pendingPriceChanges: [ReceiptPriceChange] = []
+    @State private var askingPriceUpdate = false
+    /// Artikel, dessen „Preis eingeben“ gerade offen ist (Ziel fürs Scrollen über die Tastatur).
+    @State private var editingPriceItem: String?
 
     var body: some View {
         let k = SheetTheme(appearance)
@@ -43,7 +57,7 @@ struct ReceiptReviewSheet: View {
         }) {
             SheetSurface(k: k, height: 790) {
                 VStack(alignment: .leading, spacing: 0) {
-                    SheetHeader(title: "Kassenzettel prüfen", k: k, onClose: onClose)
+                    SheetHeader(title: "Kassenzettel prüfen", k: k, onClose: onClose, onBack: onBack)
 
                     if flow.phase == .recognizing {
                         VStack(spacing: 14) {
@@ -54,13 +68,17 @@ struct ReceiptReviewSheet: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        summaryCard(t: t)
-                            .padding(.top, 16)
-
-                        EKKSectionLabel(text: "Zuordnung", k: k)
-                            .padding(.top, 18)
-
+                        // Design: Kopfkarte, Zuordnung und „Nicht auf dem Bon gefunden“ scrollen gemeinsam.
+                      ScrollViewReader { proxy in
                         ScrollView {
+                          VStack(spacing: 0) {
+                            summaryCard(t: t)
+                                .padding(.top, 16)
+
+                            EKKSectionLabel(text: "Zuordnung", k: k)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 18)
+
                             VStack(spacing: 8) {
                                 if let error = flow.errorMessage {
                                     Text(error)
@@ -74,18 +92,33 @@ struct ReceiptReviewSheet: View {
                                 }
                             }
                             .padding(.top, 10)
-                            .padding(.bottom, 16)
+
+                            if !flow.missingItems.isEmpty { missingSection(k: k) }
+
+                            Color.clear.frame(height: 16)
+                          }
+                          // Tipp auf freie Fläche (auch zwischen den Karten) schließt die Zahlentastatur.
+                          .background { Color.clear.contentShape(Rectangle()).onTapGesture(perform: dismissKeyboard) }
                         }
                         .scrollIndicators(.hidden)
+                        .scrollDismissesKeyboard(.interactively)
+                        .onChange(of: keyboardHeight) { _, _ in scrollToPriceField(proxy) }
+                        .onChange(of: editingPriceItem) { _, _ in scrollToPriceField(proxy) }
+                      }
 
-                        CTAButton(title: isSaving ? "Wird gespeichert …" : "Preise speichern", k: k,
-                                  isEnabled: flow.savableCount > 0 && !isSaving, action: save)
+                        // Bei offener Tastatur weg: sonst bliebe über der Tastatur kaum Platz für das Preisfeld.
+                        if keyboardHeight == 0 {
+                            CTAButton(title: isSaving ? "Wird gespeichert …" : "Preise speichern", k: k,
+                                      isEnabled: flow.savableCount > 0 && !isSaving, action: save)
+                        }
                     }
                 }
                 .padding(.top, 10)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 34)
+                .padding(.bottom, keyboardHeight > 0 ? keyboardHeight + 12 : 34)   // Inhalt endet über der Tastatur
+                .animation(.easeOut(duration: 0.25), value: keyboardHeight)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .background { Color.clear.contentShape(Rectangle()).onTapGesture(perform: dismissKeyboard) }
             }
         }
         .confirmationDialog(correcting.map { "„\($0.raw)“ zuordnen" } ?? "", isPresented: correctingBinding,
@@ -101,6 +134,12 @@ struct ReceiptReviewSheet: View {
             TextField("z. B. Edeka", text: $storeDraft)
             Button("Übernehmen") { flow.storeName = storeDraft.trimmingCharacters(in: .whitespaces) }
             Button("Abbrechen", role: .cancel) {}
+        }
+        .alert("Artikelpreise aktualisieren?", isPresented: $askingPriceUpdate) {
+            Button("Preise übernehmen") { persist(updating: pendingPriceChanges) }
+            Button("Nur Preisverlauf", role: .cancel) { persist(updating: []) }
+        } message: {
+            Text(ReceiptFlowViewModel.priceChangeMessage(pendingPriceChanges))
         }
     }
 
@@ -120,9 +159,16 @@ struct ReceiptReviewSheet: View {
                     Text(storeAndDate)
                         .font(AppFont.dm(13, 400))
                         .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
-                    Text("\(flow.lines.count) Positionen erkannt")
+                    Text(flow.lines.count == 1 ? "1 Position erkannt" : "\(flow.lines.count) Positionen erkannt")
                         .font(AppFont.dm(15, 600))
                         .foregroundStyle(Color.white)
+                    let missing = flow.missingItems.count
+                    if missing > 0 {
+                        Text(missing == 1 ? "1 Artikel nicht gefunden" : "\(missing) Artikel nicht gefunden")
+                            .font(AppFont.dm(13, 400))
+                            .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
+                            .contentTransition(.numericText())
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Text(flow.total.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE"))))
@@ -137,6 +183,45 @@ struct ReceiptReviewSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint("Laden ändern")
+    }
+
+    /// „Nicht auf dem Bon gefunden · n“: Label (margin-top 22), Hinweis 12 (margin-top 4), Karten ab 10, Abstand 12.
+    @ViewBuilder
+    private func missingSection(k: SheetTheme) -> some View {
+        let items = flow.missingItems
+        EKKSectionLabel(text: "Nicht auf dem Bon gefunden · \(items.count)", k: k)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 22)
+        Text("Abgehakt, aber auf dem Kassenzettel nicht erkannt. Ohne Auswahl wird kein Preis gespeichert.")
+            .font(AppFont.dm(12, 400))
+            .foregroundStyle(k.sub)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .padding(.top, 4)
+        VStack(spacing: 12) {
+            ForEach(items) { item in
+                ReceiptMissingItemCard(
+                    item: item,
+                    resolution: flow.missingResolutions[item.id],
+                    suggestions: flow.lineSuggestions(for: item),
+                    appearance: appearance,
+                    onAssign: { lineId in withAnimation(.easeOut(duration: 0.25)) { flow.assignLine(lineId, to: item) } },
+                    onPrice: { flow.setManualPrice($0, for: item) },
+                    onNotBought: {
+                        flow.markNotBought(item)
+                        onSetItemBought(item, false)
+                    },
+                    onUndo: {
+                        if flow.missingResolutions[item.id] == .notBought { onSetItemBought(item, true) }
+                        flow.clearResolution(for: item)
+                    },
+                    onPriceEditing: { editing in
+                        if editing { editingPriceItem = item.id } else if editingPriceItem == item.id { editingPriceItem = nil }
+                    })
+            }
+        }
+        .padding(.top, 10)
     }
 
     /// Positions-Karte: Rahmen 1 (content-box) → Einzug 13 / 15; Warnung mit warnBorder.
@@ -190,14 +275,43 @@ struct ReceiptReviewSheet: View {
         }
     }
 
+    /// Karte mit offenem Preisfeld vollständig über die Tastatur scrollen (Kartenunterkante = unterer Rand).
+    private func scrollToPriceField(_ proxy: ScrollViewProxy) {
+        guard let id = editingPriceItem, keyboardHeight > 0 else { return }
+        // Kurz warten, bis der Bereich über der Tastatur neu vermessen ist (Padding ändert sich gleichzeitig).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            withAnimation(.easeOut(duration: 0.25)) {
+                proxy.scrollTo(ReceiptMissingItemCard.priceFieldID(id), anchor: .bottom)
+            }
+        }
+    }
+
+    /// Zahlentastatur („Preis eingeben“) hat keinen Fertig-Knopf → per Tipp daneben schließen.
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
     private var correctingBinding: Binding<Bool> {
         Binding(get: { correcting != nil }, set: { if !$0 { correcting = nil } })
     }
 
+    /// Weichen Preise ab → erst fragen, sonst direkt speichern.
     private func save() {
+        dismissKeyboard()
+        let changes = flow.priceChanges
+        if changes.isEmpty {
+            persist(updating: [])
+        } else {
+            pendingPriceChanges = changes
+            askingPriceUpdate = true
+        }
+    }
+
+    private func persist(updating changes: [ReceiptPriceChange]) {
         isSaving = true
         Task {
             await flow.savePrices()
+            if !changes.isEmpty { onUpdateItemPrices(changes) }
             isSaving = false
             onSaved()
         }
@@ -210,4 +324,22 @@ struct ReceiptReviewSheet: View {
     flow.apply(ReceiptParser.parse(lines: ["EDEKA", "KERRYGOLD BUTTER 2,49 A", "ALPRO SOJA DRINK 2,29 A",
                                            "KOKOSM. 400ML 1,39 A", "FAIRGL.VM SCHOKO 3,49 A"]))
     return ReceiptReviewSheet(flow: flow, appearance: .light)
+}
+
+#Preview("Kassenzettel prüfen – nicht gefunden", traits: .fixedLayout(width: 390, height: 844)) {
+    let flow = ReceiptFlowViewModel(listItemNames: ["Kerrygold, original irische Butter", "Schokolade", "Bananen"],
+                                    checkedItems: [ItemModel(name: "Kerrygold, original irische Butter"),
+                                                   ItemModel(name: "Schokolade", units: 1),
+                                                   ItemModel(name: "Bananen", units: 6)],
+                                    catalog: nil, priceBook: PriceBook(repository: nil))
+    flow.apply(ReceiptParser.parse(lines: ["EDEKA", "KERRYGOLD BUTTER 2,49 A", "FAIRGL.VM SCHOKO 3,49 A"]))
+    return ReceiptReviewSheet(flow: flow, appearance: .dark)
+}
+
+#Preview("Kassenzettel prüfen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    let flow = ReceiptFlowViewModel(listItemNames: ["Kerrygold, original irische Butter", "Soyamilch", "Kokosmilch"],
+                                    catalog: nil, priceBook: PriceBook(repository: nil))
+    flow.apply(ReceiptParser.parse(lines: ["EDEKA", "KERRYGOLD BUTTER 2,49 A", "ALPRO SOJA DRINK 2,29 A",
+                                           "KOKOSM. 400ML 1,39 A", "FAIRGL.VM SCHOKO 3,49 A"]))
+    return ReceiptReviewSheet(flow: flow, appearance: .dark)
 }

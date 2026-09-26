@@ -5,26 +5,27 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Baut den Einladungslink `famlist://invite?listId=…&inviterPublicId=…&listTitle=…`.
+ - Baut den Einladungslink `famlist://invite?token=…&listTitle=…`.
+ - Der Token kommt von der RPC create_list_invite (Migration 014): zufällig, 14 Tage gültig,
+   widerrufen, sobald der Besitzer ein Mitglied entfernt.
 
  🔰 Notes for Beginners:
  - Deep Link statt Universal Link (Roberts Entscheidung F3: keine eigene Domain).
    Das Format liest AppSessionViewModel.handleOpenURL.
 
  📝 Last Change:
- - Aus ShareListView ausgelagert (Redesign „Hybrid“, Phase 4).
+ - Token statt Listen-ID (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
 import Foundation
 
 enum InviteLink {
-    static func url(listId: UUID, listTitle: String, inviterPublicId: String) -> URL? {
+    static func url(token: String, listTitle: String) -> URL? {
         var c = URLComponents()
         c.scheme = "famlist"
         c.host = "invite"
-        c.queryItems = [URLQueryItem(name: "listId", value: listId.uuidString),
-                        URLQueryItem(name: "inviterPublicId", value: inviterPublicId),
+        c.queryItems = [URLQueryItem(name: "token", value: token),
                         URLQueryItem(name: "listTitle", value: listTitle)]
         return c.url
     }

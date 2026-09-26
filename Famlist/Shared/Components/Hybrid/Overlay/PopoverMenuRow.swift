@@ -51,6 +51,8 @@ struct PopoverMenuRow: View {
                     Text(title)
                         .font(AppFont.dm(15, titleWeight))
                         .foregroundStyle(tint ?? k.text)
+                        .lineLimit(size == .compact ? 1 : nil)
+                        .minimumScaleFactor(1 / AppFont.maxScale)   // XXL: höchstens bis zur Designgröße schrumpfen
                     if let subtitle {
                         Text(subtitle)
                             .font(AppFont.dm(12, 400))
@@ -88,4 +90,25 @@ struct PopoverMenuRow: View {
                 .foregroundStyle(color ?? k.sub)
         }
     }
+}
+
+#Preview("PopoverMenuRow") {
+    let k = OverlayTheme(.light)
+    VStack(spacing: 0) {
+        PopoverMenuRow(k: k, icon: Icon.sort, title: "Name", subtitle: "A bis Z", trailing: .check, isSelected: true)
+        PopoverMenuRow(k: k, icon: Icon.trash, title: "Löschen", tint: k.danger)
+    }
+    .frame(width: 270)
+    .padding(20)
+}
+
+#Preview("PopoverMenuRow – Dark") {
+    let k = OverlayTheme(.dark)
+    VStack(spacing: 0) {
+        PopoverMenuRow(k: k, icon: Icon.sort, title: "Name", subtitle: "A bis Z", trailing: .check, isSelected: true)
+        PopoverMenuRow(k: k, icon: Icon.trash, title: "Löschen", tint: k.danger)
+    }
+    .frame(width: 270)
+    .padding(20)
+    .background(Color.hex("#0A1416"))
 }

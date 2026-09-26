@@ -16,7 +16,7 @@
  - Sheets und Overlays öffnet nicht diese View, sondern ShoppingListView über die Callbacks.
 
  📝 Last Change:
- - Abschnitte über ListSectionBuilder, Leer-Zustand aus dem Handoff, Ziehen bei „Manuell“.
+ - Textfilter (Suchleiste oben): flache Trefferliste mit Markierung, Trefferzeile, Brücke zum Hinzufügen.
  ------------------------------------------------------------------------
  */
 
@@ -28,31 +28,23 @@ struct ShoppingListContent: View {
     @EnvironmentObject var listViewModel: ListViewModel
     let t: ListTheme
     @Binding var openRow: OpenSwipeRow?
-    var onSearch: () -> Void = {}
-    var onScan: () -> Void = {}
-    var onShowLists: () -> Void = {}
-    var onMenu: () -> Void = {}
     var onEdit: (ItemModel) -> Void = { _ in }
     var onShowImage: (ItemModel) -> Void = { _ in }
+    /// Filter-Modus (Suchleiste oben): Treffer als flache Liste, dazu Trefferzeile und Brücke zum Hinzufügen.
+    var filterQuery: String = ""
+    var onAddFromFilter: (String) -> Void = { _ in }
 
     @State private var draggingId: String?
-    /// Einstellungen → Liste → „Preise anzeigen“ (Summe in der Fortschrittskarte).
-    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
 
 
     var body: some View {
         let sections = listViewModel.visibleSections
+        let query = ListTextFilter.normalized(filterQuery)
         LazyVStack(alignment: .leading, spacing: 0) {
-            ListTopBar(t: t, title: listViewModel.defaultList?.title ?? String(localized: "shoppingList.title"),
-                       onShowLists: onShowLists, onMenu: onMenu)
-            ListSearchBar(t: t, action: onSearch, onScan: onScan)
-                .padding(.top, 18)
-            ProgressHero(t: t, checked: listViewModel.checkedItemCount, total: listViewModel.totalItemCount,
-                         totalPrice: showPrices ? PriceDisplaySetting.total(of: listViewModel.items) : nil)
-                .padding(.top, 18)
-            ListFilterTabs(t: t, selection: $listViewModel.itemFilter)
-                .padding(.top, 18)
-            if listViewModel.items.isEmpty && !listViewModel.isLoadingNextPage {
+            // Kopf (Titel, Suche, Fortschritt, Tabs) liegt jetzt in CollapsingListHeader (ShoppingListView).
+            if !query.isEmpty {
+                filterResults(query: query)
+            } else if listViewModel.items.isEmpty && !listViewModel.isLoadingNextPage {
                 ListEmptyState(t: t)
                     .padding(.top, 44)                 // gap 18 + margin-top 26
             } else {
@@ -100,10 +92,11 @@ struct ShoppingListContent: View {
         }
     }
 
-    private func row(for item: ItemModel, isLastVisible: Bool) -> some View {
+    private func row(for item: ItemModel, isLastVisible: Bool, highlight: String = "") -> some View {
         SwipeableItemRow(
             t: t,
             item: item,
+            highlight: highlight,
             openRow: $openRow,
             onToggleChecked: {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { listViewModel.toggleItemChecked(item) }
@@ -129,6 +122,26 @@ struct ShoppingListContent: View {
         }
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)),
                                 removal: .opacity.combined(with: .scale(scale: 0.9))))
+    }
+
+    // MARK: - Textfilter (Canvas SearchInline)
+
+    /// Trefferzeile 13/600 (14 unter dem Feld) → Karten (Abstand 12) → Brücke „… zur Liste hinzufügen“ (24 darunter).
+    @ViewBuilder
+    private func filterResults(query: String) -> some View {
+        let ordered = listViewModel.visibleSectionsIgnoringFilter.flatMap(\.items)
+        let hits = ListTextFilter.filter(ordered, query: query)
+        Text("\(hits.count) von \(listViewModel.items.count) Artikeln · auch abgehakte")
+            .font(AppFont.dm(13, 600))
+            .foregroundStyle(t.sub)
+            .padding(.top, 14)
+            .padding(.leading, 4)
+        ForEach(hits) { item in
+            row(for: item, isLastVisible: false, highlight: query)
+                .padding(.top, 12)
+        }
+        ListFilterAddBridge(t: t, query: query) { onAddFromFilter(query) }
+            .padding(.top, 24)
     }
 
     // MARK: - Filter Empty State
@@ -195,4 +208,28 @@ private struct ReorderDropDelegate: DropDelegate {
         draggingId = nil
         return true
     }
+}
+
+#Preview("ShoppingListContent", traits: .fixedLayout(width: 390, height: 844)) {
+    @Previewable @State var openRow: OpenSwipeRow?
+    ZStack {
+        ListBackground(t: ListTheme(.light))
+        ScrollView {
+            ShoppingListContent(t: ListTheme(.light), openRow: $openRow)
+                .padding(.horizontal, 20)
+        }
+    }
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+}
+
+#Preview("ShoppingListContent – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    @Previewable @State var openRow: OpenSwipeRow?
+    ZStack {
+        ListBackground(t: ListTheme(.dark))
+        ScrollView {
+            ShoppingListContent(t: ListTheme(.dark), openRow: $openRow)
+                .padding(.horizontal, 20)
+        }
+    }
+    .environmentObject(PreviewMocks.makeListViewModelWithSamples())
 }

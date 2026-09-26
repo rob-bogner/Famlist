@@ -29,6 +29,10 @@ extension ShoppingListView {
                     // Design: das darunterliegende Sheet (Meine Listen / Einstellungen) weichgezeichnet + eigene Abdunkelung
                     ZStack(alignment: .bottom) {
                         k.scrim
+                        if let lower = base.baseSheet {             // Detail → Archiv → Einstellungen
+                            sheetView(lower, k: k, maxHeight: maxHeight, insets: insets)
+                            overlayScrim(for: base)
+                        }
                         sheetView(base, k: k, maxHeight: maxHeight, insets: insets)
                     }
                     .blur(radius: 3, opaque: false)
@@ -46,8 +50,11 @@ extension ShoppingListView {
                         .accessibilityHidden(true)
                 }
                 sheetView(sheet, k: k, maxHeight: maxHeight, insets: insets)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityAddTraits(.isModal)                  // VoiceOver bleibt im obersten Sheet
+                    .accessibilityAction(.escape) { escape(sheet) }
                     .id(sheet.id)
-                    .transition(sheet.isPopup ? .opacity.combined(with: .scale(scale: 0.96)) : .move(edge: .bottom))
+                    .transition(sheetTransition(sheet))
                     .zIndex(1)
             }
         }
@@ -59,6 +66,23 @@ extension ShoppingListView {
             Button("Abbrechen", role: .cancel) {}
         } message: { _ in
             Text("Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.")
+        }
+    }
+
+    /// „Bewegung reduzieren“: nur ein-/ausblenden statt von unten einfahren bzw. skalieren.
+    private func sheetTransition(_ sheet: ActiveListSheet) -> AnyTransition {
+        if reduceMotion { return .opacity }
+        return sheet.isPopup ? .opacity.combined(with: .scale(scale: 0.96)) : .move(edge: .bottom)
+    }
+
+    /// VoiceOver-Geste „Zurück“ (Z mit zwei Fingern): wie der Schließen-Knopf des obersten Sheets.
+    private func escape(_ sheet: ActiveListSheet) {
+        switch sheet {
+        case .receiptCapture, .receiptReview, .shoppingDone, .shoppingDoneOffer: closeReceiptFlow()
+        case .editCatalog: hideKeyboard(); activeSheet = .manageItems
+        case .editProfile: hideKeyboard(); activeSheet = .settings
+        default:
+            if let base = sheet.baseSheet { hideKeyboard(); activeSheet = base } else { closeSheet() }
         }
     }
 
@@ -104,12 +128,15 @@ extension ShoppingListView {
                           onClose: { hideKeyboard(); activeSheet = .manageItems },
                           onSave: { saveCatalogEdit(from: entry, to: entry.applying($0)) })
         case .edit(let item):
-            EditItemSheet(item: item, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height, onClose: closeSheet,
-                          onPriceHistory: { hideKeyboard(); activeSheet = .itemPriceHistory(item) },
+            EditItemSheet(item: item, draft: editDraft, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
+                          onClose: closeSheet,
+                          onPriceHistory: { draft in hideKeyboard(); editDraft = draft; activeSheet = .itemPriceHistory(item) },
                           lastPriceText: { await lastPriceText(for: item) },
                           onPriceChanged: { recordPrice(for: $0) })
         case .productImage(let item):
             ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
+        case .importClipboard:
+            ClipboardImportSheet(k: k, maxHeight: maxHeight, onClose: closeSheet)
         case .lists:
             MyListsSheet(k: k, maxHeight: maxHeight, onClose: closeSheet,
                          onCreate: { activeSheet = .createList },
@@ -129,6 +156,7 @@ extension ShoppingListView {
         case .settings:
             SettingsSheet(appearance: appearance, onClose: closeSheet,
                           onEditProfile: { activeSheet = .editProfile },
+                          onOpenReceipts: { activeSheet = .receiptArchive },
                           onDeleteAccount: { deleteAccountError = nil; activeSheet = .deleteAccount })
         case .editProfile:
             EditProfileSheet(appearance: appearance, onClose: { hideKeyboard(); activeSheet = .settings })
@@ -147,7 +175,8 @@ extension ShoppingListView {
             DeleteAccountDialog(appearance: appearance, isWorking: isDeletingAccount, errorText: deleteAccountError,
                                 onConfirm: deleteAccount, onCancel: { activeSheet = .settings })
                 .offset(y: insets.topShift)
-        case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory, .itemPriceHistory, .shoppingDoneOffer:
+        case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory, .itemPriceHistory, .shoppingDoneOffer,
+             .receiptArchive, .receiptDetail:
             receiptSheetView(sheet, k: k)
         case .listName(let mode):
             ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {

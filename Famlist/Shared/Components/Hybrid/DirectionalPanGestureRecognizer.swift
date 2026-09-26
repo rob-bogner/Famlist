@@ -31,13 +31,14 @@ import UIKit.UIGestureRecognizerSubclass
 final class DirectionalPanGestureRecognizer: UIGestureRecognizer {
     enum Decision { case undecided, horizontal, vertical }
 
-    static let decisionDistance: CGFloat = 8
-    static let verticalFailDistance: CGFloat = 16
+    // nonisolated: reine Konstanten und reine Rechnung ohne UIKit-Zustand – auch außerhalb des Main Actors nutzbar.
+    nonisolated static let decisionDistance: CGFloat = 8
+    nonisolated static let verticalFailDistance: CGFloat = 16
     /// Horizontal wins while |dx| ≥ |dy| · horizontalRatio (0.8 ≈ 51° from horizontal).
-    static let horizontalRatio: CGFloat = 0.8
+    nonisolated static let horizontalRatio: CGFloat = 0.8
 
     /// Pure direction decision on the cumulative movement since touch-down (unit-tested).
-    static func decide(dx: CGFloat, dy: CGFloat) -> Decision {
+    nonisolated static func decide(dx: CGFloat, dy: CGFloat) -> Decision {
         if hypot(dx, dy) >= decisionDistance && abs(dx) >= abs(dy) * horizontalRatio { return .horizontal }
         if abs(dy) >= verticalFailDistance { return .vertical }
         return .undecided

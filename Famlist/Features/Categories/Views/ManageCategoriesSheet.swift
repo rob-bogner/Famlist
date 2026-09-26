@@ -67,7 +67,7 @@ struct ManageCategoriesSheet: View {
                             .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
                             .padding(.top, 16)
 
-                            EKKSectionLabel(text: "\(store.categories.count) Kategorien", k: k)
+                            EKKSectionLabel(text: store.categories.count == 1 ? "1 Kategorie" : "\(store.categories.count) Kategorien", k: k)
                                 .padding(.top, 20)
 
                             VStack(spacing: 8) {
@@ -143,6 +143,7 @@ struct ManageCategoriesSheet: View {
                     .font(AppFont.outfit(16, 600))
                     .foregroundStyle(k.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Text(c.isFallback ? "Standard · kann nicht gelöscht werden" : "Tippen zum Bearbeiten")
                     .font(AppFont.dm(12, 400))
                     .foregroundStyle(k.sub)

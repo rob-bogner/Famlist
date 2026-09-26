@@ -59,4 +59,13 @@ final class PriceDisplayTests: XCTestCase {
         XCTAssertEqual(PriceDisplaySetting.lineTotal(ItemModel(name: "Milch", units: 2, price: 1.49)), 2.98, accuracy: 0.0001)
         XCTAssertEqual(PriceDisplaySetting.lineTotal(ItemModel(name: "Brot", units: 1, price: 2.99)), 2.99, accuracy: 0.0001)
     }
+
+    /// „500 g Hackfleisch“ zu 4,99 € ist EINE Packung – nicht 500 × 4,99 € (Audit H8).
+    func test_lineTotal_weightAndVolume_countOnce() {
+        XCTAssertEqual(PriceDisplaySetting.lineTotal(ItemModel(name: "Hack", units: 500, measure: "g", price: 4.99)), 4.99, accuracy: 0.0001)
+        XCTAssertEqual(PriceDisplaySetting.lineTotal(ItemModel(name: "Milch", units: 1, measure: "l", price: 1.19)), 1.19, accuracy: 0.0001)
+        XCTAssertEqual(PriceDisplaySetting.lineTotal(ItemModel(name: "Mehl", units: 2, measure: "kg", price: 0.89)), 0.89, accuracy: 0.0001)
+        XCTAssertEqual(PriceDisplaySetting.lineTotal(ItemModel(name: "Joghurt", units: 4, measure: "cup", price: 0.59)), 2.36, accuracy: 0.0001)
+        XCTAssertEqual(PriceDisplaySetting.multiplier(for: ItemModel(name: "Hack", units: 500, measure: "g")), 1)
+    }
 }

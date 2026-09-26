@@ -43,9 +43,12 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
     var productDescription: String?
     var measure: String
     var price: Double
+    /// Lokale Kopie des Fotos (Base64) – offline verfügbar; geht nicht mehr in die Datenbank.
     var imageData: String?
     /// EAN/UPC-Code, wenn der Artikel per Barcode-Scanner angelegt wurde (Migration 008).
     var barcode: String? = nil
+    /// Storage-Pfad im Bucket `catalog-images` („<user_id>/<sha256>.jpg“, Migration 016).
+    var imagePath: String? = nil
 
     // MARK: - CodingKeys (maps camelCase Swift properties to snake_case DB columns)
 
@@ -60,6 +63,7 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
         case price
         case imageData = "image_data"
         case barcode
+        case imagePath = "image_path"
     }
 
     // MARK: - Factory
@@ -145,6 +149,9 @@ protocol ItemCatalogRepository {
 
     /// Sucht einen eigenen Artikel mit diesem Barcode (Barcode-Scanner).
     func find(barcode: String) async throws -> ItemCatalogEntry?
+
+    /// Lädt ein Foto des Artikelstamms aus Storage (nil = nicht unterstützt, z. B. Vorschau).
+    func downloadImage(path: String) async throws -> Data?
 }
 
 extension ItemCatalogRepository {
@@ -153,6 +160,7 @@ extension ItemCatalogRepository {
     func update(_ entry: ItemCatalogEntry) async throws { try await save(entry) }
     func delete(id: String) async throws {}
     func find(barcode: String) async throws -> ItemCatalogEntry? { nil }
+    func downloadImage(path: String) async throws -> Data? { nil }
 }
 
 // MARK: - Preview / In-Memory Implementation

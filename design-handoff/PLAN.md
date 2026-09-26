@@ -234,6 +234,20 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ManageCategories | Wischen nach links → „Löschen“ (wie ManageItems); „Sonstiges“ nicht wischbar | Roberts Wunsch; nicht gestaltet |
 | ReceiptCapture | Ohne Kamera Hinweis „Kamera nicht verfügbar“, Auslöser und Licht gedimmt; Zähler rechts = Aufnahmen, Tippen startet „Kassenzettel prüfen“ | Platzhalter „Kamerabild“ des Designs; Weiter-Schritt nicht gestaltet |
 | ReceiptReview | Tippen auf eine Position → System-Dialog (Vorschläge, „Als neuen Artikel speichern“, „Ignorieren“); Tippen auf die Summen-Karte → Laden ändern; Ladekreis während der Texterkennung | Korrigieren nicht gestaltet |
+| ReceiptReview | „Preise speichern“ → System-Dialog „Artikelpreise aktualisieren?“ („Preise übernehmen“ / „Nur Preisverlauf“), nur wenn ein Bon-Preis vom gespeicherten Artikelpreis abweicht | Von Robert am 25.09.2026 gewünscht; nicht gestaltet |
 | ShoppingDone | „alle n Artikel abgehakt“ nur, wenn alle abgehakt sind, sonst „n von m Artikeln abgehakt“ | Design zeigt nur den Fall „alle“ |
 | PriceHistory | Zweite Zeile ohne Packungsgröße („250 g“); Hinweis „Noch keine Preise · …“ nur ohne Preise; Monate ohne Preis haben keinen Punkt | Artikelstamm speichert keine Packungsgröße; „Beispielwerte“ ist Design-Text |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |
+| Liste (Fortschrittskarte, ItemCard) | Gesamtkosten und Preis je Karte („1,49 €“, bei mehreren Stück zusätzlich „je …“); bei g/kg/ml/l/cm/m zählt der Preis einmal | Nicht gestaltet; von Robert am 25.09.2026 freigegeben (SPEC §5) |
+| EditItem | Link „Preisverlauf“ unter dem Preis (Trend-Icon, Zeile 52 pt, Chevron) | Nicht gestaltet; von Robert am 25.09.2026 freigegeben (SPEC §5) |
+| Settings | Schalter „Preise anzeigen“ | Gehört zur freigegebenen Preis-Anzeige |
+| ShoppingDone | Variante ohne Kassenzettel: Karte „Kassenzettel scannen?“ statt Summe; öffnet sich 0,7 s nach dem letzten Abhaken | Kein eigenes Design (ShoppingDoneScan.dc.html existiert nicht); Aufbau aus ShoppingDone.dc.html abgeleitet |
+| AcceptInvite / ShareMembers | Fehler (Einladung abgelaufen, Link offline nicht erstellbar) als Glas-Toast wie in SignIn | Fehlerzustände nicht gestaltet |
+| ReceiptArchive | Mini-Bon zeigt das verkleinerte erste Foto; gezeichneter Bon nur, solange es lädt oder fehlt | KASSENZETTEL_ARCHIV.md „Mini-Bon = verkleinertes erstes Foto“ |
+| ReceiptArchive | Noch nicht hochgeladene Bons: dritte Zeile „n Positionen · wird hochgeladen“ | KASSENZETTEL_ARCHIV.md verlangt einen dezenten Hinweis; Ort nicht gestaltet |
+| ReceiptArchive | Leeres Archiv: Hinweis „Noch keine Kassenzettel gespeichert.“ (13 sub), beim ersten Laden „Wird geladen …“ | Leerzustand nicht gestaltet |
+| ReceiptArchive | Filterchips scrollen waagerecht; Monate darunter scrollen | Design zeigt 5 Chips und 2 Monate |
+| ReceiptDetail | Echtes Foto statt gezeichnetem Bon (250 breit, −1,5°, unten abgeschnitten); bei nur einem Foto keine Seitenzahl und keine Punkte | Design zeigt einen Bon mit 2 Fotos |
+| ReceiptDetail | „Löschen“ → System-Rückfrage „Kassenzettel löschen?“; der Knopf fehlt, wenn man weder Ersteller noch Besitzer der Liste ist („Teilen“ dann volle Breite) | Löschen betrifft alle Mitglieder (wie Liste löschen); Server erlaubt nur Ersteller/Besitzer (Migration 021) |
+| ReceiptDetail | Vollbild: schwarzer Hintergrund, Zoom 1–5-fach, Doppeltippen 2,5-fach, ✕ oben rechts | KASSENZETTEL_ARCHIV.md „Vollbild mit Zoom“; Vollbild nicht gestaltet |
+

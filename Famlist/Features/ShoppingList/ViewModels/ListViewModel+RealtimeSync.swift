@@ -21,7 +21,8 @@
  - SyncOrchestrator buffers Realtime handlers that arrive during an active page load.
 
  📝 Last Change:
- - FAM-41: IncrementalSync integration; removed fetchAndYield / persistRemoteSnapshot from observe loop.
+ - Delta-Abgleich über mergeRemote (HLC), Zeitmarke je Liste und erst nach dem Speichern,
+   Abbruch beim Listenwechsel (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -42,6 +43,11 @@ extension ListViewModel {
         observeTask?.cancel()
         loadLocalSnapshot()
         hasObservedActiveList = true
+        // Nach einem Realtime-Abbruch Verpasstes nachholen (Audit M4).
+        repository.setReconnectHandler { [weak self] reconnectedList in
+            guard let self, reconnectedList == self.listId else { return }
+            Task { await self.runIncrementalSync() }
+        }
         // Restore persisted cursor so pagination continues from where it left off after app restart.
         if currentCursor == nil {
             currentCursor = PaginationCursor.load(listId: listId)
@@ -64,11 +70,13 @@ extension ListViewModel {
                     // Items with in-flight local animations are excluded (they are local mutations).
                     let currentItems = self.items
                     let oldIDs = Set(currentItems.map { $0.id })
+                    // uniquingKeysWith: doppelte IDs dürfen nie zum Absturz führen.
                     let oldTimestamps = Dictionary(
-                        uniqueKeysWithValues: currentItems.compactMap { item -> (String, Int64)? in
+                        currentItems.compactMap { item -> (String, Int64)? in
                             guard let ts = item.hlcTimestamp else { return nil }
                             return (item.id, ts)
-                        }
+                        },
+                        uniquingKeysWith: { _, latest in latest }
                     )
                     let remoteChangedIDs: Set<String> = Set(sorted.compactMap { item -> String? in
                         guard !self.pendingAnimatedItemIDs.contains(item.id) else { return nil }
@@ -85,14 +93,19 @@ extension ListViewModel {
 
                     // applyItems filters pendingBulkDeleteIDs and guards against redundant UI updates.
                     self.applyItems(sorted)
+                    self.prefetchImages()                    // neues Foto eines anderen Geräts sofort laden
                 }
             }
         }
 
         // Step 3: Incremental sync — runs concurrently with the Realtime subscription.
-        Task { [weak self] in
+        incrementalSyncTask?.cancel()
+        incrementalSyncTask = Task { [weak self] in
             await self?.runIncrementalSync()
-            await self?.backfillImagesFromCatalog()   // Fotos aus dem Artikelstamm nachtragen
+            guard !Task.isCancelled, let self else { return }
+            self.prefetchImages()
+            await self.syncEngine?.migrateLegacyImages(listId: self.listId)
+            await self.backfillImagesFromCatalog()   // Fotos aus dem Artikelstamm nachtragen
         }
     }
 
@@ -109,76 +122,38 @@ extension ListViewModel {
     ///   or foreground syncs should trigger the remote-highlight animation).
     @MainActor
     func runIncrementalSync(suppressHighlight: Bool = false) async {
-        let since = loadLastSyncTimestamp()
-        logVoid(params: (action: "runIncrementalSync.start", listId: listId, since: since))
-
+        // Liste zu Beginn festhalten: Wechselt der Nutzer währenddessen die Liste, darf die Zeitmarke
+        // nicht unter der neuen Liste landen (Audit M2).
+        let syncListId = listId
+        let lastSync = loadLastSyncTimestamp(for: syncListId)
+        // 5 s Überlappung: Zeilen, deren Transaktion kurz vor der Zeitmarke begann, aber erst danach sichtbar
+        // wurde, sonst nie nachgeladen (Audit 2, Befund S7). Doppelte Zeilen erkennt die HLC-Regel.
+        let since = lastSync == .distantPast ? lastSync : lastSync.addingTimeInterval(-5)
+        logVoid(params: (action: "runIncrementalSync.start", listId: syncListId, since: since))
         do {
-            let deltaItems = try await repository.fetchItemsSince(listId: listId, since: since)
-
-            var maxUpdatedAt: Date? = nil
+            let deltaItems = try await repository.fetchItemsSince(listId: syncListId, since: since)
+            guard !Task.isCancelled, syncListId == listId else { return }
             var highlightIDs: Set<String> = []
             for item in deltaItems {
-                if item.tombstone == true {
-                    applyRemoteTombstoneModel(item)
-                } else {
-                    // Skip upsert for items that have a pending local mutation (.pendingUpdate /
-                    // .pendingCreate).  The remote delta may carry stale field values (e.g. units=1
-                    // while the user just incremented to units=2) and must not overwrite the
-                    // in-flight local change before the SyncEngine has a chance to confirm it.
-                    let itemUUID = UUID(uuidString: item.id)
-                    let hasPendingLocalChange: Bool = {
-                        guard let uuid = itemUUID,
-                              let entity = try? itemStore.fetchItem(id: uuid) else { return false }
-                        if entity.syncStatus != .synced { return true }   // pending/failed: lokal noch nicht bestätigt
-                        // Lokal neuer (HLC)? Dann ist die Server-Zeile veraltet (z. B. Menge 1 statt 2).
-                        let local = HybridLogicalClock(timestamp: entity.hlcTimestamp ?? 0, counter: entity.hlcCounter ?? 0,
-                                                       nodeId: entity.hlcNodeId ?? "")
-                        let remote = HybridLogicalClock(timestamp: item.hlcTimestamp ?? 0, counter: item.hlcCounter ?? 0,
-                                                        nodeId: item.hlcNodeId ?? "")
-                        return local > remote
-                    }()
-                    if hasPendingLocalChange {
-                        logVoid(params: (action: "runIncrementalSync.skipStale", itemId: item.id, remoteUnits: item.units))
-                    } else {
-                        _ = try? itemStore.upsert(model: item)
-                        if !suppressHighlight {
-                            highlightIDs.insert(item.id)
-                        }
-                    }
-                    if let updatedAt = item.updatedAt {
-                        maxUpdatedAt = maxUpdatedAt.map { max($0, updatedAt) } ?? updatedAt
-                    }
-                }
+                // Eine Regel für alles (auch Löschmarkierungen): neuere HLC gewinnt.
+                let result = try itemStore.mergeRemote(item, legacyImageKnown: false)
+                if result != .ignored, item.tombstone != true { highlightIDs.insert(item.id) }
             }
-            try? itemStore.save()
-
-            if !suppressHighlight {
-                markRecentlySynced(ids: highlightIDs)
+            try itemStore.save()
+            if !suppressHighlight { markRecentlySynced(ids: highlightIDs) }
+            // Zeitmarke erst nach erfolgreichem Speichern – über ALLE Zeilen, auch Löschmarkierungen.
+            if let newest = deltaItems.compactMap(\.updatedAt).max(), newest > lastSync {
+                saveLastSyncTimestamp(newest, for: syncListId)
             }
-
-            // Update high-water mark only when at least one non-tombstone item was received.
-            if let newTs = maxUpdatedAt {
-                saveLastSyncTimestamp(newTs)
-            }
-
             refreshItemsFromStore()
-            logVoid(params: (
-                action: "runIncrementalSync.success",
-                listId: listId,
-                itemCount: deltaItems.count,
-                newTimestamp: maxUpdatedAt as Any
-            ))
+            logVoid(params: (action: "runIncrementalSync.success", listId: syncListId, itemCount: deltaItems.count))
+            // Nach langer Pause: endgültig gelöschte Artikel entfernen (Audit 2, Befund S3).
+            if lastSync != .distantPast { await reconcileIfStale(listId: syncListId) }
         } catch {
-            // On failure: do not advance lastSyncTimestamp.
-            // Still refresh from the local SwiftData cache so that any items written
-            // by storeLocally() (e.g. a just-added item) become visible even when
-            // the network is unavailable or fetchItemsSince() throws.
+            // Zeitmarke bleibt; der lokale Stand wird trotzdem angezeigt.
             refreshItemsFromStore()
-            logVoid(params: (
-                action: "runIncrementalSync.error",
-                listId: listId,
-                error: (error as NSError).localizedDescription
-            ))
+            logVoid(params: (action: "runIncrementalSync.error", listId: syncListId,
+                             error: (error as NSError).localizedDescription))
         }
     }
 
@@ -187,12 +162,17 @@ extension ListViewModel {
     /// Signals that the app moved into the foreground so realtime sync should resume if it was suspended.
     /// Also triggers IncrementalSync to pick up changes that arrived while backgrounded.
     func handleAppDidBecomeActive() {
+        syncEngine?.resume()
         resumeRealtimeSync(trigger: .appForeground)
         // Note: startObserving() called by resumeRealtimeSync() already calls runIncrementalSync().
     }
 
     /// Signals that the app transitioned to background so realtime observation can pause to save resources.
     func handleAppDidEnterBackground() {
+        // Laufendes Rückgängig-Fenster festschreiben: Beendet das System die App im Hintergrund, wäre die
+        // Löschung sonst verloren und die Artikel beim nächsten Start wieder da (Audit 2, Befund S15).
+        _ = commitPendingDeletion()
+        syncEngine?.pause()
         guard observeTask != nil else { return }
         logVoid(params: (
             action: "pauseRealtimeSync",
@@ -214,6 +194,19 @@ extension ListViewModel {
         ))
         UserLog.Sync.realtimeResumed(listName: defaultList?.title)
         startObserving()
+    }
+
+    /// Kein Zugriff mehr: Artikel, Fotos, Warteschlange und Zwischenstände dieser Liste vom Gerät löschen.
+    /// Vorher blieben sie nach dem Entfernen aus einer geteilten Liste gespeichert (Audit 25.09.2026).
+    internal func forgetLocalData(of removedListId: UUID) {
+        syncEngine?.forgetList(removedListId)
+        let purged = (try? itemStore.purgeAll(listId: removedListId)) ?? 0
+        try? listStore.purge(listId: removedListId)
+        try? listStore.save()
+        PaginationCursor.clear(listId: removedListId)
+        UserDefaults.standard.removeObject(forKey: "fam24_last_sync_ts_\(removedListId.uuidString)")
+        listItemCounts[removedListId] = nil
+        logVoid(params: (action: "forgetLocalData", listId: removedListId, purgedItems: purged))
     }
 
     // MARK: - Membership Observation (FAM-21 Bug Fix)
@@ -239,6 +232,7 @@ extension ListViewModel {
     internal func handleMembershipRemoval(listId removedListId: UUID) {
         logVoid(params: (action: "handleMembershipRemoval", listId: removedListId))
         allLists.removeAll { $0.id == removedListId }
+        forgetLocalData(of: removedListId)
 
         guard listId == removedListId else { return } // Nicht aktive Liste → kein Wechsel nötig
 

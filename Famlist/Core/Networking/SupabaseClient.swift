@@ -118,7 +118,9 @@ extension AuthClient: AuthClienting {
 }
 
 // MARK: - Facade Protocols
-protocol SupabaseClienting { // Protocol to hide concrete Supabase types from the rest of the app.
+/// `Sendable`: Repositories auf beliebigen Actors teilen sich eine Instanz; Umsetzungen dürfen deshalb
+/// keinen ungeschützten veränderlichen Zustand halten (AppSupabaseClient hält nur unveränderliche `let`s).
+protocol SupabaseClienting: Sendable { // Protocol to hide concrete Supabase types from the rest of the app.
     var auth: any AuthClienting { get } // Exposes auth for login-related tasks if needed.
     var realtime: RealtimeClientV2 { get } // Exposes Realtime V2 client for live subscriptions.
     // Query entry point using new API
@@ -130,15 +132,23 @@ protocol SupabaseClienting { // Protocol to hide concrete Supabase types from th
     func rpc(_ function: String) async throws
     /// Löscht Dateien aus einem Storage-Bucket.
     func storageRemove(bucket: String, paths: [String]) async throws
+    /// Lädt eine Datei aus einem privaten Storage-Bucket (mit der Sitzung des Nutzers).
+    func storageDownload(bucket: String, path: String) async throws -> Data
     /// Ruft eine Postgres-Funktion mit Parametern auf und dekodiert die Zeilen.
-    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R]
+    func rpcRows<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> [R]
+    /// Ruft eine Postgres-Funktion mit Parametern auf, die einen einzelnen Wert liefert (z. B. uuid, boolean).
+    func rpcValue<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> R
 }
 
 extension SupabaseClienting {
     // Standard für Test-Doubles, die diese Aufrufe nicht brauchen.
     func rpc(_ function: String) async throws {}
     func storageRemove(bucket: String, paths: [String]) async throws {}
-    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] { [] }
+    func storageDownload(bucket: String, path: String) async throws -> Data { throw URLError(.fileDoesNotExist) }
+    func rpcRows<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> [R] { [] }
+    func rpcValue<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> R {
+        throw PostgrestError(message: "rpcValue(\(function)) not available in this client")
+    }
 }
 
 final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around SupabaseClient conforming to our facade.
@@ -147,20 +157,35 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
     var realtime: RealtimeClientV2 { client.realtimeV2 } // Forward Realtime V2 client for live subscriptions.
 
     // Stored handles allow cancellation in deinit – prevents zombie tasks and memory leaks.
-    private var sessionTask: Task<Void, Never>?
-    private var authStateTask: Task<Void, Never>?
+    // `let` statt `var`: Sie werden nur im init gesetzt; so bleibt die Klasse ohne veränderlichen Zustand (Sendable).
+    private let sessionTask: Task<Void, Never>
+    private let authStateTask: Task<Void, Never>
 
     deinit {
-        sessionTask?.cancel()
-        authStateTask?.cancel()
+        sessionTask.cancel()
+        authStateTask.cancel()
     }
+
+    /// Eigene Session OHNE HTTP-Cache: Fotos liegen ohnehin in SwiftData (offline verfügbar); ein
+    /// zusätzlicher Datei-Cache hielte private Fotos und API-Antworten auch nach Abmelden oder
+    /// Entfernen aus einer Liste auf dem Gerät vor (Audit 25.09.2026).
+    static let uncachedSession: URLSession = {
+        let configuration = URLSessionConfiguration.default
+        configuration.urlCache = nil
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        #if DEBUG
+        if SimulatedOffline.isActive { configuration.protocolClasses = [SimulatedOfflineURLProtocol.self] }
+        #endif
+        return URLSession(configuration: configuration)
+    }()
 
     init?(config: SupabaseConfig) { // Failable initializer; returns nil if misconfigured (kept simple here).
         // Configure auth to auto-refresh tokens; rely on library defaults for secure storage/persistence.
         let options = SupabaseClientOptions(
             auth: SupabaseClientOptions.AuthOptions(
                 autoRefreshToken: true
-            )
+            ),
+            global: SupabaseClientOptions.GlobalOptions(session: Self.uncachedSession)
         )
         // Initialize Supabase client with URL, anon key, and configured options.
         self.client = SupabaseClient(supabaseURL: config.url, supabaseKey: config.anonKey, options: options) // Create configured client.
@@ -171,7 +196,6 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
             result: "SupabaseClient initialized"
         )
         
-        UserLog.Sync.supabaseInitialized(host: config.url.host ?? "unknown")
         // Optionally check/restore session asynchronously and log outcome without throwing.
         let authClient = self.client.auth // Snapshot auth client to avoid capturing self.
         // Stored as properties so they can be cancelled in deinit.
@@ -179,7 +203,6 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
             do {
                 _ = try await authClient.session // Attempt to read/restore an existing session.
                 _ = logResult(params: ["restored": true], result: "Auth session ready")
-                UserLog.Auth.authSessionReady()
             } catch {
                 _ = logResult(params: ["restored": false, "error": String(describing: error)], result: "Auth session missing")
             }
@@ -188,7 +211,6 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         authStateTask = Task {
             for await ev in authClient.authStateChanges {
                 logVoid(params: ["authEvent": String(describing: ev.event)])
-                UserLog.Auth.authStateChanged(event: String(describing: ev.event))
             }
         }
     }
@@ -206,8 +228,16 @@ final class AppSupabaseClient: SupabaseClienting { // Concrete wrapper around Su
         logVoid(params: ["rpc": function])
     }
 
-    func rpcRows<P: Encodable & Sendable, R: Decodable>(_ function: String, params: P) async throws -> [R] {
+    func rpcRows<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> [R] {
         try await client.rpc(function, params: params).execute().value
+    }
+
+    func rpcValue<P: Encodable & Sendable, R: Decodable & Sendable>(_ function: String, params: P) async throws -> R {
+        try await client.rpc(function, params: params).execute().value
+    }
+
+    func storageDownload(bucket: String, path: String) async throws -> Data {
+        try await client.storage.from(bucket).download(path: path)
     }
 
     func storageRemove(bucket: String, paths: [String]) async throws {

@@ -19,7 +19,7 @@
  - Wieder online: `reconnect` (ConnectivityMonitor.$isOnline) löst das Senden aus.
 
  📝 Last Change:
- - Initial creation (Artikelstamm offline zuerst).
+ - Fotos aus Storage lokal vorhalten, alte Base64-Fotos umziehen (Audit 25.09.2026, Migration 016).
  ------------------------------------------------------------------------
  */
 
@@ -34,6 +34,7 @@ final class OfflineItemCatalogRepository: ItemCatalogRepository {
     let store: CatalogLocalStore
     private var flushTask: Task<Void, Never>?
     private var reconnectSubscription: AnyCancellable?
+    private var didMigrateLegacyImages = false
 
     init(remote: any ItemCatalogRepository, store: CatalogLocalStore? = nil,
          reconnect: AnyPublisher<Bool, Never>? = nil) {
@@ -63,16 +64,57 @@ final class OfflineItemCatalogRepository: ItemCatalogRepository {
     func fetchAll() async throws -> [ItemCatalogEntry] {
         await flush()
         do {
-            store.setCache(try await remote.fetchAll())
+            let remoteEntries = try await remote.fetchAll()
+            store.setCache(await withLocalImages(remoteEntries))
+            await migrateLegacyImagesOnce(remoteEntries)
         } catch where store.entries != nil {
             logVoid(params: (action: "catalog.fetchAll.offline", pending: store.outbox.count))
         }
         return store.entries ?? []
     }
 
+    /// Fotos lokal bereithalten (offline verfügbar): vorhandene Kopie bei gleichem Pfad übernehmen,
+    /// sonst einmal herunterladen.
+    private func withLocalImages(_ entries: [ItemCatalogEntry]) async -> [ItemCatalogEntry] {
+        let cached = Dictionary((store.entries ?? []).map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var result: [ItemCatalogEntry] = []
+        for var entry in entries {
+            if let path = entry.imagePath {
+                if let local = cached[entry.id], local.imagePath == path, local.imageData != nil {
+                    entry.imageData = local.imageData
+                } else if let data = try? await remote.downloadImage(path: path) {
+                    entry.imageData = data.base64EncodedString()
+                }
+            }
+            result.append(entry)
+        }
+        return result
+    }
+
+    /// Alte Base64-Fotos (ohne Pfad) einmal je Sitzung nach Storage umziehen (Migration 016).
+    private func migrateLegacyImagesOnce(_ entries: [ItemCatalogEntry]) async {
+        guard !didMigrateLegacyImages else { return }
+        didMigrateLegacyImages = true
+        let legacy = entries.filter { $0.imagePath == nil && $0.imageData != nil }
+        guard !legacy.isEmpty else { return }
+        logVoid(params: (action: "catalog.migrateLegacyImages", count: legacy.count))
+        for entry in legacy { store.append(.update(entry)) }
+        await flush()
+    }
+
     func search(query: String) async throws -> [ItemCatalogEntry] {
         await flush()
-        if store.outbox.isEmpty, let remoteHits = try? await remote.search(query: query) { return remoteHits }
+        if store.outbox.isEmpty, let remoteHits = try? await remote.search(query: query) {
+            // Fotos aus der lokalen Kopie ergänzen (Treffer vom Server tragen nur den Pfad).
+            let cached = Dictionary((store.entries ?? []).map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            return remoteHits.map { hit in
+                var entry = hit
+                if entry.imageData == nil, let local = cached[hit.id], local.imagePath == hit.imagePath {
+                    entry.imageData = local.imageData
+                }
+                return entry
+            }
+        }
         let q = CatalogOperation.key(query)
         return Array((store.entries ?? []).filter { CatalogOperation.key($0.name).contains(q) }.prefix(5))
     }

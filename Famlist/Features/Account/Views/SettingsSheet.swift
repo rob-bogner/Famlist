@@ -6,7 +6,7 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Sheet „Einstellungen“ (Höhe 790): Profilkarte (einziger Weg zu „Profil bearbeiten“),
-   Erscheinungsbild System/Hell/Dunkel, Benachrichtigungen, Abmelden, Konto löschen.
+   Erscheinungsbild System/Hell/Dunkel, Liste, Kassenzettel, Benachrichtigungen, Abmelden, Konto löschen.
 
  🔰 Notes for Beginners:
  - Vorlage: SettingsScreen in design-handoff/MyListUI/Screens/AccountScreens.swift (Settings.dc.html).
@@ -15,7 +15,7 @@
    (siehe design-handoff/PLAN.md, Risiko R5).
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 4).
+ - Abschnitt „Kassenzettel“: „Fotos der Bons speichern“ und „Gespeicherte Kassenzettel“ (Archiv).
  ------------------------------------------------------------------------
  */
 
@@ -25,9 +25,12 @@ struct SettingsSheet: View {
     @EnvironmentObject var session: AppSessionViewModel
     @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    @AppStorage(ReceiptArchiveSetting.storageKey) private var saveReceipts = ReceiptArchiveSetting.defaultValue
+    @EnvironmentObject var receiptArchive: ReceiptArchive
     let appearance: Appearance
     var onClose: () -> Void = {}
     var onEditProfile: () -> Void = {}
+    var onOpenReceipts: () -> Void = {}
     var onDeleteAccount: () -> Void = {}
 
     private var choice: ListAccountAppearanceChoice { ListAccountAppearanceChoice(rawValue: appearanceRaw) ?? .system }
@@ -47,59 +50,127 @@ struct SettingsSheet: View {
             DesignListScreen(appearance: appearance)
         } content: {
             ListAccountSheet(k: k, height: 790, title: "Einstellungen", onClose: onClose) {
-                profileCard(profile, t: t, k: k)
-                    .padding(.top, 18)
-
-                ListAccountSectionLabel(text: "Erscheinungsbild", t: t)
-                    .padding(.top, 22)
-                appearanceSegment(t: t, k: k)
-                    .padding(.top, 10)
-
-                ListAccountSectionLabel(text: "Liste", t: t)
-                    .padding(.top, 22)
-                SettingsGroup(t: t) {
-                    SettingsRow(t: t, title: "Preise anzeigen", titleColor: k.text,
-                                subtitle: "Auf Artikelkarten und in der Fortschrittskarte", hasTopLine: false) {
-                        ListAccountToggle(t: t, isOn: $showPrices, label: "Preise anzeigen")
+                // Scrollt, sobald der Inhalt nicht passt (iPhone SE, große iOS-Schrift). Vorher wurden die Zeilen
+                // zusammengeschoben und überlappten sich.
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        settingsContent(profile, t: t, k: k, shared: sharedBinding, invites: invitesBinding)
                     }
+                    .padding(.bottom, 8)
                 }
-                .padding(.top, 10)
-
-                ListAccountSectionLabel(text: "Benachrichtigungen", t: t)
-                    .padding(.top, 22)
-                SettingsGroup(t: t) {
-                    SettingsRow(t: t, title: "Änderungen an geteilten Listen", titleColor: k.text,
-                                subtitle: "Wenn jemand Artikel hinzufügt oder abhakt", hasTopLine: false) {
-                        ListAccountToggle(t: t, isOn: sharedBinding, label: "Änderungen an geteilten Listen")
-                    }
-                    SettingsRow(t: t, title: "Einladungen", titleColor: k.text,
-                                subtitle: "Wenn dich jemand zu einer Liste einlädt", hasTopLine: true) {
-                        ListAccountToggle(t: t, isOn: invitesBinding, label: "Einladungen")
-                    }
-                }
-                .padding(.top, 10)
-
-                ListAccountSectionLabel(text: "Konto", t: t)
-                    .padding(.top, 22)
-                SettingsGroup(t: t) {
-                    Button(action: { session.signOut() }) {
-                        SettingsRow(t: t, title: "Abmelden", titleColor: t.accentText, subtitle: nil, hasTopLine: false) {
-                            EmptyView()
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    Button(action: onDeleteAccount) {
-                        SettingsRow(t: t, title: "Konto löschen", titleColor: t.danger,
-                                    subtitle: "Alle deine Daten werden entfernt", hasTopLine: true) {
-                            EmptyView()
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.top, 10)
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
         .task { if session.avatarImage == nil { await session.loadAvatar() } }
+        .task { await receiptArchive.refresh() }                // Anzahl und Größe der Bons aktuell halten
+    }
+
+    @ViewBuilder
+    private func settingsContent(_ profile: Profile?, t: ListAccountTokens, k: SheetTheme,
+                                 shared sharedBinding: Binding<Bool>, invites invitesBinding: Binding<Bool>) -> some View {
+        profileCard(profile, t: t, k: k)
+            .padding(.top, 18)
+
+        ListAccountSectionLabel(text: "Erscheinungsbild", t: t)
+            .padding(.top, 22)
+        appearanceSegment(t: t, k: k)
+            .padding(.top, 10)
+
+        ListAccountSectionLabel(text: "Liste", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            SettingsRow(t: t, title: "Preise anzeigen", titleColor: k.text,
+                        subtitle: "Auf Artikelkarten und in der Fortschrittskarte", hasTopLine: false) {
+                ListAccountToggle(t: t, isOn: $showPrices, label: "Preise anzeigen")
+            }
+        }
+        .padding(.top, 10)
+
+        receiptSection(t: t, k: k)
+
+        ListAccountSectionLabel(text: "Benachrichtigungen", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            SettingsRow(t: t, title: "Änderungen an geteilten Listen", titleColor: k.text,
+                        subtitle: "Wenn jemand Artikel hinzufügt oder abhakt", hasTopLine: false) {
+                ListAccountToggle(t: t, isOn: sharedBinding, label: "Änderungen an geteilten Listen")
+            }
+            SettingsRow(t: t, title: "Einladungen", titleColor: k.text,
+                        subtitle: "Wenn dich jemand zu einer Liste einlädt", hasTopLine: true) {
+                ListAccountToggle(t: t, isOn: invitesBinding, label: "Einladungen")
+            }
+        }
+        .padding(.top, 10)
+
+        accountSection(t: t)
+    }
+
+    /// Kassenzettel (Settings.dc.html): Schalter „Fotos der Bons speichern“, Zeile „Gespeicherte Kassenzettel“ → Archiv.
+    @ViewBuilder
+    private func receiptSection(t: ListAccountTokens, k: SheetTheme) -> some View {
+        ListAccountSectionLabel(text: "Kassenzettel", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            SettingsRow(t: t, title: "Fotos der Bons speichern", titleColor: k.text,
+                        subtitle: "In Famlist, sichtbar für alle in der Liste", hasTopLine: false) {
+                ListAccountToggle(t: t, isOn: $saveReceipts, label: "Fotos der Bons speichern")
+            }
+            Button(action: onOpenReceipts) {
+                SettingsRow(t: t, title: "Gespeicherte Kassenzettel", titleColor: k.text,
+                            subtitle: ReceiptArchiveSetting.summary(count: receiptArchive.receipts.count,
+                                                                    bytes: receiptArchive.totalBytes),
+                            hasTopLine: true) {
+                    SVGIcon(Icon.chevronRight, size: 18, color: k.sub, lineWidth: 2.2)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Gespeicherte Kassenzettel ansehen")
+        }
+        .padding(.top, 10)
+    }
+
+    /// Konto: Abmelden, Konto löschen.
+    @ViewBuilder
+    private func accountSection(t: ListAccountTokens) -> some View {
+        ListAccountSectionLabel(text: "Konto", t: t)
+            .padding(.top, 22)
+        SettingsGroup(t: t) {
+            Button(action: { session.signOut() }) {
+                SettingsRow(t: t, title: "Abmelden", titleColor: t.accentText, subtitle: nil, hasTopLine: false) {
+                    EmptyView()
+                }
+            }
+            .buttonStyle(.plain)
+            // Ungesendete Änderungen (z. B. offline): nachfragen statt still verwerfen (Audit 2, Befund S4).
+            // Am Knopf verankert: iOS 26 zeigt den Systemdialog als Sprechblase, die auf „Abmelden“ zeigt.
+            .confirmationDialog(unsentTitle, isPresented: unsentBinding, titleVisibility: .visible) {
+                Button("Trotzdem abmelden", role: .destructive) { session.signOut(discardingUnsentChanges: true) }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text("Verbinde dich mit dem Internet und warte kurz, dann wird alles gesendet.")
+            }
+            Button(action: onDeleteAccount) {
+                SettingsRow(t: t, title: "Konto löschen", titleColor: t.danger,
+                            subtitle: "Alle deine Daten werden entfernt", hasTopLine: true) {
+                    EmptyView()
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.top, 10)
+    }
+
+    private var unsentTitle: String {
+        let count = session.unsentChangesBeforeSignOut ?? 0
+        return count == 1
+            ? "1 Änderung ist noch nicht gesendet und geht beim Abmelden verloren."
+            : "\(count) Änderungen sind noch nicht gesendet und gehen beim Abmelden verloren."
+    }
+
+    private var unsentBinding: Binding<Bool> {
+        Binding(get: { session.unsentChangesBeforeSignOut != nil },
+                set: { if !$0 { session.unsentChangesBeforeSignOut = nil } })
     }
 
     /// Profilkarte: padding 14 + Rahmen 1 (border-box), Radius 22, gap 14
@@ -112,11 +183,15 @@ struct SettingsSheet: View {
                         .font(AppFont.outfit(17, 600))
                         .foregroundStyle(k.text)
                         .lineLimit(1)
-                    Text(session.currentUserEmail ?? "")
-                        .font(AppFont.dm(13, 400))
-                        .foregroundStyle(k.sub)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                        .minimumScaleFactor(0.85)
+                    if let email = session.currentUserEmail, !email.isEmpty {      // ohne E-Mail keine leere Zeile
+                        Text(email)
+                            .font(AppFont.dm(13, 400))
+                            .foregroundStyle(k.sub)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .truncationMode(.tail)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Text("Profil")
@@ -164,63 +239,12 @@ struct SettingsSheet: View {
     }
 }
 
-/// Gruppe: Radius 20, card, Rahmen 1 cardBorder, overflow hidden, kein Schatten.
-private struct SettingsGroup<Content: View>: View {
-    let t: ListAccountTokens
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        VStack(spacing: 0) {
-            content()
-        }
-        .padding(1)                                          // Rahmen
-        .clipShape(RR(20))
-        .background(CSSBox(shape: RR(20), paint: t.card, border: 1, borderColor: t.cardBorder))
-    }
-}
-
-/// Zeile: min. 56 (inkl. border-top 1 bei Folgezeilen), padding 8 14, gap 12;
-/// Titel 15/500, darunter optional 12 sub (gap 2), rechts optional Schalter.
-private struct SettingsRow<Trailing: View>: View {
-    let t: ListAccountTokens
-    let title: String
-    let titleColor: Color
-    let subtitle: String?
-    let hasTopLine: Bool
-    @ViewBuilder let trailing: () -> Trailing
-
-    var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(AppFont.dm(15, 500))
-                    .foregroundStyle(titleColor)
-                if let subtitle {
-                    Text(subtitle)
-                        .font(AppFont.dm(12, 400))
-                        .foregroundStyle(t.k.sub)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            trailing()
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 14)
-        .frame(minHeight: hasTopLine ? 55 : 56)
-        .padding(.top, hasTopLine ? 1 : 0)
-        .overlay(alignment: .top) {
-            if hasTopLine {
-                Rectangle().fill(t.line).frame(height: 1)
-            }
-        }
-        .contentShape(Rectangle())
-    }
-}
-
 #Preview("Einstellungen", traits: .fixedLayout(width: 390, height: 844)) {
     SettingsSheet(appearance: .light).environmentObject(PreviewMocks.makeAppSessionViewModel())
+        .environmentObject(ReceiptArchive.preview())
 }
 
 #Preview("Einstellungen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
     SettingsSheet(appearance: .dark).environmentObject(PreviewMocks.makeAppSessionViewModel())
+        .environmentObject(ReceiptArchive.preview())
 }

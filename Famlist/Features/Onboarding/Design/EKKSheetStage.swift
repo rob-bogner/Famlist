@@ -44,3 +44,23 @@ struct EKKSheetStage<Background: View, Sheet: View>: View {
         }
     }
 }
+
+#Preview("EKKSheetStage", traits: .fixedLayout(width: 390, height: 844)) {
+    EKKSheetStage(k: SheetTheme(.light)) {
+        EKKScreenBackground(t: EKKTokens(.light))
+    } sheet: {
+        SheetSurface(k: SheetTheme(.light), height: 320) {
+            EKKSectionLabel(text: "Beispiel", k: SheetTheme(.light)).padding(20)
+        }
+    }
+}
+
+#Preview("EKKSheetStage – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    EKKSheetStage(k: SheetTheme(.dark)) {
+        EKKScreenBackground(t: EKKTokens(.dark))
+    } sheet: {
+        SheetSurface(k: SheetTheme(.dark), height: 320) {
+            EKKSectionLabel(text: "Beispiel", k: SheetTheme(.dark)).padding(20)
+        }
+    }
+}

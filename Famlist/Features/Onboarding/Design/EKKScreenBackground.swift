@@ -35,3 +35,11 @@ struct EKKScreenBackground: View {
         }
     }
 }
+
+#Preview("EKKScreenBackground", traits: .fixedLayout(width: 390, height: 844)) {
+    EKKScreenBackground(t: EKKTokens(.light))
+}
+
+#Preview("EKKScreenBackground – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    EKKScreenBackground(t: EKKTokens(.dark))
+}

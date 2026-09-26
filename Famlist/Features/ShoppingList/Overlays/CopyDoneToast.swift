@@ -41,9 +41,11 @@ struct CopyDoneToast: View {
                 Text("Liste kopiert")
                     .font(AppFont.dm(15, 600))
                     .foregroundStyle(k.toastText)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(subtitle)
                     .font(AppFont.dm(12, 400))
                     .foregroundStyle(k.toastSub)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

@@ -52,7 +52,7 @@ struct RootView: View { // SwiftUI View declaration.
         .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
         .animation(.easeInOut(duration: 0.3), value: session.isRestoringSession)
         .animation(.easeInOut(duration: 0.3), value: session.needsProfileSetup)
-        .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.listId)
+        .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.token)
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
         }
@@ -71,6 +71,7 @@ struct RootView: View { // SwiftUI View declaration.
         .environmentObject(listVM) // Inject list VM.
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
 }
 
 #Preview("Authenticated") {
@@ -86,4 +87,36 @@ struct RootView: View { // SwiftUI View declaration.
         .environmentObject(listVM) // Inject list VM.
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
+}
+
+#Preview("Dark") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    let sessionVM = AppSessionViewModel(client: nil,
+                                        profiles: PreviewProfilesRepository(),
+                                        lists: PreviewListsRepository(),
+                                        listViewModel: listVM)
+    return RootView()
+        .environmentObject(sessionVM)
+        .environmentObject(listVM)
+        .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Authenticated – Dark") {
+    let listVM = PreviewMocks.makeListViewModelWithSamples()
+    let sessionVM = AppSessionViewModel(client: nil,
+                                        profiles: PreviewProfilesRepository(),
+                                        lists: PreviewListsRepository(),
+                                        listViewModel: listVM)
+    sessionVM.isAuthenticated = true
+    return RootView()
+        .environmentObject(sessionVM)
+        .environmentObject(listVM)
+        .environmentObject(CategoryStore(repository: nil))
+        .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
+        .preferredColorScheme(.dark)
 }

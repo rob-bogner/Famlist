@@ -18,14 +18,19 @@
  ------------------------------------------------------------------------
  */
 
-import AVFoundation
+@preconcurrency import AVFoundation
 import UIKit
 
+/// `@unchecked Sendable`: Veränderlich ist nur `pending`, und das ausschließlich unter `lock`.
+/// Session und Ausgabe werden nur auf `queue` konfiguriert (Apples Vorgabe für AVCaptureSession).
 final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
     let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private let queue = DispatchQueue(label: "famlist.receiptCamera")
-    private var continuation: CheckedContinuation<UIImage?, Never>?
+    /// Wartende Aufnahmen je `AVCapturePhotoSettings.uniqueID`. Vorher gab es nur eine Wartestelle:
+    /// Zwei schnelle Aufnahmen überschrieben sie, die erste wartete dann für immer (Audit 25.09.2026).
+    private let lock = NSLock()
+    private var pending: [Int64: CheckedContinuation<UIImage?, Never>] = [:]
 
     static var isAvailable: Bool { AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil }
 
@@ -55,9 +60,11 @@ final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
     func capture() async -> UIImage? {
         guard session.isRunning else { return nil }
         return await withCheckedContinuation { continuation in
-            self.continuation = continuation
             queue.async { [self] in
-                output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+                // Einstellungen entstehen auf der Kamera-Warteschlange (nicht thread-sicher, nicht Sendable).
+                let settings = AVCapturePhotoSettings()
+                lock.withLock { pending[settings.uniqueID] = continuation }
+                output.capturePhoto(with: settings, delegate: self)
             }
         }
     }
@@ -73,7 +80,14 @@ final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
 extension ReceiptCamera: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         let image = photo.fileDataRepresentation().flatMap(UIImage.init(data:))
-        continuation?.resume(returning: image)
-        continuation = nil
+        let waiting = lock.withLock { pending.removeValue(forKey: photo.resolvedSettings.uniqueID) }
+        waiting?.resume(returning: image)
+    }
+
+    /// Letzter Rückruf jeder Aufnahme. Kam kein Bild (Fehler, Session gestoppt), endet das Warten mit nil.
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings,
+                     error: Error?) {
+        let waiting = lock.withLock { pending.removeValue(forKey: resolvedSettings.uniqueID) }
+        waiting?.resume(returning: nil)
     }
 }

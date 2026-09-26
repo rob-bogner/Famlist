@@ -38,16 +38,12 @@ struct CTAButton: View {
                     .font(AppFont.dm(16, 600))
                     .foregroundStyle(k.ctaText)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
                 .padding(.horizontal, 24)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(alignment: .top) {
-                    GlossEllipse(opacity: 0.45)
-                        .frame(height: 22)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 2)
-                }
+                .background { PillGlassReflection() }
                 .clipShape(Pill)
                 .background(CSSBox(shape: Pill, paint: k.ctaPaint, shadows: k.ctaShadow))
                 .contentShape(Pill)

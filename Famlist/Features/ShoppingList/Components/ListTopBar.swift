@@ -57,3 +57,9 @@ struct ListTopBar: View {
     ListTopBar(t: ListTheme(.light), title: "My List")
         .padding(20)
 }
+
+#Preview("Dark") {
+    ListTopBar(t: ListTheme(.dark), title: "My List")
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

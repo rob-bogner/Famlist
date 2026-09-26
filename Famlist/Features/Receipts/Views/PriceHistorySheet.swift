@@ -53,10 +53,12 @@ struct PriceHistorySheet: View {
                                 .font(AppFont.outfit(17, 600))
                                 .foregroundStyle(k.text)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.85)
                             Text(vm.subtitle)
                                 .font(AppFont.dm(13, 400))
                                 .foregroundStyle(k.sub)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.85)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }

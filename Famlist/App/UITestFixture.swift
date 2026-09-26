@@ -67,19 +67,23 @@ enum UITestFixture {
 
     /// Startscreen der Fixture. `-designScreen signIn|profileSetup|acceptInvite` zeigt einen Einstiegs-Screen
     /// statt der Liste (Pixel-Abgleich gegen design-handoff/Design/png).
-    @ViewBuilder
     static var rootView: some View {
+        FixtureAppearance { screen }
+    }
+
+    @ViewBuilder
+    private static var screen: some View {
         switch UserDefaults.standard.string(forKey: "designScreen") {
         case "signIn": SignInView()
         case "profileSetup": ProfileSetupView()
         case "acceptInvite":
             let _ = setDesignInvitePreview()
-            AcceptInviteView(invite: .init(listId: designInviteId, listTitle: "Edeka", inviterPublicId: "Rob"))
+            AcceptInviteView(invite: .init(token: designInviteToken, listTitle: "Edeka"))
         default: ShoppingListView()
         }
     }
 
-    private static let designInviteId = UUID()
+    private static let designInviteToken = "design-invite"
 
     /// Rauschbild 1200 × 1200 als JPEG → Base64 (groß wie ein Kamerafoto im Artikelstamm).
     private static var largeImageBase64: String {
@@ -103,11 +107,29 @@ enum UITestFixture {
         ? .designSample
         : PriceBook(repository: InMemoryPricePointsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
 
+    /// Kassenzettel-Archiv im Speicher, Dateien in einem eigenen Ordner (bei jedem Start leer);
+    /// im Design-Modus die Bons aus ReceiptArchive.dc.html.
+    static let receiptArchive: ReceiptArchive = {
+        if designMode {                     // Bons von „Rob“ gehören dem Fixture-Konto → „Löschen“ sichtbar
+            return .preview(ArchivedReceipt.designSamples.map { sample in
+                var receipt = sample
+                if receipt.creatorName == "Rob" { receipt.createdBy = ownerId }
+                return receipt
+            })
+        }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("uiTestFixture-receipts", isDirectory: true)
+        try? FileManager.default.removeItem(at: root)
+        let store = ReceiptArchiveLocalStore(directory: root.appendingPathComponent("support"),
+                                             photoCache: root.appendingPathComponent("caches"))
+        return ReceiptArchive(repository: InMemoryReceiptsRepository(), store: store,
+                              defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
+    }()
+
     /// Beispielwerte aus AcceptInvite.dc.html, bevor der Screen erscheint.
     private static func setDesignInvitePreview() {
-        guard session.invitePreview?.listId != designInviteId else { return }
-        session.invitePreview = InvitePreviewInfo(listId: designInviteId, inviterName: "Rob", listName: "Edeka",
-                                                  itemCount: 4, memberCount: 1)
+        guard session.invitePreview?.token != designInviteToken else { return }
+        session.invitePreview = InvitePreviewInfo(token: designInviteToken, listId: UUID(), inviterName: "Rob",
+                                                  listName: "Edeka", itemCount: 4, memberCount: 1)
     }
 
     /// Owner of "My List" and "Drogerie"; "WG-Einkauf" belongs to someone else (shared list).
@@ -131,4 +153,17 @@ enum UITestFixture {
         ("Batterien", .sonstiges), ("Kerzen", .sonstiges)
     ]
 }
+
+/// Wendet wie RootView die gespeicherte Wahl „System/Hell/Dunkel“ an (vorher zeigte die Fixture immer
+/// das Systemschema, die Dunkel-Tour lief deshalb hell).
+private struct FixtureAppearance<Content: View>: View {
+    @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        content()
+            .preferredColorScheme(ListAccountAppearanceChoice(rawValue: appearanceRaw)?.colorScheme)
+    }
+}
+
 #endif

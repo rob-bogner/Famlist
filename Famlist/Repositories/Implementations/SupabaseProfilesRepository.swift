@@ -42,8 +42,6 @@ final class SupabaseProfilesRepository: ProfilesRepository {
     }
 
     func myProfile() async throws -> Profile {
-        UserLog.Auth.loadingProfile() // User-Log einmalig am Anfang
-        
         // Resolve authenticated user id from the in-memory user or by awaiting the active session
         if let currentId = client.auth.currentUser?.id {
             let profile: Profile = try await client
@@ -54,7 +52,6 @@ final class SupabaseProfilesRepository: ProfilesRepository {
                 .execute()
                 .value
             let result = logResult(params: ["source": "currentUser"], result: profile)
-            UserLog.Auth.profileLoaded(publicId: profile.publicId)
             return result
         }
         // Fallback: try to read/restore session asynchronously and use its user id
@@ -70,20 +67,7 @@ final class SupabaseProfilesRepository: ProfilesRepository {
             .execute()
             .value
         let result = logResult(params: ["source": "session"], result: profile)
-        UserLog.Auth.profileLoaded(publicId: profile.publicId)
         return result
-    }
-
-    func profileByPublicId(_ publicId: String) async throws -> Profile? {
-        let rows: [Profile] = try await client
-            .from("profiles")
-            .select()
-            .eq("public_id", value: publicId)
-            .limit(1)
-            .execute()
-            .value
-        let result = rows.first
-        return logResult(params: ["publicId": publicId], result: result)
     }
 
     func profile(id: UUID) async throws -> Profile? {
@@ -105,12 +89,11 @@ final class SupabaseProfilesRepository: ProfilesRepository {
             .eq("id", value: id.uuidString).execute()
     }
 
+    /// Fremde Profile sind nicht mehr lesbar (Migration 013); die Prüfung läuft serverseitig
+    /// ohne Groß-/Kleinschreibung über die RPC is_username_available.
     func isUsernameAvailable(_ username: String) async throws -> Bool {
-        struct Row: Decodable { let id: UUID }
-        let id = try await myId()
-        let rows: [Row] = try await client.from("profiles").select("id")
-            .ilike("username", pattern: username).limit(2).execute().value
-        return rows.allSatisfy { $0.id == id }
+        struct Params: Encodable, Sendable { let p_username: String }
+        return try await client.rpcValue("is_username_available", params: Params(p_username: username))
     }
 
     func setFavoriteList(_ listId: UUID?) async throws {
@@ -154,7 +137,9 @@ final class SupabaseProfilesRepository: ProfilesRepository {
     func deleteAccount() async throws {
         let id = try await myId()
         // Storage-Dateien zuerst über die Storage-API (direktes SQL-DELETE auf storage.objects ist gesperrt).
-        try? await client.storageRemove(bucket: "avatars", paths: ["\(id.uuidString.lowercased())/avatar.jpg"])
+        // Ein Fehler bricht ab, damit kein Profilfoto ohne Konto zurückbleibt (DSGVO). Eine fehlende
+        // Datei ist für die Storage-API kein Fehler.
+        try await client.storageRemove(bucket: "avatars", paths: ["\(id.uuidString.lowercased())/avatar.jpg"])
         try await client.rpc("delete_my_account")
     }
 }

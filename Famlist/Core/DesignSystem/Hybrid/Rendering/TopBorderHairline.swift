@@ -34,3 +34,16 @@ struct TopBorderHairline: View {
             .allowsHitTesting(false)
     }
 }
+
+#Preview("TopBorderHairline") {
+    TopBorderHairline(radius: 28, color: .hex("#0FA3AE"))
+        .frame(width: 300, height: 120)
+        .padding(20)
+}
+
+#Preview("TopBorderHairline – Dark") {
+    TopBorderHairline(radius: 28, color: .rgba(255, 255, 255, 0.18))
+        .frame(width: 300, height: 120)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

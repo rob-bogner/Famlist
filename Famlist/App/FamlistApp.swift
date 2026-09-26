@@ -35,13 +35,18 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     private let syncMonitor: SyncMonitor // Shared sync monitor for tracking sync status and metrics.
     private let categoryStore: CategoryStore // Kategorien des Nutzers (Ladenweg), Redesign „Hybrid“ Phase 6.
     private let priceBook: PriceBook // Preise aus Kassenzetteln (offline zuerst), Redesign „Hybrid“ Phase 7.
+    private let receiptArchive: ReceiptArchive // Kassenzettel-Archiv (Fotos, offline zuerst), Migration 021.
 
     // MARK: - Init (Dependency Composition)
     /// Initializes repositories and view models for the app.
     @MainActor
     init() { // Construct dependencies for the running app.
+        let environment = ProcessInfo.processInfo.environment
+        // Unit-Tests laufen in der App als Gastgeber: dann weder die echte Datenbank des Simulators noch
+        // Supabase öffnen (vorher liefen Anmeldung, Realtime und Sync parallel zu den Tests).
+        let isUnitTestHost = environment["XCTestConfigurationFilePath"] != nil
         let persistenceController: PersistenceController // Decide which persistence flavour to use.
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" { // Detect SwiftUI preview context.
+        if environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" || isUnitTestHost { // Previews und Unit-Tests
             persistenceController = .preview // Use transient in-memory storage during previews.
         } else {
             persistenceController = .shared // Use the disk-backed container for the live app.
@@ -54,11 +59,11 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
         let itemStore = SwiftDataItemStore(context: modelContainer.mainContext)
         let listStore = SwiftDataListStore(context: modelContainer.mainContext)
 
-        if let config = SupabaseConfigLoader.load(), // Try to load Supabase secrets from bundle.
+        if !isUnitTestHost,
+           let config = SupabaseConfigLoader.load(), // Try to load Supabase secrets from bundle.
            let client = AppSupabaseClient(config: config) { // Initialize the Supabase client if configured.
-            // Initialize CRDT components
-            let conflictResolver = ConflictResolver()
-            let hlcGenerator = HybridLogicalClockGenerator()
+            // HLC-Uhr mit gespeicherter Geräte-ID und letztem Stand (über Neustarts monoton).
+            let hlcGenerator = HybridLogicalClockGenerator(defaults: .standard)
             
             // Sync orchestrator serialises PageLoader and Realtime event processing (FAM-79).
             let syncOrchestrator = SyncOrchestrator()
@@ -67,12 +72,16 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             let itemsRepo = SupabaseItemsRepository(
                 client: client,
                 itemStore: itemStore,
-                conflictResolver: conflictResolver,
                 syncOrchestrator: syncOrchestrator
             )
             let profilesRepo = SupabaseProfilesRepository(client: client)
-            let listsRepo = SupabaseListsRepository(client: client)
+            // Listen offline zuerst: lokale Kopie + Warteschlange, Senden sobald Netz da ist.
+            let listsRepo = OfflineListsRepository(remote: SupabaseListsRepository(client: client),
+                                                   reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
             
+            // Produktfotos in Supabase Storage (Migration 016).
+            let imageStorage = SupabaseImageStorage(client: client)
+
             // Create operation queue for sync engine
             let operationQueue = SyncOperationQueue(context: modelContainer.mainContext)
             
@@ -81,9 +90,11 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 repository: itemsRepo,
                 itemStore: itemStore,
                 operationQueue: operationQueue,
-                conflictResolver: conflictResolver,
                 hlcGenerator: hlcGenerator,
-                syncMonitor: syncMonitor
+                syncMonitor: syncMonitor,
+                imageStorage: imageStorage,
+                isOnline: { ConnectivityMonitor.shared.isOnline },
+                isListReady: { [weak listsRepo] listId in listsRepo?.isListReady(listId) ?? true }
             )
             
             // Create list VM without starting observation; it will start after auth completes.
@@ -97,6 +108,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             )
             lvm.configure(connectivityMonitor: connectivityMonitor)
             lvm.configure(syncEngine: syncEngine)
+            lvm.configure(imageStorage: imageStorage)
             // Artikelstamm offline zuerst: lokale Warteschlange, Senden sofort bzw. sobald wieder Netz da ist.
             lvm.configure(catalogRepository: OfflineItemCatalogRepository(
                 remote: SupabaseItemCatalogRepository(client: client),
@@ -109,9 +121,26 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
 
             // Create the session VM that coordinates auth and default list bootstrap.
             self.sessionViewModel = AppSessionViewModel(client: client, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm)
-            self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client))
+            self.categoryStore = CategoryStore(repository: SupabaseCategoryDefinitionsRepository(client: client),
+                                               reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
             self.priceBook = PriceBook(repository: SupabasePricePointsRepository(client: client),
                                        reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
+            self.receiptArchive = ReceiptArchive(repository: SupabaseReceiptsRepository(client: client),
+                                                 reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
+            // Abmelden: Preise, Kassenzettel und Kategorien des Kontos verwerfen.
+            let priceBook = self.priceBook
+            let categoryStore = self.categoryStore
+            let receiptArchive = self.receiptArchive
+            self.sessionViewModel.onSignOut { [weak priceBook, weak categoryStore, weak receiptArchive] in
+                priceBook?.clearLocal()
+                categoryStore?.resetLocal()
+                receiptArchive?.clearLocal()
+            }
+            // Rückfrage beim Abmelden: auch ungesendete Preise, Kassenzettel und Kategorien zählen.
+            self.sessionViewModel.countUnsentChanges { [weak priceBook, weak categoryStore, weak receiptArchive] in
+                (priceBook?.pending.count ?? 0) + (categoryStore?.unsentChangeCount ?? 0)
+                    + (receiptArchive?.pendingCount ?? 0)
+            }
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
             let itemsRepo = PreviewItemsRepository() // Items repo in memory.
@@ -135,6 +164,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             self.sessionViewModel = AppSessionViewModel(client: nil, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm) // Root VM with preview repos.
             self.categoryStore = CategoryStore(repository: nil)
             self.priceBook = PriceBook(repository: nil) // Ohne Supabase bleiben Preise in der lokalen Warteschlange.
+            self.receiptArchive = ReceiptArchive(repository: nil) // Ohne Supabase bleiben Bons lokal.
         }
     }
 
@@ -149,6 +179,8 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                     .environmentObject(UITestFixture.session)
                     .environmentObject(UITestFixture.categoryStore)
                     .environmentObject(UITestFixture.priceBook)
+                    .environmentObject(UITestFixture.receiptArchive)
+                    .appFontScaling()
             } else {
                 appRoot
             }
@@ -161,11 +193,13 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     /// Regular root view with all shared environment objects.
     private var appRoot: some View {
         RootView() // Root view deciding between AuthView and ShoppingListView.
+            .appFontScaling() // Schriften wachsen mit der iOS-Textgröße (begrenzt)
             .environmentObject(sessionViewModel) // Inject shared session VM for auth state.
             .environmentObject(listViewModel) // Inject shared list VM for list screens.
             .environmentObject(syncMonitor) // Inject sync monitor for status tracking
             .environmentObject(categoryStore) // Kategorien (Ladenweg) für Liste und „Kategorien verwalten“
             .environmentObject(priceBook) // Kassenzettel → Preise, Preisverlauf
+            .environmentObject(receiptArchive) // Kassenzettel-Archiv (Einstellungen → Kassenzettel)
             .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
     }
 }

@@ -3,7 +3,7 @@
 
  Famlist
  Created on: 27.11.2023
- Last updated on: 24.09.2026
+ Last updated on: 25.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -23,7 +23,7 @@
    das exakt die Design-Abstände; `topShift`/`dockShift` gleichen andere Geräte aus.
 
  📝 Last Change:
- - Redesign „Hybrid“ (Handoff 24.09.2026): DockView, Kontext-Menü, Dock-Menüs, Toasts.
+ - Plus im Dock → Eingabe über der Tastatur (InlineAddOverlay), Suchleiste oben → Listenfilter.
  ------------------------------------------------------------------------
  */
 
@@ -35,8 +35,11 @@ struct ShoppingListView: View {
     @EnvironmentObject var session: AppSessionViewModel
     @EnvironmentObject var categoryStore: CategoryStore
     @EnvironmentObject var priceBook: PriceBook
+    @EnvironmentObject var receiptArchive: ReceiptArchive
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
+    /// Bedienungshilfe „Bewegung reduzieren“: Sheets/Overlays nur ein-/ausblenden, keine Federn.
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     @StateObject var keyboard = KeyboardObserver()
     @State var activeSheet: ActiveListSheet?
@@ -46,15 +49,31 @@ struct ShoppingListView: View {
     @State var copied: CopyResult?
     /// Restzeit-Balken des Rückgängig-Toasts (1 → 0 in 5 s).
     @State var undoRemaining: CGFloat = 1
-    @State var showImport = false
     /// Liste, deren Löschen gerade bestätigt werden soll (Listen-Optionen → „Liste löschen“).
     @State var listToDelete: ListModel?
     @State var isDeletingAccount = false
     @State var deleteAccountError: String?
     /// „Artikel verwalten“ bleibt beim Wechsel ins Bearbeiten-Sheet erhalten.
     @State var manageItemsVM: ManageItemsViewModel?
+    /// Eingaben in „Artikel bearbeiten“, solange der Preisverlauf darüber liegt (sonst gingen sie beim Zurückkehren verloren).
+    @State var editDraft: ItemModel?
     /// Ablauf „Kassenzettel“: lebt von der Aufnahme bis „Einkauf erledigt“.
     @State var receiptFlow: ReceiptFlowViewModel?
+    /// Fehlermeldung des ListViewModels als Toast (blendet nach 3 s aus).
+    @State var errorToast: String?
+    /// Scroll-Weg der Liste; nur CollapsingListHeader liest ihn (sonst würde die ganze Liste je Frame neu berechnet).
+    @State var listScroll = ListScrollState()
+    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    /// Hinzufügen über das Plus im Dock: Eingabe über der Tastatur (InlineAddOverlay, Canvas AddInline).
+    @State var isAddOpen = false
+    /// Vorbelegung der Eingabe (Brücke aus dem Filter: „„milch“ zur Liste hinzufügen“).
+    @State var addPrefill = ""
+    /// Suchleiste oben filtert die Liste (Canvas SearchInline).
+    @State var isFiltering = false
+    @State var filterQuery = ""
+    /// Zum Hochscrollen der Liste, bevor der Filter aufgeht (Feld liegt dann genau an der Stelle der Suchleiste).
+    @State var listScrollProxy: ScrollViewProxy?
+    static let listTopID = "shoppingListTop"
 
     var appearance: Appearance { Appearance(colorScheme) }
 
@@ -72,20 +91,29 @@ struct ShoppingListView: View {
                     .blur(radius: backgroundBlur, opaque: false)
                     .background { ListBackground(t: t) }
                     .allowsHitTesting(activeSheet == nil && activeOverlay == nil)
+                    // VoiceOver: Hinter offenen Sheets/Overlays ist die Liste nicht erreichbar (wie beim Tippen).
+                    .accessibilityHidden(activeSheet != nil || activeOverlay != nil || isAddOpen)
                 overlayLayer(t: t, insets: insets)
+                if isAddOpen, let catalog = listViewModel.catalogRepository {
+                    InlineAddOverlay(catalogRepository: catalog,
+                                     globalCatalogRepository: listViewModel.globalCatalogRepository,
+                                     appearance: appearance, keyboardHeight: keyboard.height,
+                                     initialQuery: addPrefill,
+                                     onClose: closeAdd,
+                                     onCreateNew: { activeSheet = .newItem(initialName: $0) },
+                                     onScan: openScanner)
+                        .transition(.opacity)
+                }
                 sheetLayer(k: k, maxHeight: screenHeight - 54, insets: insets)   // Design: 54 pt Luft über dem höchsten Sheet
+                errorToastView(insets: insets)
             }
             .environment(\.hybridHosted, true)
             .environment(\.hybridScreenWidth, geo.size.width)
         }
         .ignoresSafeArea(.keyboard)
-        .animation(.spring(response: 0.4, dampingFraction: 0.88), value: activeSheet)
-        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: activeOverlay)
-        .sheet(isPresented: $showImport) {
-            ClipboardImportView()
-                .environmentObject(listViewModel)
-                .presentationDragIndicator(.visible)
-        }
+        .animation(motion(.spring(response: 0.4, dampingFraction: 0.88)), value: activeSheet)
+        .animation(motion(.spring(response: 0.35, dampingFraction: 0.82)), value: activeOverlay)
+        .onChange(of: listViewModel.errorMessage) { _, message in showError(message) }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active: listViewModel.handleAppDidBecomeActive()
@@ -102,8 +130,16 @@ struct ShoppingListView: View {
         #if DEBUG
         .onAppear { applyDesignLaunchState() }
         #endif
+        .onChange(of: listViewModel.listId) { _, _ in exitFilter() }   // Filter gilt nur für die aktuelle Liste
         .onChange(of: listViewModel.shoppingCompletedEvent) { _, event in
             if let event { offerShoppingDone(for: event) }
+        }
+        .onChange(of: activeSheet?.id) { _, _ in
+            // Entwurf gilt nur für „Artikel bearbeiten“ ↔ Preisverlauf; jedes andere Sheet (oder keins) verwirft ihn.
+            switch activeSheet {
+            case .edit, .itemPriceHistory: break
+            default: editDraft = nil
+            }
         }
         .onChange(of: listViewModel.pendingDeletion?.id) { _, newId in
             guard newId != nil else { return }
@@ -115,37 +151,101 @@ struct ShoppingListView: View {
     /// Sheet: 3 pt (SheetScreen), Overlay: 2 pt (OverlayScrim), sonst scharf.
     private var backgroundBlur: CGFloat {
         if activeSheet != nil { return 3 }
+        if isAddOpen { return 2 }                             // AddInline: backdrop-filter blur(2px)
         return activeOverlay == nil ? 0 : 2
     }
 
     // MARK: - List Layer
 
     private func listLayer(t: ListTheme) -> some View {
+      ScrollViewReader { proxy in
         ScrollView {
-            ShoppingListContent(
-                t: t,
-                openRow: $openRow,
-                onSearch: openSearch,
-                onScan: openScanner,
-                onShowLists: openLists,
-                onMenu: { open(.menu) },
-                onEdit: { activeSheet = .edit($0) },
-                onShowImage: { activeSheet = .productImage($0) }
-            )
+            VStack(spacing: 0) {
+                // Kopf außerhalb des LazyVStack: bleibt beim weiten Scrollen erhalten und wird oben gehalten.
+                CollapsingListHeader(
+                    t: t,
+                    title: listViewModel.defaultList?.title ?? String(localized: "shoppingList.title"),
+                    checked: listViewModel.checkedItemCount,
+                    total: listViewModel.totalItemCount,
+                    totalPrice: showPrices ? PriceDisplaySetting.total(of: listViewModel.items) : nil,
+                    filter: $listViewModel.itemFilter,
+                    scroll: listScroll,
+                    onShowLists: openLists,
+                    onSearch: openFilter,
+                    onMenu: { open(.menu) },
+                    isFiltering: isFiltering,
+                    filterQuery: $filterQuery,
+                    onExitFilter: exitFilter)
+                    .id(Self.listTopID)
+                ShoppingListContent(
+                    t: t,
+                    openRow: $openRow,
+                    onEdit: { activeSheet = .edit($0) },
+                    onShowImage: { activeSheet = .productImage($0) },
+                    filterQuery: isFiltering ? filterQuery : "",
+                    onAddFromFilter: { query in
+                        exitFilter()
+                        openAdd(prefill: query)
+                    }
+                )
+            }
             .padding(.horizontal, 20)
             .padding(.bottom, 64 + 28)       // Dock 64 + Luft, damit die letzte Karte frei liegt
+            .background {
+                GeometryReader { geo in
+                    Color.clear.preference(key: ListScrollOffsetKey.self,
+                                           value: -geo.frame(in: .named(ListScrollOffsetKey.coordinateSpace)).minY)
+                }
+            }
         }
+        .coordinateSpace(name: ListScrollOffsetKey.coordinateSpace)
+        .modifier(TrackListScrollOffset(onChange: { [listScroll] in listScroll.offset = $0 }))
         .scrollIndicators(.hidden)
         .refreshable { await listViewModel.pullToRefresh() }   // FAM-40
         .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
+        .onAppear { listScrollProxy = proxy }
+      }
     }
 
     // MARK: - Navigation Helpers
 
-    /// Opens the search sheet, or the new-item form when no catalog is configured (preview / fallback).
-    func openSearch() {
+    /// Suchleiste / Such-Knopf: Filter-Modus. Erst ganz nach oben, damit das Feld an der Stelle der Suchleiste liegt.
+    func openFilter() {
         openRow = nil
-        activeSheet = listViewModel.catalogRepository == nil ? .newItem(initialName: "") : .search
+        let needsScroll = listScroll.offset > 1
+        withAnimation(motion(.easeOut(duration: 0.25))) {
+            listScrollProxy?.scrollTo(Self.listTopID, anchor: .top)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (needsScroll ? 0.3 : 0)) {
+            withAnimation(motion(.easeOut(duration: 0.2))) { isFiltering = true }
+        }
+    }
+
+    /// ✕ im Filterfeld, leeres Feld ohne Fokus oder Listenwechsel.
+    func exitFilter() {
+        guard isFiltering || !filterQuery.isEmpty else { return }
+        hideKeyboard()
+        withAnimation(motion(.easeOut(duration: 0.2))) {
+            filterQuery = ""
+            isFiltering = false
+        }
+    }
+
+    /// Plus im Dock: Eingabe über der Tastatur. Ohne Katalog (Vorschau) direkt „Neuer Artikel“.
+    func openAdd(prefill: String = "") {
+        openRow = nil
+        activeOverlay = nil
+        guard listViewModel.catalogRepository != nil else {
+            activeSheet = .newItem(initialName: prefill)
+            return
+        }
+        addPrefill = prefill
+        withAnimation(motion(.easeOut(duration: 0.2))) { isAddOpen = true }
+    }
+
+    func closeAdd() {
+        hideKeyboard()
+        withAnimation(motion(.easeOut(duration: 0.2))) { isAddOpen = false }
     }
 
     /// Scan-Knopf im Suchfeld → Barcode-Scanner (SPEC §3.2).
@@ -182,15 +282,37 @@ struct LayoutShift {
     var topShift: CGFloat { top - 62 }
 }
 
+/// Liefert die Scroll-Position der Liste. iOS 18+: onScrollGeometryChange (zuverlässig während des Scrollens –
+/// die GeometryReader-Preference kam auf dem Gerät nicht an, der kompakte Kopf erschien nie).
+/// iOS 17: Fallback über ListScrollOffsetKey (GeometryReader im Inhalt).
+private struct TrackListScrollOffset: ViewModifier {
+    let onChange: @MainActor (CGFloat) -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.y + geo.contentInsets.top          // 0 = ganz oben, negativ beim Ziehen
+            } action: { _, offset in
+                onChange(offset)
+            }
+        } else {
+            content.onPreferenceChange(ListScrollOffsetKey.self) { offset in
+                MainActor.assumeIsolated { onChange(offset) }            // Preferences kommen auf dem Main-Thread
+            }
+        }
+    }
+}
+
 /// Schließt eine offene Wisch-Zeile, sobald der Nutzer die Liste scrollt (iOS 18+, wie in Mail).
 private struct CloseSwipedRowOnScroll: ViewModifier {
     @Binding var openRow: OpenSwipeRow?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         if #available(iOS 18.0, *) {
             content.onScrollPhaseChange { _, phase in
                 if phase == .interacting, openRow != nil {
-                    withAnimation(SwipeableItemRow.snap) { openRow = nil }
+                    withAnimation(SwipeableItemRow.snap(reduceMotion: reduceMotion)) { openRow = nil }
                 }
             }
         } else {
@@ -208,6 +330,7 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
                                                lists: PreviewListsRepository(), listViewModel: listVM))
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
 }
 
 #Preview("Dark") {
@@ -219,5 +342,6 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
                                                lists: PreviewListsRepository(), listViewModel: listVM))
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
         .preferredColorScheme(.dark)
 }

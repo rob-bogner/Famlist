@@ -49,3 +49,23 @@ struct SheetSurface<Content: View>: View {
             .background(CSSBox(shape: shape, paint: k.sheet, shadows: k.sheetShadow))
     }
 }
+
+#Preview("SheetSurface", traits: .fixedLayout(width: 390, height: 844)) {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        SheetSurface(k: SheetTheme(.light), height: 420) {
+            SheetHeader(title: "Beispiel", k: SheetTheme(.light), onClose: {}).padding(20)
+        }
+    }
+    .ignoresSafeArea()
+}
+
+#Preview("SheetSurface – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        SheetSurface(k: SheetTheme(.dark), height: 420) {
+            SheetHeader(title: "Beispiel", k: SheetTheme(.dark), onClose: {}).padding(20)
+        }
+    }
+    .ignoresSafeArea()
+}

@@ -68,7 +68,6 @@ final class MockListsRepository: ListsRepository {
         return List(id: UUID(), owner_id: owner, title: title, is_default: false, created_at: nil, updated_at: nil)
     }
 
-    func addMember(listId: UUID, profileId: UUID) async throws {}
     func removeMember(listId: UUID, profileId: UUID) async throws {}
     func fetchMembers(listId: UUID) async throws -> [ListMember] { [] }
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> { AsyncStream { $0.finish() } }

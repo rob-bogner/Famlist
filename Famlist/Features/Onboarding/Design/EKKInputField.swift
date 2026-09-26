@@ -41,3 +41,18 @@ struct EKKInputField: View {
             .accessibilityLabel(placeholder)
     }
 }
+
+#Preview("EKKInputField") {
+    @Previewable @State var text = ""
+    EKKInputField(k: SheetTheme(.light), text: $text, placeholder: "E-Mail-Adresse",
+                  height: 52, radius: 14, horizontalPadding: 16, keyboard: .emailAddress)
+        .padding(20)
+}
+
+#Preview("EKKInputField – Dark") {
+    @Previewable @State var text = ""
+    EKKInputField(k: SheetTheme(.dark), text: $text, placeholder: "E-Mail-Adresse",
+                  height: 52, radius: 14, horizontalPadding: 16, keyboard: .emailAddress)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

@@ -31,7 +31,10 @@ final class ItemEntity: Identifiable, Codable {
     @Attribute(.unique) var id: UUID
     var listId: UUID
     var ownerPublicId: String?
+    /// Lokale Kopie des Fotos (Base64) – bleibt offline verfügbar.
     var imageData: String?
+    /// Storage-Pfad des Fotos (Migration 016); optional, damit bestehende Stores automatisch migrieren.
+    var imagePath: String?
     var name: String
     var units: Int
     var measure: String

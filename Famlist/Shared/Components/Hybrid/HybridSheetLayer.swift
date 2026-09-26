@@ -74,3 +74,13 @@ struct HybridSheetLayer<Content: View>: View {
     }
     .ignoresSafeArea()
 }
+
+#Preview("Dark") {
+    ZStack(alignment: .bottom) {
+        Color.black.opacity(0.4)
+        HybridSheetLayer(k: SheetTheme(.dark), title: "Produktbild", designHeight: 452, maxHeight: 790, onClose: {}) {
+            Text("Inhalt").foregroundStyle(SheetTheme(.dark).text).padding(.top, 22)
+        }
+    }
+    .ignoresSafeArea()
+}

@@ -85,3 +85,16 @@ private struct BarcodeScanCornerShape: Shape {
 //  Hintergrund: „Artikel bearbeiten“ (inkl. eigener Liste), weichgezeichnet 3 + Abdunkelung.
 //  Sheet 754, unten bündig, Innenabstand 10 / 20 / 24:
 //  Griff 5 → 12 → Titelzeile 44 → 16 → Produkt (Kachel 52) → 16 → 3 Kennzahlen (Abstand 8) → 16 →
+
+#Preview("BarcodeScanFrame") {
+    BarcodeScanFrame(accent: SheetTheme(.light).accent)
+        .frame(width: 280, height: 180)
+        .padding(20)
+}
+
+#Preview("BarcodeScanFrame – Dark") {
+    BarcodeScanFrame(accent: SheetTheme(.dark).accent)
+        .frame(width: 280, height: 180)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

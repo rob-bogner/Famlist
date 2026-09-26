@@ -57,6 +57,19 @@ struct ShareMembersSheet: View {
                 .scrollBounceBehavior(.basedOnSize)
             }
         }
+        .overlay(alignment: .bottom) {
+            if let message = vm.errorMessage {
+                StatusToast(text: message, isError: true, appearance: appearance)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .task(id: message) {
+                        try? await Task.sleep(nanoseconds: 4_000_000_000)
+                        withAnimation { vm.errorMessage = nil }
+                    }
+            }
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: vm.errorMessage)
         .task { await vm.load() }
     }
 
@@ -114,6 +127,7 @@ struct ShareMembersSheet: View {
                     .font(AppFont.outfit(17, 600))
                     .foregroundStyle(k.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Text(m.role)
                     .font(AppFont.dm(13, 400))
                     .foregroundStyle(k.sub)
@@ -135,7 +149,8 @@ struct ShareMembersSheet: View {
             .padding(.top, 24)
 
         VStack(spacing: 10) {
-            ListAccountIconCTA(k: k, icon: ListAccountIcon.share, title: "Einladungslink teilen", shareURL: vm.inviteURL)
+            ListAccountIconCTA(k: k, icon: ListAccountIcon.share, title: "Einladungslink teilen",
+                               action: { Task { await vm.ensureInviteURL() } }, shareURL: vm.inviteURL)
 
             // Sekundär: 52 hoch, Radius 26, Rahmen 1, field, accentText 15/600, Icon 18, gap 10
             Button(action: copyLink) {
@@ -147,7 +162,7 @@ struct ShareMembersSheet: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(CSSBox(shape: Pill, paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 52))
                 .contentShape(Pill)
             }
             .buttonStyle(.plain)
@@ -184,6 +199,7 @@ struct ShareMembersSheet: View {
                     .font(.system(size: 15, weight: .regular, design: .monospaced))
                     .foregroundStyle(k.text)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                     .textSelection(.enabled)
                 Text("Andere können dich damit finden und einladen.")
                     .font(AppFont.dm(12, 400))
@@ -196,7 +212,7 @@ struct ShareMembersSheet: View {
             Button(action: copyID) {
                 SVGIcon(copiedID ? Icon.check : ListAccountIcon.copy, size: 18, color: t.accentText, lineWidth: 2)
                     .frame(width: 44, height: 44)
-                    .background(CSSBox(shape: Circle(), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                    .background(GlassCircleBackground(style: .neutral, appearance: k.appearance, accent: k.a, size: 44))
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
@@ -208,9 +224,12 @@ struct ShareMembersSheet: View {
     // MARK: - Actions
 
     private func copyLink() {
-        guard let url = vm.inviteURL else { return }
+        guard let url = vm.inviteURL else {
+            Task { await vm.ensureInviteURL() }
+            return
+        }
         UIPasteboard.general.string = url.absoluteString
-        UserLog.Data.inviteLinkCopied(listName: vm.list.title)
+        vm.noteInviteLinkCopied()
         flash($copiedLink)
     }
 

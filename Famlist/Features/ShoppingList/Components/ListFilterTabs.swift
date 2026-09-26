@@ -73,3 +73,10 @@ struct ListFilterTabs: View {
     ListFilterTabs(t: ListTheme(.light), selection: $filter)
         .padding(20)
 }
+
+#Preview("Dark") {
+    @Previewable @State var filter = ItemFilter.all
+    ListFilterTabs(t: ListTheme(.dark), selection: $filter)
+        .padding(20)
+        .background(Color.hex("#0A1416"))
+}

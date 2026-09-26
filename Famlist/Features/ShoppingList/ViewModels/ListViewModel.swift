@@ -16,8 +16,9 @@
  - Core State (@Published properties)
  - Dependencies (repositories, stores)
  - Lifecycle (init, deinit)
- - Configuration methods
- - Basic CRUD operations (add, update, delete, toggle)
+ - List switching and sign-out reset
+ - Configuration → ListViewModel+Configuration.swift, CRUD → ListViewModel+ItemCRUD.swift,
+   Sync-Hervorhebung/Fehler → ListViewModel+Feedback.swift
 
  🔰 Notes for Beginners:
  - This is the main class definition. Additional functionality is in extension files.
@@ -26,7 +27,7 @@
  - All public methods are @MainActor-only for thread safety.
 
  📝 Last Change:
- - Refactored into smaller focused files per coding guidelines (<300 lines each).
+ - Konfiguration, CRUD und Rückmeldungen in eigene Extensions ausgelagert (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -141,7 +142,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     internal var membershipTask: Task<Void, Never>?
     
     /// Retains connectivity subscription so it lives with the view model.
-    private var connectivityCancellable: AnyCancellable?
+    internal var connectivityCancellable: AnyCancellable?
 
     /// Tracks whether realtime observation has started at least once.
     internal var hasObservedActiveList: Bool = false
@@ -179,6 +180,15 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     /// Debounce task for bulk toggle operations to prevent rapid repeated calls.
     internal var toggleAllDebounceTask: Task<Void, Never>?
+
+    /// Laufender Delta-Abgleich; wird beim Listenwechsel abgebrochen.
+    internal var incrementalSyncTask: Task<Void, Never>?
+
+    /// Listen, für die in dieser Sitzung schon Fotos aus dem Artikelstamm übernommen wurden.
+    internal var backfilledListIDs: Set<UUID> = []
+
+    /// Lädt Fotos anderer Geräte sofort herunter (offline verfügbar). nil ohne Storage (Vorschau/Tests).
+    internal var imagePrefetcher: ItemImagePrefetcher?
     
     /// Enumerates triggers that can resume realtime sync to aid logging and debugging.
     internal enum ResumeTrigger: String {
@@ -214,64 +224,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     
     deinit {
         observeTask?.cancel() // Cancel observation task to prevent dangling realtime streams.
-        connectivityCancellable?.cancel() // Stop listening to connectivity changes when the view model deallocates.
+        // connectivityCancellable braucht hier kein cancel(): AnyCancellable beendet das Abo beim eigenen deinit
+        // automatisch (Apple-Doku). Der nicht-Sendable-Typ darf im nicht isolierten deinit nicht angefasst werden.
     }
     
-    // MARK: - Configuration
-    
-    /// Injects a ListsRepository used to fetch/create the user's default list.
-    /// - Parameter listsRepository: Concrete implementation (Supabase or Preview) resolving default list rows.
-    func configure(listsRepository: ListsRepository) {
-        self.listsRepository = listsRepository
-    }
-    
-    /// Injects the connectivity monitor so the view model can resume realtime sync when the device comes back online.
-    /// - Parameter connectivityMonitor: Shared monitor publishing online/offline state.
-    func configure(connectivityMonitor: ConnectivityMonitor) {
-        connectivityCancellable?.cancel() // Cancel previous subscription if configure gets called again.
-        connectivityCancellable = connectivityMonitor.$isOnline
-            .removeDuplicates()
-            .sink { [weak self] isOnline in
-                guard let self else { return }
-                if isOnline {
-                    self.resumeRealtimeSync(trigger: .connectivity)
-                    // Also resume sync engine if available
-                    Task {
-                        await self.syncEngine?.resumeSync()
-                    }
-                }
-            }
-    }
-    
-    /// Injects the sync engine for CRDT-based operations.
-    /// Pass `SyncEngine` in production, `PreviewSyncEngine` in previews.
-    func configure(syncEngine: any SyncEngineProtocol) {
-        self.syncEngine = syncEngine
-        // Offline-First: nach jedem lokalen Schreiben sofort aus SwiftData neu lesen (nicht erst nach dem Netzwerk).
-        syncEngine.setLocalWriteObserver { [weak self] in self?.refreshItemsFromStore() }
-    }
-
-    /// Injects the personal item catalog repository for smart search support.
-    /// - Parameter catalogRepository: Repository that saves/searches the user's item catalog.
-    func configure(catalogRepository: any ItemCatalogRepository) {
-        self.catalogRepository = catalogRepository
-    }
-
-    /// Injects the global OpenFoodFacts catalog repository for extended product search.
-    /// - Parameter globalCatalogRepository: Read-only repository for the global OFF DACH catalog.
-    func configure(globalCatalogRepository: any GlobalProductCatalogRepository) {
-        self.globalCatalogRepository = globalCatalogRepository
-    }
-
-    /// Injects the SyncOrchestrator and PageLoader for cursor-based pagination (FAM-79/FAM-40).
-    func configure(syncOrchestrator: SyncOrchestrator, pageLoader: PageLoader) {
-        self.syncOrchestrator = syncOrchestrator
-        self.pageLoader = pageLoader
-        syncOrchestrator.onBudgetExceeded = { [weak self] in
-            guard let self else { return }
-            Task { await self.runIncrementalSync() }
-        }
-    }
     
     // MARK: - List Switching
     
@@ -280,9 +236,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         guard newId != self.listId else { return }
         commitPendingDeletion()              // offene Rückgängig-Löschung der alten Liste festschreiben
         observeTask?.cancel()
+        incrementalSyncTask?.cancel()
+        toggleAllDebounceTask?.cancel()
         self.listId = newId
         self.items = []
         recentlySyncedItemIDs = []
+        pendingBulkDeleteIDs = []
+        pendingAnimatedItemIDs = []
         // Reset pagination state for the new list (cursor is loaded from UserDefaults per listId in startObserving).
         currentCursor = PaginationCursor.load(listId: newId)
         hasMoreItems = true
@@ -296,8 +256,16 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         commitPendingDeletion()
         observeTask?.cancel()
         observeTask = nil
+        incrementalSyncTask?.cancel()
+        incrementalSyncTask = nil
+        toggleAllDebounceTask?.cancel()
+        toggleAllDebounceTask = nil
         membershipTask?.cancel()
         membershipTask = nil
+        pendingBulkDeleteIDs = []
+        pendingAnimatedItemIDs = []
+        backfilledListIDs = []
+        syncEngine?.resetForSignOut()                 // Warteschlange gehört zum abgemeldeten Konto
         items = []
         recentlySyncedItemIDs = []
         selectedItem = nil
@@ -310,6 +278,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         PaginationCursor.clear(listId: listId)
         clearLastSyncTimestamp()
         (catalogRepository as? OfflineItemCatalogRepository)?.clearLocalData()   // Artikelstamm des Kontos
+        // Alle Artikel (inkl. Fotos) und Listen des Kontos vom Gerät löschen (Audit H5).
+        do {
+            try itemStore.deleteAll()
+            try listStore.deleteAll()
+        } catch {
+            logVoid(params: (action: "clearForSignOut.deleteAll.error", error: (error as NSError).localizedDescription))
+        }
         currentCursor = nil
         hasMoreItems = true
         isLoadingNextPage = false
@@ -318,280 +293,5 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
         refreshItemsFromStore()
         hasObservedActiveList = false
         ListViewModel.currentSortOrder = .category
-    }
-    
-    // MARK: - CRUD Operations
-    
-    /// Adds a new item after normalizing fields (e.g., measure, listId).
-    /// - Parameter barcode: EAN/UPC aus dem Barcode-Scanner; wird im Artikelstamm gemerkt.
-    func addItem(_ item: ItemModel, barcode: String? = nil) {
-        var normalized = item
-        normalized.measure = canonicalizeMeasure(item.measure)
-        normalized.listId = normalized.listId ?? listId.uuidString
-
-        // Duplikat-Check: existiert bereits ein ungehacktes Item mit gleichem Namen?
-        if let existingIndex = items.firstIndex(where: {
-            CatalogOperation.key($0.name) == CatalogOperation.key(normalized.name) && !$0.isChecked
-        }) {
-            var incremented = items[existingIndex]
-            let oldUnits = incremented.units
-            incremented.units = oldUnits + 1
-            // Fehlende Angaben aus dem neu hinzugefügten Artikel übernehmen (z. B. Foto aus dem
-            // Artikelstamm). Vorhandene Werte bleiben unverändert.
-            incremented = ListViewModel.fillingMissingFields(of: incremented, from: normalized)
-            logVoid(params: (action: "addItem.increment", itemId: incremented.id, from: oldUnits,
-                             to: incremented.units, gotImage: items[existingIndex].imageData == nil && incremented.imageData != nil))
-            UserLog.Data.itemCountIncremented(
-                name: incremented.name,
-                from: oldUnits,
-                to: incremented.units,
-                measure: incremented.measure
-            )
-            // Optimistic update: immediately reflect the incremented count in the UI
-            // without waiting for the async SwiftData round-trip. The subsequent
-            // refreshItemsFromStore() (inside updateItem's Task) will confirm the value.
-            items[existingIndex] = incremented
-            updateItem(incremented, suppressUserLog: true)
-            return
-        }
-
-        // User-friendly log
-        let displayName = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        UserLog.Data.itemAdded(
-            name: displayName.isEmpty ? "Artikel" : displayName,
-            units: normalized.units,
-            measure: normalized.measure
-        )
-
-        // Save to personal item catalog (fire-and-forget; does not block list update).
-        // ownerPublicId is resolved by the repository from the active auth session,
-        // so we pass an empty placeholder here to avoid a nil-guard race condition.
-        if let catalogRepo = catalogRepository {
-            var catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
-            catalogEntry.barcode = barcode
-            Task {
-                do {
-                    try await catalogRepo.save(catalogEntry)
-                    logVoid(params: (action: "catalogSave.success", itemName: normalized.name))
-                } catch {
-                    logVoid(params: (action: "catalogSave.failed", itemName: normalized.name, error: (error as NSError).localizedDescription))
-                }
-            }
-        }
-
-        // Optimistic UI add: show the item immediately without waiting for the
-        // Realtime echo or the async refreshItemsFromStore() round-trip.
-        // The subsequent refreshItemsFromStore() (inside the Task below) will replace
-        // this entry with the authoritative SwiftData entity (deterministic UUID).
-        items.append(normalized)
-
-        guard let syncEngine else { return }
-        Task {
-            await syncEngine.createItem(normalized)
-            // Refresh replaces the optimistic item with the canonical SwiftData entity.
-            await MainActor.run { self.refreshItemsFromStore() }
-        }
-    }
-    
-    /// Updates an existing item after normalizing fields.
-    /// - Parameter suppressUserLog: Pass `true` when the caller has already logged the action
-    ///   (e.g. `toggleItemChecked`, increment path in `addItem`) to avoid duplicate logs.
-    /// - Parameter updateCatalog: false, wenn die Änderung aus dem Artikelstamm kommt (dort schon gespeichert).
-    func updateItem(_ item: ItemModel, trackPendingAnimation: Bool = false, suppressUserLog: Bool = false,
-                    updateCatalog: Bool = true) {
-        var normalized = item
-        normalized.measure = canonicalizeMeasure(item.measure)
-        normalized.listId = normalized.listId ?? listId.uuidString
-
-        logVoid(params: (
-            action: "updateItem",
-            itemId: normalized.id,
-            brand: normalized.brand ?? "nil",
-            category: normalized.category ?? "nil",
-            description: normalized.productDescription ?? "nil"
-        ))
-
-        if !suppressUserLog {
-            let displayName = [normalized.brand, normalized.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-            let resolvedName = displayName.isEmpty ? "Artikel" : displayName
-            // Detect quantity change by comparing with current items snapshot (still holds old state at call time).
-            if let oldItem = items.first(where: { $0.id == normalized.id }), oldItem.units != normalized.units {
-                UserLog.Data.itemQuantityChanged(
-                    name: resolvedName,
-                    from: oldItem.units,
-                    to: normalized.units,
-                    measure: normalized.measure
-                )
-            } else {
-                UserLog.Data.itemUpdated(name: resolvedName)
-            }
-        }
-
-        // Update personal item catalog (fire-and-forget; keeps catalog in sync with edits)
-        if updateCatalog, let catalogRepo = catalogRepository {
-            let catalogEntry = ItemCatalogEntry.from(item: normalized, ownerPublicId: "")
-            Task {
-                do {
-                    try await catalogRepo.save(catalogEntry)
-                    logVoid(params: (action: "catalogUpdate.success", itemName: normalized.name))
-                } catch {
-                    logVoid(params: (action: "catalogUpdate.failed", itemName: normalized.name, error: (error as NSError).localizedDescription))
-                }
-            }
-        }
-
-        // Offline-First: Bearbeitung sofort in `items` sichtbar machen. Vorher kam die Änderung erst
-        // nach `syncEngine.updateItem` (inkl. Netzwerk-Queue) über refreshItemsFromStore an – bei langsamer
-        // oder fehlender Verbindung zeigte „Artikel bearbeiten“ deshalb weiter den alten Preis (0,00).
-        applyLocalEdit(normalized)
-
-        // Track animation state if requested.
-        if trackPendingAnimation {
-            pendingAnimatedItemIDs.insert(normalized.id)
-        }
-        
-        guard let syncEngine else {
-            if trackPendingAnimation { pendingAnimatedItemIDs.remove(normalized.id) }
-            return
-        }
-        Task {
-            await syncEngine.updateItem(normalized)
-            await MainActor.run {
-                // Refresh UI from SwiftData so the edit (e.g. price change) is immediately visible
-                // without waiting for a Realtime echo. storeLocally() already wrote the correct
-                // value; this call propagates it to self.items.
-                self.refreshItemsFromStore()
-                if trackPendingAnimation {
-                    self.pendingAnimatedItemIDs.remove(normalized.id)
-                }
-            }
-        }
-    }
-    
-    /// Übernimmt die bearbeitbaren Felder sofort in `items`; CRDT-/Sync-Felder bleiben unverändert.
-    private func applyLocalEdit(_ edited: ItemModel) {
-        guard let index = items.firstIndex(where: { $0.id == edited.id }) else { return }
-        var current = items[index]
-        current.name = edited.name
-        current.units = edited.units
-        current.measure = edited.measure
-        current.price = edited.price
-        current.isChecked = edited.isChecked
-        current.isUnavailable = edited.isUnavailable
-        current.category = edited.category
-        current.productDescription = edited.productDescription
-        current.brand = edited.brand
-        current.imageData = edited.imageData
-        items[index] = current
-    }
-
-    /// Deletes an item by id within the current list.
-    /// Optimization: Items with status `.pendingCreate` are only purged locally without Supabase call.
-    func deleteItem(_ item: ItemModel) {
-        // User-friendly log — nur außerhalb Bulk-Delete, um N Einzellogs beim Bulk zu vermeiden
-        if !isBulkDeleting {
-            let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-            UserLog.Data.itemDeleted(
-                name: displayName.isEmpty ? "Artikel" : displayName,
-                units: item.units,
-                measure: item.measure
-            )
-        }
-        
-        guard let uuid = UUID(uuidString: item.id) else {
-            markItemDeleted(item)
-            return
-        }
-        
-        guard let entity = try? itemStore.fetchItem(id: uuid) else {
-            markItemDeleted(item)
-            return
-        }
-        
-        // If item was never synced, just purge it locally without API call
-        if entity.syncStatus == .pendingCreate {
-            do {
-                try itemStore.purge(id: uuid)
-                refreshItemsFromStore()
-                return
-            } catch {
-                logVoid(params: (
-                    note: "deleteItem purge failed",
-                    error: (error as NSError).localizedDescription
-                ))
-                setError(error)
-                return
-            }
-        }
-        
-        guard let syncEngine else { return }
-        Task {
-            await syncEngine.deleteItem(item)
-        }
-    }
-    
-    /// Re-queues a permanently-failed item for sync.
-    func retryItem(_ item: ItemModel) {
-        Task { await syncEngine?.retryItem(item) }
-    }
-
-    /// Toggles the checked state of an item and persists the change via updateItem.
-    /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
-    func toggleItemChecked(_ item: ItemModel) {
-        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
-        let wasComplete = isShoppingComplete
-        defer { noteCheckChange(wasComplete: wasComplete) }
-
-        // Optimistic update: toggle in-place, then re-sort according to currentSortOrder.
-        // This prevents "double jump" and keeps the order consistent with any remote snapshots.
-        var updatedItem = items[index]
-        updatedItem.isChecked.toggle()
-        items[index] = updatedItem
-        items = ListViewModel.currentSortOrder.apply(to: items)
-
-        // Specific check/uncheck log — suppresses generic "bearbeitet" in updateItem.
-        let displayName = [item.brand, item.name].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        let resolvedName = displayName.isEmpty ? "Artikel" : displayName
-        if updatedItem.isChecked {
-            UserLog.Data.itemChecked(name: resolvedName, units: updatedItem.units, measure: updatedItem.measure)
-        } else {
-            UserLog.Data.itemUnchecked(name: resolvedName, units: updatedItem.units, measure: updatedItem.measure)
-        }
-
-        pendingAnimatedItemIDs.insert(updatedItem.id)
-        updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true)
-    }
-    
-    // MARK: - Remote Sync Highlight
-
-    /// Marks items as recently synced from a remote source and schedules their removal after 2 seconds.
-    /// Safe to call with an overlapping set — `formUnion` is idempotent.
-    /// The removal subtracts only the IDs passed in this call, so a concurrent markRecentlySynced()
-    /// for different items is not affected.
-    internal func markRecentlySynced(ids: Set<String>) {
-        guard !ids.isEmpty else { return }
-        recentlySyncedItemIDs.formUnion(ids)
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            guard let self else { return }
-            self.recentlySyncedItemIDs.subtract(ids)
-        }
-    }
-
-    // MARK: - Error Handling
-
-    /// Stores a user-presentable error string on the main actor.
-    @MainActor
-    internal func setError(_ error: Error) {
-        self.errorMessage = (error as NSError).localizedDescription
-    }
-}
-
-// MARK: - Measure Canonicalization
-
-private extension ListViewModel {
-    /// Converts a free-form measure string to a normalized token using the Measure enum.
-    func canonicalizeMeasure(_ raw: String) -> String {
-        MeasureCanonicalizer.canonicalize(raw)
     }
 }

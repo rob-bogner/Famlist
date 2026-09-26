@@ -12,10 +12,11 @@
  - Einstieg: ☰ → „Kassenzettel scannen“. Das ReceiptFlowViewModel lebt in `receiptFlow`, bis der
    Ablauf geschlossen wird; Schließen an beliebiger Stelle verwirft ihn.
  - „Abgehakte löschen & fertig“ nutzt dasselbe Löschen mit Rückgängig wie das Dock.
+ - „Preise übernehmen“ (Rückfrage in „Kassenzettel prüfen“) setzt die Bon-Preise in Liste und Artikelstamm.
  - Preisverlauf: Schließen führt zurück zu „Artikel verwalten“ (liegt weichgezeichnet darunter).
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 7).
+ - Bon-Preise als neue Artikelpreise übernehmen; Listenpreise für den Vergleich an den Ablauf übergeben.
  ------------------------------------------------------------------------
  */
 
@@ -32,7 +33,16 @@ extension ShoppingListView {
         case .receiptReview:
             if let flow = receiptFlow {
                 ReceiptReviewSheet(flow: flow, appearance: appearance, onClose: closeReceiptFlow,
-                                   onSaved: { activeSheet = .shoppingDone })
+                                   onBack: {
+                                       flow.backToCapture()
+                                       activeSheet = .receiptCapture
+                                   },
+                                   onSaved: { activeSheet = .shoppingDone },
+                                   onUpdateItemPrices: { changes in
+                                       Task { await listViewModel.applyReceiptPrices(changes) }
+                                   },
+                                   onSetItemBought: { item, bought in setItemChecked(item, bought) },
+                                   keyboardHeight: keyboard.height)
             }
         case .shoppingDone:
             ShoppingDoneView(appearance: appearance,
@@ -64,17 +74,46 @@ extension ShoppingListView {
                              onFinish: finishShopping,
                              onKeep: closeReceiptFlow,
                              onScan: openReceiptCapture)
+        case .receiptArchive:
+            let access = receiptArchiveViewModel()
+            ReceiptArchiveSheet(archive: receiptArchive, appearance: appearance,
+                                currentUserId: session.currentProfile?.id, ownedListIds: access.ownedListIds,
+                                onBack: { activeSheet = .settings }, onClose: closeSheet,
+                                onOpen: { activeSheet = .receiptDetail($0) })
+        case .receiptDetail(let receipt):
+            ReceiptDetailSheet(receipt: receipt, archive: receiptArchive, appearance: appearance,
+                               canDelete: receiptArchiveViewModel().canDelete(receipt),
+                               onBack: { activeSheet = .receiptArchive }, onClose: closeSheet,
+                               onDelete: {
+                                   activeSheet = .receiptArchive
+                                   Task { await receiptArchive.delete(receipt) }
+                               })
         default:
             EmptyView()
         }
+    }
+
+    /// Archiv-Anzeige: Löschen dürfen Ersteller und Besitzer der Liste (Migration 021).
+    func receiptArchiveViewModel() -> ReceiptArchiveViewModel {
+        let me = session.currentProfile?.id
+        let owned = Set(listViewModel.allLists.filter { $0.ownerId == me }.map(\.id))
+        return ReceiptArchiveViewModel(archive: receiptArchive, currentUserId: me, ownedListIds: owned)
     }
 
     /// ☰ → „Kassenzettel scannen“: neuer Ablauf mit den Artikeln der Liste als Zuordnungs-Kandidaten.
     func openReceiptCapture() {
         openRow = nil
         receiptFlow = ReceiptFlowViewModel(listItemNames: listViewModel.items.map(\.name),
+                                           listPrices: Dictionary(listViewModel.items.map { ($0.name, $0.price) },
+                                                                  uniquingKeysWith: { first, _ in first }),
+                                           checkedItems: listViewModel.items.filter(\.isChecked),
                                            catalog: listViewModel.catalogRepository,
-                                           priceBook: priceBook)
+                                           priceBook: priceBook,
+                                           archive: receiptArchive,
+                                           origin: ReceiptArchiveOrigin(listId: listViewModel.listId,
+                                                                        listTitle: listViewModel.defaultList?.title,
+                                                                        createdBy: session.currentProfile?.id,
+                                                                        creatorName: session.currentProfile?.displayName))
         activeSheet = .receiptCapture
     }
 
@@ -92,7 +131,7 @@ extension ShoppingListView {
     /// Zuerst Zwischenspeicher (sofort), sonst einmal den Verlauf laden.
     func lastPriceText(for item: ItemModel) async -> String? {
         var last = priceBook.cachedLatest(itemName: item.name)
-        if last == nil { last = await priceBook.history(itemName: item.name).last }   // kein await im ??-Autoclosure
+        if last == nil { last = priceBook.localHistory(itemName: item.name).last }    // ohne Netz, sofort
         if let last { return "zuletzt \(PriceHistoryViewModel.euro(last.price))" }
         let current = listViewModel.items.first { $0.id == item.id } ?? item
         return current.price > 0 ? "zuletzt \(PriceDisplaySetting.euro(current.price))" : "Noch keine Preise"
@@ -103,11 +142,15 @@ extension ShoppingListView {
         listViewModel.defaultList?.title ?? String(localized: "shoppingList.title")
     }
 
-    /// Neuer Preis in „Artikel bearbeiten“ → Preispunkt (heute, Laden = Listenname) für den Preisverlauf.
+    /// Neuer Preis in „Artikel bearbeiten“ → Preispunkt für den Preisverlauf (Logik im PriceBook).
     func recordPrice(for item: ItemModel) {
-        let point = PricePoint(itemName: item.name, storeName: currentStoreName, purchasedAt: Date(),
-                               price: PriceHistoryViewModel.decimal(item.price))
-        Task { await priceBook.save([point]) }
+        priceBook.recordManualPrice(itemName: item.name, price: item.price, store: currentStoreName)
+    }
+
+    /// „Nicht gekauft“ / „Rückgängig“ aus „Kassenzettel prüfen“: Abhak-Status auf der Liste setzen.
+    private func setItemChecked(_ item: ItemModel, _ checked: Bool) {
+        guard let current = listViewModel.items.first(where: { $0.id == item.id }), current.isChecked != checked else { return }
+        listViewModel.toggleItemChecked(current)
     }
 
     private func reviewReceipt(_ flow: ReceiptFlowViewModel) {

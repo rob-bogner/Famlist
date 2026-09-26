@@ -59,3 +59,19 @@ struct SwipeToDeleteRow<Content: View>: View {
         onDelete()
     }
 }
+
+#Preview("SwipeToDeleteRow") {
+    SwipeToDeleteRow(labelColor: SheetTheme(.light).sub, onDelete: {}) {
+        Text("Butter").frame(maxWidth: .infinity, minHeight: 74, alignment: .leading).background(Color.white)
+    }
+    .padding(20)
+}
+
+#Preview("SwipeToDeleteRow – Dark") {
+    SwipeToDeleteRow(labelColor: SheetTheme(.dark).sub, onDelete: {}) {
+        Text("Butter").foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 74, alignment: .leading).background(Color.hex("#0F1C1E"))
+    }
+    .padding(20)
+    .background(Color.hex("#0A1416"))
+}
