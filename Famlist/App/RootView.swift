@@ -71,6 +71,7 @@ struct RootView: View { // SwiftUI View declaration.
         .environmentObject(listVM) // Inject list VM.
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
 }
 
 #Preview("Authenticated") {
@@ -86,6 +87,7 @@ struct RootView: View { // SwiftUI View declaration.
         .environmentObject(listVM) // Inject list VM.
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
 }
 
 #Preview("Dark") {
@@ -99,6 +101,7 @@ struct RootView: View { // SwiftUI View declaration.
         .environmentObject(listVM)
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
         .preferredColorScheme(.dark)
 }
 
@@ -114,5 +117,6 @@ struct RootView: View { // SwiftUI View declaration.
         .environmentObject(listVM)
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
         .preferredColorScheme(.dark)
 }

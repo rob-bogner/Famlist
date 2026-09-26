@@ -53,6 +53,16 @@ extension UserLog.Data {
         UserLog.log("🧾 Aufnahme gelöscht, \(remaining) übrig")
     }
 
+    /// Kassenzettel-Archiv: Bon mit Fotos gespeichert
+    static func receiptArchived(store: String, photos: Int) {
+        UserLog.log("🧾 Kassenzettel gespeichert: \(store), \(photos == 1 ? "1 Foto" : "\(photos) Fotos")")
+    }
+
+    /// Kassenzettel-Archiv: Bon gelöscht (Preise bleiben)
+    static func receiptArchiveDeleted(store: String) {
+        UserLog.log("🧾 Kassenzettel gelöscht: \(store)")
+    }
+
     /// Kategorie umbenannt / Icon geändert
     static func categoryUpdated(name: String) {
         UserLog.log("🏷️ Kategorie „\(name)“ gespeichert")

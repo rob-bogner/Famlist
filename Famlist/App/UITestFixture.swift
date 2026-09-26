@@ -107,6 +107,16 @@ enum UITestFixture {
         ? .designSample
         : PriceBook(repository: InMemoryPricePointsRepository(), defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
 
+    /// Kassenzettel-Archiv im Speicher, Dateien in einem eigenen Ordner (bei jedem Start leer).
+    static let receiptArchive: ReceiptArchive = {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("uiTestFixture-receipts", isDirectory: true)
+        try? FileManager.default.removeItem(at: root)
+        let store = ReceiptArchiveLocalStore(directory: root.appendingPathComponent("support"),
+                                             photoCache: root.appendingPathComponent("caches"))
+        return ReceiptArchive(repository: InMemoryReceiptsRepository(), store: store,
+                              defaults: UserDefaults(suiteName: "uiTestFixture") ?? .standard)
+    }()
+
     /// Beispielwerte aus AcceptInvite.dc.html, bevor der Screen erscheint.
     private static func setDesignInvitePreview() {
         guard session.invitePreview?.token != designInviteToken else { return }

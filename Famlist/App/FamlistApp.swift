@@ -35,6 +35,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     private let syncMonitor: SyncMonitor // Shared sync monitor for tracking sync status and metrics.
     private let categoryStore: CategoryStore // Kategorien des Nutzers (Ladenweg), Redesign „Hybrid“ Phase 6.
     private let priceBook: PriceBook // Preise aus Kassenzetteln (offline zuerst), Redesign „Hybrid“ Phase 7.
+    private let receiptArchive: ReceiptArchive // Kassenzettel-Archiv (Fotos, offline zuerst), Migration 021.
 
     // MARK: - Init (Dependency Composition)
     /// Initializes repositories and view models for the app.
@@ -124,16 +125,21 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                                                reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
             self.priceBook = PriceBook(repository: SupabasePricePointsRepository(client: client),
                                        reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
-            // Abmelden: Preise und Kategorien des Kontos verwerfen.
+            self.receiptArchive = ReceiptArchive(repository: SupabaseReceiptsRepository(client: client),
+                                                 reconnect: connectivityMonitor.$isOnline.eraseToAnyPublisher())
+            // Abmelden: Preise, Kassenzettel und Kategorien des Kontos verwerfen.
             let priceBook = self.priceBook
             let categoryStore = self.categoryStore
-            self.sessionViewModel.onSignOut { [weak priceBook, weak categoryStore] in
+            let receiptArchive = self.receiptArchive
+            self.sessionViewModel.onSignOut { [weak priceBook, weak categoryStore, weak receiptArchive] in
                 priceBook?.clearLocal()
                 categoryStore?.resetLocal()
+                receiptArchive?.clearLocal()
             }
-            // Rückfrage beim Abmelden: auch ungesendete Preise und Kategorien zählen.
-            self.sessionViewModel.countUnsentChanges { [weak priceBook, weak categoryStore] in
+            // Rückfrage beim Abmelden: auch ungesendete Preise, Kassenzettel und Kategorien zählen.
+            self.sessionViewModel.countUnsentChanges { [weak priceBook, weak categoryStore, weak receiptArchive] in
                 (priceBook?.pending.count ?? 0) + (categoryStore?.unsentChangeCount ?? 0)
+                    + (receiptArchive?.pendingCount ?? 0)
             }
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
@@ -158,6 +164,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             self.sessionViewModel = AppSessionViewModel(client: nil, profiles: profilesRepo, lists: listsRepo, listViewModel: lvm) // Root VM with preview repos.
             self.categoryStore = CategoryStore(repository: nil)
             self.priceBook = PriceBook(repository: nil) // Ohne Supabase bleiben Preise in der lokalen Warteschlange.
+            self.receiptArchive = ReceiptArchive(repository: nil) // Ohne Supabase bleiben Bons lokal.
         }
     }
 
@@ -172,6 +179,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                     .environmentObject(UITestFixture.session)
                     .environmentObject(UITestFixture.categoryStore)
                     .environmentObject(UITestFixture.priceBook)
+                    .environmentObject(UITestFixture.receiptArchive)
                     .appFontScaling()
             } else {
                 appRoot
@@ -191,6 +199,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             .environmentObject(syncMonitor) // Inject sync monitor for status tracking
             .environmentObject(categoryStore) // Kategorien (Ladenweg) für Liste und „Kategorien verwalten“
             .environmentObject(priceBook) // Kassenzettel → Preise, Preisverlauf
+            .environmentObject(receiptArchive) // Kassenzettel-Archiv (Einstellungen → Kassenzettel)
             .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
     }
 }
