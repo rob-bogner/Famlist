@@ -48,7 +48,7 @@ struct WatchItemScreen: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(name)
                 .font(WatchFont.outfit(22)).tracking(-0.22)
-                .watchLineBox(22 * 1.1)
+                .watchLineBox(WatchFont.scaled(22) * 1.1)
                 .accessibilityAddTraits(.isHeader)
             Text(category)
                 .font(WatchFont.dm(12, 600)).foregroundStyle(w.accentText)
@@ -69,7 +69,7 @@ struct WatchItemScreen: View {
             Spacer()
             VStack(spacing: 0) {
                 Text("\(units)").font(WatchFont.outfit(24)).foregroundStyle(w.accentText)
-                    .watchLineBox(24 * 1.05)
+                    .watchLineBox(WatchFont.scaled(24) * 1.05)
                 Text(unitName).font(WatchFont.dm(11)).foregroundStyle(w.sub)
                     .watchLineBox(WatchFont.dmLineHeight(11))
             }

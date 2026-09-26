@@ -262,3 +262,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Watch (nicht gestaltet) | Statusbildschirm „Verbinde mit dem iPhone …“ / „Öffne Famlist auf dem iPhone, um die Uhr anzumelden.“ mit Knopf „Erneut versuchen“ im Stil von „Zurücksetzen“ | Kein Design für die Anmeldung der Uhr (WATCH_PLAN §5) |
 | WatchAdd | Detailzeile „Oft gekauft“: Kategorie, sonst Einheit („Stück“) statt Menge („10 Stück“) | Der Artikelstamm speichert keine Menge |
 | WatchList | Mengen wie auf dem iPhone: ohne Einheit nur die Zahl („6“ statt „6 Stück“) | Gleiche Anzeige auf beiden Geräten (ItemModel.quantityText) |
+| Watch (alle Screens) | Größere Textgröße der Uhr: Schriften wachsen bis +24 % (wie iPhone), Zeilen und Titelzeile wachsen mit, Texte bis zu zwei Zeilen statt abgeschnitten; Standardgröße bleibt pixelgenau (geprüft: 46 mm, Standard xLarge = Faktor 1; accessibility3 = 1,24 ohne Abschneiden) | WATCH_PROMPT: „Dynamic Type darf nichts abschneiden“; Design gilt für die Standardgröße |
+| Watch (alle Screens) | Sehr lange Titel verkleinern sich bis 80 %, statt mit „…“ abzuschneiden | Titelzeile ist einzeilig |
+| WatchList | VoiceOver: jede Artikelzeile ist ein Element („Name, Menge“, Wert „offen/erledigt“); Doppeltippen öffnet, Aktion „Abhaken“/„Wieder öffnen“ | Design hat zwei Tippflächen je Zeile; so bleibt es für VoiceOver eine Zeile (WATCH_PLAN §5) |
+| Watch-Widgets | Smart Stack und Komplikationen skalieren nicht mit der Textgröße | Feste Flächen des Systems (44-pt-Kreis, Karte) |

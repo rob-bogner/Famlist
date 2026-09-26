@@ -36,6 +36,12 @@ struct FamlistWatchApp: App {
     var body: some Scene {
         WindowGroup {
             content
+                .watchFontScaling()
+                #if DEBUG
+                // `-watchTextSize xxxLarge` / `accessibility3` …: Textgröße ohne Systemeinstellung (der Uhr-
+                // Simulator kann sie nicht umstellen) – für die Prüfung „nichts wird abgeschnitten“.
+                .modifier(DebugTextSize(size: Self.debugTextSize))
+                #endif
                 .task { await environment.start() }
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     environment.sync.setActive(phase == .active)
@@ -53,6 +59,13 @@ struct FamlistWatchApp: App {
             await WatchAppEnvironment.performBackgroundRefresh()
         }
     }
+
+    #if DEBUG
+    private static var debugTextSize: DynamicTypeSize? {
+        guard let name = UserDefaults.standard.string(forKey: "watchTextSize") else { return nil }
+        return DynamicTypeSize.allCases.first { "\($0)" == name }
+    }
+    #endif
 
     /// Deep Link der Komplikationen: Navigationsstapel setzen.
     private func open(_ url: URL) {
@@ -72,3 +85,14 @@ struct FamlistWatchApp: App {
         #endif
     }
 }
+
+#if DEBUG
+/// Setzt die Textgröße nur, wenn `-watchTextSize` angegeben ist; sonst gilt die Einstellung der Uhr.
+private struct DebugTextSize: ViewModifier {
+    let size: DynamicTypeSize?
+
+    func body(content: Content) -> some View {
+        if let size { content.environment(\.dynamicTypeSize, size) } else { content }
+    }
+}
+#endif

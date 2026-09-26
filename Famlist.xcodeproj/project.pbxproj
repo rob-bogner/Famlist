@@ -12,6 +12,7 @@
 		00F3581AD8B7D698EEA5C8C0 /* SwiftDataListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C612E9BF9E500935BCB /* SwiftDataListStore.swift */; };
 		01FF945F3440E883EBD39A0F /* ClipboardImportViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7402E63E0EAD7BA7BD68481F /* ClipboardImportViewModelTests.swift */; };
 		02081D8738C39F08D4DC4963 /* EKKGlassBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF627C9FE6468C93B1E0607E /* EKKGlassBadge.swift */; };
+		021D6B44BC5C0A27879F45CB /* WatchFontScaling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02996882899B37AB99CC35D0 /* WatchFontScaling.swift */; };
 		02320C2010C5D2133B41181F /* WatchWidgetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9971695104C4C1F93382BF /* WatchWidgetState.swift */; };
 		0292015B9E3C9A8B1D997CDE /* EKKSectionLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1306DA345327237AC5662E /* EKKSectionLabel.swift */; };
 		02A2A9C361A95662C85913FD /* MultiNodeSyncScenarioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED8F07E53B0D76FD447C1C4 /* MultiNodeSyncScenarioTests.swift */; };
@@ -738,6 +739,7 @@
 		00F80DA80F949A1B0A02E630 /* SheetSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetSurface.swift; sourceTree = "<group>"; };
 		023F9ADD0EB5B9E1936DA7A0 /* CategoryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryStore.swift; sourceTree = "<group>"; };
 		0254BD43FECE4E6763A67E6F /* PriceBook.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PriceBook.swift; sourceTree = "<group>"; };
+		02996882899B37AB99CC35D0 /* WatchFontScaling.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchFontScaling.swift; sourceTree = "<group>"; };
 		03129324A3CF97738681E6CB /* UserLog+UI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "UserLog+UI.swift"; sourceTree = "<group>"; };
 		04A07C32CED6E6BB39E54E14 /* ManageCategoriesSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ManageCategoriesSheet.swift; sourceTree = "<group>"; };
 		05AE2A48FD98DDF362BCC40F /* BoxShadow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoxShadow.swift; sourceTree = "<group>"; };
@@ -2659,6 +2661,7 @@
 				A859A606A03B54FBD2720FFE /* WatchIcon.swift */,
 				A49A91F4E966F146CBBADCD8 /* WatchRGB.swift */,
 				BD1BDDCF9E64E68C0B9DA812 /* WatchTheme.swift */,
+				02996882899B37AB99CC35D0 /* WatchFontScaling.swift */,
 			);
 			name = Theme;
 			path = Theme;
@@ -3096,6 +3099,7 @@
 				505E74366D6B9D8B72301904 /* WatchAddWidget.swift in Sources */,
 				AADD039303DC919A0B26AE4E /* WatchWidgetProvider.swift in Sources */,
 				F6556CA4455F200EA2D44545 /* WatchWidgetEntry.swift in Sources */,
+				021D6B44BC5C0A27879F45CB /* WatchFontScaling.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

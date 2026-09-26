@@ -20,7 +20,21 @@ import SwiftUI
 
 extension View {
     /// - Parameter lineHeight: CSS-Zeilenhöhe in pt, z. B. WatchFont.dmLineHeight(12) oder 22 × 1.1.
+    /// Standard-Textgröße: genau eine Zeile in CSS-Höhe (pixelgenau). Größere Textgröße: bis zu zwei Zeilen,
+    /// mindestens die Zeilenhöhe – nichts wird abgeschnitten.
     func watchLineBox(_ lineHeight: CGFloat) -> some View {
-        frame(height: lineHeight)
+        modifier(WatchLineBox(lineHeight: lineHeight))
+    }
+}
+
+private struct WatchLineBox: ViewModifier {
+    let lineHeight: CGFloat
+
+    func body(content: Content) -> some View {
+        if WatchFont.scale == 1 {
+            content.lineLimit(1).frame(height: lineHeight)
+        } else {
+            content.lineLimit(2).fixedSize(horizontal: false, vertical: true).frame(minHeight: lineHeight)
+        }
     }
 }

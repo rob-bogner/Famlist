@@ -62,9 +62,9 @@ struct WatchAddScreen: View {
         Button { onAdd(item.name) } label: {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(item.name).font(WatchFont.dm(15, 500)).lineLimit(1)
+                    Text(item.name).font(WatchFont.dm(15, 500))
                         .watchLineBox(WatchFont.dmLineHeight(15, 500))
-                    Text(item.detail).font(WatchFont.dm(12)).foregroundStyle(w.sub).lineLimit(1)
+                    Text(item.detail).font(WatchFont.dm(12)).foregroundStyle(w.sub)
                         .watchLineBox(WatchFont.dmLineHeight(12))
                 }
                 .foregroundStyle(w.text)

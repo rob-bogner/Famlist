@@ -25,8 +25,8 @@ struct WatchSmartStackView: View {
                 Text("FAMLIST").font(WatchFont.dm(11, 600)).tracking(0.66).foregroundStyle(w.accentText)
             }
             Text("\(state.listName) · \(state.open) offen")
-                .font(WatchFont.outfit(16)).foregroundStyle(w.text).lineLimit(1)
-                .watchLineBox(16 * 1.1)
+                .font(WatchFont.outfit(16)).foregroundStyle(w.text)
+                .watchLineBox(WatchFont.scaled(16) * 1.1)
             WatchProgressBar(w: w, fraction: state.fraction)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

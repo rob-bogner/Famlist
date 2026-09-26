@@ -36,13 +36,12 @@ struct WatchItemRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(isChecked ? "\(name) wieder offen" : "\(name) abhaken")
 
             Button(action: onOpen) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(name).font(WatchFont.dm(15, 500)).strikethrough(isChecked).lineLimit(1)
+                    Text(name).font(WatchFont.dm(15, 500)).strikethrough(isChecked)
                         .watchLineBox(WatchFont.dmLineHeight(15, 500))
-                    Text(quantity).font(WatchFont.dm(12)).foregroundStyle(w.sub).lineLimit(1)
+                    Text(quantity).font(WatchFont.dm(12)).foregroundStyle(w.sub)
                         .watchLineBox(WatchFont.dmLineHeight(12))
                 }
                 .foregroundStyle(w.text)
@@ -52,10 +51,16 @@ struct WatchItemRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(name), \(quantity)\(isChecked ? ", erledigt" : "")")
-            .accessibilityHint("Öffnet den Artikel")
         }
         .frame(minHeight: 46)
+        // VoiceOver: eine Zeile = ein Element mit Zustand; Doppeltippen öffnet, Aktion hakt ab (WATCH_PLAN §5).
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name), \(quantity)")
+        .accessibilityValue(isChecked ? "erledigt" : "offen")
+        .accessibilityHint("Öffnet den Artikel")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { onOpen() }
+        .accessibilityAction(named: isChecked ? "Wieder öffnen" : "Abhaken") { onToggle() }
         .background(WatchCardBackground(w: w))
         .opacity(isChecked ? 0.55 : 1)
     }

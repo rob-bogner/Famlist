@@ -27,13 +27,16 @@ struct WatchScreenChrome: ViewModifier {
     /// Titel antippbar ohne „‹“ (Liste → „Listen“); das Aussehen bleibt wie im Design.
     var onTitleTap: (() -> Void)?
 
+    /// 22 pt im Design; wächst mit der Textgröße (WatchFont.scale).
+    private var titleHeight: CGFloat { (22 * WatchFont.scale).rounded() }
+
     func body(content: Content) -> some View {
         ZStack(alignment: .topLeading) {
             WatchBackground(w: w)
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .clipped()
-                .padding(.top, contentTop)
+                .padding(.top, contentTop + titleHeight - 22)
             header
                 .padding(.leading, 14)
                 .padding(.top, 10)
@@ -65,7 +68,8 @@ struct WatchScreenChrome: ViewModifier {
             .tracking(-0.17)
             .foregroundStyle(w.accentText)
             .lineLimit(1)
-            .frame(height: 22)
+            .minimumScaleFactor(0.8)
+            .frame(height: titleHeight)
             .contentShape(Rectangle())
     }
 }

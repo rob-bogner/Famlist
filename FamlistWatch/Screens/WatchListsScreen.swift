@@ -36,9 +36,9 @@ struct WatchListsScreen: View {
             HStack(spacing: 10) {
                 WatchRing(w: w, fraction: list.fraction)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(list.name).font(WatchFont.outfit(16)).lineLimit(1)
+                    Text(list.name).font(WatchFont.outfit(16))
                         .watchLineBox(WatchFont.outfitLineHeight(16))
-                    Text(list.status).font(WatchFont.dm(12)).foregroundStyle(w.sub).lineLimit(1)
+                    Text(list.status).font(WatchFont.dm(12)).foregroundStyle(w.sub)
                         .watchLineBox(WatchFont.dmLineHeight(12))
                 }
                 .foregroundStyle(w.text)

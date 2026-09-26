@@ -21,7 +21,6 @@ struct WatchSectionLabel: View {
             .font(WatchFont.dm(11, 600))
             .tracking(0.66)
             .foregroundStyle(w.sub)
-            .lineLimit(1)
             .watchLineBox(WatchFont.dmLineHeight(11, 600))
             .padding(.horizontal, 4)
             .padding(.top, 4)

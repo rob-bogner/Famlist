@@ -159,4 +159,10 @@ Dieser Punkt kommt später mit eigenem Design. Bis dahin gilt: kein eigenes UI d
 Preis auf jeder Artikelkarte (abschaltbar: Einstellungen → „Preise anzeigen“) und der Link „Preisverlauf“ in
 „Artikel bearbeiten“. Umsetzung und Abweichungen: PLAN.md §9.
 
+**Apple Watch (26.09.2026, WATCH_PROMPT.md):** Nicht gestaltet und deshalb schlicht im vorhandenen Stil
+umgesetzt (WATCH_PLAN.md §5): Anmeldung der Uhr über das iPhone („Verbinde mit dem iPhone …“, „Öffne Famlist
+auf dem iPhone …“), leere Liste, Hinweis auf wartende Änderungen, Status „Keine Artikel“, der Weg zum Screen
+„Listen“ (Titel antippen) und die Anzeige bei großer Textgröße. Abweichungen: PLAN.md §9. Ein eigenes Design
+dafür ersetzt diese Übergangslösungen.
+
 **Übergangslösung für den Preisverlauf:** Der Screen wird gebaut. Bis der Link gestaltet ist, erreicht man ihn über das System-Kontextmenü (langer Druck) auf einen Artikel in „Artikel verwalten“, Eintrag „Preisverlauf“.
