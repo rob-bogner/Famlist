@@ -81,3 +81,9 @@ Famlist/Core/DesignSystem/Hybrid/Icons/SVGPathParser.swift
 Famlist/Core/DesignSystem/Hybrid/Rendering/CSSPrimitives.swift
 Famlist/Core/DesignSystem/Hybrid/Rendering/RGB.swift
 Famlist/Features/Sharing/Models/InviteError.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSBox.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/BoxShadow.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/Paint.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSRadialGradient.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/CSSLinearGradient.swift
+Famlist/Core/DesignSystem/Hybrid/Rendering/GlossEllipse.swift

@@ -251,3 +251,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ReceiptDetail | „Löschen“ → System-Rückfrage „Kassenzettel löschen?“; der Knopf fehlt, wenn man weder Ersteller noch Besitzer der Liste ist („Teilen“ dann volle Breite) | Löschen betrifft alle Mitglieder (wie Liste löschen); Server erlaubt nur Ersteller/Besitzer (Migration 021) |
 | ReceiptDetail | Vollbild: schwarzer Hintergrund, Zoom 1–5-fach, Doppeltippen 2,5-fach, ✕ oben rechts | KASSENZETTEL_ARCHIV.md „Vollbild mit Zoom“; Vollbild nicht gestaltet |
 
+| Watch (alle Screens) | Titel oben links zeichnet die App selbst; die System-Navigationsleiste ist aus. Die Uhrzeit rechts zeichnet watchOS an seiner Stelle | watchOS 26 setzt Toolbar-Titel in eine eigene Zeile unter die Uhrzeit (Screenshot 26.09.2026) |
+| Watch (alle Screens) | Textzeilen haben die CSS-Höhe; Schriftkanten weichen im Pixelvergleich leicht ab (mittlere Abweichung 2,5–3,0 von 255, ohne Uhrzeit) | Chrome und CoreText glätten Schrift unterschiedlich; Lage, Größe und Farben stimmen auf 1 px |
+| WatchList | „Alle abhaken“ ohne backdrop-filter: blur(16px) | Unter dem Knopf liegt immer der Verlauf zu Schwarz .85, der Unterschied ist nicht sichtbar |
+| WatchItem | Zurück „‹ My List“ ist ein eigener Knopf statt des runden System-Zurück-Knopfs | Design zeigt „‹ Titel“ |
