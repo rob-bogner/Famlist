@@ -21,6 +21,8 @@ struct WatchDoneScreen: View {
     let count: Int
     let listName: String
     var onReset: () -> Void = {}
+    /// Titel antippen → „Listen“.
+    var onTitle: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 6) {
@@ -35,7 +37,7 @@ struct WatchDoneScreen: View {
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 10)
-        .watchScreen(listName, contentTop: 36, w: w)
+        .watchScreen(listName, contentTop: 36, w: w, onTitleTap: onTitle)
     }
 
     private var ring: some View {

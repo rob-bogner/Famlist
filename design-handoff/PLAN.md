@@ -255,3 +255,10 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Watch (alle Screens) | Textzeilen haben die CSS-Höhe; Schriftkanten weichen im Pixelvergleich leicht ab (mittlere Abweichung 2,5–3,0 von 255, ohne Uhrzeit) | Chrome und CoreText glätten Schrift unterschiedlich; Lage, Größe und Farben stimmen auf 1 px |
 | WatchList | „Alle abhaken“ ohne backdrop-filter: blur(16px) | Unter dem Knopf liegt immer der Verlauf zu Schwarz .85, der Unterschied ist nicht sichtbar |
 | WatchItem | Zurück „‹ My List“ ist ein eigener Knopf statt des runden System-Zurück-Knopfs | Design zeigt „‹ Titel“ |
+| WatchList, WatchDone | Titel oben links ist antippbar und führt zu „Listen“ (ohne „‹“, Aussehen unverändert) | Design zeigt keinen Weg zum Screen „Listen“; Wurzel der Navigation ist „Listen“, die aktive Liste liegt beim Start darauf |
+| WatchList (nicht gestaltet) | Leere Liste: Hinweis „Noch keine Artikel“ (DM 12, weiß .6) unter dem Fortschritt | Kein Design für leere Listen (WATCH_PLAN §5) |
+| WatchList (nicht gestaltet) | Ohne Anmeldung: „N Änderungen warten auf das iPhone“ unter dem Fortschritt | Kein Design; Änderungen bleiben in der Warteschlange (WATCH_PLAN §5) |
+| WatchLists (nicht gestaltet) | Status „Keine Artikel“ für leere Listen | Design kennt nur „x von y offen“, „x offen“, „erledigt“ |
+| Watch (nicht gestaltet) | Statusbildschirm „Verbinde mit dem iPhone …“ / „Öffne Famlist auf dem iPhone, um die Uhr anzumelden.“ mit Knopf „Erneut versuchen“ im Stil von „Zurücksetzen“ | Kein Design für die Anmeldung der Uhr (WATCH_PLAN §5) |
+| WatchAdd | Detailzeile „Oft gekauft“: Kategorie, sonst Einheit („Stück“) statt Menge („10 Stück“) | Der Artikelstamm speichert keine Menge |
+| WatchList | Mengen wie auf dem iPhone: ohne Einheit nur die Zahl („6“ statt „6 Stück“) | Gleiche Anzeige auf beiden Geräten (ItemModel.quantityText) |

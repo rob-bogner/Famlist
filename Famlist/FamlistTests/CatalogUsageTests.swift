@@ -131,6 +131,7 @@ final class CatalogUsageTests: XCTestCase {
         await repo.flush()
         XCTAssertEqual(remote.sent, ["save Milch", "use milch"], "Zählen erst nach dem Speichern")
         XCTAssertEqual(repo.pendingCount, 0)
+        XCTAssertEqual(repo.store.entries?.first?.useCount, 1, "nach dem Senden bleibt der Stand lokal sichtbar")
     }
 
     func test_noteUseQueue_survivesRestart() async throws {

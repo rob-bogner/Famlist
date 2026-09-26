@@ -24,6 +24,8 @@ struct WatchScreenChrome: ViewModifier {
     let contentTop: CGFloat
     var w = WatchTheme()
     var onBack: (() -> Void)?
+    /// Titel antippbar ohne „‹“ (Liste → „Listen“); das Aussehen bleibt wie im Design.
+    var onTitleTap: (() -> Void)?
 
     func body(content: Content) -> some View {
         ZStack(alignment: .topLeading) {
@@ -46,6 +48,12 @@ struct WatchScreenChrome: ViewModifier {
             Button(action: onBack) { titleText("‹ \(title)") }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Zurück zu \(title)")
+        } else if let onTitleTap {
+            Button(action: onTitleTap) { titleText(title) }
+                .buttonStyle(.plain)
+                .accessibilityLabel(title)
+                .accessibilityHint("Zeigt alle Listen")
+                .accessibilityAddTraits(.isHeader)
         } else {
             titleText(title).accessibilityAddTraits(.isHeader)
         }
@@ -65,7 +73,7 @@ struct WatchScreenChrome: ViewModifier {
 extension View {
     /// Screen-Rahmen mit Titel; `onBack` macht daraus eine Unterseite mit „‹ Titel“.
     func watchScreen(_ title: String, contentTop: CGFloat, w: WatchTheme = WatchTheme(),
-                     onBack: (() -> Void)? = nil) -> some View {
-        modifier(WatchScreenChrome(title: title, contentTop: contentTop, w: w, onBack: onBack))
+                     onBack: (() -> Void)? = nil, onTitleTap: (() -> Void)? = nil) -> some View {
+        modifier(WatchScreenChrome(title: title, contentTop: contentTop, w: w, onBack: onBack, onTitleTap: onTitleTap))
     }
 }

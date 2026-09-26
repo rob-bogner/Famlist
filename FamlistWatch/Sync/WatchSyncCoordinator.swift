@@ -102,6 +102,7 @@ final class WatchSyncCoordinator: ObservableObject {
 
     /// Eigene Änderungen sofort an das iPhone (ohne Fotos), falls erreichbar.
     private func forwardToPhone(_ items: [ItemModel]) {
+        logVoid(params: (action: "watchSync.forward", count: items.count, reachable: transport?.isReachable ?? false))
         guard let transport, transport.isReachable else { return }
         WatchMessage.itemBatches(items).forEach { transport.send($0, reply: nil) }
     }
@@ -113,6 +114,7 @@ final class WatchSyncCoordinator: ObservableObject {
             let result = (try? itemStore.mergeRemote(item, legacyImageKnown: false)) ?? .ignored
             if result != .ignored { changed = true }
         }
+        logVoid(params: (action: "watchSync.mergeFromPhone", received: items.count, changed: changed))
         guard changed else { return }
         try? itemStore.save()
         bump()

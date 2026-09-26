@@ -94,6 +94,7 @@ final class WatchBridge: WatchTransportDelegate {
             let result = (try? itemStore.mergeRemote(item, legacyImageKnown: false)) ?? .ignored
             if result != .ignored { merged.append(item) }
         }
+        logVoid(params: (action: "watchBridge.received", count: items.count, merged: merged.count))
         guard !merged.isEmpty else { return }
         do { try itemStore.save() } catch {
             logVoid(params: (action: "watchBridge.merge.saveError", error: error.localizedDescription))
@@ -106,7 +107,9 @@ final class WatchBridge: WatchTransportDelegate {
 
     /// Geänderte Artikel sofort an die Uhr (ohne Fotos), falls sie erreichbar ist.
     func forward(_ items: [ItemModel]) {
-        guard !items.isEmpty, transport.isReachable else { return }
+        guard !items.isEmpty else { return }
+        logVoid(params: (action: "watchBridge.forward", count: items.count, reachable: transport.isReachable))
+        guard transport.isReachable else { return }
         WatchMessage.itemBatches(items).forEach { transport.send($0, reply: nil) }
     }
 

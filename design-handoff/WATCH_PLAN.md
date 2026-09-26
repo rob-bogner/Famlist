@@ -2,7 +2,7 @@
 
 Stand 26.09.2026 · Phase 0 (Bestandsaufnahme und Plan) · Auftrag: `design-handoff/WATCH_PROMPT.md`
 
-Status: **Phasen 1–4 gebaut (26.09.2026).** Phase 3: Migrationen 022 und 023 sowie Edge Function `watch-session` sind live (Freigabe Robert, 17:38).
+Status: **Phasen 1–5 gebaut (26.09.2026).** Phase 3: Migrationen 022 und 023 sowie Edge Function `watch-session` sind live (Freigabe Robert, 17:38).
 
 ---
 
@@ -143,6 +143,7 @@ Status: **Phasen 1–4 gebaut (26.09.2026).** Phase 3: Migrationen 022 und 023 s
 |---|---|---|
 | Migration 022 | `migrations/022_catalog_usage.sql` | `item_catalog` bekommt `use_count int not null default 0` und `last_used_at timestamptz`. Dazu kommen ein Index für die Sortierung und die RPC `catalog_note_use(p_names text[])`. Die RPC zählt atomar für den angemeldeten Nutzer hoch, damit zwei Geräte sich nicht gegenseitig Zählungen überschreiben. Einträge ohne Treffer ignoriert sie. RLS bleibt wie in Migration 019. Prüfskript: `migrations/tests/022_catalog_usage_check.sql`. |
 | Edge Function | `watch-session` | Die Function prüft den JWT (`verify_jwt: true`) und holt Konto und E-Mail mit `auth.getUser(jwt)` vom Auth-Server, nie aus der Anfrage. Mit `generateLink` (magiclink) erzeugt sie einen Code, prüft, dass er zum selben Konto gehört, und gibt **nur** `hashed_token` zurück. Pro Nutzer ist höchstens 1 Aufruf je 10 s erlaubt (sonst 429). Die Quelle liegt in `supabase/functions/watch-session/index.ts`. |
+| Migration 024 | `migrations/024_ensure_default_list_rls.sql` | Fehlerbehebung, gefunden im Gerätepaar-Test: `ensure_default_list` scheiterte seit Migration 019 mit 403, sobald die Standardliste existierte. Jede Anmeldung ohne lokale Listen-Kopie (neues Gerät, Neuinstallation) brach ab. Prüfskript `migrations/tests/024_ensure_default_list_check.sql`. |
 | Migration 023 | `migrations/023_watch_session.sql` | Die Aufruf-Grenze braucht einen Zeitpunkt je Konto, der zwischen Aufrufen erhalten bleibt; Edge Functions laufen in mehreren Instanzen ohne gemeinsamen Speicher. Tabelle `private.watch_session_requests` und RPC `watch_session_claim(p_user)` (atomar, nur `service_role`). Prüfskript: dasselbe wie für 022. |
 | Client | Zähler | `ListViewModel.addItem` (auch „Menge +1“ bei gleichem Namen) und der Sammel-Import legen über die Offline-Warteschlange des Artikelstamms einen Auftrag `noteUse` ab, immer nach dem Speichern des Eintrags. Ohne Netz wird er nachgesendet; die lokale Kopie zählt sofort mit. Die Uhr nutzt in Phase 5 denselben Weg. |
 | Client | Delta aller Listen | `fetchItemsSince(listIds:since:)`: ein Aufruf je Seite mit `list_id IN (…)`, eine gemeinsame Zeitmarke. Neu hinzugekommene Listen fragt die Uhr getrennt ab `.distantPast` ab. |

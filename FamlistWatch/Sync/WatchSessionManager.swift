@@ -15,7 +15,7 @@
  - Das Konto des Codes muss zum Konto passen, das das iPhone meldet; sonst wird er verworfen.
 
  📝 Last Change:
- - Initial creation (Watch-Plan Phase 4).
+ - Gespeicherte Sitzung gilt offline sofort; abgelehnte Sitzung → neuer Code ohne Datenverlust (Phase 5).
  ------------------------------------------------------------------------
  */
 
@@ -57,13 +57,28 @@ final class WatchSessionManager: ObservableObject {
         return nil
     }
 
-    /// App-Start: gespeicherte Sitzung nutzen (erneuert sich bei Bedarf), sonst beim iPhone anfragen.
+    /// App-Start: Eine gespeicherte Sitzung gilt sofort (auch offline – die Daten liegen lokal). Lehnt der
+    /// Server sie später ab (widerrufen, abgelaufen), holt die Uhr einen neuen Code; Netzfehler ändern nichts.
     func restore() async {
-        if let auth, let session = try? await auth.session {
-            state = .signedIn(session.user.id)
-            if let context = transport.receivedContext { await handle(context) }
+        guard let auth else { state = .needsPhone; return }
+        guard let stored = auth.currentSession else { await requestFromPhone(); return }
+        state = .signedIn(stored.user.id)
+        do {
+            _ = try await auth.session                           // erneuert das Token bei Bedarf
+        } catch is URLError {
+            logVoid(params: (action: "watchSession.restore.offline", userId: stored.user.id))
+        } catch {
+            await sessionRejected()
             return
         }
+        if let context = transport.receivedContext { await handle(context) }
+    }
+
+    /// Server lehnt die Sitzung ab: nur die Anmeldung verwerfen (Daten bleiben – gleiches Konto) und neu anfragen.
+    private func sessionRejected() async {
+        logVoid(params: ["action": "watchSession.rejected"])
+        try? await auth?.signOut(scope: .local)
+        state = .needsPhone
         await requestFromPhone()
     }
 

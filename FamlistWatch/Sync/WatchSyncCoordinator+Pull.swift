@@ -95,6 +95,7 @@ extension WatchSyncCoordinator {
         try itemStore.save()
         if let newest = rows.compactMap(\.updatedAt).max(), newest > marks.since { marks.since = newest }
         marks.knownLists = listIds
+        if !rows.isEmpty { logVoid(params: (action: "watchSync.pull", rows: rows.count, changed: changed)) }
         return changed
     }
 

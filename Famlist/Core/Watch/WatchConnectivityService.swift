@@ -61,19 +61,31 @@ final class WatchConnectivityService: NSObject, WatchTransport {
         guard session.isReachable else { reply?(.failure(TransportError.notReachable)); return }
         let dictionary: [String: Any]
         do { dictionary = try message.dictionary() } catch { reply?(.failure(error)); return }
-        let callback = reply.map(ReplyCallback.init)
-        if let callback {
-            session.sendMessage(dictionary, replyHandler: { answer in
-                let result = Result { try WatchMessage(dictionary: answer) }
-                Task { @MainActor in callback.call(result) }
-            }, errorHandler: { error in
-                Task { @MainActor in callback.call(.failure(error)) }
-            })
+        if let reply {
+            let handlers = Self.replyHandlers(ReplyCallback(reply))
+            session.sendMessage(dictionary, replyHandler: handlers.reply, errorHandler: handlers.error)
         } else {
-            session.sendMessage(dictionary, replyHandler: nil) { error in
-                logVoid(params: (action: "watch.send.error", error: error.localizedDescription))
-            }
+            session.sendMessage(dictionary, replyHandler: nil, errorHandler: Self.logSendError)
         }
+    }
+
+    /// Rückrufe für WCSession – bewusst NICHT auf dem Main Actor erzeugt: WCSession ruft sie auf einem
+    /// Hintergrund-Thread auf. Eine im Main Actor entstandene Closure ist unter Swift 6 an ihn gebunden, und
+    /// die Laufzeitprüfung beendet die App (im Gerätepaar-Test beobachtet: dispatch_assert_queue).
+    nonisolated private static func replyHandlers(_ callback: ReplyCallback)
+        -> (reply: @Sendable ([String: Any]) -> Void, error: @Sendable (Error) -> Void) {
+        let reply: @Sendable ([String: Any]) -> Void = { answer in
+            let result = Result { try WatchMessage(dictionary: answer) }
+            Task { @MainActor in callback.call(result) }
+        }
+        let error: @Sendable (Error) -> Void = { error in
+            Task { @MainActor in callback.call(.failure(error)) }
+        }
+        return (reply, error)
+    }
+
+    nonisolated private static let logSendError: @Sendable (Error) -> Void = { error in
+        logVoid(params: (action: "watch.send.error", error: error.localizedDescription))
     }
 
     func transfer(_ message: WatchMessage) {
@@ -112,7 +124,13 @@ extension WatchConnectivityService: WCSessionDelegate {
                              error: Error?) {
         let context = WatchApplicationContext(dictionary: session.receivedApplicationContext)
         let reachable = session.isReachable
-        logVoid(params: (action: "watch.activated", state: activationState.rawValue, error: error?.localizedDescription ?? "-"))
+        #if os(iOS)
+        logVoid(params: (action: "watch.activated", state: activationState.rawValue, paired: session.isPaired,
+                         appInstalled: session.isWatchAppInstalled, reachable: reachable))
+        #else
+        logVoid(params: (action: "watch.activated", state: activationState.rawValue, reachable: reachable,
+                         error: error?.localizedDescription ?? "-"))
+        #endif
         Task { @MainActor in
             if let context { self.deliverContext(context) }
             self.delegate?.transportReachabilityChanged(reachable)
@@ -130,6 +148,7 @@ extension WatchConnectivityService: WCSessionDelegate {
 
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         let reachable = session.isReachable
+        logVoid(params: (action: "watch.reachability", reachable: reachable))
         Task { @MainActor in self.delegate?.transportReachabilityChanged(reachable) }
     }
 

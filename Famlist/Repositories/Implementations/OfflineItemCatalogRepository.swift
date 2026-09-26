@@ -19,7 +19,8 @@
  - Wieder online: `reconnect` (ConnectivityMonitor.$isOnline) löst das Senden aus.
 
  📝 Last Change:
- - Zähl-Auftrag noteUse („Oft gekauft“, Migration 022, 26.09.2026).
+ - Zähl-Auftrag noteUse („Oft gekauft“, Migration 022); gesendete Aufträge gehen in die lokale Kopie ein
+   (26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -146,6 +147,9 @@ final class OfflineItemCatalogRepository: ItemCatalogRepository {
         while let pending = store.outbox.first {
             do {
                 try await send(pending.operation)
+                // Gesendet: in die lokale Kopie übernehmen. Sonst zeigte die Anzeige bis zum nächsten fetchAll
+                // wieder den alten Stand (der Auftrag steht nicht mehr in der Warteschlange).
+                if let cache = store.cache { store.setCache(pending.operation.apply(to: cache)) }
                 store.removeFirst()
             } catch let error as URLError {
                 logVoid(params: (action: "catalog.flush.offline", code: error.code.rawValue, pending: store.outbox.count))

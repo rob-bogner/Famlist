@@ -61,6 +61,15 @@ struct SignInView: View {
             if let message { show(message, isError: true) }
         }
         #if DEBUG && targetEnvironment(simulator)
+        // Startargument `-simulatorSignIn tester|demo|developer`: meldet das Testkonto ohne Tippen an
+        // (Uhr-Gerätepaar im Simulator, Watch-Plan Phase 5).
+        .task {
+            guard let name = UserDefaults.standard.string(forKey: "simulatorSignIn"),
+                  let account = SimulatorAuthHelper.TestAccount.allCases.first(where: { $0.description.lowercased() == name.lowercased() })
+            else { return }
+            let c = SimulatorAuthHelper.getCredentials(for: account)
+            session.signInWithEmailPassword(email: c.email, password: c.password)
+        }
         .confirmationDialog("Testkonten (nur Simulator)", isPresented: $showTestAccounts, titleVisibility: .visible) {
             ForEach(SimulatorAuthHelper.TestAccount.allCases, id: \.self) { account in
                 Button(account.description) {

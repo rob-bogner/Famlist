@@ -26,12 +26,18 @@ struct WatchListScreen: View {
     var onOpen: (String) -> Void = { _ in }
     var onCheckAll: () -> Void = {}
     var onAdd: () -> Void = {}
+    /// Titel antippen → „Listen“.
+    var onTitle: (() -> Void)?
+    /// Hinweis unter dem Fortschritt (nicht gestaltet, PLAN.md §9), z. B. wartende Änderungen.
+    var note: String?
 
     var body: some View {
         ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
                     progress
+                    if let note { hint(note) }
+                    if sections.isEmpty { hint("Noch keine Artikel") }
                     ForEach(sections) { section in
                         WatchSectionLabel(w: w, text: section.title)
                         ForEach(section.items) { item in
@@ -53,7 +59,14 @@ struct WatchListScreen: View {
             .padding(.horizontal, 10)
             .padding(.bottom, 8)
         }
-        .watchScreen(title, contentTop: 38, w: w)
+        .watchScreen(title, contentTop: 38, w: w, onTitleTap: onTitle)
+    }
+
+    /// Schlichter Hinweis im vorhandenen Stil (DM 12, weiß .6) – nicht gestaltet, PLAN.md §9.
+    private func hint(_ text: String) -> some View {
+        Text(text).font(WatchFont.dm(12)).foregroundStyle(w.sub)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 4)
     }
 
     /// „2 von 6 erledigt“ (DM 12, Zahl weiß 600) + Balken; Abstand 5, padding 0 4 2 4.

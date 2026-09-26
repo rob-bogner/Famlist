@@ -1,0 +1,25 @@
+/*
+ WatchItemDetail.swift
+ FamlistWatch
+ Created on: 26.09.2026
+
+ ------------------------------------------------------------------------
+ 📄 File Overview:
+ - Anzeigedaten des Screens „Artikel“: Name, Kategorie (Ladenweg-Name), Einheit, Menge.
+
+ 📝 Last Change:
+ - Initial creation (Watch-Plan Phase 5).
+ ------------------------------------------------------------------------
+ */
+
+import Foundation
+
+struct WatchItemDetail: Hashable {
+    let id: String
+    let name: String
+    let category: String
+    /// Einheit ohne Zahl, z. B. „Packung“, „Stück“.
+    let unitName: String
+    let units: Int
+    let isChecked: Bool
+}
