@@ -87,7 +87,12 @@ extension ShoppingListView {
                                                                   uniquingKeysWith: { first, _ in first }),
                                            checkedItems: listViewModel.items.filter(\.isChecked),
                                            catalog: listViewModel.catalogRepository,
-                                           priceBook: priceBook)
+                                           priceBook: priceBook,
+                                           archive: receiptArchive,
+                                           origin: ReceiptArchiveOrigin(listId: listViewModel.listId,
+                                                                        listTitle: listViewModel.defaultList?.title,
+                                                                        createdBy: session.currentProfile?.id,
+                                                                        creatorName: session.currentProfile?.displayName))
         activeSheet = .receiptCapture
     }
 

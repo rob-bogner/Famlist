@@ -175,6 +175,7 @@
 		7D039EE0D61D957C1FCE8049 /* ImageStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8BA02E9EA3F7EC6A169D58 /* ImageStorage.swift */; };
 		7EFED0132179F8611AA872AE /* ReceiptItemPriceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFAC718B6EA06A9E89E148C /* ReceiptItemPriceTests.swift */; };
 		8099180626840B2158777BB2 /* ItemUpsertResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D15A02D9730787C64FF6602 /* ItemUpsertResult.swift */; };
+		821BC037B7FEDCFDAA527092 /* ReceiptArchiveOrigin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 714E37496F3DED027625A730 /* ReceiptArchiveOrigin.swift */; };
 		83B6590C3DA9D068440ACC26 /* ItemSearchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309F093164FF356FE2054921 /* ItemSearchSheet.swift */; };
 		84A3B1375421D0097396A603 /* DesignProgressHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFD969A1BB70CF4118A59E9 /* DesignProgressHero.swift */; };
 		853CC737E2F667D9DEFBA61C /* OfflineListsRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384DBE037CBCA5F2F668A416 /* OfflineListsRepositoryTests.swift */; };
@@ -297,6 +298,7 @@
 		D706E8A2CBEDE7A4D989E550 /* ListAccountTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F481201C2DE16E0A6F0D1E0 /* ListAccountTokens.swift */; };
 		D753A0CB673587D2080055DD /* ItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22E342E263DBEDA16C2811B7 /* ItemCard.swift */; };
 		D7915183F400D4A9E135273C /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73877591C8C752A869202B3 /* Appearance.swift */; };
+		D7CDC6452BF206F2A6DBF194 /* ReceiptFlowArchiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0085D39DB4BA17149EF055D7 /* ReceiptFlowArchiveTests.swift */; };
 		D7DA0373C09EB936D1748394 /* Paint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D5A7DEF8CEFAF5D864C685 /* Paint.swift */; };
 		D8344B104C513BD50297A301 /* SupabaseItemCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B951391DB1C9883C6B32320 /* SupabaseItemCatalogRepository.swift */; };
 		D851E34CABE9A0F5EC091492 /* DesignListTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83472F750E394CFC9772B5A4 /* DesignListTopBar.swift */; };
@@ -452,6 +454,7 @@
 
 /* Begin PBXFileReference section */
 		00080945BFF7500A3F67A10F /* ListSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSummaryCard.swift; sourceTree = "<group>"; };
+		0085D39DB4BA17149EF055D7 /* ReceiptFlowArchiveTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptFlowArchiveTests.swift; sourceTree = "<group>"; };
 		00F80DA80F949A1B0A02E630 /* SheetSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetSurface.swift; sourceTree = "<group>"; };
 		023F9ADD0EB5B9E1936DA7A0 /* CategoryStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryStore.swift; sourceTree = "<group>"; };
 		0254BD43FECE4E6763A67E6F /* PriceBook.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PriceBook.swift; sourceTree = "<group>"; };
@@ -596,6 +599,7 @@
 		6954CBCFE75541BB981ED25D /* ItemSearchViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemSearchViewModel.swift; sourceTree = "<group>"; };
 		6B384179175ADD6EADE22E2A /* DMSans-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DMSans-Variable.ttf"; sourceTree = "<group>"; };
 		6F815D61C1694C42AD2AB8BB /* PriceStatistics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PriceStatistics.swift; sourceTree = "<group>"; };
+		714E37496F3DED027625A730 /* ReceiptArchiveOrigin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptArchiveOrigin.swift; sourceTree = "<group>"; };
 		71FA8C5371538AF720898E68 /* ListSectionBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListSectionBuilder.swift; sourceTree = "<group>"; };
 		723E81D36A402740D942BA73 /* PriceDisplayTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PriceDisplayTests.swift; sourceTree = "<group>"; };
 		7402E63E0EAD7BA7BD68481F /* ClipboardImportViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipboardImportViewModelTests.swift; sourceTree = "<group>"; };
@@ -1118,6 +1122,7 @@
 				9114D9A95C674BB018F9ECCE /* ReceiptArchiveDraft.swift */,
 				E19AC9BF9357B952467AB767 /* ReceiptArchiveSetting.swift */,
 				301284985F05DBC0F98303A8 /* ReceiptArchiveError.swift */,
+				714E37496F3DED027625A730 /* ReceiptArchiveOrigin.swift */,
 			);
 			name = Models;
 			path = Models;
@@ -1489,6 +1494,7 @@
 				CDFAC718B6EA06A9E89E148C /* ReceiptItemPriceTests.swift */,
 				992AC50EF5DD15B7A8185EE1 /* ReceiptArchiveTests.swift */,
 				10C19739E31CBA3E941993C6 /* ReceiptArchiveFormatTests.swift */,
+				0085D39DB4BA17149EF055D7 /* ReceiptFlowArchiveTests.swift */,
 			);
 			path = FamlistTests;
 			sourceTree = "<group>";
@@ -2498,6 +2504,7 @@
 				5279C406401C8FA32CCEA60E /* SupabaseReceiptsRepository.swift in Sources */,
 				324005B20106D032B8355956 /* ReceiptArchiveLocalStore.swift in Sources */,
 				5519ECA3DAD6ACC386258F96 /* ReceiptsRepository.swift in Sources */,
+				821BC037B7FEDCFDAA527092 /* ReceiptArchiveOrigin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2562,6 +2569,7 @@
 				7EFED0132179F8611AA872AE /* ReceiptItemPriceTests.swift in Sources */,
 				CEEB99C6E17341CBEB1D2E7A /* ReceiptArchiveTests.swift in Sources */,
 				3C4CFE4528BB1FA3A36DA908 /* ReceiptArchiveFormatTests.swift in Sources */,
+				D7CDC6452BF206F2A6DBF194 /* ReceiptFlowArchiveTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

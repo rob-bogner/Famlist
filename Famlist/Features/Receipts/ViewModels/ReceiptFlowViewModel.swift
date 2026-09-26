@@ -16,9 +16,11 @@
  - Preise je Stück: Bei „2 Stk x 1,29“ speichert der Preisverlauf 1,29 €, nicht den Zeilenbetrag 2,58 €.
  - `priceChanges`: zugeordnete Artikel, deren gespeicherter Preis (Liste oder Artikelstamm) vom Bon abweicht.
    „Kassenzettel prüfen“ fragt vor dem Speichern, ob diese Preise die Artikelpreise ersetzen sollen.
+ - Kassenzettel-Archiv: „Preise speichern“ legt zusätzlich einen Archiv-Eintrag mit den Aufnahmen an,
+   wenn `archive` und `origin` gesetzt sind und der Schalter „Fotos der Bons speichern“ an ist.
 
  📝 Last Change:
- - Rückfrage „Artikelpreise aktualisieren?“ vorbereitet (`priceChanges`); Preispunkte je Stück.
+ - „Preise speichern“ legt einen Archiv-Eintrag an (Kassenzettel-Archiv).
  ------------------------------------------------------------------------
  */
 
@@ -52,19 +54,24 @@ final class ReceiptFlowViewModel: ObservableObject {
     private var catalogPrices: [String: Double] = [:]
     private let catalog: (any ItemCatalogRepository)?
     private let priceBook: PriceBook
+    private let archive: ReceiptArchive?
+    private let origin: ReceiptArchiveOrigin?
     /// Ersetzbar in Tests (Vision braucht echte Bilder).
     var recognize: ([UIImage]) async -> [String] = ReceiptTextRecognizer.recognizeLines(in:)
 
     /// `listPrices`: Artikelname → Preis der Artikel in der geöffneten Liste.
     /// `checkedItems`: abgehakte Artikel – daraus entsteht „Nicht auf dem Bon gefunden“.
     init(listItemNames: [String], listPrices: [String: Double] = [:], checkedItems: [ItemModel] = [],
-         catalog: (any ItemCatalogRepository)?, priceBook: PriceBook) {
+         catalog: (any ItemCatalogRepository)?, priceBook: PriceBook,
+         archive: ReceiptArchive? = nil, origin: ReceiptArchiveOrigin? = nil) {
         self.candidates = listItemNames
         self.checkedItems = checkedItems
         self.listPrices = Dictionary(listPrices.map { (CatalogOperation.key($0.key), $0.value) },
                                      uniquingKeysWith: { first, _ in first })
         self.catalog = catalog
         self.priceBook = priceBook
+        self.archive = archive
+        self.origin = origin
     }
 
     /// Summe laut Bon, sonst Summe der Positionen.
@@ -208,7 +215,17 @@ final class ReceiptFlowViewModel: ObservableObject {
             line.itemName.map { PricePoint(itemName: $0, storeName: store, purchasedAt: date, price: line.unitPrice) }
         } + manualPrices.map { PricePoint(itemName: $0.item.name, storeName: store, purchasedAt: date, price: $0.price) }
         let saved = await priceBook.save(points)
+        await archiveReceipt(store: store, date: date, savedPrices: saved)
         phase = .done(saved: saved)
+    }
+
+    /// Bon mit Aufnahmen ins Archiv (nur wenn Schalter an; ReceiptArchive prüft das).
+    private func archiveReceipt(store: String, date: Date, savedPrices: Int) async {
+        guard let archive, let origin else { return }
+        await archive.archive(ReceiptArchiveDraft(
+            pages: pages, listId: origin.listId, listTitle: origin.listTitle, createdBy: origin.createdBy,
+            creatorName: origin.creatorName, storeName: store, purchasedAt: date, total: total,
+            lineCount: lines.count, savedPriceCount: savedPrices))
     }
 
     // MARK: - Artikelpreise

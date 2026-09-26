@@ -101,4 +101,5 @@ struct PreviewMocks { // Namespace for preview data and factories.
         .environmentObject(PreviewMocks.makeAppSessionViewModel())
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
 }

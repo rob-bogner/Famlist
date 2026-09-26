@@ -35,6 +35,7 @@ struct ShoppingListView: View {
     @EnvironmentObject var session: AppSessionViewModel
     @EnvironmentObject var categoryStore: CategoryStore
     @EnvironmentObject var priceBook: PriceBook
+    @EnvironmentObject var receiptArchive: ReceiptArchive
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.scenePhase) private var scenePhase
     /// Bedienungshilfe „Bewegung reduzieren“: Sheets/Overlays nur ein-/ausblenden, keine Federn.
@@ -220,6 +221,7 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
                                                lists: PreviewListsRepository(), listViewModel: listVM))
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
 }
 
 #Preview("Dark") {
@@ -231,5 +233,6 @@ private struct CloseSwipedRowOnScroll: ViewModifier {
                                                lists: PreviewListsRepository(), listViewModel: listVM))
         .environmentObject(CategoryStore(repository: nil))
         .environmentObject(PriceBook(repository: nil))
+        .environmentObject(ReceiptArchive(repository: nil))
         .preferredColorScheme(.dark)
 }
