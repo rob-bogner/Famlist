@@ -28,30 +28,16 @@ struct ShoppingListContent: View {
     @EnvironmentObject var listViewModel: ListViewModel
     let t: ListTheme
     @Binding var openRow: OpenSwipeRow?
-    var onSearch: () -> Void = {}
-    var onScan: () -> Void = {}
-    var onShowLists: () -> Void = {}
-    var onMenu: () -> Void = {}
     var onEdit: (ItemModel) -> Void = { _ in }
     var onShowImage: (ItemModel) -> Void = { _ in }
 
     @State private var draggingId: String?
-    /// Einstellungen → Liste → „Preise anzeigen“ (Summe in der Fortschrittskarte).
-    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
 
 
     var body: some View {
         let sections = listViewModel.visibleSections
         LazyVStack(alignment: .leading, spacing: 0) {
-            ListTopBar(t: t, title: listViewModel.defaultList?.title ?? String(localized: "shoppingList.title"),
-                       onShowLists: onShowLists, onMenu: onMenu)
-            ListSearchBar(t: t, action: onSearch, onScan: onScan)
-                .padding(.top, 18)
-            ProgressHero(t: t, checked: listViewModel.checkedItemCount, total: listViewModel.totalItemCount,
-                         totalPrice: showPrices ? PriceDisplaySetting.total(of: listViewModel.items) : nil)
-                .padding(.top, 18)
-            ListFilterTabs(t: t, selection: $listViewModel.itemFilter)
-                .padding(.top, 18)
+            // Kopf (Titel, Suche, Fortschritt, Tabs) liegt jetzt in CollapsingListHeader (ShoppingListView).
             if listViewModel.items.isEmpty && !listViewModel.isLoadingNextPage {
                 ListEmptyState(t: t)
                     .padding(.top, 44)                 // gap 18 + margin-top 26

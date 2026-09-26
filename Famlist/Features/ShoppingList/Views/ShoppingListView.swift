@@ -61,6 +61,9 @@ struct ShoppingListView: View {
     @State var receiptFlow: ReceiptFlowViewModel?
     /// Fehlermeldung des ListViewModels als Toast (blendet nach 3 s aus).
     @State var errorToast: String?
+    /// Scroll-Weg der Liste; nur CollapsingListHeader liest ihn (sonst würde die ganze Liste je Frame neu berechnet).
+    @State var listScroll = ListScrollState()
+    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
 
     var appearance: Appearance { Appearance(colorScheme) }
 
@@ -134,19 +137,38 @@ struct ShoppingListView: View {
 
     private func listLayer(t: ListTheme) -> some View {
         ScrollView {
-            ShoppingListContent(
-                t: t,
-                openRow: $openRow,
-                onSearch: openSearch,
-                onScan: openScanner,
-                onShowLists: openLists,
-                onMenu: { open(.menu) },
-                onEdit: { activeSheet = .edit($0) },
-                onShowImage: { activeSheet = .productImage($0) }
-            )
+            VStack(spacing: 0) {
+                // Kopf außerhalb des LazyVStack: bleibt beim weiten Scrollen erhalten und wird oben gehalten.
+                CollapsingListHeader(
+                    t: t,
+                    title: listViewModel.defaultList?.title ?? String(localized: "shoppingList.title"),
+                    checked: listViewModel.checkedItemCount,
+                    total: listViewModel.totalItemCount,
+                    totalPrice: showPrices ? PriceDisplaySetting.total(of: listViewModel.items) : nil,
+                    filter: $listViewModel.itemFilter,
+                    scroll: listScroll,
+                    onShowLists: openLists,
+                    onSearch: openSearch,
+                    onScan: openScanner,
+                    onMenu: { open(.menu) })
+                ShoppingListContent(
+                    t: t,
+                    openRow: $openRow,
+                    onEdit: { activeSheet = .edit($0) },
+                    onShowImage: { activeSheet = .productImage($0) }
+                )
+            }
             .padding(.horizontal, 20)
             .padding(.bottom, 64 + 28)       // Dock 64 + Luft, damit die letzte Karte frei liegt
+            .background {
+                GeometryReader { geo in
+                    Color.clear.preference(key: ListScrollOffsetKey.self,
+                                           value: -geo.frame(in: .named(ListScrollOffsetKey.coordinateSpace)).minY)
+                }
+            }
         }
+        .coordinateSpace(name: ListScrollOffsetKey.coordinateSpace)
+        .modifier(TrackListScrollOffset(onChange: { [listScroll] in listScroll.offset = $0 }))
         .scrollIndicators(.hidden)
         .refreshable { await listViewModel.pullToRefresh() }   // FAM-40
         .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
@@ -192,6 +214,27 @@ struct LayoutShift {
     var dockShift: CGFloat { 34 - dockBottom }
     /// Verschiebung für Overlays, die sich auf die Oberkante (62) beziehen.
     var topShift: CGFloat { top - 62 }
+}
+
+/// Liefert die Scroll-Position der Liste. iOS 18+: onScrollGeometryChange (zuverlässig während des Scrollens –
+/// die GeometryReader-Preference kam auf dem Gerät nicht an, der kompakte Kopf erschien nie).
+/// iOS 17: Fallback über ListScrollOffsetKey (GeometryReader im Inhalt).
+private struct TrackListScrollOffset: ViewModifier {
+    let onChange: @MainActor (CGFloat) -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.y + geo.contentInsets.top          // 0 = ganz oben, negativ beim Ziehen
+            } action: { _, offset in
+                onChange(offset)
+            }
+        } else {
+            content.onPreferenceChange(ListScrollOffsetKey.self) { offset in
+                MainActor.assumeIsolated { onChange(offset) }            // Preferences kommen auf dem Main-Thread
+            }
+        }
+    }
 }
 
 /// Schließt eine offene Wisch-Zeile, sobald der Nutzer die Liste scrollt (iOS 18+, wie in Mail).
