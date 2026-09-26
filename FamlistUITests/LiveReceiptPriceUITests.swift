@@ -31,6 +31,7 @@ final class LiveReceiptPriceUITests: XCTestCase {
     private let shots = ProcessInfo.processInfo.environment["FAMLIST_SHOTS"]
     private let jelly = "Livetest Quittengelee"
     private let juice = "Livetest Birnensaft"
+    private var steps: LiveReceiptSteps { LiveReceiptSteps(app: app, shot: { self.shot($0) }) }
 
     override func setUp() async throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["FAMLIST_LIVE"] == "1", "nur mit TEST_RUNNER_FAMLIST_LIVE=1")
@@ -42,9 +43,9 @@ final class LiveReceiptPriceUITests: XCTestCase {
     }
 
     func test_live_pricesSaved_byEdit_andByReceipt() {
-        signInIfNeeded()
-        createNew(jelly)
-        createNew(juice)
+        steps.signInIfNeeded()
+        steps.createNew(jelly)
+        steps.createNew(juice)
         XCTAssertTrue(checkButton(jelly).waitForExistence(timeout: 10), "Quittengelee steht auf der Liste")
         XCTAssertTrue(checkButton(juice).waitForExistence(timeout: 10), "Birnensaft steht auf der Liste")
 
@@ -57,10 +58,10 @@ final class LiveReceiptPriceUITests: XCTestCase {
         assertServerPrice(jelly, 1.11)
 
         // 2) Kassenzettel → „Preise übernehmen“
-        scanReceiptFromPhotos()
+        steps.scanReceiptFromPhotos()
         let save = app.buttons["Preise speichern"]
         XCTAssertTrue(save.waitForExistence(timeout: 10), "Kassenzettel prüfen")
-        XCTAssertTrue(waitUntil(20) { save.isEnabled }, "Positionen erkannt und zugeordnet")
+        XCTAssertTrue(steps.waitUntil(20) { save.isEnabled }, "Positionen erkannt und zugeordnet")
         shot("2-review")
         save.tap()
         let alert = app.alerts["Artikelpreise aktualisieren?"]
@@ -98,9 +99,9 @@ final class LiveReceiptPriceUITests: XCTestCase {
     /// „Abgehakte löschen & fertig“. Danach sind die Artikel weg; neu hinzugefügt tragen sie den Bon-Preis
     /// (aus dem Artikelstamm).
     func test_live_receiptAfterShopping_pricesSurviveFinish() {
-        signInIfNeeded()
-        createNew(jelly)
-        createNew(juice)
+        steps.signInIfNeeded()
+        steps.createNew(jelly)
+        steps.createNew(juice)
         setPriceViaEdit(jelly, to: "1,11")
         setPriceViaEdit(juice, to: "0,5")
         XCTAssertTrue(priceLabel("0,50").waitForExistence(timeout: 5), "Birnensaft 0,50 €")
@@ -109,10 +110,10 @@ final class LiveReceiptPriceUITests: XCTestCase {
         let scan = app.buttons["Kassenzettel scannen"]
         XCTAssertTrue(scan.waitForExistence(timeout: 8), "„Einkauf erledigt“ bietet den Scan an")
         scan.tap()
-        pickReceiptPhoto()
+        steps.pickReceiptPhoto()
         let save = app.buttons["Preise speichern"]
         XCTAssertTrue(save.waitForExistence(timeout: 10), "Kassenzettel prüfen")
-        XCTAssertTrue(waitUntil(20) { save.isEnabled }, "Positionen erkannt und zugeordnet")
+        XCTAssertTrue(steps.waitUntil(20) { save.isEnabled }, "Positionen erkannt und zugeordnet")
         save.tap()
         let alert = app.alerts["Artikelpreise aktualisieren?"]
         XCTAssertTrue(alert.waitForExistence(timeout: 5), "Rückfrage erscheint")
@@ -164,36 +165,7 @@ final class LiveReceiptPriceUITests: XCTestCase {
         XCTAssertTrue(checkButton(name).waitForExistence(timeout: 10), "\(name) wieder auf der Liste")
     }
 
-    private func signInIfNeeded() {
-        let list = app.buttons["Artikel suchen oder hinzufügen"]
-        if list.waitForExistence(timeout: 12) { return }
-        let profileDone = app.buttons["Los geht’s"]
-        if profileDone.exists {
-            profileDone.tap()
-            XCTAssertTrue(list.waitForExistence(timeout: 20), "Liste nach Profil anlegen")
-            return
-        }
-        XCTAssertTrue(app.openTestAccountsDialog(), "Anmeldebildschirm")
-        let tester = app.buttons["Tester"]
-        XCTAssertTrue(tester.waitForExistence(timeout: 5), "Testkonten-Dialog")
-        tester.tap()
-        XCTAssertTrue(list.waitForExistence(timeout: 30), "Liste nach Anmeldung")
-    }
 
-    /// Suche → „Neu anlegen“ → „Zur Liste hinzufügen“ (landet auch im Artikelstamm).
-    private func createNew(_ name: String) {
-        app.buttons["Artikel suchen oder hinzufügen"].tap()
-        let field = app.textFields["Artikel suchen"]
-        XCTAssertTrue(field.waitForExistence(timeout: 5))
-        field.typeText(name)
-        let cta = app.buttons["Neu anlegen: „\(name)“"]
-        XCTAssertTrue(cta.waitForExistence(timeout: 8), "Neu anlegen")
-        cta.tap()
-        let save = app.buttons["Zur Liste hinzufügen"]
-        XCTAssertTrue(save.waitForExistence(timeout: 5), "Formular „Neuer Artikel“")
-        save.tap()
-        XCTAssertTrue(checkButton(name).waitForExistence(timeout: 10), "\(name) auf der Liste")
-    }
 
     /// Wischen nach links → „Bearbeiten“ → Preis eintippen → „Speichern“.
     private func setPriceViaEdit(_ name: String, to price: String) {
@@ -259,34 +231,7 @@ final class LiveReceiptPriceUITests: XCTestCase {
         return value
     }
 
-    /// ☰ → „Kassenzettel scannen“ → „Aus Fotos wählen“ → neuestes Foto → „Kassenzettel prüfen“.
-    private func scanReceiptFromPhotos() {
-        app.buttons["Mehr"].tap()
-        let menuItem = app.buttons["Kassenzettel scannen"]
-        XCTAssertTrue(menuItem.waitForExistence(timeout: 5), "Menü")
-        menuItem.tap()
-        pickReceiptPhoto()
-    }
 
-    /// In der Aufnahme: „Aus Fotos wählen“ → neuestes Foto → bestätigen (öffnet „Kassenzettel prüfen“).
-    private func pickReceiptPhoto() {
-        let pick = app.buttons["Aus Fotos wählen"]
-        XCTAssertTrue(pick.waitForExistence(timeout: 5), "Kassenzettel-Aufnahme")
-        pick.tap()
-        let photos = app.images.matching(NSPredicate(format: "label BEGINSWITH %@ OR label BEGINSWITH %@", "Foto", "Photo"))
-        XCTAssertTrue(photos.firstMatch.waitForExistence(timeout: 10), "Fotoauswahl\n\(app.debugDescription)")
-        shot("picker")
-        // Neuestes Foto = oben links im Raster (Bezeichnung „Foto, 25. September, 23:15“; Beispielfotos sind älter).
-        let receipt = photos.allElementsBoundByIndex
-            .min { ($0.frame.minY, $0.frame.minX) < ($1.frame.minY, $1.frame.minX) } ?? photos.firstMatch
-        // Die Fotoauswahl läuft in einem Systemprozess: Elemente gelten als „nicht antippbar“ → auf die Position tippen.
-        let frame = receipt.frame
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
-        let add = app.buttons.matching(NSPredicate(format: "label IN %@", ["Hinzufügen", "Add", "Fertig", "Done"])).firstMatch
-        XCTAssertTrue(add.waitForExistence(timeout: 5), "Fotoauswahl bestätigen\n\(app.debugDescription)")
-        let addFrame = add.frame
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: addFrame.midX, dy: addFrame.midY)).tap()
-    }
 
     private func relaunchAfterSync() {
         Thread.sleep(forTimeInterval: 5)                      // Senden + Realtime-Echo abwarten
@@ -338,14 +283,6 @@ final class LiveReceiptPriceUITests: XCTestCase {
         text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? text
     }
 
-    private func waitUntil(_ seconds: TimeInterval, _ condition: () -> Bool) -> Bool {
-        let deadline = Date().addingTimeInterval(seconds)
-        while Date() < deadline {
-            if condition() { return true }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
-        }
-        return condition()
-    }
 
     private func shot(_ name: String) {
         guard let shots else { return }
