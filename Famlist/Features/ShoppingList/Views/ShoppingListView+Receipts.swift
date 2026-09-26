@@ -41,7 +41,8 @@ extension ShoppingListView {
                                    onUpdateItemPrices: { changes in
                                        Task { await listViewModel.applyReceiptPrices(changes) }
                                    },
-                                   onSetItemBought: { item, bought in setItemChecked(item, bought) })
+                                   onSetItemBought: { item, bought in setItemChecked(item, bought) },
+                                   keyboardHeight: keyboard.height)
             }
         case .shoppingDone:
             ShoppingDoneView(appearance: appearance,

@@ -25,8 +25,11 @@ struct SheetPriceField: View {
     let k: SheetTheme
     @Binding var price: String
     var hasError = false
+    /// true: Feld bekommt beim Erscheinen sofort den Fokus (Zahlentastatur geht auf), z. B. „Preis eingeben“.
+    var autoFocus = false
 
     @State private var text = ""
+    @FocusState private var focused: Bool
     private var separator: String { Locale.current.decimalSeparator ?? "," }
 
     var body: some View {
@@ -37,6 +40,7 @@ struct SheetPriceField: View {
                 .foregroundStyle(k.text)
                 .tint(k.accent)
                 .accessibilityLabel("Preis")
+                .focused($focused)
                 .onChange(of: text) { _, newValue in apply(newValue) }
             Text(Locale.current.currencySymbol ?? "€")
                 .font(AppFont.dm(16, 600))
@@ -48,6 +52,11 @@ struct SheetPriceField: View {
         .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1,
                            borderColor: hasError ? .hex("#E5484D") : k.fieldBorder))
         .onAppear { text = displayText(from: price) }
+        .task {
+            guard autoFocus else { return }
+            try? await Task.sleep(for: .milliseconds(150))       // erst nach dem Einblenden fokussieren
+            focused = true
+        }
     }
 
     /// Keeps digits and one separator, then writes the dot-decimal value back to the binding.

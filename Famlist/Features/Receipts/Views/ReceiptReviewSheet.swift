@@ -36,6 +36,8 @@ struct ReceiptReviewSheet: View {
     var onUpdateItemPrices: ([ReceiptPriceChange]) -> Void = { _ in }
     /// „Nicht gekauft“ / „Rückgängig“: Artikel auf der Liste wieder öffnen bzw. erneut abhaken.
     var onSetItemBought: (ItemModel, Bool) -> Void = { _, _ in }
+    /// Höhe der Tastatur (KeyboardObserver): Inhalt endet darüber, damit das Preisfeld sichtbar bleibt.
+    var keyboardHeight: CGFloat = 0
 
     @State private var correcting: ReceiptReviewLine?
     @State private var editingStore = false
@@ -43,6 +45,8 @@ struct ReceiptReviewSheet: View {
     @State private var isSaving = false
     @State private var pendingPriceChanges: [ReceiptPriceChange] = []
     @State private var askingPriceUpdate = false
+    /// Artikel, dessen „Preis eingeben“ gerade offen ist (Ziel fürs Scrollen über die Tastatur).
+    @State private var editingPriceItem: String?
 
     var body: some View {
         let k = SheetTheme(appearance)
@@ -65,6 +69,7 @@ struct ReceiptReviewSheet: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         // Design: Kopfkarte, Zuordnung und „Nicht auf dem Bon gefunden“ scrollen gemeinsam.
+                      ScrollViewReader { proxy in
                         ScrollView {
                           VStack(spacing: 0) {
                             summaryCard(t: t)
@@ -92,17 +97,28 @@ struct ReceiptReviewSheet: View {
 
                             Color.clear.frame(height: 16)
                           }
+                          // Tipp auf freie Fläche (auch zwischen den Karten) schließt die Zahlentastatur.
+                          .background { Color.clear.contentShape(Rectangle()).onTapGesture(perform: dismissKeyboard) }
                         }
                         .scrollIndicators(.hidden)
+                        .scrollDismissesKeyboard(.interactively)
+                        .onChange(of: keyboardHeight) { _, _ in scrollToPriceField(proxy) }
+                        .onChange(of: editingPriceItem) { _, _ in scrollToPriceField(proxy) }
+                      }
 
-                        CTAButton(title: isSaving ? "Wird gespeichert …" : "Preise speichern", k: k,
-                                  isEnabled: flow.savableCount > 0 && !isSaving, action: save)
+                        // Bei offener Tastatur weg: sonst bliebe über der Tastatur kaum Platz für das Preisfeld.
+                        if keyboardHeight == 0 {
+                            CTAButton(title: isSaving ? "Wird gespeichert …" : "Preise speichern", k: k,
+                                      isEnabled: flow.savableCount > 0 && !isSaving, action: save)
+                        }
                     }
                 }
                 .padding(.top, 10)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 34)
+                .padding(.bottom, keyboardHeight > 0 ? keyboardHeight + 12 : 34)   // Inhalt endet über der Tastatur
+                .animation(.easeOut(duration: 0.25), value: keyboardHeight)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .background { Color.clear.contentShape(Rectangle()).onTapGesture(perform: dismissKeyboard) }
             }
         }
         .confirmationDialog(correcting.map { "„\($0.raw)“ zuordnen" } ?? "", isPresented: correctingBinding,
@@ -199,6 +215,9 @@ struct ReceiptReviewSheet: View {
                     onUndo: {
                         if flow.missingResolutions[item.id] == .notBought { onSetItemBought(item, true) }
                         flow.clearResolution(for: item)
+                    },
+                    onPriceEditing: { editing in
+                        if editing { editingPriceItem = item.id } else if editingPriceItem == item.id { editingPriceItem = nil }
                     })
             }
         }
@@ -256,12 +275,29 @@ struct ReceiptReviewSheet: View {
         }
     }
 
+    /// Karte mit offenem Preisfeld vollständig über die Tastatur scrollen (Kartenunterkante = unterer Rand).
+    private func scrollToPriceField(_ proxy: ScrollViewProxy) {
+        guard let id = editingPriceItem, keyboardHeight > 0 else { return }
+        // Kurz warten, bis der Bereich über der Tastatur neu vermessen ist (Padding ändert sich gleichzeitig).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            withAnimation(.easeOut(duration: 0.25)) {
+                proxy.scrollTo(ReceiptMissingItemCard.priceFieldID(id), anchor: .bottom)
+            }
+        }
+    }
+
+    /// Zahlentastatur („Preis eingeben“) hat keinen Fertig-Knopf → per Tipp daneben schließen.
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
     private var correctingBinding: Binding<Bool> {
         Binding(get: { correcting != nil }, set: { if !$0 { correcting = nil } })
     }
 
     /// Weichen Preise ab → erst fragen, sonst direkt speichern.
     private func save() {
+        dismissKeyboard()
         let changes = flow.priceChanges
         if changes.isEmpty {
             persist(updating: [])

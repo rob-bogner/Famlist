@@ -29,6 +29,8 @@ struct ReceiptMissingItemCard: View {
     var onPrice: (Decimal) -> Void = { _ in }
     var onNotBought: () -> Void = {}
     var onUndo: () -> Void = {}
+    /// Meldet „Preis eingeben“ offen/zu – die Liste scrollt das Preisfeld dann über die Tastatur.
+    var onPriceEditing: (Bool) -> Void = { _ in }
 
     private enum Mode { case none, assign, price }
     @State private var mode: Mode = .none
@@ -78,6 +80,11 @@ struct ReceiptMissingItemCard: View {
         .background(CSSBox(shape: RR(24), paint: t.card, border: 1,
                            borderColor: mode != .none && resolution == nil ? k.ring : t.cardBorder,
                            shadows: t.cardShadow))
+        .id(Self.priceFieldID(item.id))        // Ziel für ScrollViewReader: ganze Karte über der Tastatur
+        .onChange(of: mode) { _, newMode in
+            if newMode != .price { dismissKeyboard() }
+            onPriceEditing(newMode == .price)
+        }
         .animation(.easeOut(duration: 0.2), value: mode)
         .animation(.easeOut(duration: 0.2), value: resolution)
     }
@@ -177,8 +184,8 @@ struct ReceiptMissingItemCard: View {
     private func priceEntry(k: SheetTheme) -> some View {
         let value = Decimal(string: priceText, locale: Locale(identifier: "en_US_POSIX")) ?? 0
         return HStack(spacing: 10) {
-            SheetPriceField(k: k, price: $priceText)
-            Button(action: { onPrice(value); mode = .none }) {
+            SheetPriceField(k: k, price: $priceText, autoFocus: true)
+            Button(action: { dismissKeyboard(); onPrice(value); mode = .none }) {
                 Text("Übernehmen")
                     .font(AppFont.dm(15, 600))
                     .foregroundStyle(k.ctaText)
@@ -191,6 +198,12 @@ struct ReceiptMissingItemCard: View {
             .disabled(value <= 0)
             .opacity(value > 0 ? 1 : 0.45)
         }
+    }
+
+    static func priceFieldID(_ itemId: String) -> String { "receiptPrice-\(itemId)" }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func resolvedLine(icon: [SVGElement], color: Color, text: String, k: SheetTheme) -> some View {
