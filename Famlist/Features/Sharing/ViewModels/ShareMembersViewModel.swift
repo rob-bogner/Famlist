@@ -6,13 +6,14 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Lädt Besitzer und Mitglieder einer Liste für „Mitglieder & Teilen“, entfernt Mitglieder (nur Besitzer).
+ - Archivierte Mitglieder (Konto gelöscht, noch wiederherstellbar) zeigt und entfernt nur der Besitzer.
 
  🔰 Notes for Beginners:
  - list_members enthält nur Mitglieder ohne Besitzer; den Besitzer lädt `profile(id:)`.
  - Man selbst erscheint als „Name (Du)“ wie im Design („Rob (Du)“).
 
  📝 Last Change:
- - Einladungslink mit Token vom Server statt Listen-ID (Audit 25.09.2026).
+ - Archivierte Mitglieder anzeigen und entfernen (Konto-Archiv, 27.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -25,21 +26,29 @@ final class ShareMembersViewModel: ObservableObject {
     @Published var errorMessage: String?
     /// Einladungslink mit Token (Migration 014). nil, bis der Server ihn geliefert hat (offline: bleibt nil).
     @Published private(set) var inviteURL: URL?
+    /// Mitglieder mit gelöschtem Konto, die noch wiederherstellen können (nur für den Besitzer, Migration 027).
+    @Published private(set) var archivedMembers: [ArchivedListMember] = []
 
     let list: ListModel
     private let me: Profile?
     private let lists: ListsRepository?
     private let profiles: ProfilesRepository?
+    private let accounts: AccountRepository?
 
-    init(list: ListModel, me: Profile?, lists: ListsRepository?, profiles: ProfilesRepository?) {
+    init(list: ListModel, me: Profile?, lists: ListsRepository?, profiles: ProfilesRepository?,
+         accounts: AccountRepository? = nil) {
         self.list = list
         self.me = me
         self.lists = lists
         self.profiles = profiles
+        self.accounts = accounts
         members = [ownerRow(name: me.map(\.displayName))].compactMap { $0 }
     }
 
     var isOwner: Bool { list.ownerId == me?.id }
+
+    /// Zahl für „Mitglieder · N“: aktive und archivierte (Board ShareMembersArchived).
+    var memberCount: Int { members.count + archivedMembers.count }
 
     func load() async {
         isLoading = true
@@ -64,6 +73,25 @@ final class ShareMembersViewModel: ObservableObject {
             errorMessage = "Mitglieder konnten nicht geladen werden."
         }
         members = rows
+        if isOwner, let archived = try? await accounts?.archivedMembers(listId: list.id) {
+            archivedMembers = archived
+        }
+    }
+
+    /// Besitzer entfernt ein Mitglied mit gelöschtem Konto endgültig (kommt beim Wiederherstellen nicht zurück).
+    func removeArchived(_ member: ArchivedListMember) {
+        guard isOwner, let accounts else { return }
+        let previous = archivedMembers
+        archivedMembers.removeAll { $0.id == member.id }
+        UserLog.Data.archivedMemberRemoved(name: member.name)
+        Task {
+            do {
+                try await accounts.removeArchivedMember(listId: list.id, profileId: member.id)
+            } catch {
+                archivedMembers = previous
+                errorMessage = "„\(member.name)“ konnte nicht entfernt werden."
+            }
+        }
     }
 
     /// Besitzer entfernt ein Mitglied (Wischen).

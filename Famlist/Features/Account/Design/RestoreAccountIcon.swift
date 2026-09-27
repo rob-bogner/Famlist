@@ -34,6 +34,9 @@ enum RestoreAccountIcon {
                                         .circle(17, 9.5, 2.4), .path("M16.5 14.6c2.2.1 3.6 1.5 4.1 4")]
     /// Listen anderer (Pfeil hinein)
     static let enter: [SVGElement] = [.path("M4 12h11M11 8l4 4-4 4"), .path("M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4")]
+    /// Person mit Minus (MemberDeletedToast)
+    static let memberLeft: [SVGElement] = [.circle(10, 8.5, 3.4), .path("M3.5 19.5c.8-3.3 3.3-5.1 6.5-5.1 1.4 0 2.6.3 3.6.9"),
+                                           .path("M16 17h6")]
     /// Offline-Hinweis
     static let offline: [SVGElement] = [.path("M2 8.5a15 15 0 0 1 4.3-2.7M9.5 5.1A15 15 0 0 1 22 8.5M5 12a10 10 0 0 1 3.3-2M13.5 9.6A10 10 0 0 1 19 12M8.5 15.5a5 5 0 0 1 6.2-.6M12 19.5h.01M3 3l18 18")]
 }
