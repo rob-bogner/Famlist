@@ -73,6 +73,7 @@ extension SyncEngine {
     private func write(_ items: [ItemModel], tombstone: Bool, sendImmediately: Bool = true,
                        forceImage: Bool = false) async {
         var seen = Set<String>()
+        var written: [ItemModel] = []
         for item in items where seen.insert(item.id).inserted {
             guard let uuid = UUID(uuidString: item.id), item.listId != nil else {
                 logVoid(params: (action: "write.skip", itemId: item.id, reason: "invalid id or listId"))
@@ -88,7 +89,9 @@ extension SyncEngine {
             do {
                 let entity = try itemStore.writeLocal(model, hlc: hlc, tombstone: tombstone, modifiedBy: hlcGenerator.nodeId)
                 let type: SyncOperationType = tombstone ? .delete : (isNew ? .create : .update)
-                enqueue(entity.toItemModel(), type: type, hlc: hlc, tombstone: tombstone, includeImage: imageChanged)
+                let snapshot = entity.toItemModel()
+                enqueue(snapshot, type: type, hlc: hlc, tombstone: tombstone, includeImage: imageChanged)
+                written.append(snapshot)
             } catch {
                 logVoid(params: (action: "write.error", itemId: item.id, error: error.localizedDescription))
             }
@@ -96,6 +99,7 @@ extension SyncEngine {
         saveStore("write")
         updatePendingCount()
         localWriteObserver?()
+        if !written.isEmpty { writtenItemsObserver?(written) }
         if sendImmediately { await processQueue() }
     }
 

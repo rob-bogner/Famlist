@@ -251,3 +251,18 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ReceiptDetail | „Löschen“ → System-Rückfrage „Kassenzettel löschen?“; der Knopf fehlt, wenn man weder Ersteller noch Besitzer der Liste ist („Teilen“ dann volle Breite) | Löschen betrifft alle Mitglieder (wie Liste löschen); Server erlaubt nur Ersteller/Besitzer (Migration 021) |
 | ReceiptDetail | Vollbild: schwarzer Hintergrund, Zoom 1–5-fach, Doppeltippen 2,5-fach, ✕ oben rechts | KASSENZETTEL_ARCHIV.md „Vollbild mit Zoom“; Vollbild nicht gestaltet |
 
+| Watch (alle Screens) | Titel oben links zeichnet die App selbst; die System-Navigationsleiste ist aus. Die Uhrzeit rechts zeichnet watchOS an seiner Stelle | watchOS 26 setzt Toolbar-Titel in eine eigene Zeile unter die Uhrzeit (Screenshot 26.09.2026) |
+| Watch (alle Screens) | Textzeilen haben die CSS-Höhe; Schriftkanten weichen im Pixelvergleich leicht ab (mittlere Abweichung 2,5–3,0 von 255, ohne Uhrzeit) | Chrome und CoreText glätten Schrift unterschiedlich; Lage, Größe und Farben stimmen auf 1 px |
+| WatchList | „Alle abhaken“ ohne backdrop-filter: blur(16px) | Unter dem Knopf liegt immer der Verlauf zu Schwarz .85, der Unterschied ist nicht sichtbar |
+| WatchItem | Zurück „‹ My List“ ist ein eigener Knopf statt des runden System-Zurück-Knopfs | Design zeigt „‹ Titel“ |
+| WatchList, WatchDone | Titel oben links ist antippbar und führt zu „Listen“ (ohne „‹“, Aussehen unverändert) | Design zeigt keinen Weg zum Screen „Listen“; Wurzel der Navigation ist „Listen“, die aktive Liste liegt beim Start darauf |
+| WatchList (nicht gestaltet) | Leere Liste: Hinweis „Noch keine Artikel“ (DM 12, weiß .6) unter dem Fortschritt | Kein Design für leere Listen (WATCH_PLAN §5) |
+| WatchList (nicht gestaltet) | Ohne Anmeldung: „N Änderungen warten auf das iPhone“ unter dem Fortschritt | Kein Design; Änderungen bleiben in der Warteschlange (WATCH_PLAN §5) |
+| WatchLists (nicht gestaltet) | Status „Keine Artikel“ für leere Listen | Design kennt nur „x von y offen“, „x offen“, „erledigt“ |
+| Watch (nicht gestaltet) | Statusbildschirm „Verbinde mit dem iPhone …“ / „Öffne Famlist auf dem iPhone, um die Uhr anzumelden.“ mit Knopf „Erneut versuchen“ im Stil von „Zurücksetzen“ | Kein Design für die Anmeldung der Uhr (WATCH_PLAN §5) |
+| WatchAdd | Detailzeile „Oft gekauft“: Kategorie, sonst Einheit („Stück“) statt Menge („10 Stück“) | Der Artikelstamm speichert keine Menge |
+| WatchList | Mengen wie auf dem iPhone: ohne Einheit nur die Zahl („6“ statt „6 Stück“) | Gleiche Anzeige auf beiden Geräten (ItemModel.quantityText) |
+| Watch (alle Screens) | Größere Textgröße der Uhr: Schriften wachsen bis +24 % (wie iPhone), Zeilen und Titelzeile wachsen mit, Texte bis zu zwei Zeilen statt abgeschnitten; Standardgröße bleibt pixelgenau (geprüft: 46 mm, Standard xLarge = Faktor 1; accessibility3 = 1,24 ohne Abschneiden) | WATCH_PROMPT: „Dynamic Type darf nichts abschneiden“; Design gilt für die Standardgröße |
+| Watch (alle Screens) | Sehr lange Titel verkleinern sich bis 80 %, statt mit „…“ abzuschneiden | Titelzeile ist einzeilig |
+| WatchList | VoiceOver: jede Artikelzeile ist ein Element („Name, Menge“, Wert „offen/erledigt“); Doppeltippen öffnet, Aktion „Abhaken“/„Wieder öffnen“ | Design hat zwei Tippflächen je Zeile; so bleibt es für VoiceOver eine Zeile (WATCH_PLAN §5) |
+| Watch-Widgets | Smart Stack und Komplikationen skalieren nicht mit der Textgröße | Feste Flächen des Systems (44-pt-Kreis, Karte) |

@@ -8,7 +8,7 @@
  - Artikel anlegen, bearbeiten, umbenennen, löschen, erneut senden und abhaken (Offline-First über die SyncEngine).
 
  📝 Last Change:
- - Aus ListViewModel.swift ausgelagert (Audit 25.09.2026).
+ - Hinzufügen zählt im Artikelstamm für „Oft gekauft“ (Migration 022, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -45,7 +45,7 @@ extension ListViewModel {
             measure: normalized.measure
         )
 
-        saveToCatalog(normalized, barcode: barcode)
+        saveToCatalog(normalized, barcode: barcode, countUse: true)
 
         // Gerade weggewischt und noch im Rückgängig-Zeitraum? Dann erst die Löschung festschreiben und
         // danach neu anlegen – beides in dieser Reihenfolge, damit das Anlegen die neuere HLC bekommt.
@@ -78,18 +78,37 @@ extension ListViewModel {
                                           measure: incremented.measure)
         items[index] = incremented
         updateItem(incremented, suppressUserLog: true)
+        noteCatalogUse(names: [incremented.name])                // erneut hinzugefügt → zählt für „Oft gekauft“
     }
 
     /// Artikelstamm im Hintergrund ergänzen (blockiert die Liste nicht).
-    private func saveToCatalog(_ item: ItemModel, barcode: String?) {
+    /// - Parameter countUse: true beim Hinzufügen zu einer Liste → Zähler „Oft gekauft“ (Migration 022).
+    ///   Der Zähl-Auftrag folgt dem Speichern in derselben Aufgabe, damit der Eintrag schon existiert.
+    private func saveToCatalog(_ item: ItemModel, barcode: String?, countUse: Bool = false) {
         guard let catalogRepo = catalogRepository else { return }
         var catalogEntry = ItemCatalogEntry.from(item: item, ownerPublicId: "")
         catalogEntry.barcode = barcode
+        let usedAt = Date()
         Task {
             do {
                 try await catalogRepo.save(catalogEntry)
+                if countUse { try await catalogRepo.noteUse(names: [item.name], at: usedAt) }
             } catch {
                 logVoid(params: (action: "catalogSave.failed", itemName: item.name, error: (error as NSError).localizedDescription))
+            }
+        }
+    }
+
+    /// Hinzufügungen ohne neuen Artikelstamm-Eintrag zählen (Menge erhöht, Sammel-Import).
+    /// Namen, die nicht im eigenen Artikelstamm stehen, ignoriert der Server.
+    internal func noteCatalogUse(names: [String]) {
+        guard let catalogRepo = catalogRepository, !names.isEmpty else { return }
+        let usedAt = Date()
+        Task {
+            do {
+                try await catalogRepo.noteUse(names: names, at: usedAt)
+            } catch {
+                logVoid(params: (action: "catalogNoteUse.failed", count: names.count, error: (error as NSError).localizedDescription))
             }
         }
     }

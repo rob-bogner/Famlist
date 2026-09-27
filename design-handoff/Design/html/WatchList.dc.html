@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Watch – Einkaufsliste</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#000;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<!-- Apple Watch 46 mm: 208 × 248 pt · watchOS ist immer dunkel -->
+<div style="width: 208px; height: 248px; position: relative; overflow: hidden; background: radial-gradient(120% 70% at 50% 110%, {{w.glow}}, rgba(0,0,0,0) 60%), #000000; color: #FFFFFF; font-family: 'DM Sans', system-ui, sans-serif">
+<div style="position: absolute; left: 14px; right: 14px; top: 10px; height: 22px; display: flex; align-items: center; justify-content: space-between">
+<span style="font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: {{w.accentText}}">My List</span>
+<span style="font-size: 15px; font-weight: 600; color: #FFFFFF">9:41</span>
+</div>
+<div style="position: absolute; left: 12px; right: 12px; top: 38px; bottom: 0px; display: flex; flex-direction: column; gap: 6px; overflow: hidden">
+<div style="padding: 0 4px 2px 4px; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0"><span style="font-size: 12px; color: {{w.sub}}"><b style="color: #FFFFFF; font-weight: 600">2</b> von 6 erledigt</span><span style="height: 5px; border-radius: 3px; background: {{w.track}}; overflow: hidden"><span style="display: block; width: 33%; height: 5px; border-radius: 3px; background: {{w.fill}}"></span></span></div>
+<span style="padding: 4px 4px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: {{w.sub}}">Obst &amp; Gemüse</span>
+<div style="height: 46px; box-sizing: border-box; padding: 0 12px; border-radius: 18px; background: {{w.card}}; border: 1px solid {{w.cardBorder}}; box-shadow: {{w.cardShadow}}; display: flex; align-items: center; gap: 10px; flex-shrink: 0"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{w.ring}}; flex-shrink: 0"></span><span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Bananen</span><span style="font-size: 12px; color: {{w.sub}}; white-space: nowrap">6 Stück</span></span></div>
+<div style="height: 46px; box-sizing: border-box; padding: 0 12px; border-radius: 18px; background: {{w.card}}; border: 1px solid {{w.cardBorder}}; box-shadow: {{w.cardShadow}}; display: flex; align-items: center; gap: 10px; flex-shrink: 0"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{w.ring}}; flex-shrink: 0"></span><span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tomaten</span><span style="font-size: 12px; color: {{w.sub}}; white-space: nowrap">500 g</span></span></div>
+<div style="height: 46px; box-sizing: border-box; padding: 0 12px; border-radius: 18px; background: {{w.card}}; border: 1px solid {{w.cardBorder}}; box-shadow: {{w.cardShadow}}; display: flex; align-items: center; gap: 10px; flex-shrink: 0; opacity: 0.55"><span style="width: 26px; height: 26px; border-radius: 50%; background: {{w.checkFill}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 500; text-decoration: line-through; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Äpfel</span><span style="font-size: 12px; color: {{w.sub}}; white-space: nowrap">1 kg</span></span></div>
+</div>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 70px; background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 55%); pointer-events: none"></div>
+<button aria-label="Alle abhaken" style="position: absolute; left: 10px; bottom: 8px; width: 42px; height: 42px; border-radius: 50%; border: 1px solid {{w.glassBorder}}; background: {{w.glassBtn}}; backdrop-filter: blur(16px); padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 7 17l-5-5M22 10l-7.5 7.5L13 16"></path></svg></button>
+<button aria-label="Artikel hinzufügen" style="position: absolute; right: 10px; bottom: 8px; width: 42px; height: 42px; border-radius: 50%; border: 0; background: {{w.fab}}; box-shadow: {{w.fabShadow}}; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer"><span style="position: absolute; left: 8px; right: 8px; top: 3px; height: 15px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0)); pointer-events: none"></span><svg style="position: relative" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1FC2CC","options":["#1FC2CC","#4C8DFF","#8B6CFF","#FF8A4C"]},"$preview":{"width":208,"height":248}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#1FC2CC';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, 0.5);
+    const w = {
+      accent, accentText: light, glow: rgba(accent, 0.16),
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08))', cardBorder: 'rgba(255,255,255,0.08)',
+      cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+      sub: 'rgba(255,255,255,0.6)', faint: 'rgba(255,255,255,0.4)', line: 'rgba(255,255,255,0.12)',
+      track: 'rgba(255,255,255,0.14)', ring: rgba(accent, 0.55),
+      fill: 'linear-gradient(90deg, ' + light + ', ' + accent + ')',
+      fab: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      fabShadow: 'inset 0 -3px 8px rgba(0,30,34,0.3), 0 0 14px ' + rgba(accent, 0.35),
+      checkFill: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 55%, ' + deep + ' 100%)',
+      glassBtn: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))', glassBorder: 'rgba(255,255,255,0.16)',
+      chip: rgba(accent, 0.2), chipText: light
+    };
+    return { w };
+  }
+}
+</script>
+</body>
+</html>

@@ -13,14 +13,18 @@
  - Äußere Schatten zeichnet Core Animation (CALayer.shadowPath), nicht SwiftUI-`.blur`: Ändert sich eine Box
    in jedem Frame (z. B. der Listenkopf beim Scrollen), musste SwiftUI jede Unschärfe neu rechnen – die Liste
    stotterte (auf dem Gerät nachgewiesen, 26.09.2026). Ein Schatten mit festem Umriss kostet dagegen fast nichts.
+ - Die Uhr-App und ihre Widgets kompilieren diese Datei mit. watchOS hat weder UIKit-Views noch Core Animation;
+   dort zeichnet `DropShadowLayer` den Schatten wie früher mit SwiftUI-`.blur`.
 
  📝 Last Change:
- - Äußere Schatten über Core Animation statt `.blur` (flüssiges Scrollen mit mitklappendem Listenkopf).
+ - watchOS-Zweig für äußere Schatten (SwiftUI-`.blur`), damit Uhr und Widgets wieder bauen.
  ------------------------------------------------------------------------
  */
 
 import SwiftUI
+#if !os(watchOS)
 import UIKit
+#endif
 
 /// Eine vollständige CSS-Box (border-box) mit der CSS-Malreihenfolge:
 /// äußere Schatten → Hintergrund → innere Schatten → Rahmen.
@@ -74,6 +78,25 @@ private struct HardShadowShape<S: InsettableShape>: Shape {
     }
 }
 
+#if os(watchOS)
+/// Äußerer Schatten mit SwiftUI-`.blur`, unter der Box ausgestanzt (watchOS hat kein Core Animation).
+/// Gauß-Radius B / 2 (README: `box-shadow` blur B).
+private struct DropShadowLayer<S: InsettableShape>: View {
+    let shape: S
+    let s: BoxShadow
+
+    var body: some View {
+        ZStack {
+            shape.inset(by: -s.spread)
+                .fill(s.color)
+                .offset(x: s.x, y: s.y)
+                .blur(radius: s.blur / 2)
+            shape.fill(Color.black).blendMode(.destinationOut)
+        }
+        .compositingGroup()
+    }
+}
+#else
 /// Äußerer Schatten als CALayer-Schatten mit festem Umriss (`shadowPath`), unter der Box ausgestanzt.
 /// Gauß-Radius wie bisher B / 2 (README: `box-shadow` blur B).
 private struct DropShadowLayer<S: InsettableShape>: UIViewRepresentable {
@@ -132,6 +155,7 @@ private final class ShadowHostView: UIView {
         CATransaction.commit()
     }
 }
+#endif
 
 private struct InnerShadowLayer<S: InsettableShape>: View {
     let shape: S

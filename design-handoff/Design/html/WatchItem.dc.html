@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Watch – Artikel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#000;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<!-- Apple Watch 46 mm: 208 × 248 pt · watchOS ist immer dunkel -->
+<div style="width: 208px; height: 248px; position: relative; overflow: hidden; background: radial-gradient(120% 70% at 50% 110%, {{w.glow}}, rgba(0,0,0,0) 60%), #000000; color: #FFFFFF; font-family: 'DM Sans', system-ui, sans-serif">
+<div style="position: absolute; left: 14px; right: 14px; top: 10px; height: 22px; display: flex; align-items: center; justify-content: space-between">
+<span style="font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: {{w.accentText}}">‹ My List</span>
+<span style="font-size: 15px; font-weight: 600; color: #FFFFFF">9:41</span>
+</div>
+<div style="position: absolute; left: 12px; right: 12px; top: 40px; bottom: 0px; display: flex; flex-direction: column; gap: 6px; overflow: hidden">
+<div style="padding: 0 4px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0"><span style="font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1">Butter</span><span style="align-self: flex-start; padding: 3px 9px; border-radius: 999px; background: {{w.chip}}; color: {{w.chipText}}; font-size: 12px; font-weight: 600">Milchprodukte</span></div>
+<div style="height: 56px; box-sizing: border-box; padding: 0 6px; border-radius: 18px; background: {{w.card}}; border: 1px solid {{w.cardBorder}}; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0"><span style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"></path></svg></span><span style="display: flex; flex-direction: column; align-items: center; gap: 0"><span style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 600; line-height: 1.05; color: {{w.accentText}}">1</span><span style="font-size: 11px; color: {{w.sub}}">Packung</span></span><span style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></div>
+<span style="text-align: center; font-size: 11px; color: {{w.faint}}; flex-shrink: 0">Menge mit der Krone ändern</span>
+<button style="position: relative; height: 44px; flex-shrink: 0; border-radius: 22px; border: 0; padding: 0; background: linear-gradient(180deg, {{w.accentText}} 0%, {{w.accent}} 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5); color: #04262A; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#04262A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Abhaken</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1FC2CC","options":["#1FC2CC","#4C8DFF","#8B6CFF","#FF8A4C"]},"$preview":{"width":208,"height":248}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#1FC2CC';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, 0.5);
+    const w = {
+      accent, accentText: light, glow: rgba(accent, 0.16),
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08))', cardBorder: 'rgba(255,255,255,0.08)',
+      cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+      sub: 'rgba(255,255,255,0.6)', faint: 'rgba(255,255,255,0.4)', line: 'rgba(255,255,255,0.12)',
+      track: 'rgba(255,255,255,0.14)', ring: rgba(accent, 0.55),
+      fill: 'linear-gradient(90deg, ' + light + ', ' + accent + ')',
+      fab: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      fabShadow: 'inset 0 -3px 8px rgba(0,30,34,0.3), 0 0 14px ' + rgba(accent, 0.35),
+      checkFill: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 55%, ' + deep + ' 100%)',
+      glassBtn: 'linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))', glassBorder: 'rgba(255,255,255,0.16)',
+      chip: rgba(accent, 0.2), chipText: light
+    };
+    return { w };
+  }
+}
+</script>
+</body>
+</html>

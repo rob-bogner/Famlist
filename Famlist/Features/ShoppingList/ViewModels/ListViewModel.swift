@@ -27,7 +27,7 @@
  - All public methods are @MainActor-only for thread safety.
 
  📝 Last Change:
- - Konfiguration, CRUD und Rückmeldungen in eigene Extensions ausgelagert (Audit 25.09.2026).
+ - Alle Listen synchron: allLists passt die Realtime-Kanäle an (Watch-Plan Phase 3, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -57,7 +57,10 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     @Published var defaultList: ListModel? = nil
 
     /// All lists belonging to the current user; populated by loadAllLists(ownerId:).
-    @Published var allLists: [ListModel] = []
+    /// Jede Änderung passt die Realtime-Kanäle an (alle Listen synchron, ListViewModel+AllListsSync).
+    @Published var allLists: [ListModel] = [] {
+        didSet { updateAllListsSync() }
+    }
 
     /// Item counts per list id, sourced from the local SwiftData store.
     @Published var listItemCounts: [UUID: Int] = [:]
@@ -146,6 +149,13 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
     /// Tracks whether realtime observation has started at least once.
     internal var hasObservedActiveList: Bool = false
+
+    /// true im Vordergrund nach startObserving: Kanäle ALLER Listen offen (ListViewModel+AllListsSync).
+    internal var isAllListsSyncActive = false
+
+    /// Von außen übernommene Artikel (Realtime, Delta) je Liste weiterreichen – an die Apple Watch
+    /// (WatchBridge, verdrahtet in FamlistApp). nil = keine Uhr.
+    internal var remoteChangeForwarder: (@MainActor (UUID, Set<String>) -> Void)?
 
     /// Sync orchestrator used by loadNextPage() to serialise page fetches with Realtime events.
     internal var syncOrchestrator: SyncOrchestrator?
@@ -254,6 +264,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Clears view model state in response to sign-out.
     func clearForSignOut() {
         commitPendingDeletion()
+        stopAllListsSync()                                  // vor dem Leeren von allLists
         observeTask?.cancel()
         observeTask = nil
         incrementalSyncTask?.cancel()

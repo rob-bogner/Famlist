@@ -3,7 +3,7 @@
 
  Famlist
  Created on: 12.03.2026
- Last updated on: 12.03.2026
+ Last updated on: 26.09.2026
 
  ------------------------------------------------------------------------
  📄 File Overview:
@@ -21,7 +21,7 @@
  - save() uses upsert to avoid duplicates (unique on owner_public_id + name_lower).
 
  📝 Last Change:
- - Initial creation for FAM-60 smart search feature.
+ - Zähler use_count/last_used_at und noteUse für „Oft gekauft“ (Migration 022, 26.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -49,6 +49,11 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
     var barcode: String? = nil
     /// Storage-Pfad im Bucket `catalog-images` („<user_id>/<sha256>.jpg“, Migration 016).
     var imagePath: String? = nil
+    /// Wie oft der Artikel zu einer Liste hinzugefügt wurde (Migration 022). nil = Stand ohne Zähler.
+    /// Nur lesen: Gezählt wird ausschließlich über `noteUse` (RPC catalog_note_use).
+    var useCount: Int? = nil
+    /// Zeitpunkt der letzten Hinzufügung (Migration 022).
+    var lastUsedAt: Date? = nil
 
     // MARK: - CodingKeys (maps camelCase Swift properties to snake_case DB columns)
 
@@ -64,6 +69,8 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
         case imageData = "image_data"
         case barcode
         case imagePath = "image_path"
+        case useCount = "use_count"
+        case lastUsedAt = "last_used_at"
     }
 
     // MARK: - Factory
@@ -152,6 +159,10 @@ protocol ItemCatalogRepository {
 
     /// Lädt ein Foto des Artikelstamms aus Storage (nil = nicht unterstützt, z. B. Vorschau).
     func downloadImage(path: String) async throws -> Data?
+
+    /// Zählt Hinzufügungen zu einer Liste („Oft gekauft“, Migration 022). Namen ohne Eintrag im
+    /// eigenen Artikelstamm werden ignoriert. `date` = Zeitpunkt der Hinzufügung auf dem Gerät.
+    func noteUse(names: [String], at date: Date) async throws
 }
 
 extension ItemCatalogRepository {
@@ -161,6 +172,7 @@ extension ItemCatalogRepository {
     func delete(id: String) async throws {}
     func find(barcode: String) async throws -> ItemCatalogEntry? { nil }
     func downloadImage(path: String) async throws -> Data? { nil }
+    func noteUse(names: [String], at date: Date) async throws {}
 }
 
 // MARK: - Preview / In-Memory Implementation
