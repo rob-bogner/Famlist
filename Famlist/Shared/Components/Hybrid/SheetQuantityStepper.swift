@@ -75,6 +75,7 @@ struct SheetQuantityStepper: View {
         .padding(.horizontal, 6)                        // 1 border + 5 padding
         .frame(width: 148, height: 52)
         .background(background)
+        .revealsWhenFocused(focused)            // über Schnellwahl-Leiste und Ziffernblock halten
         .animation(.easeOut(duration: 0.15), value: focused)
         .accessibilityElement(children: .contain)
         .accessibilityValue("\(quantity)")

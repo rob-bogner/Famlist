@@ -62,28 +62,25 @@ struct EditItemSheet: View {
 
     /// Menge wird per Ziffernblock bearbeitet → Schnellwahl-Leiste statt CTA.
     @State private var quantityEditing = false
-    private static let quantityRowID = "quantityRow"
 
     private var bottomInset: CGFloat { keyboardHeight > 0 ? keyboardHeight + 14 : 34 }
+    /// Bei offener Tastatur verdeckt: Tastatur + Schnellwahl-Leiste bzw. 14 Abstand + CTA 56, dazu 12 Luft.
+    private var revealInset: CGFloat {
+        keyboardHeight + (quantityEditing ? QuantityPresetBar.height : 14 + 56) + 12
+    }
 
     var body: some View {
         HybridSheetLayer(k: k, title: "Artikel bearbeiten", designHeight: 726, maxHeight: maxHeight, onClose: onClose) {
             ZStack(alignment: .bottom) {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        form
-                            .padding(.top, 16)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 56 + bottomInset + 20)
-                    }
-                    .scrollIndicators(.hidden)
-                    .scrollDismissesKeyboard(.interactively)
-                    // Menge bearbeiten: Zeile über Schnellwahl-Leiste und Ziffernblock holen.
-                    .onChange(of: keyboardHeight) { _, height in
-                        guard quantityEditing, height > 0 else { return }
-                        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(Self.quantityRowID, anchor: .center) }
-                    }
+                // Fokussiertes Feld bleibt über Tastatur und Knopf bzw. Schnellwahl-Leiste sichtbar.
+                KeyboardRevealScrollView(keyboardHeight: keyboardHeight, bottomInset: revealInset) {
+                    form
+                        .padding(.top, 16)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 56 + 34 + 20)
                 }
+                .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
 
 
                 if quantityEditing && keyboardHeight > 0 {
@@ -136,7 +133,6 @@ struct EditItemSheet: View {
                     UnitPickerMenu(k: k, measure: $formVM.measure)
                 }
             }
-            .id(Self.quantityRowID)
 
             VStack(alignment: .leading, spacing: 6) {
                 FieldLabel(text: "Preis", k: k)

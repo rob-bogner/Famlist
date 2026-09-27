@@ -50,6 +50,7 @@ struct ListAccountFocusedField<Leading: View>: View {
         .frame(height: 52)
         .background(CSSBox(shape: RR(16), paint: .color(k.fieldFocus), border: 1.5, borderColor: k.ring,
                            shadows: [.drop(0, 0, 0, 4, k.ringSoft)]))
+        .revealsWhenFocused(focused)            // über der Tastatur halten
         .task {
             guard autoFocus else { return }
             try? await Task.sleep(nanoseconds: 350_000_000)

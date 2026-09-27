@@ -21,6 +21,9 @@
 import SwiftUI
 
 struct QuantityPresetBar: View {
+    /// Höhe der Leiste; die Sheets halten die Mengenzeile um diesen Betrag über dem Ziffernblock.
+    static let height: CGFloat = 50
+
     let k: SheetTheme
     let units: Int
     let measure: String
@@ -56,7 +59,7 @@ struct QuantityPresetBar: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 12)
-        .frame(height: 50)
+        .frame(height: Self.height)
         .frame(maxWidth: .infinity)
         .background(alignment: .top) {
             (k.isDark ? Color.hex("#1F2426") : Color.hex("#F4F6F7"))

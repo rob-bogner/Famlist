@@ -159,7 +159,8 @@ extension ShoppingListView {
                           onOpenReceipts: { activeSheet = .receiptArchive },
                           onDeleteAccount: { deleteAccountError = nil; activeSheet = .deleteAccount })
         case .editProfile:
-            EditProfileSheet(appearance: appearance, onClose: { hideKeyboard(); activeSheet = .settings })
+            EditProfileSheet(appearance: appearance, keyboardHeight: keyboard.height,
+                             onClose: { hideKeyboard(); activeSheet = .settings })
         case .manageCategories:
             ManageCategoriesSheet(store: categoryStore, appearance: appearance, onClose: closeSheet,
                                   onEdit: { activeSheet = .editCategory($0) },
