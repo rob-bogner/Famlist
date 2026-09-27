@@ -32,6 +32,8 @@ extension ShoppingListView {
         case "copy": activeOverlay = .copy
         case "delete": activeOverlay = .delete
         case "copied": copied = CopyResult(count: listViewModel.uncheckedItems.count, scope: .open)
+        case "memberDeleted":                                   // Board MemberDeletedToast
+            session.handleUserEvent(.memberArchived(AccountNotice(id: UUID(), listId: nil, subjectName: "Sofie")))
         case "undo":
             // Warten, bis die Beispiel-Artikel ihre endgültige ID im Store haben.
             Task { @MainActor in
@@ -58,7 +60,7 @@ extension ShoppingListView {
             return .importClipboard
         case "createList": return .createList
         case "listOptions": return listViewModel.defaultList.map { .listOptions($0) }
-        case "shareMembers": return listViewModel.defaultList.map { .shareMembers($0) }
+        case "shareMembers", "shareMembersArchived": return listViewModel.defaultList.map { .shareMembers($0) }
         case "settings": return .settings
         case "receiptArchive": return .receiptArchive
         case "receiptDetail": return receiptArchive.receipts.first.map { .receiptDetail($0) }

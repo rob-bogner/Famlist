@@ -136,3 +136,38 @@ Je Phase ein Commit, kein Push ohne Okay.
 | Admin-Archivierung ohne angemeldeten Nutzer | Der Trigger `on_list_member_removed` widerruft dann alle Einladungen der fremden Liste (weil `auth.uid()` leer ist). | In `archive_account` bewusst so hinnehmen oder den Trigger anpassen; Entscheidung in Phase 1 dokumentieren. |
 | Offline-Kaltstart eines archivierten Kontos | Die App zeigt kurz die lokalen Daten, bis sie online ist. | Server blockiert jeden Zugriff; `account_archived` meldet ab. Bewusst Offline-First. |
 | Rechtliches | Ob 60 Tage mit der DSGVO vereinbar sind, ist nicht geprüft. | Robert. |
+
+---
+
+## 8. Umsetzung (Stand 27.09.2026, Branch `account-archive`)
+
+| Phase | Commit | Ergebnis |
+|---|---|---|
+| 1 | `8df6662` | Migration 027 live; SQL-Test `027_account_archive_check.sql`: 35 Prüfungen wie erwartet |
+| 2 | `b08588c` | Migration 028 live (`pg_net`, Cron 03:30); Edge Functions `account-purge`, `purge-my-account`, `watch-session` v2; Live-Test mit 2 Wegwerf-Konten (4 bzw. 1 Foto, Konto und Zeilen weg; 409 für aktive Konten; 403 für `admin_delete_user` als Nutzer) |
+| 3 | `0432f70` | App: RestoreAccountView, RestorePurgeDialog, Konto-löschen-Text, Anmeldeablauf, Kanal `user:<id>` einmal abonniert; 27 neue Unit-Tests, Suite 706 grün |
+| 4 | `efc072a` | App: MemberDeletedToast, archivierte Mitglieder in „Mitglieder & Teilen“; 5 neue Unit-Tests |
+| 5 | (dieser Commit) | Fixture-Screens, 4 UI-Tests, Screenshot-Abgleich, Build 2 |
+
+### Entscheidungen bei der Umsetzung
+
+- **Kein eigenes RestoreAccountViewModel.** Die Logik liegt in `AppSessionViewModel+Archive.swift`, weil der Archivzustand das Routing in `RootView` steuert. Die View hält nur ihren Anzeigezustand (lädt, bestätigt, Fehlertext).
+- **Archiv-Prüfung beim Start:** Ohne lokale Profilkopie (erste Anmeldung auf dem Gerät) fragt die App vorher. Mit Kopie startet sie sofort und fragt im Hintergrund; ist das Konto archiviert, verwirft sie die lokalen Daten und zeigt RestoreAccount. Grund: Ein Kaltstart ohne Netz darf nicht auf eine Zeitüberschreitung warten.
+- **Ein Abonnement für `user:<id>`:** `observeMemberRemovals` leitet sich aus `observeUserEvents` ab. Test-Doubles bekommen eine Standard-Umsetzung, die nur `memberRemoved` liefert.
+- **Konto löschen** löscht das Profilfoto nicht mehr vorab (es muss beim Wiederherstellen zurückkommen).
+
+### Abweichungen vom Design
+
+| Stelle | Design | Umsetzung | Grund |
+|---|---|---|---|
+| MemberDeletedToast | „Sofie hat ihr Konto gelöscht“, „Sie ist nicht mehr Mitglied …“ | „Sofie hat das Konto gelöscht“, „Sofie ist nicht mehr Mitglied dieser Liste. Wird das Konto wiederhergestellt, ist Sofie automatisch wieder dabei.“ | Die App kennt das Geschlecht nicht. |
+| ArchivedMemberRemove | „Stellt sie ihr Konto wieder her, kommt sie …“ | „Wird das Konto wiederhergestellt, kommt Sofie nicht mehr automatisch zurück. Du kannst Sofie später neu einladen.“ | wie oben |
+| RestoreAccount | nur Offline-Hinweis | Schlägt Wiederherstellen oder endgültiges Löschen online fehl, erscheint derselbe rote Hinweis mit Warn-Icon und „Das hat nicht geklappt. Bitte versuche es erneut.“ | Fehlerfall nicht gestaltet; vorhandene Box wiederverwendet. |
+| Anmelden | – | Wird das Konto auf einem anderen Gerät gelöscht, meldet sich dieses Gerät ab und zeigt über die vorhandene Fehlermeldung: „Dein Konto wurde auf einem anderen Gerät gelöscht. Melde dich an, um es wiederherzustellen.“ | Fall nicht gestaltet. |
+| Konto löschen | – | Ohne Netz: „Zum Löschen brauchst du eine Internetverbindung.“ an der Stelle des Beschreibungstexts (wie bisherige Fehler). | Fall nicht gestaltet. |
+| Resttage-Chip | „Noch 60 Tage“ | Einzahl „Noch 1 Tag“ | Grammatik |
+
+### Nicht umgesetzt (mit Grund)
+
+- **SPEC.md, PLAN.md, MyListUI:** nicht angefasst. Den Ordner `design-handoff/` gleicht die Design-Sitzung laufend mit dem Canvas ab (`Design/SYNC.md`); SPEC.md §2/§3 enthält die neuen Screens bereits. Eine SwiftUI-Referenz in MyListUI wäre eine zweite Kopie der App-Views.
+- **Test mit zwei echten Geräten** (Realtime-Hinweis, Liste verschwindet und kommt zurück): nur mit TestFlight-Build 2 möglich. Die Server-Seite (Broadcasts, Zugriffe) ist per SQL-Test geprüft, das Auswerten der Nachrichten per Unit-Test.

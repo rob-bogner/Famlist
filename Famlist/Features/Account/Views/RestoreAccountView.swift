@@ -26,8 +26,10 @@ struct RestoreAccountView: View {
     @ObservedObject private var connectivity = ConnectivityMonitor.shared
     @Environment(\.colorScheme) private var colorScheme
     let status: AccountArchiveStatus
-    /// Vorschau: Zustand „offline“ erzwingen.
+    /// Vorschau/Fixture: Zustand „offline“ erzwingen.
     var previewOffline = false
+    /// Vorschau/Fixture: Adresse für „Angemeldet als …“ (ohne Supabase-Client gibt es keine).
+    var previewEmail: String? = nil
     @State private var phase: Phase = .idle
     @State private var failureText: String?
 
@@ -173,7 +175,7 @@ struct RestoreAccountView: View {
             if isOffline || failureText != nil {
                 notice(k: k, t: t)
             }
-            if !isOffline, let email = session.currentUserEmail {
+            if !isOffline, let email = previewEmail ?? session.currentUserEmail {
                 Text("Angemeldet als \(email)")
                     .font(AppFont.dm(13, 400))
                     .foregroundStyle(k.sub)
@@ -273,11 +275,11 @@ private extension AccountArchiveStatus {
 }
 
 #Preview("Konto wiederherstellen", traits: .fixedLayout(width: 390, height: 844)) {
-    RestoreAccountView(status: .preview).environmentObject(PreviewMocks.makeAppSessionViewModel())
+    RestoreAccountView(status: .preview, previewEmail: "rob@beispiel.de").environmentObject(PreviewMocks.makeAppSessionViewModel())
 }
 
 #Preview("Konto wiederherstellen – Dark", traits: .fixedLayout(width: 390, height: 844)) {
-    RestoreAccountView(status: .preview).environmentObject(PreviewMocks.makeAppSessionViewModel())
+    RestoreAccountView(status: .preview, previewEmail: "rob@beispiel.de").environmentObject(PreviewMocks.makeAppSessionViewModel())
         .preferredColorScheme(.dark)
 }
 
