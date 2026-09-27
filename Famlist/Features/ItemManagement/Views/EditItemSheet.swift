@@ -60,24 +60,48 @@ struct EditItemSheet: View {
         self.onPriceChanged = onPriceChanged
     }
 
+    /// Menge wird per Ziffernblock bearbeitet → Schnellwahl-Leiste statt CTA.
+    @State private var quantityEditing = false
+    private static let quantityRowID = "quantityRow"
+
     private var bottomInset: CGFloat { keyboardHeight > 0 ? keyboardHeight + 14 : 34 }
 
     var body: some View {
         HybridSheetLayer(k: k, title: "Artikel bearbeiten", designHeight: 726, maxHeight: maxHeight, onClose: onClose) {
             ZStack(alignment: .bottom) {
-                ScrollView {
-                    form
-                        .padding(.top, 16)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 56 + bottomInset + 20)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        form
+                            .padding(.top, 16)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 56 + bottomInset + 20)
+                    }
+                    .scrollIndicators(.hidden)
+                    .scrollDismissesKeyboard(.interactively)
+                    // Menge bearbeiten: Zeile über Schnellwahl-Leiste und Ziffernblock holen.
+                    .onChange(of: keyboardHeight) { _, height in
+                        guard quantityEditing, height > 0 else { return }
+                        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(Self.quantityRowID, anchor: .center) }
+                    }
                 }
-                .scrollIndicators(.hidden)
-                .scrollDismissesKeyboard(.interactively)
 
-                CTAButton(title: "Speichern", k: k, isEnabled: formVM.isValid, action: save)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, bottomInset)
-                    .animation(.easeOut(duration: 0.25), value: keyboardHeight)
+
+                if quantityEditing && keyboardHeight > 0 {
+                    // Menge wird eingetippt: Schnellwahl direkt über dem Ziffernblock statt des großen Knopfs.
+                    QuantityPresetBar(k: k, units: Int(formVM.units) ?? 1, measure: formVM.measure,
+                                      onSelect: { preset in
+                                          formVM.units = String(preset.units)
+                                          formVM.measure = preset.measure
+                                      },
+                                      onDone: { quantityEditing = false })
+                        .padding(.bottom, keyboardHeight)
+                        .transition(.opacity)
+                } else {
+                    CTAButton(title: "Speichern", k: k, isEnabled: formVM.isValid, action: save)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, bottomInset)
+                        .animation(.easeOut(duration: 0.25), value: keyboardHeight)
+                }
             }
         }
         .onChange(of: formVM.name) { _, _ in formVM.validateField(.name) }
@@ -107,10 +131,12 @@ struct EditItemSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 FieldLabel(text: "Menge", k: k)
                 HStack(spacing: 10) {
-                    SheetQuantityStepper(k: k, quantity: unitsBinding)
+                    SheetQuantityStepper(k: k, quantity: unitsBinding, measure: formVM.measure,
+                                         isEditing: $quantityEditing)
                     UnitPickerMenu(k: k, measure: $formVM.measure)
                 }
             }
+            .id(Self.quantityRowID)
 
             VStack(alignment: .leading, spacing: 6) {
                 FieldLabel(text: "Preis", k: k)

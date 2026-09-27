@@ -37,11 +37,11 @@ struct ItemInputValidator { // Namespace struct; no instances required.
         return nil // Valid name.
     }
     /// Validates units text for numeric content and range boundaries.
-    static func validateUnits(_ units: String) -> String? { // Units must be a number within 1...999.
+    static func validateUnits(_ units: String) -> String? { // Units must be a number within 1...9999 (Gramm/Milliliter brauchen mehr als 999).
         if units.isEmpty { return String(localized: "validation.units.missing") } // Error when missing.
         guard let v = Int(units) else { return String(localized: "validation.units.nan") } // Not a number.
         if v < 1 { return String(localized: "validation.units.min") } // Below minimum.
-        if v > 999 { return String(localized: "validation.units.max") } // Above maximum.
+        if v > 9999 { return String(localized: "validation.units.max") } // Above maximum.
         return nil // Valid units.
     }
     /// Validates a price string; empty is allowed, otherwise must be a number.
