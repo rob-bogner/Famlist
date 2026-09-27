@@ -471,31 +471,37 @@ final class ClipboardImportParserTests: XCTestCase {
         }
     }
 
-    // MARK: - Audit: Dezimalmengen
+    // MARK: - Dezimalmengen (seit Migration 025 als Kommazahl, keine Umrechnung mehr)
 
-    func test_decimal_kg_convertsToGram() {
+    func test_decimal_kg_keepsKilogram() {
         let item = parse("[A]\n1,5 kg Kartoffeln").items[0]
-        XCTAssertEqual(item.units, 1500)
-        XCTAssertEqual(item.measure, "g")
+        XCTAssertEqual(item.units, 1.5)
+        XCTAssertEqual(item.measure, "kg")
         XCTAssertEqual(item.name, "Kartoffeln")
     }
 
-    func test_decimal_l_convertsToMilliliter() {
+    func test_decimal_l_keepsLiter() {
         let item = parse("[A]\n0,5 l Milch").items[0]
-        XCTAssertEqual(item.units, 500)
-        XCTAssertEqual(item.measure, "ml")
+        XCTAssertEqual(item.units, 0.5)
+        XCTAssertEqual(item.measure, "l")
     }
 
     func test_decimal_quarterKg_andFraction() {
-        XCTAssertEqual(parse("[A]\n0,25 kg Hack").items[0].units, 250)
-        XCTAssertEqual(parse("[A]\n1/2 kg Butter").items[0].measure, "g")
-        XCTAssertEqual(parse("[A]\n1/2 kg Butter").items[0].units, 500)
+        XCTAssertEqual(parse("[A]\n0,25 kg Hack").items[0].units, 0.25)
+        XCTAssertEqual(parse("[A]\n1/2 kg Butter").items[0].measure, "kg")
+        XCTAssertEqual(parse("[A]\n1/2 kg Butter").items[0].units, 0.5)
     }
 
-    func test_decimal_meter_convertsToCentimeter() {
+    func test_decimal_meter_keepsMeter() {
         let item = parse("[A]\n1,5 m Folie").items[0]
-        XCTAssertEqual(item.units, 150)
-        XCTAssertEqual(item.measure, "cm")
+        XCTAssertEqual(item.units, 1.5)
+        XCTAssertEqual(item.measure, "m")
+    }
+
+    /// Zähl-Einheiten bleiben ganze Stück: 1,5 Brot → 2.
+    func test_decimal_piece_roundsUp() {
+        let item = parse("[A]\n1,5 Brot").items[0]
+        XCTAssertEqual(item.units, 2)
     }
 
     func test_wholeKg_staysKg() {
@@ -554,8 +560,8 @@ final class ClipboardImportParserTests: XCTestCase {
         XCTAssertEqual(result.items[1].measure, "piece")
         XCTAssertEqual(result.items[2].units, 100)
         XCTAssertEqual(result.items[2].measure, "g")
-        XCTAssertEqual(result.items[3].units, 1500, "1,5 l wird wie bei führender Menge in ml umgerechnet")
-        XCTAssertEqual(result.items[3].measure, "ml")
+        XCTAssertEqual(result.items[3].units, 1.5, "1,5 l bleibt wie bei führender Menge 1,5 l")
+        XCTAssertEqual(result.items[3].measure, "l")
     }
 
     func test_trailingNumberWithoutKnownUnit_staysInName() {

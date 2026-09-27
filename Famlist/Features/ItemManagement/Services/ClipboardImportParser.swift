@@ -40,9 +40,9 @@ struct ClipboardImportParser {
 
     struct ParsedItem {
         let name: String
-        /// Ganzzahl-Menge, mind. 1. Dezimalmengen bei kg/l/m werden in g/ml/cm umgerechnet,
-        /// alle anderen Dezimalmengen auf ganze Stück aufgerundet (siehe `resolveUnits`).
-        let units: Int
+        /// Menge. Gewicht/Volumen/Länge mit Kommazahl (1,5 kg), Zähl-Einheiten auf ganze Stück aufgerundet
+        /// (siehe `resolveUnits`).
+        let units: Double
         /// Kanonischer Measure-rawValue der App-Enum, oder "" wenn keine Einheit.
         let measure: String
         let category: String?

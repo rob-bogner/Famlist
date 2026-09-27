@@ -217,7 +217,7 @@ final class LiveRealtimeSharingTests: XCTestCase {
 
         // 4. Besitzer legt an, ändert, markiert als gelöscht
         struct ItemRow: Encodable {
-            let id: UUID; let list_id: UUID; let name: String; let units: Int
+            let id: UUID; let list_id: UUID; let name: String; let units: Double
             let hlc_timestamp: Int64; let hlc_counter: Int; let hlc_node_id: String; let tombstone: Bool
         }
         let itemId = UUID()
@@ -227,7 +227,7 @@ final class LiveRealtimeSharingTests: XCTestCase {
                                                      tombstone: false)).execute()
         try await waitFor("INSERT beim Mitglied") { await log.contains("insert:Livetest Milch") }
 
-        struct UnitsPatch: Encodable { let units: Int; let hlc_timestamp: Int64; let hlc_counter: Int; let hlc_node_id: String }
+        struct UnitsPatch: Encodable { let units: Double; let hlc_timestamp: Int64; let hlc_counter: Int; let hlc_node_id: String }
         try await owner.from("items").update(UnitsPatch(units: 3, hlc_timestamp: now + 1, hlc_counter: 0, hlc_node_id: "live-owner"))
             .eq("id", value: itemId.uuidString).execute()
         try await waitFor("UPDATE (Menge 3) beim Mitglied") { await log.contains("update:Livetest Milch:3:false") }

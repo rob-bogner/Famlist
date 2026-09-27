@@ -37,7 +37,7 @@ final class ImportMergeServiceTests: XCTestCase {
 
     private func parsedItem(
         _ name: String,
-        units: Int = 1,
+        units: Double = 1,
         measure: String = "",
         category: String? = nil,
         brand: String? = nil,
@@ -53,7 +53,7 @@ final class ImportMergeServiceTests: XCTestCase {
         )
     }
 
-    private func activeItem(name: String, units: Int = 1, measure: String = "") -> ItemModel {
+    private func activeItem(name: String, units: Double = 1, measure: String = "") -> ItemModel {
         let id = UUID.deterministicItemID(listId: testListId, name: name).uuidString
         return ItemModel(
             id: id,
@@ -64,7 +64,7 @@ final class ImportMergeServiceTests: XCTestCase {
         )
     }
 
-    private func deletedItem(name: String, units: Int = 1) -> ItemModel {
+    private func deletedItem(name: String, units: Double = 1) -> ItemModel {
         let id = UUID.deterministicItemID(listId: testListId, name: name).uuidString
         return ItemModel(
             id: id,
@@ -211,6 +211,24 @@ final class ImportMergeServiceTests: XCTestCase {
             return XCTFail("Expected .update")
         }
         XCTAssertEqual(item.units, 2)  // 1 existing + 1 imported
+    }
+
+    /// Gleiche Einheit mit Kommazahl: 1 kg vorhanden + 0,5 kg importiert → 1,5 kg.
+    func test_merge_existingActiveItem_sameMeasure_addsDecimal() {
+        let result = merge(selected: [parsedItem("Hack", units: 0.5, measure: "kg")],
+                           localItems: [activeItem(name: "Hack", units: 1, measure: "kg")])
+        guard case .update(let item) = result.targets.first else { return XCTFail("Expected .update") }
+        XCTAssertEqual(item.units, 1.5)
+        XCTAssertEqual(item.measure, "kg")
+    }
+
+    /// Umrechenbare Einheit: 500 g vorhanden + 1 kg importiert → 1,5 kg (vorher „501 kg“).
+    func test_merge_existingActiveItem_convertibleMeasure_convertsAndAdds() {
+        let result = merge(selected: [parsedItem("Hack", units: 1, measure: "kg")],
+                           localItems: [activeItem(name: "Hack", units: 500, measure: "g")])
+        guard case .update(let item) = result.targets.first else { return XCTFail("Expected .update") }
+        XCTAssertEqual(item.units, 1.5)
+        XCTAssertEqual(item.measure, "kg")
     }
 
     /// Schon abgehakt (gekauft) und erneut importiert → wieder offen mit der importierten Menge (Audit M8).

@@ -17,6 +17,17 @@ import Foundation // Needed for UUID conversion between String and UUID represen
 
 /// Mapping helpers from ItemEntity (SwiftData) to ItemModel (shared model for UI/network).
 extension ItemEntity {
+    /// Menge mit Nachkommastellen. Einträge vor Migration 025 haben nur `units` → Rückfall darauf.
+    /// Schreiben setzt beide Felder: `quantity` genau (2 Stellen), `units` aufgerundet.
+    var amount: Double {
+        get { quantity ?? Double(units) }
+        set {
+            let value = QuantityFormat.normalized(newValue)
+            quantity = value
+            units = Int(value.rounded(.up))
+        }
+    }
+
     /// Builds an ItemModel snapshot from the SwiftData entity, including CRDT metadata.
     /// - Returns: A fully populated ItemModel instance.
     func toItemModel() -> ItemModel {
@@ -25,7 +36,7 @@ extension ItemEntity {
             imagePath: imagePath,
             imageData: imageData,
             name: name,
-            units: units,
+            units: amount,
             measure: measure,
             price: price,
             isChecked: isChecked,
@@ -97,7 +108,7 @@ extension ItemEntity {
             self.imagePath = model.imagePath
         }
         self.name = model.name
-        self.units = model.units
+        self.amount = model.units
         self.measure = model.measure
         self.price = model.price
         self.isChecked = model.isChecked

@@ -200,7 +200,7 @@ extension ShoppingListView {
     private func addScanned(_ product: ScannedProduct, quantity: Int) {
         var item = product.entry.toItemModel(listId: listViewModel.listId.uuidString,
                                              ownerPublicId: listViewModel.defaultList?.ownerId.uuidString)
-        item.units = quantity
+        item.units = Double(quantity)
         listViewModel.addItem(item, barcode: product.barcode)
     }
 

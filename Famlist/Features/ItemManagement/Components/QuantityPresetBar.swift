@@ -25,7 +25,7 @@ struct QuantityPresetBar: View {
     static let height: CGFloat = 50
 
     let k: SheetTheme
-    let units: Int
+    let units: Double
     let measure: String
     var onSelect: (QuantityPreset) -> Void = { _ in }
     var onDone: () -> Void = {}

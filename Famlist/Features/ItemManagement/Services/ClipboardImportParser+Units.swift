@@ -60,14 +60,6 @@ extension ClipboardImportParser {
         "pak", "x",
     ]
 
-    /// Dezimalmengen dieser Einheiten werden in die kleinere Einheit umgerechnet.
-    /// Ziel-Tokens sind die rawValues der `Measure`-Enum (dieselben, die `MeasureCanonicalizer` liefert).
-    private static let smallerUnits: [String: (measure: String, factor: Double)] = [
-        Measure.kg.rawValue: (Measure.g.rawValue, 1000),
-        Measure.l.rawValue:  (Measure.ml.rawValue, 1000),
-        Measure.m.rawValue:  (Measure.cm.rawValue, 100),
-    ]
-
     /// Kombinierte, nach Länge absteigend sortierte Liste aller bekannten Einheiten-Tokens.
     /// Längere Tokens zuerst verhindert, dass "m" vor "ml" oder "litres" vor "l" greift.
     private static let sortedAllKnownUnits: [(token: String, canonical: String?)] = {
@@ -131,17 +123,18 @@ extension ClipboardImportParser {
 
     // MARK: - Hilfsfunktionen
 
-    /// Wandelt eine explizite Menge in ganze Einheiten um (Minimum 1).
+    /// Wandelt eine explizite Menge in die gespeicherte Menge um.
     /// - Ohne Einheit → "piece".
-    /// - Dezimalmenge bei kg/l/m → kleinere Einheit: 1,5 kg → 1500 g, 0,5 l → 500 ml, 1,5 m → 150 cm.
-    /// - Sonst aufrunden auf ganze Stück: 1,5 Brot → 2, 0,5 → 1, 3,0 → 3.
-    static func resolveUnits(_ quantity: Double, measure: String) -> (units: Int, measure: String) {
+    /// - Gewicht/Volumen/Länge behalten die Kommazahl (2 Stellen): 1,5 kg → 1,5 kg, 0,25 l → 0,25 l.
+    /// - Zähl-Einheiten aufrunden auf ganze Stück: 1,5 Brot → 2, 0,5 → 1, 3,0 → 3.
+    static func resolveUnits(_ quantity: Double, measure: String) -> (units: Double, measure: String) {
         let measure = measure.isEmpty ? "piece" : measure
-        let isWhole = abs(quantity - quantity.rounded()) < 0.0001
-        if !isWhole, let smaller = smallerUnits[measure] {
-            return (max(1, Int((quantity * smaller.factor).rounded())), smaller.measure)
+        switch Measure.fromExternal(measure) {
+        case .g, .kg, .ml, .l, .cm, .m:
+            return (max(QuantityFormat.range.lowerBound, QuantityFormat.normalized(quantity)), measure)
+        default:
+            // Kleine Toleranz, damit Rundungsfehler (2.0000001) nicht auf 3 aufrunden.
+            return (Double(max(1, Int((quantity - 0.0001).rounded(.up)))), measure)
         }
-        // Kleine Toleranz, damit Rundungsfehler (2.0000001) nicht auf 3 aufrunden.
-        return (max(1, Int((quantity - 0.0001).rounded(.up))), measure)
     }
 }

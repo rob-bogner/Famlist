@@ -11,11 +11,12 @@
  🔰 Notes for Beginners:
  - Heißt im Design `QuantityStepper`. Der Name ist in Famlist schon belegt (ViewModifiers.swift),
    deshalb `SheetQuantityStepper`.
- - Grenzen 1…9999 (QuantityPresets.range); Gramm/Milliliter brauchen mehr als 999.
+ - Menge mit Nachkommastellen (z. B. 1,5 kg): eintippen 0,01…9999 (QuantityFormat.range), ± bleibt ab 1
+   (QuantityPresets.range) und rastet auf die Schrittweite ein.
  - `isEditing` meldet dem Sheet, dass die Zahl bearbeitet wird (Schnellwahl-Leiste über dem Ziffernblock).
 
  📝 Last Change:
- - Zahl eintippbar, Schrittweite je Einheit, aktiver Zustand mit Akzent-Ring (Canvas „Menge eintippen“).
+ - Kommazahlen: Komma-Tastatur, höchstens 4 Vor- und 2 Nachkommastellen, Anzeige „1,5“.
  ------------------------------------------------------------------------
  */
 
@@ -25,17 +26,17 @@ import UIKit
 /// Mengen-Stepper: 148 × 52, Pille, − (Glas neutral) · Zahl (eintippbar) · + (Glas Akzent).
 struct SheetQuantityStepper: View {
     let k: SheetTheme
-    @Binding var quantity: Int
+    @Binding var quantity: Double
     /// Einheit (rawValue) – bestimmt die Schrittweite der ± -Knöpfe.
     var measure: String = ""
     /// true, solange die Zahl per Ziffernblock bearbeitet wird.
     var isEditing: Binding<Bool> = .constant(false)
-    var range: ClosedRange<Int> = QuantityPresets.range
+    var range: ClosedRange<Double> = QuantityFormat.range
 
     @State private var text = ""
     @FocusState private var focused: Bool
 
-    private var step: Int { QuantityPresets.step(for: measure) }
+    private var step: Double { QuantityPresets.step(for: measure) }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -51,7 +52,7 @@ struct SheetQuantityStepper: View {
             .accessibilityLabel("Menge verringern")
 
             TextField("", text: $text)
-                .keyboardType(.numberPad)
+                .keyboardType(.decimalPad)
                 .multilineTextAlignment(.center)
                 .font(AppFont.outfit(19, 600))
                 .foregroundStyle(k.text)
@@ -78,9 +79,9 @@ struct SheetQuantityStepper: View {
         .revealsWhenFocused(focused)            // über Schnellwahl-Leiste und Ziffernblock halten
         .animation(.easeOut(duration: 0.15), value: focused)
         .accessibilityElement(children: .contain)
-        .accessibilityValue("\(quantity)")
-        .onAppear { text = String(quantity) }
-        .onChange(of: quantity) { _, q in if Int(text) != q { text = String(q) } }
+        .accessibilityValue(QuantityFormat.format(quantity))
+        .onAppear { text = QuantityFormat.format(quantity) }
+        .onChange(of: quantity) { _, q in if QuantityFormat.parse(text) != q { text = QuantityFormat.format(q) } }
         .onChange(of: focused) { _, isFocused in
             isEditing.wrappedValue = isFocused
             if !isFocused { commit() }
@@ -99,19 +100,20 @@ struct SheetQuantityStepper: View {
         }
     }
 
-    private var canDecrease: Bool { quantity > range.lowerBound }
+    private var canDecrease: Bool { quantity > QuantityPresets.range.lowerBound }
 
-    /// Nur Ziffern, höchstens 4 Stellen; gültige Werte sofort übernehmen (leer bleibt stehen bis zum Verlassen).
+    /// Nur Ziffern und ein Komma (höchstens 4 + 2 Stellen); gültige Werte sofort übernehmen
+    /// (leer oder „1,“ bleibt stehen bis zum Verlassen).
     private func apply(_ raw: String) {
-        let digits = String(raw.filter(\.isNumber).prefix(4))
-        if digits != raw { text = digits; return }
-        if let v = Int(digits), range.contains(v), v != quantity { quantity = v }
+        let clean = QuantityFormat.sanitizeInput(raw)
+        if clean != raw { text = clean; return }
+        if let v = QuantityFormat.parse(clean), range.contains(v), v != quantity { quantity = v }
     }
 
     private func commit() {
-        let v = Int(text) ?? quantity
+        let v = QuantityFormat.parse(text) ?? quantity
         quantity = min(max(v, range.lowerBound), range.upperBound)
-        text = String(quantity)
+        text = QuantityFormat.format(quantity)
     }
 
     private func change(up: Bool) {
@@ -123,13 +125,13 @@ struct SheetQuantityStepper: View {
 }
 
 #Preview {
-    @Previewable @State var quantity = 500
+    @Previewable @State var quantity: Double = 500
     SheetQuantityStepper(k: SheetTheme(.light), quantity: $quantity, measure: "g")
         .padding(20)
 }
 
 #Preview("Dark") {
-    @Previewable @State var quantity = 1
+    @Previewable @State var quantity: Double = 1.5
     SheetQuantityStepper(k: SheetTheme(.dark), quantity: $quantity)
         .padding(20)
         .background(Color.hex("#0A1416"))

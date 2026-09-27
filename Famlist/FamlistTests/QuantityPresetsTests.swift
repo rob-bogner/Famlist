@@ -32,6 +32,22 @@ final class QuantityPresetsTests: XCTestCase {
         XCTAssertEqual(QuantityPresets.next(3, up: true, step: 1), 4)
     }
 
+    /// Kommazahlen: ± rastet auf die Schrittweite ein; unter 1 senkt „−“ nicht weiter ab.
+    func test_next_withDecimals() {
+        XCTAssertEqual(QuantityPresets.next(1.5, up: true, step: 1), 2)
+        XCTAssertEqual(QuantityPresets.next(1.5, up: false, step: 1), 1)
+        XCTAssertEqual(QuantityPresets.next(0.5, up: true, step: 1), 1)
+        XCTAssertEqual(QuantityPresets.next(0.5, up: false, step: 1), 0.5)
+        XCTAssertEqual(QuantityPresets.next(125.5, up: true, step: 50), 150)
+    }
+
+    func test_validation_allowsDecimals() {
+        XCTAssertNil(ItemInputValidator.validateUnits("1,5"))
+        XCTAssertNil(ItemInputValidator.validateUnits("0.25"))
+        XCTAssertNotNil(ItemInputValidator.validateUnits("0"))
+        XCTAssertNotNil(ItemInputValidator.validateUnits("abc"))
+    }
+
     func test_gramPresets_includeKilogram() {
         let presets = QuantityPresets.presets(for: "g")
         XCTAssertEqual(presets.map(\.label), ["100 g", "250 g", "500 g", "1 kg"])

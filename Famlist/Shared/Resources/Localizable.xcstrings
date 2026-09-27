@@ -2390,13 +2390,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Minimum ist 1"
+            "value" : "Menge muss größer als 0 sein"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Minimum is 1"
+            "value" : "Quantity must be greater than 0"
           }
         }
       }

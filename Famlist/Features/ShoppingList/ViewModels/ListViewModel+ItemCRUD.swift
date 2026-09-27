@@ -63,11 +63,15 @@ extension ListViewModel {
         }
     }
 
-    /// Duplikat hinzugefügt: Menge des vorhandenen Artikels erhöhen und fehlende Angaben ergänzen.
+    /// Duplikat hinzugefügt: Mengen zusammenführen (QuantityMerge: addieren, g↔kg usw. umrechnen, sonst gilt die
+    /// neue Eingabe – vorher ergab 500 g + 1 kg „501“). Fehlende Angaben werden ergänzt.
     private func incrementExisting(at index: Int, with added: ItemModel) {
         var incremented = items[index]
         let oldUnits = incremented.units
-        incremented.units = oldUnits + max(added.units, 1)
+        let merged = QuantityMerge.combine(existing: (incremented.units, incremented.measure),
+                                           added: (added.units > 0 ? added.units : 1, added.measure))
+        incremented.units = merged.units
+        incremented.measure = merged.measure
         incremented = ListViewModel.fillingMissingFields(of: incremented, from: added)
         logVoid(params: (action: "addItem.increment", itemId: incremented.id, from: oldUnits, to: incremented.units))
         UserLog.Data.itemCountIncremented(name: incremented.name, from: oldUnits, to: incremented.units,

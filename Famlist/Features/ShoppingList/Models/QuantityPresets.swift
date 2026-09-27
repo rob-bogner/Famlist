@@ -23,27 +23,31 @@ import Foundation
 
 struct QuantityPreset: Equatable, Identifiable {
     let label: String
-    let units: Int
+    let units: Double
     let measure: String
     var id: String { label }
 }
 
 enum QuantityPresets {
-    static let range: ClosedRange<Int> = 1...9999
+    /// Bereich der ± -Knöpfe: nie unter 1. Kleinere Mengen (z. B. 0,5 kg) nur per Eingabe (QuantityFormat.range).
+    static let range: ClosedRange<Double> = 1...9999
 
     /// Schrittweite der ± -Knöpfe.
-    static func step(for measure: String) -> Int {
+    static func step(for measure: String) -> Double {
         switch Measure.fromExternal(measure) {
         case .g, .ml: return 50
         default: return 1
         }
     }
 
-    /// Nächster Wert: rastet auf Vielfache der Schrittweite ein und bleibt in `range`.
-    static func next(_ value: Int, up: Bool, step: Int) -> Int {
-        guard step > 1 else { return min(max(value + (up ? 1 : -1), range.lowerBound), range.upperBound) }
-        let snapped = up ? (value / step + 1) * step : ((value - 1) / step) * step
-        return min(max(snapped, range.lowerBound), range.upperBound)
+    /// Nächster Wert: rastet auf Vielfache der Schrittweite ein und bleibt in `range`
+    /// (1,5 + 1 → 2, 1,5 − 1 → 1, 120 g + 50 → 150). Unter 1 senkt „−“ nicht weiter ab.
+    static func next(_ value: Double, up: Bool, step: Double) -> Double {
+        let value = QuantityFormat.normalized(value)
+        if !up && value <= range.lowerBound { return value }
+        let steps = QuantityFormat.normalized(value / step)
+        let snapped = up ? (steps.rounded(.down) + 1) * step : (steps.rounded(.up) - 1) * step
+        return min(max(QuantityFormat.normalized(snapped), range.lowerBound), range.upperBound)
     }
 
     /// Schnellwahl über dem Ziffernblock.
@@ -56,11 +60,11 @@ enum QuantityPresets {
             return [.init(label: "250 ml", units: 250, measure: "ml"), .init(label: "500 ml", units: 500, measure: "ml"),
                     .init(label: "1 l", units: 1, measure: "l")]
         case .kg:
-            return [1, 2, 5].map { .init(label: "\($0) kg", units: $0, measure: "kg") }
+            return ([1, 2, 5] as [Int]).map { .init(label: "\($0) kg", units: Double($0), measure: "kg") }
         case .l:
-            return [1, 2, 6].map { .init(label: "\($0) l", units: $0, measure: "l") }
+            return ([1, 2, 6] as [Int]).map { .init(label: "\($0) l", units: Double($0), measure: "l") }
         default:
-            return [2, 6, 10].map { .init(label: "\($0)", units: $0, measure: measure) }
+            return ([2, 6, 10] as [Int]).map { .init(label: "\($0)", units: Double($0), measure: measure) }
         }
     }
 }

@@ -87,7 +87,7 @@ extension UserLog {
 
         /// Sync endgültig fehlgeschlagen nach max. Retries
         /// → "⚠️ Synchronisierung fehlgeschlagen: Eier"
-        static func itemSyncFailed(name: String, units: Int, measure: String) {
+        static func itemSyncFailed(name: String, units: Double, measure: String) {
             log("⚠️ Synchronisierung fehlgeschlagen: \(name)")
         }
     }

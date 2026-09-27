@@ -158,7 +158,8 @@ private struct ClipboardImportRow: View {
     let onToggle: () -> Void
 
     private var details: String {
-        let amount = item.measure.isEmpty ? "\(item.units)" : "\(item.units) \(Measure.fromExternal(item.measure).localizedName)"
+        let amount = item.measure.isEmpty ? QuantityFormat.format(item.units)
+            : "\(QuantityFormat.format(item.units)) \(Measure.fromExternal(item.measure).localizedName)"
         return [amount, item.category].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
     }
 

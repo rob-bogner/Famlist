@@ -36,7 +36,11 @@ final class ItemEntity: Identifiable, Codable {
     /// Storage-Pfad des Fotos (Migration 016); optional, damit bestehende Stores automatisch migrieren.
     var imagePath: String?
     var name: String
+    /// Ganzzahliger Stand der Menge (aufgerundet). Gelesen und geschrieben wird über `amount`.
     var units: Int
+    /// Menge mit Nachkommastellen (seit Migration 025). Optional, damit bestehende Stores automatisch migrieren;
+    /// `nil` bei Einträgen von vorher – dann gilt `units`.
+    var quantity: Double?
     var measure: String
     var price: Double
     var isChecked: Bool
@@ -85,7 +89,7 @@ final class ItemEntity: Identifiable, Codable {
         ownerPublicId: String?,
         imageData: String?,
         name: String,
-        units: Int,
+        units: Double,
         measure: String,
         price: Double,
         isChecked: Bool,
@@ -109,7 +113,8 @@ final class ItemEntity: Identifiable, Codable {
         self.ownerPublicId = ownerPublicId
         self.imageData = imageData
         self.name = name
-        self.units = units
+        self.units = Int(units.rounded(.up))
+        self.quantity = QuantityFormat.normalized(units)
         self.measure = measure
         self.price = price
         self.isChecked = isChecked
@@ -163,7 +168,7 @@ final class ItemEntity: Identifiable, Codable {
         let ownerPublicId = try container.decodeIfPresent(String.self, forKey: .ownerPublicId)
         let imageData = try container.decodeIfPresent(String.self, forKey: .imageData)
         let name = try container.decode(String.self, forKey: .name)
-        let units = try container.decode(Int.self, forKey: .units)
+        let units = try container.decode(Double.self, forKey: .units)
         let measure = try container.decode(String.self, forKey: .measure)
         let price = try container.decode(Double.self, forKey: .price)
         let isChecked = try container.decode(Bool.self, forKey: .isChecked)
@@ -218,7 +223,7 @@ final class ItemEntity: Identifiable, Codable {
         try container.encodeIfPresent(ownerPublicId, forKey: .ownerPublicId)
         try container.encodeIfPresent(imageData, forKey: .imageData)
         try container.encode(name, forKey: .name)
-        try container.encode(units, forKey: .units)
+        try container.encode(amount, forKey: .units)
         try container.encode(measure, forKey: .measure)
         try container.encode(price, forKey: .price)
         try container.encode(isChecked, forKey: .isChecked)

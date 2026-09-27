@@ -53,12 +53,13 @@ struct UserLog {
     /// Formatiert eine Mengenangabe nutzerfreundlich.
     /// - `measure=""` → "Nx"  (z. B. "1x")
     /// - sonst → `"N <localizedMeasure>"` (z. B. "3 Stück", "215 ml")
-    static func formatQuantity(_ units: Int, _ measure: String) -> String {
+    static func formatQuantity(_ units: Double, _ measure: String) -> String {
+        let amount = QuantityFormat.format(units)             // „1,5“ statt „1.5“
         if measure.isEmpty {
-            return "\(units)x"
+            return "\(amount)x"
         }
         let localizedMeasure = Measure.fromExternal(measure).localizedName
-        return "\(units) \(localizedMeasure)"
+        return "\(amount) \(localizedMeasure)"
     }
 
     // MARK: - Logging-Kategorien

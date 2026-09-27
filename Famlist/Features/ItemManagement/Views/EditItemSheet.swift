@@ -85,9 +85,9 @@ struct EditItemSheet: View {
 
                 if quantityEditing && keyboardHeight > 0 {
                     // Menge wird eingetippt: Schnellwahl direkt über dem Ziffernblock statt des großen Knopfs.
-                    QuantityPresetBar(k: k, units: Int(formVM.units) ?? 1, measure: formVM.measure,
+                    QuantityPresetBar(k: k, units: QuantityFormat.parse(formVM.units) ?? 1, measure: formVM.measure,
                                       onSelect: { preset in
-                                          formVM.units = String(preset.units)
+                                          formVM.units = QuantityFormat.format(preset.units)
                                           formVM.measure = preset.measure
                                       },
                                       onDone: { quantityEditing = false })
@@ -179,8 +179,8 @@ struct EditItemSheet: View {
         }
     }
 
-    private var unitsBinding: Binding<Int> {
-        Binding(get: { Int(formVM.units) ?? 1 }, set: { formVM.units = String($0) })
+    private var unitsBinding: Binding<Double> {
+        Binding(get: { QuantityFormat.parse(formVM.units) ?? 1 }, set: { formVM.units = QuantityFormat.format($0) })
     }
 
     /// Aktuelle Eingaben als Artikel (gleiche ID, Liste und Besitzer wie `item`).
