@@ -61,6 +61,7 @@ struct SheetTextField: View {
                     .padding(.leading, 4)
             }
         }
+        .revealsWhenFocused(isFocused)          // Feld samt Fehlertext über Tastatur und Knöpfen halten
     }
 
     private var background: some View {

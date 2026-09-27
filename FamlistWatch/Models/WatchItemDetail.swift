@@ -20,6 +20,9 @@ struct WatchItemDetail: Hashable {
     let category: String
     /// Einheit ohne Zahl, z. B. „Packung“, „Stück“.
     let unitName: String
-    let units: Int
+    /// Menge, auch mit Nachkommastellen (1,5 kg).
+    let units: Double
+    /// Schrittweite von Krone und ± (g/ml 50, sonst 1 – wie auf dem iPhone).
+    let step: Double
     let isChecked: Bool
 }

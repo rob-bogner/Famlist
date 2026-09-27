@@ -60,24 +60,45 @@ struct EditItemSheet: View {
         self.onPriceChanged = onPriceChanged
     }
 
+    /// Menge wird per Ziffernblock bearbeitet → Schnellwahl-Leiste statt CTA.
+    @State private var quantityEditing = false
+
     private var bottomInset: CGFloat { keyboardHeight > 0 ? keyboardHeight + 14 : 34 }
+    /// Bei offener Tastatur verdeckt: Tastatur + Schnellwahl-Leiste bzw. 14 Abstand + CTA 56, dazu 12 Luft.
+    private var revealInset: CGFloat {
+        keyboardHeight + (quantityEditing ? QuantityPresetBar.height : 14 + 56) + 12
+    }
 
     var body: some View {
         HybridSheetLayer(k: k, title: "Artikel bearbeiten", designHeight: 726, maxHeight: maxHeight, onClose: onClose) {
             ZStack(alignment: .bottom) {
-                ScrollView {
+                // Fokussiertes Feld bleibt über Tastatur und Knopf bzw. Schnellwahl-Leiste sichtbar.
+                KeyboardRevealScrollView(keyboardHeight: keyboardHeight, bottomInset: revealInset) {
                     form
                         .padding(.top, 16)
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 56 + bottomInset + 20)
+                        .padding(.bottom, 56 + 34 + 20)
                 }
                 .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
 
-                CTAButton(title: "Speichern", k: k, isEnabled: formVM.isValid, action: save)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, bottomInset)
-                    .animation(.easeOut(duration: 0.25), value: keyboardHeight)
+
+                if quantityEditing && keyboardHeight > 0 {
+                    // Menge wird eingetippt: Schnellwahl direkt über dem Ziffernblock statt des großen Knopfs.
+                    QuantityPresetBar(k: k, units: QuantityFormat.parse(formVM.units) ?? 1, measure: formVM.measure,
+                                      onSelect: { preset in
+                                          formVM.units = QuantityFormat.format(preset.units)
+                                          formVM.measure = preset.measure
+                                      },
+                                      onDone: { quantityEditing = false })
+                        .padding(.bottom, keyboardHeight)
+                        .transition(.opacity)
+                } else {
+                    CTAButton(title: "Speichern", k: k, isEnabled: formVM.isValid, action: save)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, bottomInset)
+                        .animation(.easeOut(duration: 0.25), value: keyboardHeight)
+                }
             }
         }
         .onChange(of: formVM.name) { _, _ in formVM.validateField(.name) }
@@ -107,7 +128,8 @@ struct EditItemSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 FieldLabel(text: "Menge", k: k)
                 HStack(spacing: 10) {
-                    SheetQuantityStepper(k: k, quantity: unitsBinding)
+                    SheetQuantityStepper(k: k, quantity: unitsBinding, measure: formVM.measure,
+                                         isEditing: $quantityEditing)
                     UnitPickerMenu(k: k, measure: $formVM.measure)
                 }
             }
@@ -157,8 +179,8 @@ struct EditItemSheet: View {
         }
     }
 
-    private var unitsBinding: Binding<Int> {
-        Binding(get: { Int(formVM.units) ?? 1 }, set: { formVM.units = String($0) })
+    private var unitsBinding: Binding<Double> {
+        Binding(get: { QuantityFormat.parse(formVM.units) ?? 1 }, set: { formVM.units = QuantityFormat.format($0) })
     }
 
     /// Aktuelle Eingaben als Artikel (gleiche ID, Liste und Besitzer wie `item`).

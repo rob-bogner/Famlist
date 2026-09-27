@@ -89,6 +89,25 @@ final class ItemEditLocalUpdateTests: XCTestCase {
         XCTAssertEqual(sut.items.first?.price, 1.19)
     }
 
+    /// Gleiche Einheit mit Kommazahl: 1 kg + 0,5 kg → 1,5 kg.
+    func test_addItem_duplicate_sameMeasure_addsDecimal() {
+        let hack = ItemModel(id: UUID().uuidString, name: "Hack", units: 1, measure: "kg", listId: listId.uuidString)
+        sut.items = [hack]
+        sut.addItem(ItemModel(name: "Hack", units: 0.5, measure: "kg", listId: listId.uuidString))
+        XCTAssertEqual(sut.items.first?.units, 1.5)
+        XCTAssertEqual(sut.items.first?.measure, "kg")
+    }
+
+    /// Umrechenbare Einheit: 500 g + 1 kg → 1,5 kg (vorher „501“).
+    func test_addItem_duplicate_convertibleMeasure_convertsAndAdds() {
+        let hack = ItemModel(id: UUID().uuidString, name: "Hack", units: 500, measure: "g", listId: listId.uuidString)
+        sut.items = [hack]
+        sut.addItem(ItemModel(name: "Hack", units: 1, measure: "kg", listId: listId.uuidString))
+        XCTAssertEqual(sut.items.count, 1)
+        XCTAssertEqual(sut.items.first?.units, 1.5)
+        XCTAssertEqual(sut.items.first?.measure, "kg")
+    }
+
     func test_fillingMissingFields_keepsExistingValues() {
         let existing = ItemModel(imageData: "ALT", name: "Milch", units: 3, price: 0.99, brand: "Weihenstephan")
         let incoming = ItemModel(imageData: "NEU", name: "Milch", units: 1, price: 1.49, productDescription: "3,5 %", brand: "Andechser")

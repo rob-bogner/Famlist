@@ -8,7 +8,7 @@
  - Uhr-ViewModel mit echtem Speicher und echter SyncEngine (ohne Sitzung → Aufträge bleiben in der
    Warteschlange und lassen sich zählen):
    aktive Liste, Reihenfolge und Status der Listen, Abhaken + Haptik, Hinzufügen (Menge +1, wieder öffnen,
-   neu mit Vorlage aus dem Artikelstamm, Zählen), alle abhaken / zurücksetzen, Menge 1…99, Abschnitte.
+   neu mit Vorlage aus dem Artikelstamm, Zählen), alle abhaken / zurücksetzen, Menge 0,01…9999 mit Kommazahlen, Abschnitte.
 
  📝 Last Change:
  - Initial creation (Watch-Plan Phase 5).
@@ -49,7 +49,7 @@ final class WatchListViewModelTests: XCTestCase {
     }
 
     @discardableResult
-    private func addItem(_ list: UUID, _ name: String, units: Int = 1, checked: Bool = false,
+    private func addItem(_ list: UUID, _ name: String, units: Double = 1, checked: Bool = false,
                          category: String? = nil, measure: String = "") throws -> ItemModel {
         let model = ItemModel(id: UUID().uuidString, name: name, units: units, measure: measure, isChecked: checked,
                               category: category, listId: list.uuidString, hlcTimestamp: 1_000, hlcCounter: 0,
@@ -121,9 +121,28 @@ final class WatchListViewModelTests: XCTestCase {
     func test_setUnits_isClamped() async throws {
         let milk = try addItem(listA, "Milch", units: 2)
         let sut = makeSUT()
-        sut.setUnits(milk.id, to: 250)
-        await waitUntil { sut.detail(for: milk.id)?.units == 99 }
-        XCTAssertEqual(sut.detail(for: milk.id)?.units, 99)
+        sut.setUnits(milk.id, to: 20_000)
+        await waitUntil { sut.detail(for: milk.id)?.units == 9999 }
+        XCTAssertEqual(sut.detail(for: milk.id)?.units, 9999)
+    }
+
+    /// Grammangaben und Kommazahlen bleiben erhalten (vorher Grenze 99).
+    func test_setUnits_keepsGramsAndDecimals() async throws {
+        let hack = try addItem(listA, "Hack", units: 500, measure: "g")
+        let sut = makeSUT()
+        XCTAssertEqual(sut.detail(for: hack.id)?.step, 50)
+        sut.setUnits(hack.id, to: 1.25)
+        await waitUntil { sut.detail(for: hack.id)?.units == 1.25 }
+        XCTAssertEqual(sut.detail(for: hack.id)?.units, 1.25)
+    }
+
+    /// Erneut hinzufügen = eine Stufe mehr: 500 g → 550 g (vorher wurden daraus 99).
+    func test_addExistingOpenName_withGrams_addsOneStep() async throws {
+        let hack = try addItem(listA, "Hack", units: 500, measure: "g")
+        let sut = makeSUT()
+        sut.add(name: "Hack")
+        await waitUntil { sut.detail(for: hack.id)?.units == 550 }
+        XCTAssertEqual(sut.detail(for: hack.id)?.units, 550)
     }
 
     // MARK: - Hinzufügen

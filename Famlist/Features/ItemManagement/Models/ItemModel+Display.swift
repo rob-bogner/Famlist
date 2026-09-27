@@ -19,10 +19,11 @@
 import UIKit
 
 extension ItemModel {
-    /// "1 Packung", "500 g" or just "2" when no measure is set.
+    /// "1 Packung", "1,5 kg", "500 g" or just "2" when no measure is set.
     var quantityText: String {
-        guard !measure.isEmpty else { return "\(units)" }
-        return "\(units) \(Measure.fromExternal(measure).localizedName)"
+        let amount = QuantityFormat.format(units)
+        guard !measure.isEmpty else { return amount }
+        return "\(amount) \(Measure.fromExternal(measure).localizedName)"
     }
 
     /// Product photo decoded from base64 imageData, if any.

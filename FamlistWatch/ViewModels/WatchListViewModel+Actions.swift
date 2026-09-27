@@ -73,10 +73,11 @@ extension WatchListViewModel {
 
     // MARK: - Menge
 
-    /// Neue Menge (Krone in Ruhe oder ＋/−), 1…99.
-    func setUnits(_ itemId: String, to units: Int) {
+    /// Neue Menge (Krone in Ruhe oder ＋/−), 0,01…9999 wie auf dem iPhone (vorher 1…99 – kürzte Grammangaben).
+    func setUnits(_ itemId: String, to units: Double) {
         guard var item = items.first(where: { $0.id == itemId }) else { return }
-        let clamped = min(max(units, 1), 99)
+        let clamped = min(max(QuantityFormat.normalized(units), QuantityFormat.range.lowerBound),
+                          QuantityFormat.range.upperBound)
         guard clamped != item.units else { return }
         UserLog.Data.itemQuantityChanged(name: item.name, from: item.units, to: clamped, measure: item.measure)
         item.units = clamped
@@ -92,7 +93,8 @@ extension WatchListViewModel {
         let key = ItemIdentity.normalizedKey(name)
         if var open = items.first(where: { ItemIdentity.normalizedKey($0.name) == key && !$0.isChecked }) {
             let old = open.units
-            open.units = min(old + 1, 99)
+            // Eine Stufe mehr wie ＋ (2 → 3 Stück, 500 → 550 g); vorher +1 mit Grenze 99 (500 g wurden 99).
+            open.units = QuantityPresets.next(old, up: true, step: QuantityPresets.step(for: open.measure))
             UserLog.Data.itemCountIncremented(name: open.name, from: old, to: open.units, measure: open.measure)
             write(open)
             noteCatalogUse(open.name, saving: nil)

@@ -73,7 +73,7 @@ final class ItemFormViewModel: ObservableObject {
     /// Initialize with existing item (for Edit mode)
     init(item: ItemModel) {
         self.name = item.name
-        self.units = String(item.units)
+        self.units = QuantityFormat.format(item.units)
         self.measure = item.measure
         self.price = String(item.price)
         self.brand = item.brand ?? ""
@@ -133,7 +133,7 @@ final class ItemFormViewModel: ObservableObject {
             id: existingId ?? UUID().uuidString,
             imageData: imageBase64,
             name: sanitizedName,
-            units: Int(units) ?? 1,
+            units: QuantityFormat.parse(units) ?? 1,
             measure: measure,
             price: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0.0,
             isChecked: isChecked,

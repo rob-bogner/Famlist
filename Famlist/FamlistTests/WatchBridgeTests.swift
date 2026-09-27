@@ -99,7 +99,7 @@ final class WatchBridgeTests: XCTestCase {
         WatchBridge(transport: transport, client: client, itemStore: store, defaults: defaults)
     }
 
-    private func item(_ id: UUID, units: Int, hlc: Int64, node: String = "watch") -> ItemModel {
+    private func item(_ id: UUID, units: Double, hlc: Int64, node: String = "watch") -> ItemModel {
         ItemModel(id: id.uuidString, name: "Milch", units: units, measure: "", listId: listId.uuidString,
                   hlcTimestamp: hlc, hlcCounter: 0, hlcNodeId: node, tombstone: false)
     }

@@ -82,7 +82,8 @@ final class WatchListViewModel: ObservableObject {
         return WatchItemDetail(id: item.id, name: item.name,
                                category: CategoryResolver.name(for: item.category, in: sync.categories),
                                unitName: WatchQuantity.unitName(measure: item.measure),
-                               units: item.units, isChecked: item.isChecked)
+                               units: item.units, step: QuantityPresets.step(for: item.measure),
+                               isChecked: item.isChecked)
     }
 
     // MARK: - Aufbau

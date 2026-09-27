@@ -35,7 +35,7 @@ extension UserLog {
 
         /// Neuer Artikel hinzugefügt
         /// → "➕ Hinzugefügt: Eier (2 Stück)"
-        static func itemAdded(name: String, units: Int? = nil, measure: String? = nil) {
+        static func itemAdded(name: String, units: Double? = nil, measure: String? = nil) {
             if let units = units {
                 let qty = UserLog.formatQuantity(units, measure ?? "")
                 log("➕ Hinzugefügt: \(name) (\(qty))")
@@ -46,48 +46,48 @@ extension UserLog {
 
         /// Artikel bereits vorhanden — Menge erhöht
         /// → "➕ Menge erhöht: Eier (2 → 5 Stück)"
-        static func itemCountIncremented(name: String, from oldUnits: Int, to newUnits: Int, measure: String) {
+        static func itemCountIncremented(name: String, from oldUnits: Double, to newUnits: Double, measure: String) {
             let newQty = UserLog.formatQuantity(newUnits, measure)
-            log("➕ Menge erhöht: \(name) (\(oldUnits) → \(newQty))")
+            log("➕ Menge erhöht: \(name) (\(QuantityFormat.format(oldUnits)) → \(newQty))")
         }
 
         /// Artikel abgehakt
         /// → "✅ Abgehakt: Eier (5 Stück)"
-        static func itemChecked(name: String, units: Int, measure: String) {
+        static func itemChecked(name: String, units: Double, measure: String) {
             let qty = UserLog.formatQuantity(units, measure)
             log("✅ Abgehakt: \(name) (\(qty))")
         }
 
         /// Abhaken rückgängig gemacht
         /// → "↩️ Abgehakt entfernt: Eier (5 Stück)"
-        static func itemUnchecked(name: String, units: Int, measure: String) {
+        static func itemUnchecked(name: String, units: Double, measure: String) {
             let qty = UserLog.formatQuantity(units, measure)
             log("↩️ Abgehakt entfernt: \(name) (\(qty))")
         }
 
         /// Menge manuell geändert
         /// → "✏️ Menge geändert: Eier (5 → 3 Stück)"
-        static func itemQuantityChanged(name: String, from oldUnits: Int, to newUnits: Int, measure: String) {
+        static func itemQuantityChanged(name: String, from oldUnits: Double, to newUnits: Double, measure: String) {
             let newQty = UserLog.formatQuantity(newUnits, measure)
-            log("✏️ Menge geändert: \(name) (\(oldUnits) → \(newQty))")
+            log("✏️ Menge geändert: \(name) (\(QuantityFormat.format(oldUnits)) → \(newQty))")
         }
 
         /// Reaktivierung eines gelöschten Artikels
         /// → "♻️ Gelöschten Artikel wiederhergestellt: Brot (1 Stück)"
-        static func itemReactivated(name: String, units: Int, measure: String) {
+        static func itemReactivated(name: String, units: Double, measure: String) {
             let qty = UserLog.formatQuantity(units, measure)
             log("♻️ Gelöschten Artikel wiederhergestellt: \(name) (\(qty))")
         }
 
         /// Artikel bearbeitet (Name, Kategorie, Marke o. ä. — keine Mengenänderung)
         /// → "✏️ Milch bearbeitet"
-        static func itemUpdated(name: String, units: Int? = nil, measure: String? = nil) {
+        static func itemUpdated(name: String, units: Double? = nil, measure: String? = nil) {
             log("✏️ \(name) bearbeitet")
         }
 
         /// Artikel entfernt
         /// → "🗑️ Artikel entfernt: Milch (3 Stück)"
-        static func itemDeleted(name: String, units: Int, measure: String) {
+        static func itemDeleted(name: String, units: Double, measure: String) {
             let qty = UserLog.formatQuantity(units, measure)
             log("🗑️ Artikel entfernt: \(name) (\(qty))")
         }
@@ -140,7 +140,7 @@ extension UserLog {
 
         /// Abgehakte Artikel entfernt
         /// ≤5 → Namen aufführen als Bullet-Liste, >5 → Anzahl
-        static func checkedItemsDeleted(items: [(name: String, units: Int, measure: String)]) {
+        static func checkedItemsDeleted(items: [(name: String, units: Double, measure: String)]) {
             if items.count <= 5 {
                 let bullets = items.map { "  • \($0.name)" }.joined(separator: "\n")
                 log("🗑️ \(items.count) Artikel entfernt:\n\(bullets)")
@@ -151,7 +151,7 @@ extension UserLog {
 
         /// Nicht abgehakte Artikel entfernt
         /// ≤5 → Namen aufführen als Bullet-Liste, >5 → Anzahl
-        static func uncheckedItemsDeleted(items: [(name: String, units: Int, measure: String)]) {
+        static func uncheckedItemsDeleted(items: [(name: String, units: Double, measure: String)]) {
             if items.count <= 5 {
                 let bullets = items.map { "  • \($0.name)" }.joined(separator: "\n")
                 log("🗑️ \(items.count) Artikel entfernt:\n\(bullets)")

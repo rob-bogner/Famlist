@@ -17,9 +17,10 @@ import Foundation
 
 enum WatchQuantity {
     /// Wie ItemModel.quantityText auf dem iPhone: ohne Einheit nur die Zahl.
-    static func text(units: Int, measure: String) -> String {
-        guard !measure.isEmpty else { return "\(units)" }
-        return "\(units) \(Measure.fromExternal(measure).localizedName)"
+    static func text(units: Double, measure: String) -> String {
+        let amount = QuantityFormat.format(units)                // „1,5“ wie auf dem iPhone
+        guard !measure.isEmpty else { return amount }
+        return "\(amount) \(Measure.fromExternal(measure).localizedName)"
     }
 
     /// Einheit für den Stepper im Screen „Artikel“ (ohne Einheit: „Stück“).

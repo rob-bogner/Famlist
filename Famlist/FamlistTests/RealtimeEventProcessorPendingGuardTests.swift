@@ -28,7 +28,7 @@ private func makeUpdatePayload(
     id: UUID,
     listId: UUID,
     name: String = "Tee",
-    units: Int = 1,
+    units: Double = 1,
     hlcTimestamp: Int64? = 9_999_999_999_999,
     hlcCounter: Int = 0,
     hlcNodeId: String = "remote-node",
@@ -81,7 +81,7 @@ final class RealtimeEventProcessorPendingGuardTests: XCTestCase {
     }
 
     @discardableResult
-    private func insertEntity(id: UUID, units: Int, syncStatus: ItemEntity.SyncStatus,
+    private func insertEntity(id: UUID, units: Double, syncStatus: ItemEntity.SyncStatus,
                               hlcTimestamp: Int64 = 1_000, nodeId: String = "local-node") throws -> ItemEntity {
         let entity = ItemEntity(id: id, listId: listId, ownerPublicId: nil, imageData: nil, name: "Tee",
                                 units: units, measure: "pkg", price: 0, isChecked: false, category: nil,

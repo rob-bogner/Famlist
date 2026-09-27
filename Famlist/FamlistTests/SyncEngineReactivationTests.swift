@@ -89,7 +89,7 @@ final class SyncEngineReactivationTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func item(_ name: String, units: Int = 1, image: String? = nil) -> ItemModel {
+    private func item(_ name: String, units: Double = 1, image: String? = nil) -> ItemModel {
         ItemModel(imageData: image, name: name, units: units, listId: listId.uuidString)
     }
 

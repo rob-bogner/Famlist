@@ -55,7 +55,7 @@ final class ListViewModelApplyItemsTests: XCTestCase {
 
     private func makeItem(id: String = UUID().uuidString,
                           name: String,
-                          units: Int = 1,
+                          units: Double = 1,
                           price: Double = 0,
                           listId: UUID? = nil) -> ItemModel {
         ItemModel(

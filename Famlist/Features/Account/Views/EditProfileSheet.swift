@@ -26,13 +26,20 @@ import PhotosUI
 struct EditProfileSheet: View {
     @EnvironmentObject var session: AppSessionViewModel
     let appearance: Appearance
+    /// Aktuelle Tastaturhöhe (0 = geschlossen); hält das fokussierte Feld darüber sichtbar.
+    var keyboardHeight: CGFloat = 0
     var onClose: () -> Void = {}
 
     @State private var username = ""
     @State private var fullName = ""
+    @FocusState private var fullNameFocused: Bool
     @State private var check: AppSessionViewModel.UsernameCheck = .empty
     @State private var photo: PhotosPickerItem?
     @State private var isSaving = false
+
+    /// Unter dem Scroll-Bereich liegen 20 Abstand + CTA 56 + 34 Sheet-Rand = 110 pt, die die Tastatur zuerst
+    /// verdeckt. Nur was darüber hinausgeht, verkleinert den sichtbaren Bereich; dazu 12 Luft.
+    private var revealInset: CGFloat { max(0, keyboardHeight - 110) + 12 }
 
     var body: some View {
         let t = ListAccountTokens(appearance)
@@ -43,92 +50,103 @@ struct EditProfileSheet: View {
             DesignListScreen(appearance: appearance)
         } content: {
             ListAccountSheet(k: k, height: 726, title: "Profil bearbeiten", onClose: onClose) {
-                HStack(spacing: 16) {
-                    ListAccountAvatar(t: t, initial: session.currentProfile?.initial ?? "?", size: 88, fontSize: 34,
-                                      image: session.avatarImage)
-                        .overlay(alignment: .bottomTrailing) {
-                            // right −2, bottom −2, 34 × 34, neutraler Glas-Knopf (Token gn)
-                            PhotosPicker(selection: $photo, matching: .images) {
-                                SVGIcon(ListAccountIcon.camera, size: 16, color: t.accentText, lineWidth: 2)
-                                    .frame(width: 34, height: 34)
-                                    .background(GlassCircleBackground(style: .neutral, appearance: k.appearance,
-                                                                      accent: k.a, size: 34))
-                                    .frame(width: 44, height: 44)     // Trefferfläche 44, Optik 34
-                                    .contentShape(Circle())
+                // Felder scrollen bei offener Tastatur; das fokussierte bleibt über der Tastatur sichtbar.
+                KeyboardRevealScrollView(keyboardHeight: keyboardHeight, bottomInset: revealInset) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: 16) {
+                            ListAccountAvatar(t: t, initial: session.currentProfile?.initial ?? "?", size: 88, fontSize: 34,
+                                              image: session.avatarImage)
+                                .overlay(alignment: .bottomTrailing) {
+                                    // right −2, bottom −2, 34 × 34, neutraler Glas-Knopf (Token gn)
+                                    PhotosPicker(selection: $photo, matching: .images) {
+                                        SVGIcon(ListAccountIcon.camera, size: 16, color: t.accentText, lineWidth: 2)
+                                            .frame(width: 34, height: 34)
+                                            .background(GlassCircleBackground(style: .neutral, appearance: k.appearance,
+                                                                              accent: k.a, size: 34))
+                                            .frame(width: 44, height: 44)     // Trefferfläche 44, Optik 34
+                                            .contentShape(Circle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(-5)                              // 44er-Trefferfläche ohne Layout-Versatz
+                                    .offset(x: 2, y: 2)
+                                    .accessibilityLabel("Foto ändern")
+                                }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Dein Profil")
+                                    .font(AppFont.outfit(19, 600))
+                                    .foregroundStyle(k.text)
+                                Text("So sehen dich andere Mitglieder deiner Listen.")
+                                    .font(AppFont.dm(13, 400))
+                                    .foregroundStyle(k.sub)
+                                    .cssLineHeight(18.2, font: introFont)        // line-height 1.4
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
-                            .buttonStyle(.plain)
-                            .padding(-5)                              // 44er-Trefferfläche ohne Layout-Versatz
-                            .offset(x: 2, y: 2)
-                            .accessibilityLabel("Foto ändern")
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Dein Profil")
-                            .font(AppFont.outfit(19, 600))
-                            .foregroundStyle(k.text)
-                        Text("So sehen dich andere Mitglieder deiner Listen.")
-                            .font(AppFont.dm(13, 400))
-                            .foregroundStyle(k.sub)
-                            .cssLineHeight(18.2, font: introFont)        // line-height 1.4
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(.top, 18)
+                        .padding(.top, 18)
 
-                // Benutzername (fokussiert)
-                VStack(alignment: .leading, spacing: 6) {
-                    ListAccountFieldGroup(label: "Benutzername", t: t) {
-                        ListAccountFocusedField(t: t, text: $username, placeholder: "benutzername",
-                                                a11yLabel: "Benutzername", submitLabel: .next) {
-                            Text("@")
+                        // Benutzername (fokussiert)
+                        VStack(alignment: .leading, spacing: 6) {
+                            ListAccountFieldGroup(label: "Benutzername", t: t) {
+                                ListAccountFocusedField(t: t, text: $username, placeholder: "benutzername",
+                                                        a11yLabel: "Benutzername", submitLabel: .next) {
+                                    Text("@")
+                                        .font(AppFont.dm(16, 400))
+                                        .foregroundStyle(k.sub)
+                                }
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                            }
+                            Text(hint.text)
+                                .font(AppFont.dm(12, 400))
+                                .foregroundStyle(hint.isError ? t.danger : k.sub)
+                                .padding(.leading, 4)
+                        }
+                        .padding(.top, 22)
+
+                        // Vollständiger Name: 52, Radius 16, Rahmen 1, field, Textfarbe sub
+                        ListAccountFieldGroup(label: "Vollständiger Name (optional)", t: t) {
+                            TextField("", text: $fullName, prompt: Text("Vor- und Nachname").foregroundStyle(t.placeholderOnSub))
                                 .font(AppFont.dm(16, 400))
                                 .foregroundStyle(k.sub)
+                                .tint(k.accent)
+                                .submitLabel(.done)
+                                .accessibilityLabel("Vollständiger Name")
+                                .focused($fullNameFocused)
+                                .padding(.horizontal, 17)                        // 1 Rahmen + 16 Padding
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                                .revealsWhenFocused(fullNameFocused)
                         }
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                        .padding(.top, 14)
+
+                        // E-Mail: nicht änderbar – gestrichelter Rahmen 1 (fieldBorder), kein Hintergrund, Schloss 18
+                        ListAccountFieldGroup(label: "E-Mail-Adresse", t: t) {
+                            HStack(spacing: 10) {
+                                Text(session.currentUserEmail ?? "–")
+                                    .font(AppFont.dm(16, 400))
+                                    .foregroundStyle(k.sub)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                SVGIcon(ListAccountIcon.lock, size: 18, color: k.sub, lineWidth: 2)
+                                    .accessibilityLabel("Nicht änderbar")
+                            }
+                            .padding(.horizontal, 17)
+                            .frame(height: 52)
+                            .background(CSSBox(shape: RR(16), border: 1, borderColor: k.fieldBorder, dash: [3, 3]))
+                            .accessibilityElement(children: .combine)
+                        }
+                        .padding(.top, 14)
                     }
-                    Text(hint.text)
-                        .font(AppFont.dm(12, 400))
-                        .foregroundStyle(hint.isError ? t.danger : k.sub)
-                        .padding(.leading, 4)
+                    .padding(.horizontal, 20)                        // Fokus-Ring nicht am Scroll-Rand abschneiden
                 }
-                .padding(.top, 22)
+                .padding(.horizontal, -20)
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
 
-                // Vollständiger Name: 52, Radius 16, Rahmen 1, field, Textfarbe sub
-                ListAccountFieldGroup(label: "Vollständiger Name (optional)", t: t) {
-                    TextField("", text: $fullName, prompt: Text("Vor- und Nachname").foregroundStyle(t.placeholderOnSub))
-                        .font(AppFont.dm(16, 400))
-                        .foregroundStyle(k.sub)
-                        .tint(k.accent)
-                        .submitLabel(.done)
-                        .accessibilityLabel("Vollständiger Name")
-                        .padding(.horizontal, 17)                        // 1 Rahmen + 16 Padding
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
-                }
-                .padding(.top, 14)
-
-                // E-Mail: nicht änderbar – gestrichelter Rahmen 1 (fieldBorder), kein Hintergrund, Schloss 18
-                ListAccountFieldGroup(label: "E-Mail-Adresse", t: t) {
-                    HStack(spacing: 10) {
-                        Text(session.currentUserEmail ?? "–")
-                            .font(AppFont.dm(16, 400))
-                            .foregroundStyle(k.sub)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        SVGIcon(ListAccountIcon.lock, size: 18, color: k.sub, lineWidth: 2)
-                            .accessibilityLabel("Nicht änderbar")
-                    }
-                    .padding(.horizontal, 17)
-                    .frame(height: 52)
-                    .background(CSSBox(shape: RR(16), border: 1, borderColor: k.fieldBorder, dash: [3, 3]))
-                    .accessibilityElement(children: .combine)
-                }
-                .padding(.top, 14)
-
-                Spacer(minLength: 0)                                     // margin-top: auto
                 CTAButton(title: isSaving ? "Wird gespeichert …" : "Speichern", k: k,
                           isEnabled: check == .available && !isSaving, action: save)
                     .padding(.top, 20)

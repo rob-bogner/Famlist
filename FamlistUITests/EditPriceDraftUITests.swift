@@ -37,9 +37,13 @@ final class EditPriceDraftUITests: XCTestCase {
         field.tap()
         field.typeText("3,33")
 
-        // Zahlentastatur schließen wie ein Nutzer: Inhalt nach unten ziehen (scrollDismissesKeyboard).
-        let start = app.staticTexts["Kategorie"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 160)))
+        // Zahlentastatur schließen wie ein Nutzer: Inhalt nach unten bis in die Tastatur ziehen (scrollDismissesKeyboard).
+        // Das Preisfeld wird beim Fokussieren über „Speichern“ geholt – eine feste Strecke ab „Kategorie“ endet
+        // seitdem weit über der Tastatur, deshalb bis 40 pt unter deren Oberkante ziehen.
+        let label = app.staticTexts["Kategorie"]
+        let start = label.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let distance = app.keyboards.firstMatch.frame.minY + 40 - label.frame.midY
+        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: distance)))
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3), "Tastatur geschlossen")
         let history = app.buttons["Preisverlauf anzeigen"]
         XCTAssertTrue(history.waitForExistence(timeout: 5), "Link „Preisverlauf“")
@@ -53,6 +57,22 @@ final class EditPriceDraftUITests: XCTestCase {
         app.buttons["Speichern"].tap()
         let price = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Preis 3,33")).firstMatch
         XCTAssertTrue(price.waitForExistence(timeout: 5), "Karte zeigt 3,33 €")
+    }
+
+    /// Fokussiertes Preisfeld liegt sichtbar über „Speichern“, „Speichern“ über der Tastatur (KeyboardRevealScrollView).
+    /// Vorher lag das Feld hinter Ziffernblock und Knopf.
+    func test_focusedPriceField_isVisibleAboveSaveButton() {
+        openEdit("Butter")
+        let field = app.textFields["Preis"]
+        field.tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 3), "Tastatur offen")
+        let save = app.buttons["Speichern"]
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            field.frame.maxY <= save.frame.minY && save.frame.maxY <= keyboard.frame.minY
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter().wait(for: [visible], timeout: 3), .completed,
+                       "Preisfeld \(field.frame) über „Speichern“ \(save.frame) über Tastatur \(keyboard.frame)")
     }
 
     private func openEdit(_ name: String) {

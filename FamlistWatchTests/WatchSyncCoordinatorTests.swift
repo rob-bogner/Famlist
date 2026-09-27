@@ -76,7 +76,7 @@ final class WatchSyncCoordinatorTests: XCTestCase {
         ListModel(id: id, ownerId: UUID(), title: title, isDefault: false, createdAt: Date(), updatedAt: Date())
     }
 
-    private func row(_ list: UUID, _ name: String, units: Int = 1, hlc: Int64, updated: TimeInterval) -> ItemModel {
+    private func row(_ list: UUID, _ name: String, units: Double = 1, hlc: Int64, updated: TimeInterval) -> ItemModel {
         ItemModel(id: UUID().uuidString, name: name, units: units, measure: "", listId: list.uuidString,
                   updatedAt: Date(timeIntervalSince1970: updated), hlcTimestamp: hlc, hlcCounter: 0,
                   hlcNodeId: "phone", tombstone: false)

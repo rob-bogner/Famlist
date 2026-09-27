@@ -46,8 +46,8 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Name of the item (e.g., "Milk", "Bread").
     var name: String
     
-    /// Number of units for the item (e.g., 2 liters, 3 packs).
-    var units: Int
+    /// Menge des Artikels, auch mit Nachkommastellen (z. B. 1,5 kg, 3 Packungen). Höchstens 2 Stellen (QuantityFormat).
+    var units: Double
     
     /// Measurement unit associated with the item (e.g., "liters", "packs").
     var measure: String
@@ -173,7 +173,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         imagePath: String? = nil,
         imageData: String? = nil, // Default image data is nil
         name: String = "", // Default name is an empty string
-        units: Int = 1, // Default to 1 unit
+        units: Double = 1, // Default to 1 unit
         measure: String = "", // Default measurement is empty
         price: Double = 0.0, // Default price is 0.0
         isChecked: Bool = false, // Default to unchecked
@@ -228,7 +228,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
             imagePath: try c.decodeIfPresent(String.self, forKey: .imagePath),
             imageData: try c.decodeIfPresent(String.self, forKey: .imageData),
             name: try c.decode(String.self, forKey: .name),
-            units: try c.decode(Int.self, forKey: .units),
+            units: try c.decode(Double.self, forKey: .units),     // alte Snapshots mit Ganzzahl lesen sich ebenso
             measure: try c.decode(String.self, forKey: .measure),
             price: try c.decode(Double.self, forKey: .price),
             isChecked: try c.decode(Bool.self, forKey: .isChecked),

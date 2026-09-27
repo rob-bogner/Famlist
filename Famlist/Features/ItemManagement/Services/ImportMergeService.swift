@@ -82,12 +82,12 @@ struct ImportMergeService {
             let uniqueNonEmptyMeasures = Set(nonEmptyMeasures)
             let allCompatible = uniqueNonEmptyMeasures.count <= 1
 
-            let finalUnits: Int
+            let finalUnits: Double
             let finalMeasure: String
 
             if allCompatible {
                 // Sum all units; use first non-empty measure (or "" if none)
-                finalUnits = group.reduce(0) { $0 + $1.units }
+                finalUnits = min(QuantityFormat.normalized(group.reduce(0) { $0 + $1.units }), QuantityFormat.range.upperBound)
                 finalMeasure = nonEmptyMeasures.first ?? ""
             } else {
                 // Incompatible measures → use first item only, discard rest
@@ -118,10 +118,13 @@ struct ImportMergeService {
                     )
                     targets.append(.reactivate(reactivatedItem))
                 } else {
-                    // Active item → accumulate units, preserve existing metadata
+                    // Aktiver Artikel: Mengen zusammenführen (QuantityMerge: addieren, g↔kg usw. umrechnen, sonst
+                    // gilt der Import – vorher ergab 500 g + 1 kg „501 kg“). Metadaten bleiben erhalten.
                     var updatedItem = existing
-                    updatedItem.units = existing.units + finalUnits
-                    if !finalMeasure.isEmpty { updatedItem.measure = finalMeasure }
+                    let merged = QuantityMerge.combine(existing: (existing.units, existing.measure),
+                                                       added: (finalUnits, finalMeasure))
+                    updatedItem.units = merged.units
+                    updatedItem.measure = merged.measure
                     if let cat = category   { updatedItem.category = cat }
                     if let desc = productDesc { updatedItem.productDescription = desc }
                     if let br = brand        { updatedItem.brand = br }

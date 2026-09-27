@@ -24,7 +24,7 @@ struct SupabaseItemRow: Codable {
     let imageData: String?
     let imagePath: String?
     let name: String
-    let units: Int
+    let units: Double
     let measure: String
     let price: Double
     let isChecked: Bool

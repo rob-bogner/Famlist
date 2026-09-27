@@ -39,7 +39,7 @@ final class MultiDeviceSyncIntegrationTests: XCTestCase {
         return try store.fetchItem(id: XCTUnwrap(UUID(uuidString: rows[0].id)))
     }
 
-    private func row(_ id: UUID, name: String, units: Int = 1, ts: Int64, counter: Int = 0, node: String,
+    private func row(_ id: UUID, name: String, units: Double = 1, ts: Int64, counter: Int = 0, node: String,
                      tombstone: Bool = false) -> ItemModel {
         ItemModel(id: id.uuidString, name: name, units: units, listId: UUID().uuidString,
                   hlcTimestamp: ts, hlcCounter: counter, hlcNodeId: node, tombstone: tombstone)
@@ -84,7 +84,7 @@ final class MultiDeviceSyncIntegrationTests: XCTestCase {
     func testRapidConcurrentUpdates_shouldConvergeInAnyOrder() throws {
         let id = UUID()
         let rows = (0..<5).map { i in
-            row(id, name: "Device\(i)", units: i, ts: 1000 + Int64(i * 100), counter: i, node: "device\(i)")
+            row(id, name: "Device\(i)", units: Double(i), ts: 1000 + Int64(i * 100), counter: i, node: "device\(i)")
         }
         let orders = [rows, rows.reversed(), [rows[2], rows[0], rows[4], rows[1], rows[3]]]
         let results = try orders.map { try XCTUnwrap(converge($0)) }

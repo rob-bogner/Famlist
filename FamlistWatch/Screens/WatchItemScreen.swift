@@ -22,8 +22,12 @@ struct WatchItemScreen: View {
     let name: String
     let category: String
     let unitName: String
-    @State var units: Int
-    var onUnitsChanged: (Int) -> Void = { _ in }
+    @State var units: Double
+    /// Schrittweite von Krone und ± (QuantityPresets.step: g/ml 50, sonst 1).
+    var step: Double = 1
+    var onUnitsChanged: (Double) -> Void = { _ in }
+    /// Rasterschritte der Krone; jeder Schritt wendet dieselbe Regel an wie ± (QuantityPresets.next).
+    @State private var crownTicks: Double = 0
     var onCheck: () -> Void = {}
     var onBack: () -> Void = {}
 
@@ -65,28 +69,30 @@ struct WatchItemScreen: View {
     /// Zahl Outfit 24/600 (line-height 1.05) accentText, Einheit DM 11 weiß .6.
     private var stepper: some View {
         HStack {
-            stepButton(Icon.minus, label: "Weniger") { setUnits(units - 1) }
+            stepButton(Icon.minus, label: "Weniger") { change(up: false) }
             Spacer()
             VStack(spacing: 0) {
-                Text("\(units)").font(WatchFont.outfit(24)).foregroundStyle(w.accentText)
+                Text(QuantityFormat.format(units)).font(WatchFont.outfit(24)).foregroundStyle(w.accentText)
                     .watchLineBox(WatchFont.scaled(24) * 1.05)
                 Text(unitName).font(WatchFont.dm(11)).foregroundStyle(w.sub)
                     .watchLineBox(WatchFont.dmLineHeight(11))
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Menge \(units) \(unitName)")
-            .accessibilityAdjustableAction { direction in
-                setUnits(direction == .increment ? units + 1 : units - 1)
-            }
+            .accessibilityLabel("Menge \(QuantityFormat.format(units)) \(unitName)")
+            .accessibilityAdjustableAction { direction in change(up: direction == .increment) }
             Spacer()
-            stepButton(Icon.plus, label: "Mehr") { setUnits(units + 1) }
+            stepButton(Icon.plus, label: "Mehr") { change(up: true) }
         }
         .padding(.horizontal, 7)                          // Rand 1 + padding 6 (CSS border-box)
         .frame(minHeight: 56)
         .background(WatchCardBackground(w: w, innerHighlight: false))
         .focusable()
-        .digitalCrownRotation(detent: $units, from: 1, through: 99, by: 1, sensitivity: .low, isContinuous: false,
-                              isHapticFeedbackEnabled: true, onIdle: { onUnitsChanged(units) })
+        .digitalCrownRotation(detent: $crownTicks, from: -100_000, through: 100_000, by: 1, sensitivity: .low,
+                              isContinuous: false, isHapticFeedbackEnabled: true, onIdle: { onUnitsChanged(units) })
+        .onChange(of: crownTicks) { old, new in
+            let ticks = Int((new - old).rounded())
+            for _ in 0..<abs(ticks) { units = QuantityPresets.next(units, up: ticks > 0, step: step) }
+        }
     }
 
     /// CTA „Abhaken“: 44 hoch, Radius 22, Verlauf light → accent, inset 0 1 0 weiß .5, Text #04262A 15/600,
@@ -115,8 +121,9 @@ struct WatchItemScreen: View {
         .accessibilityLabel(label)
     }
 
-    private func setUnits(_ value: Int) {
-        units = min(max(value, 1), 99)
+    /// Eine Stufe mehr/weniger (1,5 + 1 → 2; 120 g + 50 → 150 g; unter 1 senkt „−“ nicht weiter).
+    private func change(up: Bool) {
+        units = QuantityPresets.next(units, up: up, step: step)
         onUnitsChanged(units)
     }
 }

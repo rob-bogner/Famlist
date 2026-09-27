@@ -75,7 +75,7 @@ final class ListViewModelDuplicateDetectionTests: XCTestCase {
 
     private func makeItem(
         name: String,
-        units: Int = 1,
+        units: Double = 1,
         isChecked: Bool = false
     ) -> ItemModel {
         ItemModel(

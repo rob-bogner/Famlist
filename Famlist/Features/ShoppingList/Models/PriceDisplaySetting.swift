@@ -38,12 +38,13 @@ enum PriceDisplaySetting {
 
     /// Preis × Stückzahl eines Artikels (siehe `multiplier`).
     static func lineTotal(_ item: ItemModel) -> Double {
-        max(item.price, 0) * Double(multiplier(for: item))
+        max(item.price, 0) * multiplier(for: item)
     }
 
     /// Wie oft der Preis zählt: Stückzahl bei Zähl-Einheiten, 1 bei Gewicht/Volumen/Länge.
-    static func multiplier(for item: ItemModel) -> Int {
-        isMeasuredAmount(item.measure) ? 1 : max(item.units, 1)
+    /// Kommazahlen zählen anteilig (2,5 Packungen → 2,5 × Preis); 0 oder weniger zählt wie 1.
+    static func multiplier(for item: ItemModel) -> Double {
+        isMeasuredAmount(item.measure) ? 1 : (item.units > 0 ? item.units : 1)
     }
 
     /// true für Einheiten, bei denen die Menge eine Größe ist (g, kg, ml, l, cm, m).

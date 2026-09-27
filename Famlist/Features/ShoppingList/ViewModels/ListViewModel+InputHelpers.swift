@@ -41,7 +41,7 @@ extension ListViewModel {
         let newItem = ItemModel(
             imageData: image.flatMap(ProductImageCodec.encode),
             name: name,
-            units: Int(units) ?? 1,
+            units: QuantityFormat.parse(units) ?? 1,
             measure: measure, // addItem() normalisiert via canonicalizeMeasure
             price: 0.0,
             isChecked: false,

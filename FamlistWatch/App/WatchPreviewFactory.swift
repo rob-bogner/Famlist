@@ -29,7 +29,7 @@ enum WatchPreviewFactory {
                              createdAt: Date(), updatedAt: Date())
         _ = try? sync.listStore.upsert(model: list)
         for (name, units, checked) in [("Bananen", 6, false), ("Tomaten", 500, false), ("Äpfel", 1, true)] {
-            _ = try? sync.itemStore.upsert(model: ItemModel(name: name, units: units, measure: name == "Tomaten" ? "g" : "",
+            _ = try? sync.itemStore.upsert(model: ItemModel(name: name, units: Double(units), measure: name == "Tomaten" ? "g" : "",
                                                             isChecked: checked, category: "Obst & Gemüse",
                                                             listId: list.id.uuidString))
         }

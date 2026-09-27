@@ -170,7 +170,7 @@ final class LiveWatchServerTests: XCTestCase {
         // Zwei Wegwerf-Listen mit je einem Artikel (werden am Ende samt Artikeln gelöscht).
         struct NewList: Encodable { let id: UUID; let owner_id: UUID; let title: String; let is_default: Bool }
         struct ItemRow: Encodable {
-            let id: UUID; let list_id: UUID; let name: String; let units: Int
+            let id: UUID; let list_id: UUID; let name: String; let units: Double
             let hlc_timestamp: Int64; let hlc_counter: Int; let hlc_node_id: String; let tombstone: Bool
         }
         let temp = [UUID(), UUID()]

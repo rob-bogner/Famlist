@@ -166,7 +166,7 @@ final class RealtimeEventProcessor {
         }
         
         let name = extractString("name") ?? ""
-        let units = extractInt("units") ?? 1
+        let units = extractDouble("units").map(QuantityFormat.normalized) ?? 1   // Kommazahl seit Migration 025
         let measure = extractString("measure") ?? ""
         let price = extractDouble("price") ?? 0.0
         let isChecked = extractBool("isChecked") ?? false

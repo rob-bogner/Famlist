@@ -107,7 +107,7 @@ final class MultiNodeSyncScenarioTests: XCTestCase {
 
     private func tick() async throws { try await Task.sleep(nanoseconds: 5_000_000) }
 
-    private func newItem(_ name: String, units: Int = 1) -> ItemModel {
+    private func newItem(_ name: String, units: Double = 1) -> ItemModel {
         ItemModel(name: name, units: units, measure: "", listId: listId.uuidString)
     }
 

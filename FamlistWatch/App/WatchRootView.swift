@@ -57,7 +57,7 @@ struct WatchRootView: View {
         case .item(let id):
             if let detail = model.detail(for: id) {
                 WatchItemScreen(backTitle: model.title, name: detail.name, category: detail.category,
-                                unitName: detail.unitName, units: detail.units,
+                                unitName: detail.unitName, units: detail.units, step: detail.step,
                                 onUnitsChanged: { model.setUnits(id, to: $0) },
                                 onCheck: { model.check(id); pop() }, onBack: pop)
             }

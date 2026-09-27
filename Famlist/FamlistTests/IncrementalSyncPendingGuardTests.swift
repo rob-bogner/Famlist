@@ -82,7 +82,7 @@ final class IncrementalSyncPendingGuardTests: XCTestCase {
 
     /// Inserts an entity into SwiftData with the given syncStatus and units.
     @discardableResult
-    private func insertEntity(id: UUID, units: Int, syncStatus: ItemEntity.SyncStatus,
+    private func insertEntity(id: UUID, units: Double, syncStatus: ItemEntity.SyncStatus,
                               hlcTimestamp: Int64 = 2_000) throws -> ItemEntity {
         let entity = ItemEntity(
             id: id,
@@ -109,7 +109,7 @@ final class IncrementalSyncPendingGuardTests: XCTestCase {
 
     /// Builds a delta ItemModel for the given id with the given units and a future updatedAt.
     /// Standard-HLC 1000 = älter als die lokale Zeile (2000): der typische veraltete Server-Stand.
-    private func makeDeltaItem(id: UUID, units: Int, hlcTimestamp: Int64 = 1_000) -> ItemModel {
+    private func makeDeltaItem(id: UUID, units: Double, hlcTimestamp: Int64 = 1_000) -> ItemModel {
         var item = ItemModel(
             id: id.uuidString,
             name: "Tee",

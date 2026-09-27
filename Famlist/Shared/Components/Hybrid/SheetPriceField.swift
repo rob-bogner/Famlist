@@ -51,6 +51,7 @@ struct SheetPriceField: View {
         .frame(width: 148, height: 52)
         .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1,
                            borderColor: hasError ? .hex("#E5484D") : k.fieldBorder))
+        .revealsWhenFocused(focused)            // über Tastatur und Knöpfen halten
         .onAppear { text = displayText(from: price) }
         .task {
             guard autoFocus else { return }
