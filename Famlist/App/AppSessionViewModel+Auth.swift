@@ -8,7 +8,7 @@
  - Anmelden (Magic-Link, Passwort), Registrieren, Sitzung wiederherstellen und Start nach der Anmeldung (Profil und Start-Liste laden).
 
  📝 Last Change:
- - Aus AppSessionViewModel.swift ausgelagert (Audit 25.09.2026).
+ - Gelöschtes (archiviertes) Konto vor bzw. nach dem Start prüfen; Hinweise laden (Konto-Archiv, 27.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -129,11 +129,16 @@ extension AppSessionViewModel {
     /// Completes auth: loads profile and start list and opens the list.
     /// Offline-First: Mit einem gespeicherten Profil startet die App sofort aus der lokalen Kopie; das
     /// Profil wird im Hintergrund aktualisiert. Vorher führte ein Start ohne Netz auf „Anmelden“ (Audit K6).
+    /// Konto-Archiv: Ohne lokale Kopie (erste Anmeldung auf dem Gerät) wird vorher geprüft, ob das Konto
+    /// gelöscht ist; mit Kopie startet die App sofort und prüft im Hintergrund (sonst hinge ein Start ohne Netz).
     func handleAuthCompletion() async {
+        let hasLocalProfile = authService?.currentUserId.flatMap { ProfileCache.load(userId: $0) } != nil
+        if !hasLocalProfile, await enterArchiveIfNeeded() { return }
         do {
             await markPhase(.profile)
             let me = try await loadProfile()
             currentProfile = me
+            listViewModel.userEventHandler = { [weak self] event in self?.handleUserEvent(event) }
 
             // Gespeicherten Invite aus dem Pre-Auth-Zustand übernehmen
             if let stored = pendingInviteStorage {
@@ -155,6 +160,10 @@ extension AppSessionViewModel {
             await markPhase(.itemsSnapshot)
             UserLog.Data.loadingItems()
             self.isAuthenticated = true
+            Task {
+                if hasLocalProfile { await checkArchiveInBackground() }
+                await loadAccountNotices()
+            }
         } catch {
             self.errorMessage = UserFacingError.message(for: error)
             self.isAuthenticated = false

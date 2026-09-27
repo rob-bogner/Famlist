@@ -143,7 +143,11 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
 
     /// Beobachtet list_members DELETE-Events für den eingeloggten User.
     internal var membershipTask: Task<Void, Never>?
-    
+
+    /// Ereignisse des Kanals `user:<id>`, die nicht die Listen selbst betreffen (Konto-Archiv); gesetzt von
+    /// AppSessionViewModel. „Aus Liste entfernt“ erledigt das ListViewModel selbst.
+    var userEventHandler: (@MainActor (UserChannelEvent) -> Void)?
+
     /// Retains connectivity subscription so it lives with the view model.
     internal var connectivityCancellable: AnyCancellable?
 

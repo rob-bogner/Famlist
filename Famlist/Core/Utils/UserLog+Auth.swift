@@ -67,9 +67,29 @@ extension UserLog {
             log("👤 Profilfoto aktualisiert")
         }
 
-        /// Konto gelöscht (alle Daten entfernt)
-        static func accountDeleted() {
-            log("🗑️ Konto und alle Daten gelöscht")
+        /// Konto gelöscht: 60 Tage archiviert, danach endgültig gelöscht (Migration 027)
+        static func accountArchived() {
+            log("🗑️ Konto gelöscht – 60 Tage wiederherstellbar")
+        }
+
+        /// Archiviertes Konto nach erneuter Anmeldung erkannt
+        static func archivedAccountFound(purgeDate: String) {
+            log("🗄️ Konto ist gelöscht – endgültige Löschung am \(purgeDate)")
+        }
+
+        /// Archiviertes Konto wiederhergestellt
+        static func accountRestored() {
+            log("♻️ Konto wiederhergestellt")
+        }
+
+        /// Wiederherstellen fehlgeschlagen
+        static func accountRestoreFailed(reason: String) {
+            log("⚠️ Konto konnte nicht wiederhergestellt werden: \(reason)")
+        }
+
+        /// Archiviertes Konto sofort endgültig gelöscht
+        static func accountPurged() {
+            log("🗑️ Konto und alle Daten endgültig gelöscht")
         }
 
         /// Anmeldelink per E-Mail verschickt

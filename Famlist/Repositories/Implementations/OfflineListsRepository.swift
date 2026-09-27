@@ -148,6 +148,7 @@ final class OfflineListsRepository: ListsRepository {
 
     func fetchMembers(listId: UUID) async throws -> [ListMember] { try await remote.fetchMembers(listId: listId) }
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> { remote.observeMemberRemovals(userId: userId) }
+    func observeUserEvents(userId: UUID) -> AsyncStream<UserChannelEvent> { remote.observeUserEvents(userId: userId) }
     func createInvite(listId: UUID) async throws -> String { try await remote.createInvite(listId: listId) }
     func invitePreview(token: String) async throws -> InvitePreviewRow? { try await remote.invitePreview(token: token) }
     func acceptInvite(token: String) async throws -> UUID { try await remote.acceptInvite(token: token) }

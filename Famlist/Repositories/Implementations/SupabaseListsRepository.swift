@@ -166,34 +166,18 @@ final class SupabaseListsRepository: ListsRepository {
         logVoid(params: (listId: listId, profileId: profileId))
     }
 
-    /// „Du wurdest aus einer Liste entfernt“ kommt als privater Broadcast an `user:<id>`
-    /// (Trigger on_list_member_removed, Migration 014). Postgres Changes auf list_members
-    /// gingen nicht: DELETE-Events lassen sich dort nicht filtern und erreichten alle Nutzer.
+    /// „Du wurdest aus einer Liste entfernt“ – nur dieser Teil von observeUserEvents
+    /// (SupabaseListsRepository+UserChannel.swift), damit der Kanal `user:<id>` nur einmal abonniert wird.
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID> {
-        AsyncStream { [weak self] continuation in
-            guard let self else { continuation.finish(); return }
-
-            let channel = client.realtime.channel("user:\(userId.uuidString.lowercased())") {
-                $0.isPrivate = true
-            }
-            let removals = channel.broadcastStream(event: "member_removed")
-
+        let events = observeUserEvents(userId: userId)
+        return AsyncStream { continuation in
             let task = Task {
-                // Anmelden mit Wiederholung wie bei den Listen-Kanälen; vorher blieb es nach einem
-                // Fehlschlag beim einen Versuch (Audit 2, Befund S12).
-                await SupabaseRealtimeManager.subscribeWithRetry(channel, listId: nil)
-                for await message in removals {
-                    if let listId = Self.listId(fromBroadcast: message) {
-                        continuation.yield(listId)
-                    }
+                for await event in events {
+                    if case .memberRemoved(let listId) = event { continuation.yield(listId) }
                 }
                 continuation.finish()
             }
-
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
-                Task { await channel.unsubscribe() }
-            }
+            continuation.onTermination = { @Sendable _ in task.cancel() }
         }
     }
 

@@ -130,4 +130,14 @@ extension UserLog.Data {
     static func accessRevoked() {
         UserLog.log("🚫 Zugriff auf geteilte Liste wurde entzogen")
     }
+
+    /// Hinweis gezeigt: Mitglied hat sein Konto gelöscht (Konto-Archiv)
+    static func memberDeletedAccountShown(name: String) {
+        UserLog.log("👥 \(name) hat das Konto gelöscht und ist nicht mehr Mitglied")
+    }
+
+    /// Besitzer entfernt ein Mitglied mit gelöschtem Konto endgültig aus der Liste
+    static func archivedMemberRemoved(name: String) {
+        UserLog.log("👥 \(name) (Konto gelöscht) endgültig aus der Liste entfernt")
+    }
 }

@@ -134,12 +134,9 @@ final class SupabaseProfilesRepository: ProfilesRepository {
         return URL(string: try await client.storageCreateSignedURL(bucket: "avatars", path: path, expiresIn: 3600))
     }
 
+    /// Archiviert das Konto (Migration 027). Das Profilfoto bleibt liegen, damit es beim Wiederherstellen
+    /// zurückkommt; nach 60 Tagen löscht die Edge Function account-purge alle Fotos (Migration 028).
     func deleteAccount() async throws {
-        let id = try await myId()
-        // Storage-Dateien zuerst über die Storage-API (direktes SQL-DELETE auf storage.objects ist gesperrt).
-        // Ein Fehler bricht ab, damit kein Profilfoto ohne Konto zurückbleibt (DSGVO). Eine fehlende
-        // Datei ist für die Storage-API kein Fehler.
-        try await client.storageRemove(bucket: "avatars", paths: ["\(id.uuidString.lowercased())/avatar.jpg"])
         try await client.rpc("delete_my_account")
     }
 }

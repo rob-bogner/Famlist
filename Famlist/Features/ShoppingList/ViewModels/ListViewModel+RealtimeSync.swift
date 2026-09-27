@@ -229,16 +229,20 @@ extension ListViewModel {
 
     // MARK: - Membership Observation (FAM-21 Bug Fix)
 
-    /// Startet eine Realtime-Beobachtung auf list_members DELETE-Events für den angegebenen User.
+    /// Startet die Realtime-Beobachtung des Kanals `user:<id>` (entfernt, wiederhergestellt, Konto-Archiv).
     /// Wird beim Login gestartet und bei Sign-Out via clearForSignOut() gestoppt.
     func startObservingMemberships(userId: UUID) {
         guard let repo = listsRepository else { return }
         membershipTask?.cancel()
         membershipTask = Task { [weak self] in
-            guard let self else { return }
-            for await removedListId in repo.observeMemberRemovals(userId: userId) {
+            for await event in repo.observeUserEvents(userId: userId) {
                 await MainActor.run {
-                    self.handleMembershipRemoval(listId: removedListId)
+                    guard let self else { return }
+                    if case .memberRemoved(let removedListId) = event {
+                        self.handleMembershipRemoval(listId: removedListId)
+                    } else {
+                        self.userEventHandler?(event)
+                    }
                 }
             }
         }
