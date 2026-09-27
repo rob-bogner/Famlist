@@ -22,7 +22,9 @@ struct WatchItemDetail: Hashable {
     let unitName: String
     /// Menge, auch mit Nachkommastellen (1,5 kg).
     let units: Double
-    /// Schrittweite von Krone und ± (g/ml 50, sonst 1 – wie auf dem iPhone).
+    /// Feiner Schritt (± tippen, Krone langsam): kg/l/m 0,1 · g/ml 50 · sonst 1 – wie auf dem iPhone.
     let step: Double
+    /// Grober Schritt (± halten, Krone schnell): kg/l/m 1 · sonst wie `step`.
+    let coarseStep: Double
     let isChecked: Bool
 }

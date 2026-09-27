@@ -93,8 +93,8 @@ extension WatchListViewModel {
         let key = ItemIdentity.normalizedKey(name)
         if var open = items.first(where: { ItemIdentity.normalizedKey($0.name) == key && !$0.isChecked }) {
             let old = open.units
-            // Eine Stufe mehr wie ＋ (2 → 3 Stück, 500 → 550 g); vorher +1 mit Grenze 99 (500 g wurden 99).
-            open.units = QuantityPresets.next(old, up: true, step: QuantityPresets.step(for: open.measure))
+            // Eine grobe Stufe mehr (2 → 3 Stück, 1,5 → 2 kg, 500 → 550 g); vorher +1 mit Grenze 99 (500 g wurden 99).
+            open.units = QuantityPresets.next(old, up: true, step: QuantityPresets.coarseStep(for: open.measure))
             UserLog.Data.itemCountIncremented(name: open.name, from: old, to: open.units, measure: open.measure)
             write(open)
             noteCatalogUse(open.name, saving: nil)

@@ -55,6 +55,7 @@ Famlist/Core/Utils/Logger.swift
 Famlist/Core/Extensions/Measure.swift
 Famlist/Features/ShoppingList/Models/QuantityFormat.swift
 Famlist/Features/ShoppingList/Models/QuantityPresets.swift
+Famlist/Shared/Components/HoldRepeatButton.swift
 Famlist/Core/Utils/UserLog+Auth.swift
 Famlist/Core/Utils/UserLog+Data.swift
 Famlist/Core/Utils/UserLog+DataLists.swift

@@ -18,7 +18,10 @@ final class QuantityPresetsTests: XCTestCase {
     func test_step_dependsOnMeasure() {
         XCTAssertEqual(QuantityPresets.step(for: "g"), 50)
         XCTAssertEqual(QuantityPresets.step(for: "ml"), 50)
-        XCTAssertEqual(QuantityPresets.step(for: "kg"), 1)
+        XCTAssertEqual(QuantityPresets.step(for: "kg"), 0.1)            // tippen: 0,1 kg (Robert 27.09.)
+        XCTAssertEqual(QuantityPresets.coarseStep(for: "kg"), 1)        // halten / Krone schnell: 1 kg
+        XCTAssertEqual(QuantityPresets.coarseStep(for: "g"), 50)
+        XCTAssertEqual(QuantityPresets.coarseStep(for: "pack"), 1)
         XCTAssertEqual(QuantityPresets.step(for: "pack"), 1)
     }
 
@@ -39,6 +42,15 @@ final class QuantityPresetsTests: XCTestCase {
         XCTAssertEqual(QuantityPresets.next(0.5, up: true, step: 1), 1)
         XCTAssertEqual(QuantityPresets.next(0.5, up: false, step: 1), 0.5)
         XCTAssertEqual(QuantityPresets.next(125.5, up: true, step: 50), 150)
+    }
+
+    /// Feine Schritte bei kg: 1,5 → 1,6; nach unten bis 0,1, nicht darunter.
+    func test_next_fineKilogramSteps() {
+        XCTAssertEqual(QuantityPresets.next(1.5, up: true, step: 0.1), 1.6)
+        XCTAssertEqual(QuantityPresets.next(1.5, up: false, step: 0.1), 1.4)
+        XCTAssertEqual(QuantityPresets.next(0.1, up: false, step: 0.1), 0.1)
+        XCTAssertEqual(QuantityPresets.next(1.25, up: true, step: 0.1), 1.3)       // rastet ein
+        XCTAssertEqual(QuantityPresets.next(1.5, up: true, step: 1), 2)
     }
 
     func test_validation_allowsDecimals() {

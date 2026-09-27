@@ -36,17 +36,18 @@ struct SheetQuantityStepper: View {
     @State private var text = ""
     @FocusState private var focused: Bool
 
+    /// Tippen: feiner Schritt (0,1 kg); gedrückt halten: grober Schritt (1 kg) – Wunsch Robert 27.09.2026.
     private var step: Double { QuantityPresets.step(for: measure) }
+    private var coarseStep: Double { QuantityPresets.coarseStep(for: measure) }
 
     var body: some View {
         HStack(spacing: 0) {
-            Button(action: { change(up: false) }) {
+            HoldRepeatButton(onTap: { change(up: false, step: step) }, onRepeat: { change(up: false, step: coarseStep) }) {
                 GlassOrb(style: .neutral, appearance: k.appearance, accent: k.a, icon: Icon.minus, size: 40,
                          iconSize: 16, iconColor: canDecrease ? nil : k.stepOffIcon, lineWidth: 2.6)
                     .frame(width: 44, height: 44)             // Trefferfläche 44, Optik 40
                     .contentShape(Circle())
             }
-            .buttonStyle(.plain)
             .padding(-2)                                      // 44er-Trefferfläche ohne Layout-Versatz
             .disabled(!canDecrease)
             .accessibilityLabel("Menge verringern")
@@ -62,13 +63,12 @@ struct SheetQuantityStepper: View {
                 .accessibilityLabel("Menge")
                 .onChange(of: text) { _, newValue in apply(newValue) }
 
-            Button(action: { change(up: true) }) {
+            HoldRepeatButton(onTap: { change(up: true, step: step) }, onRepeat: { change(up: true, step: coarseStep) }) {
                 GlassOrb(style: .accent, appearance: k.appearance, accent: k.a, icon: Icon.plus, size: 40,
                          iconSize: 16, lineWidth: 2.6)
                     .frame(width: 44, height: 44)             // Trefferfläche 44, Optik 40
                     .contentShape(Circle())
             }
-            .buttonStyle(.plain)
             .padding(-2)                                      // 44er-Trefferfläche ohne Layout-Versatz
             .disabled(quantity >= range.upperBound)
             .accessibilityLabel("Menge erhöhen")
@@ -100,7 +100,7 @@ struct SheetQuantityStepper: View {
         }
     }
 
-    private var canDecrease: Bool { quantity > QuantityPresets.range.lowerBound }
+    private var canDecrease: Bool { quantity > QuantityPresets.minimum(forStep: step) }
 
     /// Nur Ziffern und ein Komma (höchstens 4 + 2 Stellen); gültige Werte sofort übernehmen
     /// (leer oder „1,“ bleibt stehen bis zum Verlassen).
@@ -116,7 +116,7 @@ struct SheetQuantityStepper: View {
         text = QuantityFormat.format(quantity)
     }
 
-    private func change(up: Bool) {
+    private func change(up: Bool, step: Double) {
         let next = QuantityPresets.next(quantity, up: up, step: step)
         guard next != quantity else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()

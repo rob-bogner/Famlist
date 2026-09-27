@@ -156,6 +156,17 @@ final class WatchListViewModelTests: XCTestCase {
         XCTAssertEqual(sut.sections.flatMap(\.items).first?.quantity, "3")
     }
 
+    /// kg: erneut hinzufügen = grober Schritt (1,5 kg → 2 kg), nicht 0,1.
+    func test_addExistingOpenName_withKilogram_addsCoarseStep() async throws {
+        let hack = try addItem(listA, "Hackfleisch", units: 1.5, measure: "kg")
+        let sut = makeSUT()
+        XCTAssertEqual(sut.detail(for: hack.id)?.step, 0.1)
+        XCTAssertEqual(sut.detail(for: hack.id)?.coarseStep, 1)
+        sut.add(name: "Hackfleisch")
+        await waitUntil { sut.detail(for: hack.id)?.units == 2 }
+        XCTAssertEqual(sut.detail(for: hack.id)?.units, 2)
+    }
+
     func test_addCheckedName_reopensSameItem() async throws {
         let bread = try addItem(listA, "Brot", checked: true)
         let sut = makeSUT()

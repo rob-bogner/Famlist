@@ -166,6 +166,7 @@
 		437613EF28174E7E07A8C898 /* LocalJSONFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5EBFE86621CD9639457DA46 /* LocalJSONFile.swift */; };
 		437C6C33BF77200F9561CE2E /* SyncEngineError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4175FC736BC1862F87E19AE9 /* SyncEngineError.swift */; };
 		437D5389638BCD4DE8A3D837 /* CategoryResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BF0429DE129E13BC69AC85 /* CategoryResolver.swift */; };
+		43A5A4F110677BCFCF719189 /* DevLaunchToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8BEA22AE199E6B6BD2BEAB4 /* DevLaunchToast.swift */; };
 		43C511385CA47D5423404234 /* ItemCatalogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6552BE6F4FFA6B298F110A0 /* ItemCatalogRepository.swift */; };
 		440032327434CF4893F39C91 /* OfflineStartUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B03560D8F5D8AE16044C4ED /* OfflineStartUITests.swift */; };
 		4507965FD43FB477CC92B0C8 /* PriceBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0254BD43FECE4E6763A67E6F /* PriceBook.swift */; };
@@ -526,6 +527,7 @@
 		DCA5A5DF5B886E5F6909D514 /* ListAccountBackdrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2172A8690849A11A33FD2ACE /* ListAccountBackdrop.swift */; };
 		DD9B8676273CED0DA95EF306 /* AppSessionViewModel+Auth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14582F0EA856C757A427D75C /* AppSessionViewModel+Auth.swift */; };
 		DEAB6404765F4C61BC3A96CE /* ItemEntityQuantityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A4353094B51E52746D7B47 /* ItemEntityQuantityTests.swift */; };
+		DEE2B9560C7A4B3E2BD2D505 /* HoldRepeatButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38F17A3E00FF9748C504098 /* HoldRepeatButton.swift */; };
 		DF15146058A3642C21272C3A /* SheetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10DF5AADE3DE8A8F6C5448E /* SheetTheme.swift */; };
 		DFC34419CA95E0F98DA774E7 /* HybridLogicalClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BCF2ED1F86D000D3915 /* HybridLogicalClock.swift */; };
 		E03418D6D95E97E2C3B1B4E3 /* SentOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C175323A8BA2DF3AFFAF25B6 /* SentOperation.swift */; };
@@ -655,6 +657,7 @@
 		F2E4EA7409C7D97638B283CC /* WatchAppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61831F6CABA466C069F3C17 /* WatchAppEnvironment.swift */; };
 		F32F233E52A0056D6A335C6F /* ItemEditLocalUpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F78245E84458AAC30FE7 /* ItemEditLocalUpdateTests.swift */; };
 		F35E3C0DDB06022A879B7F13 /* CategoryDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAB853B8BEEE43591A78895 /* CategoryDefinition.swift */; };
+		F35F310AFEAA01D9D32E5E77 /* HoldRepeatButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38F17A3E00FF9748C504098 /* HoldRepeatButton.swift */; };
 		F4AFF081FB180492837B8F12 /* ShareMembersSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AA8B2D68CA4862D058E415 /* ShareMembersSheet.swift */; };
 		F4DE57673D12CA0478C6794D /* SwipeableItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED086311F8CF5CE7E402FA80 /* SwipeableItemRow.swift */; };
 		F54D45A8E5760EBD68DDD8EE /* ListMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF21A012F1300AA000D3915 /* ListMember.swift */; };
@@ -1120,6 +1123,7 @@
 		C5581E3026C091EEA4CC2D8C /* AccentScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentScale.swift; sourceTree = "<group>"; };
 		C581304E213506C9C81E3244 /* WatchSectionDisplay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSectionDisplay.swift; sourceTree = "<group>"; };
 		C61831F6CABA466C069F3C17 /* WatchAppEnvironment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchAppEnvironment.swift; sourceTree = "<group>"; };
+		C8BEA22AE199E6B6BD2BEAB4 /* DevLaunchToast.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DevLaunchToast.swift; sourceTree = "<group>"; };
 		C8DD3392444FEBDE38D23EF7 /* ListFilterAddBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListFilterAddBridge.swift; sourceTree = "<group>"; };
 		C9C8E87354678EB1B187D910 /* DeleteChoiceScreen.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeleteChoiceScreen.swift; sourceTree = "<group>"; };
 		C9CD9E8362683C8094EBA106 /* WatchSmartStackWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSmartStackWidget.swift; sourceTree = "<group>"; };
@@ -1146,6 +1150,7 @@
 		D1295D6B5C1644C630DCCB55 /* WatchListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchListViewModelTests.swift; sourceTree = "<group>"; };
 		D1BF0429DE129E13BC69AC85 /* CategoryResolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryResolver.swift; sourceTree = "<group>"; };
 		D2B4DB4240DF849D3414670C /* ListViewModel+UndoDelete.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ListViewModel+UndoDelete.swift"; sourceTree = "<group>"; };
+		D38F17A3E00FF9748C504098 /* HoldRepeatButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HoldRepeatButton.swift; sourceTree = "<group>"; };
 		D39533751677ABB50FBDF7FE /* ListViewModel+Sections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ListViewModel+Sections.swift"; sourceTree = "<group>"; };
 		D3EAB6A22B8A7CADB7BD5C50 /* View+WatchLineHeight.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "View+WatchLineHeight.swift"; sourceTree = "<group>"; };
 		D42CB2C3677F17EBE29F330B /* WatchE2EHook.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchE2EHook.swift; sourceTree = "<group>"; };
@@ -2542,6 +2547,7 @@
 			children = (
 				2736740C803A9D8BF4349D6F /* Hybrid */,
 				AFB896877970660D425BF53D /* KeyboardReveal */,
+				D38F17A3E00FF9748C504098 /* HoldRepeatButton.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -2604,6 +2610,7 @@
 				14582F0EA856C757A427D75C /* AppSessionViewModel+Auth.swift */,
 				196FFDDF02329F3E6FB3747D /* AppSessionViewModel+DeepLink.swift */,
 				6012DFCE80BB7D719D84BDAC /* AppSessionViewModel+SignOut.swift */,
+				C8BEA22AE199E6B6BD2BEAB4 /* DevLaunchToast.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -3182,6 +3189,7 @@
 				021D6B44BC5C0A27879F45CB /* WatchFontScaling.swift in Sources */,
 				398283E73BF889423524CB12 /* QuantityFormat.swift in Sources */,
 				57D48BA45CC1F17DB1C5D3E0 /* QuantityPresets.swift in Sources */,
+				DEE2B9560C7A4B3E2BD2D505 /* HoldRepeatButton.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3595,6 +3603,8 @@
 				0E57A9A34E1410B668DE7D2F /* WatchTransport.swift in Sources */,
 				7F40426F87B6603B5CDF887D /* WatchConnectivityService.swift in Sources */,
 				0D13988A578F3A7113C3DB54 /* WatchBridge.swift in Sources */,
+				F35F310AFEAA01D9D32E5E77 /* HoldRepeatButton.swift in Sources */,
+				43A5A4F110677BCFCF719189 /* DevLaunchToast.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

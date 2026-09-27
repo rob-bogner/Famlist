@@ -83,6 +83,7 @@ final class WatchListViewModel: ObservableObject {
                                category: CategoryResolver.name(for: item.category, in: sync.categories),
                                unitName: WatchQuantity.unitName(measure: item.measure),
                                units: item.units, step: QuantityPresets.step(for: item.measure),
+                               coarseStep: QuantityPresets.coarseStep(for: item.measure),
                                isChecked: item.isChecked)
     }
 

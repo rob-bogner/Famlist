@@ -29,25 +29,41 @@ struct QuantityPreset: Equatable, Identifiable {
 }
 
 enum QuantityPresets {
-    /// Bereich der ± -Knöpfe: nie unter 1. Kleinere Mengen (z. B. 0,5 kg) nur per Eingabe (QuantityFormat.range).
+    /// Bereich der ± -Knöpfe. Untergrenze 1 – bei feinen Schritten (0,1 kg) die Schrittweite selbst (`minimum`).
+    /// Kleinere Mengen sonst nur per Eingabe (QuantityFormat.range).
     static let range: ClosedRange<Double> = 1...9999
 
-    /// Schrittweite der ± -Knöpfe.
+    /// Feiner Schritt: einmal tippen bzw. Krone langsam drehen. kg/l/m 0,1 · g/ml 50 · sonst 1.
     static func step(for measure: String) -> Double {
         switch Measure.fromExternal(measure) {
         case .g, .ml: return 50
+        case .kg, .l, .m: return 0.1
         default: return 1
         }
     }
 
-    /// Nächster Wert: rastet auf Vielfache der Schrittweite ein und bleibt in `range`
-    /// (1,5 + 1 → 2, 1,5 − 1 → 1, 120 g + 50 → 150). Unter 1 senkt „−“ nicht weiter ab.
+    /// Grober Schritt: Knopf gedrückt halten bzw. Krone schnell drehen. kg/l/m 1 · sonst wie `step`.
+    static func coarseStep(for measure: String) -> Double {
+        switch Measure.fromExternal(measure) {
+        case .kg, .l, .m: return 1
+        default: return step(for: measure)
+        }
+    }
+
+    /// Kleinster Wert, den „−“ erreicht: die Schrittweite, wenn sie unter 1 liegt (0,1 kg), sonst 1.
+    static func minimum(forStep step: Double) -> Double {
+        step < 1 ? step : range.lowerBound
+    }
+
+    /// Nächster Wert: rastet auf Vielfache der Schrittweite ein und bleibt im Bereich
+    /// (1,5 + 1 → 2, 1,5 + 0,1 → 1,6, 120 g + 50 → 150). Unter `minimum` senkt „−“ nicht weiter ab.
     static func next(_ value: Double, up: Bool, step: Double) -> Double {
         let value = QuantityFormat.normalized(value)
-        if !up && value <= range.lowerBound { return value }
+        let lower = minimum(forStep: step)
+        if !up && value <= lower { return value }
         let steps = QuantityFormat.normalized(value / step)
         let snapped = up ? (steps.rounded(.down) + 1) * step : (steps.rounded(.up) - 1) * step
-        return min(max(QuantityFormat.normalized(snapped), range.lowerBound), range.upperBound)
+        return min(max(QuantityFormat.normalized(snapped), lower), range.upperBound)
     }
 
     /// Schnellwahl über dem Ziffernblock.
