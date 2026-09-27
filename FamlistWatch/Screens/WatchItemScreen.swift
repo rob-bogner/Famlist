@@ -33,10 +33,11 @@ struct WatchItemScreen: View {
     @State private var crownTicks: Double = 0
     /// Zeitpunkt der letzten Raste – daraus die eigene Geschwindigkeitsmessung.
     @State private var lastTickTime: Date?
-    /// Folgt eine Raste schneller als 200 ms auf die vorige, gilt das Drehen als schnell. Gemessen am 27.09.2026
+    /// Folgt eine Raste schneller als 170 ms auf die vorige, gilt das Drehen als schnell. Gemessen am 27.09.2026
     /// auf der Apple Watch Ultra: schnell (eine Umdrehung = 6 Rasten) 73–141 ms, langsam 384–1035 ms.
+    /// Abgestimmt mit Robert am 27.09.2026: 200 ms zu früh, 100 ms zu spät, 150 ms fast, 170 ms.
     /// `DigitalCrownEvent.velocity` ist dafür unbrauchbar: während der Bewegung fast immer 0, erst beim Einrasten ein Wert.
-    private static let fastTickInterval: TimeInterval = 0.2
+    private static let fastTickInterval: TimeInterval = 0.17
     /// Langsam gedreht zählt jede 2. Raste als feiner Schritt. Stand 27.09.2026 (Robert: „einen Tick zu langsam“;
     /// 1 Raste war zu empfindlich). `.low` liefert nur ~6 Rasten pro Umdrehung – feiner geht es erst mit
     /// höherer Kronen-Empfindlichkeit (offen, siehe Handoff).

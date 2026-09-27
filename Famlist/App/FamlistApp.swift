@@ -220,6 +220,5 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             .environmentObject(priceBook) // Kassenzettel → Preise, Preisverlauf
             .environmentObject(receiptArchive) // Kassenzettel-Archiv (Einstellungen → Kassenzettel)
             .modelContainer(modelContainer) // Expose SwiftData container to the view hierarchy.
-            .devLaunchToast() // Nur DEBUG: Startargument -devToast "Text" (Rückmeldung bei Installation aus der Ferne)
     }
 }
