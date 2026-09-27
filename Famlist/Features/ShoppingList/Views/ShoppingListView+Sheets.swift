@@ -150,7 +150,8 @@ extension ShoppingListView {
         case .shareMembers(let list):
             ShareMembersSheet(viewModel: ShareMembersViewModel(list: list, me: session.currentProfile,
                                                                lists: listViewModel.listsRepository,
-                                                               profiles: session.profiles),
+                                                               profiles: session.profiles,
+                                                               accounts: session.accounts),
                               appearance: appearance, publicID: session.currentProfile?.publicId ?? "–",
                               onClose: closeSheet)
         case .settings:

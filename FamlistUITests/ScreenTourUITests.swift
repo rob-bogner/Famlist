@@ -27,10 +27,10 @@ final class ScreenTourUITests: XCTestCase {
     private var shotsDirectory: String?
     private let environment = ProcessInfo.processInfo.environment
 
-    static let screens = ["signIn", "profileSetup", "acceptInvite"]
-    static let overlays = ["menu", "sort", "copy", "delete", "copied", "undo"]
+    static let screens = ["signIn", "profileSetup", "acceptInvite", "restoreAccount", "restoreAccountOffline"]
+    static let overlays = ["menu", "sort", "copy", "delete", "copied", "undo", "memberDeleted"]
     static let sheets = ["search", "newItem", "edit", "productImage", "lists", "barcode", "createList",
-                         "listOptions", "shareMembers", "settings", "receiptArchive", "receiptDetail",
+                         "listOptions", "shareMembers", "shareMembersArchived", "settings", "receiptArchive", "receiptDetail",
                          "editProfile", "deleteAccount",
                          "manageCategories", "editCategory", "receiptCapture", "receiptReview",
                          "shoppingDone", "priceHistory", "manageItems", "importClipboard"]

@@ -37,7 +37,9 @@ struct RootView: View { // SwiftUI View declaration.
                     .accessibilityLabel(Text(String(localized: "auth.session.restoring"))) // Accessibility label for loading.
                     .transition(.opacity)
             } else if session.isAuthenticated { // If authenticated and not restoring, show the main app UI.
-                if session.needsProfileSetup {
+                if let archived = session.archivedAccount {
+                    RestoreAccountView(status: archived) // Gelöschtes Konto: wiederherstellen oder endgültig löschen.
+                } else if session.needsProfileSetup {
                     ProfileSetupView() // Schritt 2 von 2: Benutzername fehlt noch.
                 } else if let invite = session.pendingInvite {
                     AcceptInviteView(invite: invite) // Einladungslink: annehmen oder ablehnen.
@@ -53,6 +55,7 @@ struct RootView: View { // SwiftUI View declaration.
         .animation(.easeInOut(duration: 0.3), value: session.isRestoringSession)
         .animation(.easeInOut(duration: 0.3), value: session.needsProfileSetup)
         .animation(.easeInOut(duration: 0.3), value: session.pendingInvite?.token)
+        .animation(.easeInOut(duration: 0.3), value: session.archivedAccount)
         .onOpenURL { url in // Handle deep links such as the Supabase magic-link callback.
             session.handleOpenURL(url) // Forward URL to session VM to extract session via Supabase.
         }

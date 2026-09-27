@@ -16,7 +16,7 @@
  - Bei vielen Mitgliedern scrollt der Inhalt (Design zeigt ein Mitglied).
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 4). Ersetzt ShareListView und MembersView.
+ - Archivierte Mitglieder (Konto gelöscht) mit „Entfernen“ und Bestätigung (Konto-Archiv, 27.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -30,6 +30,8 @@ struct ShareMembersSheet: View {
 
     @State private var copiedLink = false
     @State private var copiedID = false
+    /// Archiviertes Mitglied, dessen Entfernen gerade bestätigt wird (Board ArchivedMemberRemove).
+    @State private var archivedToRemove: ArchivedListMember?
 
     init(viewModel: ShareMembersViewModel, appearance: Appearance, publicID: String, onClose: @escaping () -> Void = {}) {
         _vm = StateObject(wrappedValue: viewModel)
@@ -70,6 +72,14 @@ struct ShareMembersSheet: View {
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: vm.errorMessage)
+        .confirmationDialog(archivedToRemove.map { "\($0.name) aus der Liste entfernen?" } ?? "",
+                            isPresented: Binding(get: { archivedToRemove != nil }, set: { if !$0 { archivedToRemove = nil } }),
+                            titleVisibility: .visible, presenting: archivedToRemove) { member in
+            Button("Entfernen", role: .destructive) { vm.removeArchived(member) }
+            Button("Abbrechen", role: .cancel) {}
+        } message: { member in
+            Text("Wird das Konto wiederhergestellt, kommt \(member.name) nicht mehr automatisch zurück. Du kannst \(member.name) später neu einladen.")
+        }
         .task { await vm.load() }
     }
 
@@ -80,7 +90,7 @@ struct ShareMembersSheet: View {
         let dashed = k.a.base.color(0.4)                     // ShareMembers: dashed = rgba(accent, .4)
         let hintFont = AppFont.ui(.dmSans, 14, 400)
 
-        ListAccountSectionLabel(text: "Mitglieder · \(vm.members.count)", t: t)
+        ListAccountSectionLabel(text: "Mitglieder · \(vm.memberCount)", t: t)
             .padding(.top, 20)
 
         VStack(spacing: 10) {
@@ -93,10 +103,13 @@ struct ShareMembersSheet: View {
                     memberCard(m, t: t, k: k)
                 }
             }
+            ForEach(vm.archivedMembers) { m in
+                ShareArchivedMemberCard(member: m, t: t, onRemove: { archivedToRemove = m })
+            }
         }
         .padding(.top, 10)
 
-        if vm.members.count <= 1 {
+        if vm.memberCount <= 1 {
             // Gestrichelter Hinweis: padding 12 14 (+1,5 Rahmen), Radius 18, gap 12.
             // Das SVG (22) wird im Browser per flex-shrink auf ≈ 12,5 pt gestaucht (langer Text) –
             // hier exakt so nachgebildet: Icon 12,5 in einer 22 hohen Box.

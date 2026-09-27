@@ -12,7 +12,7 @@
 // - Höchstens 1 Aufruf je 10 s und Konto (Migration 023, watch_session_claim).
 // - Keine Tokens, Codes oder E-Mail-Adressen im Log.
 //
-// Antworten: 200 { token_hash, type: "magiclink" } · 401 Token fehlt/ungültig · 403 anonymes Konto
+// Antworten: 200 { token_hash, type: "magiclink" } · 401 Token fehlt/ungültig · 403 anonymes/archiviertes Konto
 //            405 nicht POST · 422 Konto ohne E-Mail · 429 zu früh (Retry-After: 10) · 500 Fehler
 
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
@@ -44,6 +44,14 @@ Deno.serve(async (req: Request) => {
     if (userError || !user) return json(401, { error: "invalid_token" });
     if (user.is_anonymous) return json(403, { error: "anonymous_user" });
     if (!user.email) return json(422, { error: "no_email" });
+
+    // Archivierte Konten (Migration 027/028) bekommen keine Uhr-Sitzung.
+    const { data: archived, error: archivedError } = await admin.rpc("account_is_archived", { p_user: user.id });
+    if (archivedError) {
+      console.error("watch-session: status failed", archivedError.code);
+      return json(500, { error: "internal" });
+    }
+    if (archived === true) return json(403, { error: "account_archived" });
 
     const { data: allowed, error: claimError } = await admin.rpc("watch_session_claim", { p_user: user.id });
     if (claimError) {

@@ -52,7 +52,14 @@ final class AppSessionViewModel: ObservableObject {
     internal var favoriteWriteTask: Task<Void, Never>? = nil
     /// Profilfoto des angemeldeten Nutzers (aus dem privaten Bucket `avatars`, per signiertem Link geladen).
     @Published var avatarImage: UIImage? = nil
-    
+    /// Gesetzt, wenn das angemeldete Konto gelöscht (archiviert) ist → RootView zeigt „Konto wiederherstellen“.
+    @Published var archivedAccount: AccountArchiveStatus? = nil
+    /// Noch nicht gezeigte Hinweise „Mitglied hat sein Konto gelöscht“ (nur für Listenbesitzer).
+    @Published var accountNotices: [AccountNotice] = []
+    /// Läuft gerade „Konto löschen“ auf diesem Gerät? Dann gilt das Realtime-Ereignis account_archived nicht
+    /// als „auf einem anderen Gerät gelöscht“.
+    internal var isDeletingAccount = false
+
     /// Current user's email address (if authenticated)
     var currentUserEmail: String? {
         authService?.client.auth.currentUser?.email
@@ -105,34 +112,40 @@ final class AppSessionViewModel: ObservableObject {
     internal let profiles: ProfilesRepository
     internal let lists: ListsRepository
     internal let listViewModel: ListViewModel
-    
+    /// Konto-Archiv (Migrationen 027/028); nil in Vorschauen ohne Server.
+    internal let accounts: AccountRepository?
+
     // MARK: - Lifecycle
-    
+
     /// Creates a new AppSessionViewModel.
     /// - Parameters:
     ///   - client: Supabase client facade; can be nil for previews.
     ///   - profiles: Profiles repository used to load the current user profile.
     ///   - lists: Lists repository used to resolve the default list.
     ///   - listViewModel: The list VM that will observe items for the resolved default list.
+    ///   - accounts: Konto-Archiv; ohne Angabe aus dem Client gebaut (Tests übergeben ein Double).
     init(
         client: SupabaseClienting?,
         profiles: ProfilesRepository,
         lists: ListsRepository,
-        listViewModel: ListViewModel
+        listViewModel: ListViewModel,
+        accounts: AccountRepository? = nil
     ) {
         self.profiles = profiles
         self.lists = lists
         self.listViewModel = listViewModel
-        
+
         // Initialize services only if client is available
         if let client {
             self.authService = AuthService(client: client)
             self.onboardingService = OnboardingService(client: client, profiles: profiles)
+            self.accounts = accounts ?? SupabaseAccountRepository(client: client)
         } else {
             self.authService = nil
             self.onboardingService = nil
+            self.accounts = accounts
         }
-        
+
         restoreTask = Task { await self.restoreSession() }
     }
     
@@ -185,6 +198,9 @@ final class AppSessionViewModel: ObservableObject {
         pendingInvite = nil
         pendingInviteStorage = nil
         invitePreview = nil
+        archivedAccount = nil
+        accountNotices = []
+        listViewModel.userEventHandler = nil
         logVoid(params: ["action": "resetLocalState"])
     }
 }

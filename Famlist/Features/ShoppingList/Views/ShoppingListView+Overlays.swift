@@ -133,7 +133,31 @@ extension ShoppingListView {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
                 .transition(toastTransition)
+        } else if let notice = activeNotice, activeSheet == nil {
+            MemberDeletedToast(k: k, name: notice.subjectName, remaining: noticeRemaining)
+                .padding(.horizontal, 20)
+                .padding(.bottom, insets.dockBottom + 80)       // Design: unten 114 bei Dock-Unterkante 34
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .transition(toastTransition)
+                .task(id: notice.id) { await present(notice) }
         }
+    }
+
+    /// Hinweis „Mitglied hat das Konto gelöscht“ für die geöffnete Liste (ohne Liste: in jeder Liste).
+    private var activeNotice: AccountNotice? {
+        session.accountNotices.first { $0.listId == nil || $0.listId == listViewModel.listId }
+    }
+
+    /// 6 s zeigen (Restzeit-Balken läuft ab), vorlesen, danach als gesehen markieren.
+    private func present(_ notice: AccountNotice) async {
+        noticeRemaining = 1
+        AccessibilityNotification.Announcement("\(notice.subjectName) hat das Konto gelöscht").post()
+        withAnimation(.linear(duration: 6)) { noticeRemaining = 0 }
+        try? await Task.sleep(nanoseconds: 6_000_000_000)
+        guard !Task.isCancelled else { return }
+        withAnimation(motion(.easeOut(duration: 0.25))) { session.markNoticeSeen(notice) }
     }
 
     /// Fehler des ListViewModels (z. B. Liste offline duplizieren) über allen Ebenen, damit er auch

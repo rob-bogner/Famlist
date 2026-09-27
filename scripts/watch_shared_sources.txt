@@ -48,6 +48,8 @@ Famlist/Repositories/Models/AuthError.swift
 Famlist/Repositories/Models/ItemUpsertResult.swift
 Famlist/Repositories/Models/List.swift
 Famlist/Repositories/Models/ListMember.swift
+Famlist/Repositories/Models/AccountNotice.swift
+Famlist/Repositories/Models/UserChannelEvent.swift
 Famlist/Repositories/Models/Profile.swift
 
 # Logging
@@ -70,6 +72,7 @@ Famlist/Features/ShoppingList/Services/MeasureCanonicalizer.swift
 # Listen, Profil (Favorit), Artikelstamm (Oft gekauft)
 Famlist/Repositories/Protocols/ListsRepository.swift
 Famlist/Repositories/Implementations/SupabaseListsRepository.swift
+Famlist/Repositories/Implementations/SupabaseListsRepository+UserChannel.swift
 Famlist/Repositories/Protocols/ProfilesRepository.swift
 Famlist/Repositories/Implementations/SupabaseProfilesRepository.swift
 Famlist/Repositories/Protocols/ItemCatalogRepository.swift

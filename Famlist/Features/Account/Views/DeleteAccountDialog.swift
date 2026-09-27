@@ -9,12 +9,12 @@
 
  🔰 Notes for Beginners:
  - Vorlage: DeleteAccountScreen in design-handoff/MyListUI/Screens/AccountScreens.swift
-   (DeleteAccount.dc.html): links/rechts 24, oben 250, Radius 28.
- - „Konto endgültig löschen“ ruft delete_my_account() auf. Solange das läuft, zeigt der Knopf einen
+   (DeleteAccount.dc.html): links/rechts 24, oben 214, Radius 28.
+ - „Konto löschen“ ruft delete_my_account() auf (archiviert 60 Tage, Migration 027). Solange das läuft, zeigt der Knopf einen
    Ladekreis und beide Knöpfe sind gesperrt.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 4).
+ - Neuer Text und Hinweis auf 60 Tage Wiederherstellen (Konto-Archiv, 27.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -48,16 +48,18 @@ struct DeleteAccountDialog: View {
                     .padding(.top, 4)
                     .accessibilityAddTraits(.isHeader)
 
-                Text(errorText ?? "Deine eigenen Listen, Artikel und Fotos werden dauerhaft gelöscht. Aus geteilten Listen wirst du entfernt. Das lässt sich nicht rückgängig machen.")
+                Text(errorText ?? "Dein Konto wird sofort deaktiviert. Deine geteilten Listen verschwinden bei allen Mitgliedern, und aus Listen anderer wirst du entfernt.")
                     .font(AppFont.dm(14, 400))
                     .foregroundStyle(errorText == nil ? k.sub : t.danger)
                     .multilineTextAlignment(.center)
                     .cssLineHeight(21, font: bodyFont)             // line-height 1.5
                     .fixedSize(horizontal: false, vertical: true)
 
+                restoreHint(k: k)
+
                 Button(action: onConfirm) {
                     ZStack {
-                        Text("Konto endgültig löschen")
+                        Text("Konto löschen")
                             .font(AppFont.dm(16, 600))
                             .foregroundStyle(.white)
                             .opacity(isWorking ? 0 : 1)
@@ -89,10 +91,28 @@ struct DeleteAccountDialog: View {
             .background(CSSBox(shape: RR(28), paint: .color(t.menu), border: 1, borderColor: t.menuBorder,
                                shadows: t.menuShadow))
             .padding(.horizontal, 24)
-            .padding(.top, 250)
+            .padding(.top, 214)
             .accessibilityElement(children: .contain)
             .accessibilityAddTraits(.isModal)
         }
+    }
+
+    /// Hinweisfeld: padding 10/12, Radius 14, 13 pt, line-height 1.45; „60 Tagen“ fett in Textfarbe.
+    private func restoreHint(k: SheetTheme) -> some View {
+        let strong = AttributedString("60 Tagen", attributes: AttributeContainer()
+            .font(AppFont.dm(13, 600)).foregroundColor(k.text))
+        let text = AttributedString("Meldest du dich innerhalb von ") + strong
+            + AttributedString(" wieder an, kannst du alles wiederherstellen. Danach wird alles endgültig gelöscht.")
+        return Text(text)
+            .font(AppFont.dm(13, 400))
+            .foregroundStyle(k.sub)
+            .multilineTextAlignment(.center)
+            .cssLineHeight(18.85, font: AppFont.ui(.dmSans, 13, 400))   // line-height 1.45
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity)
+            .background(RR(14).fill(k.field))
     }
 }
 

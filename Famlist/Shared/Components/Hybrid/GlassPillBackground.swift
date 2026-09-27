@@ -25,6 +25,8 @@ struct GlassPillBackground: View {
     let appearance: Appearance
     let accent: AccentScale
     let height: CGFloat
+    /// Abweichende Höhe des Lichtsaums, wenn das Board sie anders setzt (z. B. 50-pt-Knöpfe in RestoreAccount: 5).
+    var glowHeightOverride: CGFloat? = nil
 
     var body: some View {
         let t = GlassStyleTokens(style: style, appearance: appearance, accent: accent)
@@ -32,7 +34,7 @@ struct GlassPillBackground: View {
         let edge: CGFloat = height < 44 ? 2 : 3
         let glossHeight = (height * 0.38).rounded()
         let glowInset = max(18, (height * 0.7).rounded())
-        let glowHeight: CGFloat = height < 44 ? 5 : 7
+        let glowHeight: CGFloat = glowHeightOverride ?? (height < 44 ? 5 : 7)
         ZStack {
             Capsule()
                 .fill(LinearGradient(stops: [stop(.rgba(255, 255, 255, t.gloss), 0), stop(.rgba(255, 255, 255, 0), 1)],

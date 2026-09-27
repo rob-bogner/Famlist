@@ -59,7 +59,11 @@ protocol ListsRepository {
     /// Beobachtet DELETE-Events auf list_members für den angegebenen User.
     /// Liefert die list_id jedes Mal, wenn der User aus einer Liste entfernt wird.
     func observeMemberRemovals(userId: UUID) -> AsyncStream<UUID>
-    
+
+    /// Alle Ereignisse des privaten Kanals `user:<id>` (entfernt, wiederhergestellt, Konto gelöscht).
+    /// Standard: nur `memberRemoved` aus observeMemberRemovals (Test-Doubles).
+    func observeUserEvents(userId: UUID) -> AsyncStream<UserChannelEvent>
+
     /// Fetch default list or create it if missing.
     /// - Parameter ownerId: The owner/profile UUID.
     /// - Returns: A ListModel representing the default list.
@@ -130,6 +134,17 @@ extension ListsRepository {
 }
 
 extension ListsRepository {
+    func observeUserEvents(userId: UUID) -> AsyncStream<UserChannelEvent> {
+        let removals = observeMemberRemovals(userId: userId)
+        return AsyncStream { continuation in
+            let task = Task {
+                for await listId in removals { continuation.yield(.memberRemoved(listId: listId)) }
+                continuation.finish()
+            }
+            continuation.onTermination = { @Sendable _ in task.cancel() }
+        }
+    }
+
     /// Anlegen mit einer auf dem Gerät vergebenen ID (Offline-First). Standard: ID des Servers.
     func createList(id: UUID, for owner: UUID, title: String) async throws -> List {
         try await createList(for: owner, title: title)

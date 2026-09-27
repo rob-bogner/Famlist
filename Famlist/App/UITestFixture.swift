@@ -79,6 +79,10 @@ enum UITestFixture {
         case "acceptInvite":
             let _ = setDesignInvitePreview()
             AcceptInviteView(invite: .init(token: designInviteToken, listTitle: "Edeka"))
+        case "restoreAccount", "restoreAccountOffline":
+            RestoreAccountView(status: AccountArchiveStatus(archivedAt: Date(), purgeAfter: Date().addingTimeInterval(60 * 86_400)),
+                               previewOffline: UserDefaults.standard.string(forKey: "designScreen") == "restoreAccountOffline",
+                               previewEmail: "rob@beispiel.de")
         default: ShoppingListView()
         }
     }
@@ -136,8 +140,12 @@ enum UITestFixture {
     private static let ownerId = UUID()
 
     static let session: AppSessionViewModel = {
+        // Board ShareMembersArchived: „Sofie“ mit gelöschtem Konto nur in diesem Design-Sheet.
+        let archived = UserDefaults.standard.string(forKey: "designSheet") == "shareMembersArchived"
+            ? [PreviewAccountRepository.designMember] : []
         let session = AppSessionViewModel(client: nil, profiles: PreviewProfilesRepository(),
-                                          lists: PreviewListsRepository(), listViewModel: listVM)
+                                          lists: PreviewListsRepository(), listViewModel: listVM,
+                                          accounts: PreviewAccountRepository(archivedMembers: archived))
         session.currentProfile = Profile(id: ownerId, publicId: "ui-test", username: "uitest", fullName: "UI Test",
                                          avatarUrl: nil, createdAt: nil, updatedAt: nil)
         return session

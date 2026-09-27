@@ -28,6 +28,8 @@ struct GlassToast<Content: View>: View {
     let radius: CGFloat
     let leading: CGFloat
     let trailing: CGFloat
+    /// CSS-padding oben/unten (mit Rahmen). Standard 6: nur wirksam, wenn große iOS-Schrift den Text umbricht.
+    var vertical: CGFloat = 6
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -36,7 +38,7 @@ struct GlassToast<Content: View>: View {
         }
         .padding(.leading, leading + 1)
         .padding(.trailing, trailing + 1)
-        .padding(.vertical, 6)                 // nur wirksam, wenn große iOS-Schrift den Text umbricht
+        .padding(.vertical, vertical)
         .frame(maxWidth: .infinity)
         .frame(minHeight: height)              // Designhöhe; wächst statt abzuschneiden
         .background(CSSBox(shape: RR(radius), paint: .color(k.toast), border: 1, borderColor: k.toastBorder,

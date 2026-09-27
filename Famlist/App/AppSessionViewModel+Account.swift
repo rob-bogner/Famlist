@@ -11,10 +11,11 @@
  🔰 Notes for Beginners:
  - Favorit = profiles.favorite_list_id (pro Nutzer). Ohne Favorit gilt die Standard-Liste (is_default).
  - Profilfotos liegen im privaten Bucket `avatars`; angezeigt werden sie über signierte Links.
- - Konto löschen ruft delete_my_account() auf (Migration 009) und meldet danach lokal ab.
+ - Konto löschen ruft delete_my_account() auf: seit Migration 027 wird das Konto 60 Tage archiviert
+   (Wiederherstellen: AppSessionViewModel+Archive.swift). Danach meldet die App lokal ab.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 4).
+ - Konto löschen archiviert; Offline-Prüfung vorab (Konto-Archiv, 27.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -154,11 +155,18 @@ extension AppSessionViewModel {
 
     // MARK: - Konto löschen
 
-    /// Löscht alle eigenen Daten im Backend und meldet ab. Liefert false bei Fehler.
+    /// Löscht das Konto (60 Tage wiederherstellbar, Migration 027) und meldet ab. Liefert false bei Fehler.
+    /// Ohne Netz wird nichts versucht; das Konto bleibt unverändert.
     func deleteAccount() async -> Bool {
+        guard ConnectivityMonitor.shared.isOnline else {
+            errorMessage = "Zum Löschen brauchst du eine Internetverbindung."
+            return false
+        }
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
         do {
             try await profiles.deleteAccount()
-            UserLog.Auth.accountDeleted()
+            UserLog.Auth.accountArchived()
             do {
                 try await authService?.signOut()
             } catch {

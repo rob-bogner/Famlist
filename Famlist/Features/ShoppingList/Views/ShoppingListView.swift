@@ -49,6 +49,8 @@ struct ShoppingListView: View {
     @State var copied: CopyResult?
     /// Restzeit-Balken des Rückgängig-Toasts (1 → 0 in 5 s).
     @State var undoRemaining: CGFloat = 1
+    /// Restzeit des Hinweises „Mitglied hat das Konto gelöscht“ (MemberDeletedToast).
+    @State var noticeRemaining: CGFloat = 1
     /// Liste, deren Löschen gerade bestätigt werden soll (Listen-Optionen → „Liste löschen“).
     @State var listToDelete: ListModel?
     @State var isDeletingAccount = false
