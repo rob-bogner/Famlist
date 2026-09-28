@@ -43,6 +43,7 @@ final class SupabasePricePointsRepository: PricePointsRepository {
         let store_name: String
         let purchased_at: String
         let price: Decimal
+        var receipt_id: UUID?
     }
 
     func insert(_ points: [PricePoint]) async throws {
@@ -51,7 +52,7 @@ final class SupabasePricePointsRepository: PricePointsRepository {
         if let current = client.auth.currentUser?.id { uid = current } else { uid = try await client.auth.session.user.id }
         let rows = points.map {
             Row(id: $0.id, profile_id: uid, item_key: $0.itemKey, item_name: $0.itemName, store_name: $0.storeName,
-                purchased_at: Self.dayFormatter.string(from: $0.purchasedAt), price: $0.price)
+                purchased_at: Self.dayFormatter.string(from: $0.purchasedAt), price: $0.price, receipt_id: $0.receiptId)
         }
         // ignoreDuplicates → ON CONFLICT DO NOTHING: Doppeltes Senden (Antwort ging verloren) ist harmlos und
         // braucht keine UPDATE-Regel. Vorher blieb die Warteschlange danach für immer hängen (Audit H9).

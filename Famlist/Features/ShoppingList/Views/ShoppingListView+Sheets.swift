@@ -157,7 +157,7 @@ extension ShoppingListView {
         case .settings:
             SettingsSheet(appearance: appearance, onClose: closeSheet,
                           onEditProfile: { activeSheet = .editProfile },
-                          onOpenReceipts: { activeSheet = .receiptArchive },
+                          onOpenReceipts: { activeSheet = .receiptArchive() },
                           onDeleteAccount: { deleteAccountError = nil; activeSheet = .deleteAccount })
         case .editProfile:
             EditProfileSheet(appearance: appearance, keyboardHeight: keyboard.height,

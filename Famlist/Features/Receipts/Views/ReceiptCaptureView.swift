@@ -15,7 +15,8 @@
  - Jede Aufnahme erscheint als Vorschaubild (46 × 62); das ✕ löscht sie einzeln.
 
  📝 Last Change:
- - Sucher füllt die freie Höhe (504 bei 844 pt, auf größeren iPhones höher) statt fest max. 504.
+ - Live-Rahmen, Auto-Auslösung mit Ring und Schalter, Tippen aufs Vorschaubild öffnet das Vollbild
+   (ReceiptCaptureLive.dc.html, freigegeben 28.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -28,6 +29,13 @@ struct ReceiptCaptureView: View {
     var onContinue: () -> Void = {}
 
     @StateObject private var camera = ReceiptCamera()
+    @StateObject private var scanner = ReceiptLiveScanner()
+    /// Schalter „Auto“/„Manuell“; die Wahl bleibt gespeichert (Standard: Auto).
+    @AppStorage("receiptAutoCapture") private var autoCapture = true
+    @State private var showsPreview = false
+    @State private var previewPage = 0
+    /// Zählt Auto-Aufnahmen – Auslöser für die Haptik.
+    @State private var autoShots = 0
     @State private var cameraRunning = false
     @State private var torchOn = false
     @State private var picked: [PhotosPickerItem] = []
@@ -35,7 +43,13 @@ struct ReceiptCaptureView: View {
 
     /// Kamera-Screen ist immer dunkel → Akzent aus dem dunklen Theme.
     private let k = SheetTheme(.dark)
-    private var count: Int { flow.pages.count }
+    private var count: Int { flow.scans.count }
+    private var detected: Bool { cameraRunning && scanner.quad != nil }
+    private var hint: String {
+        if detected { return autoCapture ? "Bon erkannt · ruhig halten" : "Bon erkannt · Auslöser tippen" }
+        return count == 0 ? "Ganzen Bon ins Bild · bei langen Bons in mehreren Teilen"
+                          : "Nächsten Teil aufnehmen oder „Prüfen“ tippen"
+    }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -43,7 +57,8 @@ struct ReceiptCaptureView: View {
             CSSRadialGradient(center: UnitPoint(x: 0.5, y: 0.4), extent: .ellipse(rx: 0.9, ry: 0.6),
                               stops: [stop(.hex("#2B3A3C"), 0), stop(.hex("#121A1B"), 0.7), stop(.hex("#0A0F10"), 1)])
             if cameraRunning {
-                CameraPreviewView(session: camera.session)
+                CameraPreviewView(session: camera.session, quad: scanner.quad,
+                                  stroke: UIColor(k.a.light.color()), fill: UIColor(k.a.base.color(0.12)))
                     .accessibilityHidden(true)
             }
 
@@ -65,9 +80,18 @@ struct ReceiptCaptureView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
-        .task { cameraRunning = await camera.start() }
-        .onDisappear { camera.stop() }
+        .task { await startCamera() }
+        .onDisappear {
+            camera.setDocumentHandler(nil)
+            camera.stop()
+        }
         .onChange(of: picked) { _, items in importPicked(items) }
+        .onChange(of: autoCapture) { _, on in scanner.isAutoEnabled = on }
+        .onChange(of: showsPreview) { _, shown in scanner.isPaused = shown }
+        .sensoryFeedback(.success, trigger: autoShots)
+        .fullScreenCover(isPresented: $showsPreview) {
+            ReceiptPagePreviewCover(flow: flow, page: $previewPage, onClose: { showsPreview = false })
+        }
     }
 
     private var topBar: some View {
@@ -102,27 +126,23 @@ struct ReceiptCaptureView: View {
                 .overlay(RR(8).strokeBorder(Color.rgba(255, 255, 255, 0.28),
                                             style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
                 .padding(16)
-            ViewfinderCorner(size: 36, radius: 20)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            ViewfinderCorner(size: 36, radius: 20).rotationEffect(.degrees(90))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-            ViewfinderCorner(size: 36, radius: 20).rotationEffect(.degrees(180))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-            ViewfinderCorner(size: 36, radius: 20).rotationEffect(.degrees(270))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                .opacity(detected ? 0 : 1)                               // Bon erkannt: Innenfläche aus
+            Group {
+                ViewfinderCorner(size: 36, radius: 20)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                ViewfinderCorner(size: 36, radius: 20).rotationEffect(.degrees(90))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                ViewfinderCorner(size: 36, radius: 20).rotationEffect(.degrees(180))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                ViewfinderCorner(size: 36, radius: 20).rotationEffect(.degrees(270))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            }
+            .opacity(detected ? 0.35 : 1)                                // Bon erkannt: Ecken treten zurück
         }
+        .animation(.easeOut(duration: 0.2), value: detected)
         .opacity(flash ? 0.3 : 1)
         .overlay(alignment: .bottom) {
-            // Hinweis im Sucher: links/rechts 32, unten 30, DM Sans 13, Zeilenhöhe 1.4
-            Text(count == 0 ? "Ganzen Bon ins Bild · bei langen Bons in mehreren Teilen"
-                            : "Nächsten Teil aufnehmen oder „Prüfen“ tippen")
-                .font(AppFont.dm(13, 400))
-                .foregroundStyle(Color.rgba(255, 255, 255, 0.8))
-                .multilineTextAlignment(.center)
-                .cssLineHeight(18.2, font: AppFont.ui(.dmSans, 13, 400))
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 30)
+            ReceiptLiveHint(text: hint, detected: detected, accent: k.a.light.color())
         }
         .overlay {
             if !cameraRunning {
@@ -144,12 +164,22 @@ struct ReceiptCaptureView: View {
     /// damit der Sucher nach dem ersten Foto nicht springt.
     private var thumbnailStrip: some View {
         HStack(alignment: .bottom, spacing: 10) {
-            ForEach(Array(flow.pages.enumerated()), id: \.offset) { index, image in
-                ReceiptPageThumbnail(image: image, number: index + 1, isLatest: index == count - 1) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { flow.removePage(at: index) }
-                }
+            ForEach(Array(flow.scans.enumerated()), id: \.element.id) { index, page in
+                ReceiptPageThumbnail(image: page.image, number: index + 1, isLatest: index == count - 1,
+                                     onDelete: {
+                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { flow.removePage(at: index) }
+                                     },
+                                     onOpen: {
+                                         previewPage = index
+                                         showsPreview = true
+                                     })
                 .transition(.scale(scale: 0.6).combined(with: .opacity))
             }
+            Spacer(minLength: 0)
+            // Schalter Auto/Manuell: rechts, unten bündig mit den Aufnahmen (ReceiptCaptureLive).
+            ReceiptAutoToggle(isOn: $autoCapture, accent: k.a.light.color())
+                .opacity(cameraRunning ? 1 : 0.4)
+                .allowsHitTesting(cameraRunning)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 62, alignment: .bottom)
@@ -172,70 +202,18 @@ struct ReceiptCaptureView: View {
             .frame(width: 112, alignment: .leading)
 
             Spacer(minLength: 0)
-            Button(action: capture) {
-                // 80 border-box, Rahmen 4 weiß .9, Padding 5 → Innenkreis 62
-                Circle()
-                    .fill(Color.white)
-                    .padding(9)
-                    .frame(width: 80, height: 80)
-                    .overlay(Circle().strokeBorder(Color.rgba(255, 255, 255, 0.9), lineWidth: 4))
-                    .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .opacity(cameraRunning ? 1 : 0.4)
-            .allowsHitTesting(cameraRunning)
-            .accessibilityLabel("Foto aufnehmen")
+            ReceiptShutterButton(progress: detected && autoCapture ? scanner.progress : nil,
+                                 ringColor: k.a.light.color(), action: { capture(automatic: false) })
+                .opacity(cameraRunning ? 1 : 0.4)
+                .allowsHitTesting(cameraRunning)
             Spacer(minLength: 0)
 
-            checkButton
+            ReceiptCheckButton(count: count, theme: k, action: onContinue)
                 .frame(width: 112, alignment: .trailing)
         }
         .frame(height: 80)
         .padding(.horizontal, 20)
         .padding(.bottom, 40)
-    }
-
-    /// „Prüfen“ + Anzahl: Pille 52 hoch, Padding 16/12, Abstand 8, Glanz oben; ohne Aufnahme Glas, 45 %.
-    private var checkButton: some View {
-        let enabled = count > 0
-        return Button(action: onContinue) {
-            HStack(spacing: 8) {
-                Text("Prüfen")
-                    .font(AppFont.dm(15, 600))
-                    .foregroundStyle(enabled ? k.ctaText : Color.white)
-                Text("\(count)")
-                    .font(AppFont.dm(13, 700))
-                    .foregroundStyle(Color.white)
-                    .contentTransition(.numericText())
-                    .padding(.horizontal, 6)
-                    .frame(minWidth: 24, minHeight: 24)
-                    .background(Capsule().fill(enabled ? Color.rgba(4, 38, 42, 0.85) : Color.rgba(255, 255, 255, 0.2)))
-            }
-            .padding(.leading, 16)
-            .padding(.trailing, 12)
-            .frame(height: 52)
-            .background {
-                if enabled {
-                    PillGlassReflection(topInset: 11, topOffset: 2, topHeight: 18, topOpacity: 0.4,
-                                        glowInset: 22, glowOffset: 2, glowHeight: 6,
-                                        glowOpacity: 0.14, glowBlur: 2.5)
-                }
-            }
-            .clipShape(Capsule())
-            .background(CSSBox(shape: Capsule(),
-                               paint: enabled ? k.ctaPaint : .color(.rgba(255, 255, 255, 0.14)),
-                               shadows: enabled ? [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.5)),
-                                                   .drop(0, 10, 22, -10, k.a.base.color(0.8))] : []))
-            .contentShape(Capsule())
-            .fixedSize()
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.45)
-        .animation(.easeOut(duration: 0.2), value: enabled)
-        .accessibilityLabel(enabled ? (count == 1 ? "1 Aufnahme prüfen und Preise auslesen"
-                                                  : "\(count) Aufnahmen prüfen und Preise auslesen")
-                                    : "Prüfen – erst ein Foto aufnehmen")
     }
 
     /// Glas-Knopf 48, neutral dunkel (Kamera, Canvas-Token gnd).
@@ -253,11 +231,25 @@ struct ReceiptCaptureView: View {
 
     // MARK: - Actions
 
-    private func capture() {
+    /// Kamera starten und die Live-Erkennung anschließen (Auto löst über `scanner.onAutoCapture` aus).
+    private func startCamera() async {
+        cameraRunning = await camera.start()
+        guard cameraRunning else { return }
+        scanner.isAutoEnabled = autoCapture
+        scanner.onAutoCapture = { capture(automatic: true) }
+        let scanner = scanner
+        camera.setDocumentHandler { quad, time in
+            Task { @MainActor in scanner.update(quad: quad, at: time) }
+        }
+    }
+
+    private func capture(automatic: Bool) {
+        if !automatic { scanner.didCaptureManually() }
         withAnimation(.easeOut(duration: 0.12)) { flash = true }
         Task {
             if let image = await camera.capture() {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { flow.addPage(image) }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { flow.addPage(image, automatic: automatic) }
+                if automatic { autoShots += 1 }
             }
             withAnimation(.easeIn(duration: 0.2)) { flash = false }
         }

@@ -13,7 +13,7 @@
  - Das ✕ ist nur 22 pt groß, die Tippfläche aber 44 × 44 pt (gleicher Mittelpunkt).
 
  📝 Last Change:
- - Initial creation (Redesign Kassenzettel fotografieren).
+ - Tippen aufs Bild öffnet das Vollbild; Tippfläche des ✕ überdeckt das Bild nur noch in der Ecke.
  ------------------------------------------------------------------------
  */
 
@@ -25,8 +25,18 @@ struct ReceiptPageThumbnail: View {
     let number: Int
     var isLatest = false
     var onDelete: () -> Void = {}
+    /// Tippen aufs Bild: Vollbild öffnen.
+    var onOpen: () -> Void = {}
 
     var body: some View {
+        Button(action: onOpen) { thumbnail }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Aufnahme \(number) vergrößern")
+            .overlay(alignment: .topTrailing) { deleteButton }
+            .accessibilityElement(children: .contain)
+    }
+
+    private var thumbnail: some View {
         Image(uiImage: image)
             .resizable()
             .scaledToFill()
@@ -45,23 +55,23 @@ struct ReceiptPageThumbnail: View {
                     .padding(4)
                     .accessibilityHidden(true)
             }
-            .overlay(alignment: .topTrailing) { deleteButton }
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel("Aufnahme \(number)")
+            .contentShape(RR(10))
     }
 
-    /// ✕ 22 rund bei right/top −8; Mitte (43 | 3) → 44er-Tippfläche um (+19 | −19) verschoben.
+    /// ✕ 22 rund bei right/top −8; Mitte (43 | 3). Die 44er-Tippfläche liegt nach rechts oben außen:
+    /// Das ✕ sitzt in ihrer linken unteren Ecke, vom Bild überdeckt sie nur 14 × 14. Vorher war sie um das ✕
+    /// zentriert und deckte ein Viertel des Bildes ab – Tippen aufs Bild löschte dann oft die Aufnahme.
     private var deleteButton: some View {
         Button(action: onDelete) {
             SVGIcon(Icon.close, size: 10, color: .white, lineWidth: 3)
                 .frame(width: 22, height: 22)
                 .background(CSSBox(shape: Circle(), paint: .color(.rgba(20, 30, 32, 0.9)), border: 1,
                                    borderColor: .rgba(255, 255, 255, 0.3)))
-                .frame(width: 44, height: 44)
+                .frame(width: 44, height: 44, alignment: .bottomLeading)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .offset(x: 19, y: -19)
+        .offset(x: 30, y: -30)
         .accessibilityLabel("Aufnahme \(number) löschen")
     }
 }

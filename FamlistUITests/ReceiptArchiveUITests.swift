@@ -65,6 +65,26 @@ final class ReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(edeka.waitForNonExistence(timeout: 3))
     }
 
+    /// Vollbild eines gespeicherten Bons: ✕ schließt auch beim Tippen auf die Glasfläche neben den Strichen.
+    /// (Vorher reagierten nur die Striche; ein Tipp in die Mitte traf sie zufällig, deshalb bewusst daneben.)
+    func test_detailFullscreen_closeButtonClosesOnGlassArea() {
+        let open = app.buttons["Gespeicherte Kassenzettel ansehen"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15))
+        open.tap()
+        let edeka = app.buttons["Edeka, 24.09.2026 · Liste Edeka, 5 Positionen, 11,51\u{00A0}€"]
+        XCTAssertTrue(edeka.waitForExistence(timeout: 5))
+        edeka.tap()
+        let fullscreen = app.buttons["Vollbild"]
+        XCTAssertTrue(fullscreen.waitForExistence(timeout: 5))
+        fullscreen.tap()
+
+        let close = app.buttons["receiptFullscreenClose"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5), "Vollbild offen")
+        close.coordinate(withNormalizedOffset: CGVector(dx: 0.22, dy: 0.5)).tap()
+        XCTAssertTrue(close.waitForNonExistence(timeout: 3), "✕ schließt das Vollbild")
+        XCTAssertTrue(app.staticTexts["Summe laut Bon"].exists, "zurück im Detail")
+    }
+
     func test_foreignReceipt_hasNoDelete() {
         let open = app.buttons["Gespeicherte Kassenzettel ansehen"]
         XCTAssertTrue(open.waitForExistence(timeout: 15))

@@ -14,15 +14,16 @@
  - Kamera-Berechtigung: NSCameraUsageDescription (Build-Setting), Text in PLAN.md §9.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Phase 7).
+ - Live-Erkennung: zweiter Ausgang für Kamerabilder, sucht den Bon bis zu 10-mal pro Sekunde (nur mit Handler).
  ------------------------------------------------------------------------
  */
 
 @preconcurrency import AVFoundation
 import UIKit
 
-/// `@unchecked Sendable`: Veränderlich ist nur `pending`, und das ausschließlich unter `lock`.
-/// Session und Ausgabe werden nur auf `queue` konfiguriert (Apples Vorgabe für AVCaptureSession).
+/// `@unchecked Sendable`: `pending` und `documentHandler` ändern sich nur unter `lock`,
+/// `lastAnalysis` nur auf `videoQueue`. Session und Ausgaben werden nur auf `queue` konfiguriert
+/// (Apples Vorgabe für AVCaptureSession).
 final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
     let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
@@ -31,6 +32,14 @@ final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
     /// Zwei schnelle Aufnahmen überschrieben sie, die erste wartete dann für immer (Audit 25.09.2026).
     private let lock = NSLock()
     private var pending: [Int64: CheckedContinuation<UIImage?, Never>] = [:]
+
+    /// Live-Erkennung: Kamerabilder für die Suche nach dem Bon (eigene Warteschlange, verspätete Bilder verfallen).
+    private let videoOutput = AVCaptureVideoDataOutput()
+    private let videoQueue = DispatchQueue(label: "famlist.receiptCamera.video")
+    private var documentHandler: (@Sendable (ReceiptQuad?, TimeInterval) -> Void)?
+    private var lastAnalysis: TimeInterval = -.infinity
+    /// Höchstens 10 Analysen pro Sekunde: reicht für einen ruhigen Rahmen und schont den Akku.
+    static let analysisInterval: TimeInterval = 0.1
 
     static var isAvailable: Bool { AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil }
 
@@ -45,6 +54,11 @@ final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
                 session.sessionPreset = .photo
                 if session.canAddInput(input) { session.addInput(input) }
                 if session.canAddOutput(output) { session.addOutput(output) }
+                if session.canAddOutput(videoOutput) {
+                    videoOutput.alwaysDiscardsLateVideoFrames = true
+                    videoOutput.setSampleBufferDelegate(self, queue: videoQueue)
+                    session.addOutput(videoOutput)
+                }
                 session.commitConfiguration()
             }
             if !session.isRunning { session.startRunning() }
@@ -69,6 +83,12 @@ final class ReceiptCamera: NSObject, ObservableObject, @unchecked Sendable {
         }
     }
 
+    /// Live-Erkennung ein (Handler) oder aus (nil). Der Handler läuft auf der Video-Warteschlange und bekommt
+    /// die Ecken in Sensor-Koordinaten (siehe ReceiptDocumentDetector) samt Zeitstempel des Bildes.
+    func setDocumentHandler(_ handler: (@Sendable (ReceiptQuad?, TimeInterval) -> Void)?) {
+        lock.withLock { documentHandler = handler }
+    }
+
     func setTorch(_ on: Bool) {
         guard let device = AVCaptureDevice.default(for: .video), device.hasTorch else { return }
         try? device.lockForConfiguration()
@@ -89,5 +109,16 @@ extension ReceiptCamera: AVCapturePhotoCaptureDelegate {
                      error: Error?) {
         let waiting = lock.withLock { pending.removeValue(forKey: resolvedSettings.uniqueID) }
         waiting?.resume(returning: nil)
+    }
+}
+
+extension ReceiptCamera: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard let handler = lock.withLock({ documentHandler }) else { return }
+        let time = sampleBuffer.presentationTimeStamp.seconds
+        guard time - lastAnalysis >= Self.analysisInterval,
+              let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        lastAnalysis = time
+        handler(ReceiptDocumentDetector.detect(in: buffer), time)
     }
 }

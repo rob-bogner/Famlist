@@ -37,6 +37,8 @@ struct ArchivedReceipt: Identifiable, Codable, Equatable, Sendable {
     let bytes: Int
     let createdAt: Date
     var isPending = false
+    /// Positionen des Bons (Migration 029). nil bei Bons von älteren App-Versionen und im lokalen Speicher von vorher.
+    var lines: [ReceiptLine]? = nil
 
     /// Pfad des n-ten Fotos (1-basiert) im Bucket.
     static func photoPath(listId: UUID, receiptId: UUID, index: Int) -> String {

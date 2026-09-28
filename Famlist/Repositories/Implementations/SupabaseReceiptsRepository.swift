@@ -45,6 +45,7 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
         let photo_paths: [String]
         let bytes: Int
         var created_at: String?
+        var lines: [ReceiptLine]?
         var lists: NameRow?
         var profiles: NameRow?
     }
@@ -52,7 +53,7 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
     func fetchAll() async throws -> [ArchivedReceipt] {
         let rows: [Row] = try await client.from("receipts")
             .select("id, list_id, created_by, store_name, purchased_at, total, line_count, saved_price_count, "
-                    + "photo_paths, bytes, created_at, lists(title), profiles(username, full_name)")
+                    + "photo_paths, bytes, created_at, lines, lists(title), profiles(username, full_name)")
             .order("purchased_at", ascending: false)
             .order("created_at", ascending: false)
             .limit(Self.fetchLimit)
@@ -70,7 +71,7 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
         let row = Row(id: receipt.id, list_id: receipt.listId, created_by: uid, store_name: receipt.storeName,
                       purchased_at: ReceiptDay.string(receipt.purchasedAt), total: receipt.total,
                       line_count: receipt.lineCount, saved_price_count: receipt.savedPriceCount,
-                      photo_paths: receipt.photoPaths, bytes: receipt.bytes)
+                      photo_paths: receipt.photoPaths, bytes: receipt.bytes, lines: receipt.lines ?? [])
         // ON CONFLICT DO NOTHING: wiederholtes Senden nach verlorener Antwort ist harmlos.
         try await client.from("receipts").upsert(row, onConflict: "id", ignoreDuplicates: true).execute()
     }
@@ -95,6 +96,6 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
                                purchasedAt: ReceiptDay.date(row.purchased_at) ?? Date(), total: row.total,
                                lineCount: row.line_count, savedPriceCount: row.saved_price_count,
                                photoPaths: row.photo_paths, bytes: row.bytes,
-                               createdAt: row.created_at.flatMap(ReceiptDay.timestamp) ?? Date())
+                               createdAt: row.created_at.flatMap(ReceiptDay.timestamp) ?? Date(), lines: row.lines)
     }
 }

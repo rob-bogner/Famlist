@@ -155,6 +155,19 @@ Jede Zeile hat eine Light- und eine Dark-Variante, außer bei den Kamera-Screens
 
 Dieser Punkt kommt später mit eigenem Design. Bis dahin gilt: kein eigenes UI dafür erfinden.
 
+**Von Robert freigegeben (28.09.2026) – Kassenzettel wie ein Dokumentenscanner:**
+Jede Aufnahme wird automatisch auf den Bon zugeschnitten (ohne neues UI). Dazu gestaltet und umgesetzt:
+- ReceiptCaptureLive (Bon erkannt, Auto), ReceiptCaptureLiveManual (Bon erkannt, Manuell), ReceiptCaptureLiveSearch
+  (kein Bon im Bild): Live-Rahmen um den Bon, Hinweis-Pille, Ring am Auslöser füllt sich bis zur Auto-Aufnahme,
+  Schalter „Auto“/„Manuell“ rechts neben den Aufnahmen.
+- Tippen auf ein Vorschaubild öffnet das Vollbild (ReceiptFullscreenCrop) mit der Pille „Ecken anpassen“.
+- ReceiptCropEdit, ReceiptCropEditDrag: „Ecken anpassen“ – vier Griffe, Lupe beim Ziehen, „Ganzes Foto“ verwirft
+  den Zuschnitt, „Übernehmen“ speichert ihn; ✕ führt ohne Änderung zurück zum Vollbild.
+
+**Von Robert gewünscht (28.09.2026), nicht gestaltet:** Menü ☰ → „Gespeicherte Kassenzettel“ (unter „Kassenzettel
+scannen“, Icon „Fotos“ aus ReceiptCapture) öffnet das Archiv direkt über der Liste; „Zurück“ schließt es dann.
+Der Bon speichert seine Positionen (Migration 029); eine Anzeige der Positionen im Bon-Detail ist noch nicht gestaltet.
+
 **Von Robert freigegeben (25.09.2026), obwohl nicht gestaltet:** Live-Gesamtkosten in der Fortschrittskarte,
 Preis auf jeder Artikelkarte (abschaltbar: Einstellungen → „Preise anzeigen“) und der Link „Preisverlauf“ in
 „Artikel bearbeiten“. Umsetzung und Abweichungen: PLAN.md §9.

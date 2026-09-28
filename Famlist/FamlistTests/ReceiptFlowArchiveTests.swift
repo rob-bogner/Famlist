@@ -94,5 +94,37 @@ final class ReceiptFlowArchiveTests: XCTestCase {
         XCTAssertTrue(repo.receipts.isEmpty)
         XCTAssertTrue(archive.receipts.isEmpty)
         XCTAssertEqual(points.stored.count, 2, "Preise werden trotzdem gespeichert")
+        XCTAssertTrue(points.stored.allSatisfy { $0.receiptId == nil }, "Ohne Archiv-Eintrag kein Verweis auf einen Bon")
+    }
+
+    /// Der Bon speichert seine Positionen; die Preise desselben Einkaufs verweisen auf ihn (Migration 029).
+    func test_savePrices_storesLines_andLinksPrices() async throws {
+        let repo = InMemoryReceiptsRepository()
+        let points = InMemoryPricePointsRepository()
+        let archive = makeArchive(repo)
+        let flow = makeFlow(archive: archive, points: points)
+        await flow.process()
+        await flow.savePrices()
+        await archive.flush()
+
+        let receipt = try XCTUnwrap(repo.receipts.first)
+        let lines = try XCTUnwrap(receipt.lines)
+        XCTAssertEqual(lines.map(\.raw), ["KERRYGOLD BUTTER", "KOKOSM. 400ML", "FAIRGL.VM SCHOKO"])
+        XCTAssertEqual(lines.map(\.isSaved), [true, true, false])
+        XCTAssertEqual(lines[0].itemName, "Kerrygold, original irische Butter")
+        XCTAssertNil(lines[2].itemName, "Nicht bestätigter neuer Artikel wird nicht zugeordnet")
+        XCTAssertEqual(lines[1].price, Decimal(string: "1.39"))
+        XCTAssertEqual(points.stored.count, 2)
+        XCTAssertTrue(points.stored.allSatisfy { $0.receiptId == receipt.id })
+    }
+
+    /// Archiv-Einträge von vorher (ohne `lines` im lokalen JSON) lassen sich weiter lesen.
+    func test_archivedReceipt_decodesWithoutLines() throws {
+        let old = #"{"id":"6F1C2B2E-8B1B-4B6B-9A0C-0D6B8E7F1A11","listId":"0B8E9C1D-3C44-4B0E-8F21-5B7A9E2C4D10","#
+            + #""storeName":"EDEKA","purchasedAt":780000000,"total":7.37,"lineCount":3,"savedPriceCount":2,"#
+            + #""photoPaths":["a/b/1.jpg"],"bytes":10,"createdAt":780000000,"isPending":false}"#
+        let receipt = try JSONDecoder().decode(ArchivedReceipt.self, from: Data(old.utf8))
+        XCTAssertNil(receipt.lines)
+        XCTAssertEqual(receipt.storeName, "EDEKA")
     }
 }

@@ -26,14 +26,18 @@ struct PricePoint: Codable, Identifiable, Equatable {
     var storeName: String
     var purchasedAt: Date
     var price: Decimal
+    /// Bon, von dem der Preis stammt (Migration 029); nil = von Hand eingetragen oder Bon nicht archiviert.
+    var receiptId: UUID?
 
-    init(id: UUID = UUID(), itemName: String, storeName: String, purchasedAt: Date, price: Decimal) {
+    init(id: UUID = UUID(), itemName: String, storeName: String, purchasedAt: Date, price: Decimal,
+         receiptId: UUID? = nil) {
         self.id = id
         self.itemKey = Self.key(for: itemName)
         self.itemName = itemName
         self.storeName = storeName
         self.purchasedAt = purchasedAt
         self.price = price
+        self.receiptId = receiptId
     }
 
     static func key(for name: String) -> String {

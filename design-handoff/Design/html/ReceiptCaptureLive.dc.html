@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kassenzettel fotografieren – Bon erkannt</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 40%, #2B3A3C 0%, #121A1B 70%, #0A0F10 100%); font-family: 'DM Sans', system-ui, sans-serif; color: #FFFFFF">
+<!-- Kamerabild (Platzhalter): Bon schräg auf dem Tisch. In der App liegt hier die Live-Vorschau. -->
+<svg aria-hidden="true" width="390" height="844" viewBox="0 0 390 844" style="position: absolute; left: 0; top: 0">
+<g transform="rotate(-5 195 372)">
+<rect x="101" y="182" width="188" height="380" rx="2" fill="#F4F1EA"></rect>
+<rect x="150" y="206" width="90" height="7" rx="3" fill="#B9B4AA"></rect>
+<rect x="121" y="236" width="148" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="252" width="120" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="268" width="148" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="284" width="100" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="300" width="136" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="316" width="148" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="332" width="112" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="348" width="148" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="364" width="90" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="380" width="148" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="396" width="128" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="121" y="424" width="148" height="2" rx="1" fill="#B9B4AA"></rect>
+<rect x="121" y="440" width="70" height="6" rx="3" fill="#B9B4AA"></rect>
+<rect x="219" y="440" width="50" height="6" rx="3" fill="#B9B4AA"></rect>
+</g>
+<!-- Live-Rahmen: folgt den erkannten Ecken. Linie 3 (Akzent hell), Fläche Akzent 12 %, Ecken-Punkte 10. -->
+<g transform="rotate(-5 195 372)" style="display: {{frame.display}}">
+<rect x="101" y="182" width="188" height="380" rx="4" fill="{{frame.fill}}" stroke="{{frame.stroke}}" stroke-width="3" stroke-linejoin="round"></rect>
+<circle cx="101" cy="182" r="5" fill="{{frame.stroke}}" stroke="#FFFFFF" stroke-width="2"></circle>
+<circle cx="289" cy="182" r="5" fill="{{frame.stroke}}" stroke="#FFFFFF" stroke-width="2"></circle>
+<circle cx="289" cy="562" r="5" fill="{{frame.stroke}}" stroke="#FFFFFF" stroke-width="2"></circle>
+<circle cx="101" cy="562" r="5" fill="{{frame.stroke}}" stroke="#FFFFFF" stroke-width="2"></circle>
+</g>
+</svg>
+<div style="position: absolute; left: 20px; right: 20px; top: 62px; display: flex; align-items: center; justify-content: space-between">
+<button aria-label="Schließen" style="position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; background: {{gnd.bg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 13px; right: 13px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gnd.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></span></button>
+<span style="padding: 8px 14px; border-radius: 18px; background: rgba(0,0,0,0.35); color: #FFFFFF; font-size: 14px; font-weight: 600">{{title}}</span>
+<button aria-label="Licht" style="position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; background: {{gnd.bg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 13px; right: 13px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gnd.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg></span></button>
+</div>
+<!-- Sucher wie ReceiptCapture. Ist ein Bon erkannt, treten Ecken und Innenfläche zurück (35 % bzw. aus). -->
+<div style="position: absolute; left: 20px; top: 126px; width: 350px; height: 504px">
+<div style="position: absolute; inset: 0; opacity: {{finder.opacity}}">
+<span style="position: absolute; width: 36px; height: 36px; border-color: #FFFFFF; border-style: solid; left: 0; top: 0; border-width: 4px 0 0 4px; border-top-left-radius: 20px"></span>
+<span style="position: absolute; width: 36px; height: 36px; border-color: #FFFFFF; border-style: solid; right: 0; top: 0; border-width: 4px 4px 0 0; border-top-right-radius: 20px"></span>
+<span style="position: absolute; width: 36px; height: 36px; border-color: #FFFFFF; border-style: solid; left: 0; bottom: 0; border-width: 0 0 4px 4px; border-bottom-left-radius: 20px"></span>
+<span style="position: absolute; width: 36px; height: 36px; border-color: #FFFFFF; border-style: solid; right: 0; bottom: 0; border-width: 0 4px 4px 0; border-bottom-right-radius: 20px"></span>
+</div>
+<div style="position: absolute; left: 16px; top: 16px; right: 16px; bottom: 16px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.28); display: {{finder.dashed}}"></div>
+<!-- Hinweis: Suche wie bisher als Text; erkannt als Pille mit Akzent-Punkt, damit er auf dem Kamerabild lesbar bleibt. -->
+<div style="position: absolute; left: 16px; right: 16px; bottom: 24px; display: flex; justify-content: center">
+<span style="display: flex; align-items: center; gap: 8px; padding: {{hint.padding}}; border-radius: 16px; background: {{hint.bg}}; font-size: 13px; line-height: 1.4; font-weight: {{hint.weight}}; color: rgba(255,255,255,0.9); text-align: center"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{frame.stroke}}; flex-shrink: 0; display: {{hint.dot}}"></span>{{hint.text}}</span>
+</div>
+</div>
+<!-- Aufnahmen links (wie ReceiptCapture), rechts der Schalter Auto/Manuell: Pille 32, Glas neutral dunkel. -->
+<div aria-label="Aufnahmen" style="position: absolute; left: 20px; top: 646px; display: {{shots.display}}; align-items: flex-end; gap: 10px">
+<div style="position: relative; width: 46px; height: 62px">
+<div style="position: absolute; inset: 0; box-sizing: border-box; border-radius: 10px; border: 2px solid #FFFFFF; background: #F4F1EA; box-shadow: 0 6px 14px -6px rgba(0,0,0,0.7); overflow: hidden; display: flex; flex-direction: column; gap: 4px; padding: 7px 6px">
+<span style="height: 3px; width: 70%; border-radius: 2px; background: #B9B4AA"></span>
+<span style="height: 2px; width: 100%; border-radius: 1px; background: #CFCAC0"></span>
+<span style="height: 2px; width: 85%; border-radius: 1px; background: #CFCAC0"></span>
+<span style="height: 2px; width: 100%; border-radius: 1px; background: #CFCAC0"></span>
+<span style="height: 2px; width: 60%; border-radius: 1px; background: #CFCAC0"></span>
+<span style="height: 2px; width: 90%; border-radius: 1px; background: #CFCAC0"></span>
+</div>
+<span style="position: absolute; left: 4px; bottom: 4px; min-width: 16px; height: 16px; border-radius: 8px; background: rgba(0,0,0,0.6); font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; color: #FFFFFF">1</span>
+<button aria-label="Aufnahme 1 löschen" style="position: absolute; right: -8px; top: -8px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); background: rgba(20,30,32,0.9); padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+</div>
+<button role="switch" aria-checked="{{auto.checked}}" aria-label="Automatisch auslösen" style="position: absolute; right: 20px; top: 676px; height: 32px; box-sizing: border-box; padding: 0 12px 0 10px; border-radius: 16px; border: 0; background: {{gnd.pbg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; gap: 7px; color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 2px; height: 12px; border-radius: 6px; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: relative; width: 10px; height: 10px; box-sizing: border-box; border-radius: 50%; background: {{auto.dotBg}}; border: {{auto.dotBorder}}"></span><span style="position: relative">{{auto.text}}</span></button>
+<div style="position: absolute; left: 20px; right: 20px; bottom: 40px; height: 80px; display: flex; align-items: center; justify-content: space-between">
+<div style="width: 112px; display: flex; justify-content: flex-start">
+<button aria-label="Aus Fotos wählen" style="position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; background: {{gnd.bg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 13px; right: 13px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gnd.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 16l4.5-4.5 4 4 3-3L20 17"></path><path d="M16 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"></path></svg></span></button>
+</div>
+<!-- Auslöser wie ReceiptCapture. Auto: Der Ring füllt sich im Uhrzeigersinn (Akzent hell, 4), solange der Bon ruhig liegt; voll = Aufnahme. -->
+<div style="position: relative; width: 80px; height: 80px; flex-shrink: 0">
+<button aria-label="Foto aufnehmen" style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.9); background: transparent; padding: 5px; box-sizing: border-box; cursor: pointer"><span style="display: block; width: 100%; height: 100%; border-radius: 50%; background: #FFFFFF"></span></button>
+<svg aria-hidden="true" width="80" height="80" viewBox="0 0 80 80" style="position: absolute; left: 0; top: 0; transform: rotate(-90deg); display: {{ring.display}}"><circle cx="40" cy="40" r="38" fill="none" stroke="{{frame.stroke}}" stroke-width="4" stroke-linecap="round" stroke-dasharray="{{ring.dash}}"></circle></svg>
+</div>
+<div style="width: 112px; display: flex; justify-content: flex-end">
+<button aria-label="{{done.label}}" aria-disabled="{{done.disabled}}" style="position: relative; height: 52px; box-sizing: border-box; padding: 0 12px 0 16px; border-radius: 26px; border: 0; background: {{done.bg}}; box-shadow: {{done.shadow}}; opacity: {{done.opacity}}; color: {{done.text}}; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; overflow: hidden; white-space: nowrap">
+<span aria-hidden="true" style="position: absolute; left: 11px; right: 11px; top: 2px; height: 18px; border-radius: 9px; background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span>
+<span aria-hidden="true" style="position: absolute; left: 22px; right: 22px; bottom: 2px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.14); filter: blur(2.5px); pointer-events: none"></span>
+<span style="position: relative">Prüfen</span>
+<span style="position: relative; min-width: 24px; height: 24px; box-sizing: border-box; padding: 0 6px; border-radius: 12px; background: {{done.badgeBg}}; color: {{done.badgeText}}; font-size: 13px; font-weight: 700; line-height: 24px; text-align: center">{{count}}</span>
+</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"state":{"editor":"enum","default":"detected","options":["searching","detected"]},"auto":{"editor":"enum","default":"on","options":["on","off"]},"shots":{"editor":"enum","default":"1","options":["0","1"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    // Kamera ist immer dunkel: Glas neutral dunkel (gnd) wie ReceiptCapture.
+    const gnd = {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      pbg: 'linear-gradient(180deg, #33474A 0%, #1F3033 55%, #152326 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)'
+    };
+    const detected = (this.props.state ?? 'detected') === 'detected';
+    const auto = (this.props.auto ?? 'on') === 'on';
+    const n = parseInt(this.props.shots ?? '1', 10) || 0;
+    const done = n > 0 ? {
+      bg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', text: '#04262A', opacity: '1', disabled: 'false',
+      shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 22px -10px ' + rgba(accent, 0.8),
+      badgeBg: 'rgba(4,38,42,0.85)', badgeText: '#FFFFFF',
+      label: n + (n === 1 ? ' Aufnahme' : ' Aufnahmen') + ' prüfen und Preise auslesen'
+    } : {
+      bg: 'rgba(255,255,255,0.14)', text: '#FFFFFF', opacity: '0.45', disabled: 'true', shadow: 'none',
+      badgeBg: 'rgba(255,255,255,0.2)', badgeText: '#FFFFFF', label: 'Prüfen – erst ein Foto aufnehmen'
+    };
+    const ringLength = 2 * Math.PI * 38;
+    const searchHint = n === 0 ? 'Ganzen Bon ins Bild · bei langen Bons in mehreren Teilen' : 'Nächsten Teil aufnehmen oder „Prüfen“ tippen';
+    return { gnd, done, count: String(n),
+      title: n === 0 ? 'Kassenzettel' : 'Kassenzettel · Teil ' + (n + 1),
+      frame: { display: detected ? 'inline' : 'none', stroke: light, fill: rgba(accent, 0.12) },
+      finder: { opacity: detected ? '0.35' : '1', dashed: detected ? 'none' : 'block' },
+      hint: detected
+        ? { text: auto ? 'Bon erkannt · ruhig halten' : 'Bon erkannt · Auslöser tippen', bg: 'rgba(0,0,0,0.5)', padding: '7px 14px 7px 12px', weight: '600', dot: 'block' }
+        : { text: searchHint, bg: 'rgba(0,0,0,0)', padding: '0 16px', weight: '400', dot: 'none' },
+      ring: { display: detected && auto ? 'block' : 'none', dash: (ringLength * 0.6).toFixed(1) + ' ' + ringLength.toFixed(1) },
+      auto: auto
+        ? { text: 'Auto', checked: 'true', dotBg: light, dotBorder: '0' }
+        : { text: 'Manuell', checked: 'false', dotBg: 'rgba(0,0,0,0)', dotBorder: '1.5px solid rgba(255,255,255,0.7)' },
+      shots: { display: n > 0 ? 'flex' : 'none' }
+    };
+  }
+}
+</script>
+</body>
+</html>

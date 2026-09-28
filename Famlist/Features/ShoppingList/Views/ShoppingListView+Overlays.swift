@@ -283,6 +283,7 @@ extension ShoppingListView {
         case .manageItems: openManageItems()
         case .manageCategories: activeSheet = .manageCategories
         case .receipt: openReceiptCapture()
+        case .receiptArchive: activeSheet = .receiptArchive(fromMenu: true)
         case .importClipboard: activeSheet = .importClipboard
         case .settings: activeSheet = .settings
         }

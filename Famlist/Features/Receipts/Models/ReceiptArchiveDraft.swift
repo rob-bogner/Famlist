@@ -19,6 +19,8 @@
 import UIKit
 
 struct ReceiptArchiveDraft {
+    /// Vorab vergeben, damit die Preise desselben Einkaufs auf den Bon verweisen können (price_points.receipt_id).
+    var id = UUID()
     var pages: [UIImage]
     var listId: UUID
     var listTitle: String?
@@ -29,4 +31,5 @@ struct ReceiptArchiveDraft {
     var total: Decimal
     var lineCount: Int
     var savedPriceCount: Int
+    var lines: [ReceiptLine] = []
 }

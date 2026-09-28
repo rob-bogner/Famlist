@@ -14,7 +14,7 @@
  - Wischen blättert durch die Fotos, solange nicht gezoomt ist.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - ✕ reagiert auf der ganzen Glasfläche (vorher nur auf den Strichen); optional Pille „Ecken anpassen“.
  ------------------------------------------------------------------------
  */
 
@@ -24,6 +24,8 @@ struct ReceiptFullscreenViewer: View {
     let images: [UIImage?]
     @Binding var page: Int
     var onClose: () -> Void = {}
+    /// Nur im Kamerabildschirm: Pille „Ecken anpassen“ unten (öffnet den Ecken-Editor für `page`).
+    var onAdjustCorners: ((Int) -> Void)? = nil
 
     @State private var scale: CGFloat = 1
     @State private var lastScale: CGFloat = 1
@@ -42,6 +44,11 @@ struct ReceiptFullscreenViewer: View {
             .tabViewStyle(.page(indexDisplayMode: images.count > 1 ? .automatic : .never))
             .ignoresSafeArea()
             closeButton
+            if let onAdjustCorners {
+                adjustButton { onAdjustCorners(page) }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .ignoresSafeArea()
+            }
         }
         .onChange(of: page) { _, _ in resetZoom() }
         .accessibilityAction(.escape, onClose)
@@ -87,11 +94,31 @@ struct ReceiptFullscreenViewer: View {
             SVGIcon(Icon.close, size: 18, color: .white, lineWidth: 2.2)
                 .frame(width: 44, height: 44)
                 .background(GlassCircleBackground(style: .neutralDark, appearance: .dark, accent: AccentScale(Appearance.dark.defaultAccent, .dark), size: 44))   // Glas neutral dunkel (Token gnd)
+                // Der Glas-Hintergrund nimmt keine Berührungen an; ohne Tippfläche reagierten nur die Striche des ✕.
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Schließen")
+        .accessibilityIdentifier("receiptFullscreenClose")
         .padding(.trailing, 20)
         .padding(.top, 8)
+    }
+
+    /// „Ecken anpassen“: Glas-Pille neutral dunkel, 44 hoch, mittig, 100 über dem Bildschirmrand – über den
+    /// Seitenpunkten (ReceiptFullscreenCrop.dc.html).
+    private func adjustButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text("Ecken anpassen")
+                .font(AppFont.dm(15, 600))
+                .foregroundStyle(Color.white)
+                .padding(.horizontal, 20)
+                .frame(height: 44)
+                .background(GlassPillBackground(style: .neutralDark, appearance: .dark,
+                                                accent: AccentScale(Appearance.dark.defaultAccent, .dark), height: 44))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 100)
     }
 
     private func toggleZoom() {

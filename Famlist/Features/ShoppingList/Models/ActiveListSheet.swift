@@ -61,10 +61,10 @@ enum ActiveListSheet: Equatable, Identifiable {
     case shoppingDoneOffer
     /// Import aus Zwischenablage (Menü).
     case importClipboard
-    /// Kassenzettel-Archiv; liegt über den Einstellungen.
-    case receiptArchive
+    /// Kassenzettel-Archiv; aus den Einstellungen geöffnet liegt es über ihnen, aus dem Menü ☰ direkt über der Liste.
+    case receiptArchive(fromMenu: Bool = false)
     /// Ein gespeicherter Kassenzettel; liegt über dem Archiv.
-    case receiptDetail(ArchivedReceipt)
+    case receiptDetail(ArchivedReceipt, fromMenu: Bool = false)
 
     var id: String {
         switch self {
@@ -93,7 +93,7 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .shoppingDoneOffer: return "shoppingDoneOffer"
         case .importClipboard: return "importClipboard"
         case .receiptArchive: return "receiptArchive"
-        case .receiptDetail(let receipt): return "receiptDetail-\(receipt.id)"
+        case .receiptDetail(let receipt, _): return "receiptDetail-\(receipt.id)"
         }
     }
 }
@@ -107,8 +107,8 @@ extension ActiveListSheet {
         case .editCategory: return .manageCategories
         case .priceHistory: return .manageItems
         case .itemPriceHistory(let item): return .edit(item)
-        case .receiptArchive: return .settings
-        case .receiptDetail: return .receiptArchive
+        case .receiptArchive(let fromMenu): return fromMenu ? nil : .settings
+        case .receiptDetail(_, let fromMenu): return .receiptArchive(fromMenu: fromMenu)
         default: return nil
         }
     }

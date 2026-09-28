@@ -12,7 +12,7 @@
    „Kassenzettel scannen“ (Einstieg nicht gestaltet) und „Aus Zwischenablage importieren“.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“).
+ - „Gespeicherte Kassenzettel“ (Wunsch Robert 28.09.2026): öffnet das Archiv direkt aus dem Menü.
  ------------------------------------------------------------------------
  */
 
@@ -24,6 +24,7 @@ enum ListMenuItem: CaseIterable {
     case manageItems
     case manageCategories
     case receipt
+    case receiptArchive
     case importClipboard
     case settings
 }

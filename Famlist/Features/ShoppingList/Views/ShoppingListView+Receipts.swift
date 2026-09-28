@@ -74,18 +74,20 @@ extension ShoppingListView {
                              onFinish: finishShopping,
                              onKeep: closeReceiptFlow,
                              onScan: openReceiptCapture)
-        case .receiptArchive:
+        case .receiptArchive(let fromMenu):
             let access = receiptArchiveViewModel()
+            // Aus dem Menü gibt es keine Einstellungen darunter: „Zurück“ schließt dann.
             ReceiptArchiveSheet(archive: receiptArchive, appearance: appearance,
                                 currentUserId: session.currentProfile?.id, ownedListIds: access.ownedListIds,
-                                onBack: { activeSheet = .settings }, onClose: closeSheet,
-                                onOpen: { activeSheet = .receiptDetail($0) })
-        case .receiptDetail(let receipt):
+                                onBack: { if fromMenu { closeSheet() } else { activeSheet = .settings } },
+                                onClose: closeSheet,
+                                onOpen: { activeSheet = .receiptDetail($0, fromMenu: fromMenu) })
+        case .receiptDetail(let receipt, let fromMenu):
             ReceiptDetailSheet(receipt: receipt, archive: receiptArchive, appearance: appearance,
                                canDelete: receiptArchiveViewModel().canDelete(receipt),
-                               onBack: { activeSheet = .receiptArchive }, onClose: closeSheet,
+                               onBack: { activeSheet = .receiptArchive(fromMenu: fromMenu) }, onClose: closeSheet,
                                onDelete: {
-                                   activeSheet = .receiptArchive
+                                   activeSheet = .receiptArchive(fromMenu: fromMenu)
                                    Task { await receiptArchive.delete(receipt) }
                                })
         default:

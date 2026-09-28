@@ -71,7 +71,7 @@ final class ReceiptArchive: ObservableObject {
             pages.compactMap(ReceiptPhotoCodec.jpeg(from:))
         }.value
         guard !encoded.isEmpty else { return nil }
-        let id = UUID()
+        let id = draft.id
         let paths = encoded.indices.map { ArchivedReceipt.photoPath(listId: draft.listId, receiptId: id, index: $0 + 1) }
         do {
             for (data, path) in zip(encoded, paths) { try store.writePendingPhoto(data, path: path) }
@@ -93,7 +93,8 @@ final class ReceiptArchive: ObservableObject {
         ArchivedReceipt(id: id, listId: draft.listId, listTitle: draft.listTitle, createdBy: draft.createdBy,
                         creatorName: draft.creatorName, storeName: draft.storeName, purchasedAt: draft.purchasedAt,
                         total: draft.total, lineCount: draft.lineCount, savedPriceCount: draft.savedPriceCount,
-                        photoPaths: paths, bytes: bytes, createdAt: Date(), isPending: true)
+                        photoPaths: paths, bytes: bytes, createdAt: Date(), isPending: true,
+                        lines: draft.lines)
     }
 
     // MARK: - Laden

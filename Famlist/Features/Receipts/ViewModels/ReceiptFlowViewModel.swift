@@ -18,9 +18,11 @@
    „Kassenzettel prüfen“ fragt vor dem Speichern, ob diese Preise die Artikelpreise ersetzen sollen.
  - Kassenzettel-Archiv: „Preise speichern“ legt zusätzlich einen Archiv-Eintrag mit den Aufnahmen an,
    wenn `archive` und `origin` gesetzt sind und der Schalter „Fotos der Bons speichern“ an ist.
+ - Zuschnitt: Findet die Erkennung keinen Bon, bleibt das Foto unverändert. Das Original bleibt in
+   `scans` erhalten, ins Archiv und in die Texterkennung geht das zugeschnittene Bild (`pages`).
 
  📝 Last Change:
- - „Preise speichern“ legt einen Archiv-Eintrag an (Kassenzettel-Archiv).
+ - Jede Aufnahme wird automatisch auf den Bon zugeschnitten (ReceiptPageCropper); „Prüfen“ wartet darauf.
  ------------------------------------------------------------------------
  */
 
@@ -35,7 +37,8 @@ final class ReceiptFlowViewModel: ObservableObject {
         case done(saved: Int)
     }
 
-    @Published var pages: [UIImage] = []
+    /// Aufnahmen in Reihenfolge. `image` ist nach dem Zuschnitt der gerade gezogene Bon.
+    @Published private(set) var scans: [ReceiptPage] = []
     @Published private(set) var phase: Phase = .capturing
     @Published var lines: [ReceiptReviewLine] = []
     @Published var storeName: String?
@@ -56,8 +59,12 @@ final class ReceiptFlowViewModel: ObservableObject {
     private let priceBook: PriceBook
     private let archive: ReceiptArchive?
     private let origin: ReceiptArchiveOrigin?
+    /// Laufende Zuschnitte je Aufnahme. „Prüfen“ wartet, bis alle fertig sind.
+    private var cropTasks: [UUID: Task<Void, Never>] = [:]
     /// Ersetzbar in Tests (Vision braucht echte Bilder).
     var recognize: ([UIImage]) async -> [String] = ReceiptTextRecognizer.recognizeLines(in:)
+    var cropPage: (UIImage) async -> ReceiptPageCropper.Result = ReceiptPageCropper.autoCrop(_:)
+    var cropWithQuad: (UIImage, ReceiptQuad) async -> UIImage? = ReceiptPageCropper.cropInBackground(_:to:)
 
     /// `listPrices`: Artikelname → Preis der Artikel in der geöffneten Liste.
     /// `checkedItems`: abgehakte Artikel – daraus entsteht „Nicht auf dem Bon gefunden“.
@@ -79,15 +86,60 @@ final class ReceiptFlowViewModel: ObservableObject {
 
     var savableCount: Int { lines.filter(\.isSaved).count + manualPrices.count }
 
+    /// Bilder für Texterkennung und Archiv (zugeschnitten, sofern ein Bon erkannt wurde).
+    var pages: [UIImage] { scans.map(\.image) }
+
     // MARK: - Aufnahme
 
-    func addPage(_ image: UIImage) { pages.append(image) }
+    /// Neue Aufnahme: erscheint sofort als Originalfoto. Der Zuschnitt ersetzt es, sobald er fertig ist.
+    /// So bleibt die Reihenfolge erhalten, auch wenn mehrere Zuschnitte gleichzeitig laufen.
+    func addPage(_ image: UIImage, automatic: Bool = false) {
+        let page = ReceiptPage(original: image)
+        scans.append(page)
+        if automatic { UserLog.Data.receiptAutoCaptured(page: scans.count) }
+        let crop = cropPage
+        cropTasks[page.id] = Task { [weak self] in
+            let result = await crop(image)
+            // Abgebrochen (gelöscht oder von Hand angepasst): Das späte Ergebnis darf nichts überschreiben.
+            guard !Task.isCancelled else { return }
+            self?.finishCrop(page.id, result: result)
+        }
+    }
+
+    /// „Ecken anpassen“: neue Ecken übernehmen; nil = „Ganzes Foto“ (Zuschnitt verwerfen).
+    func adjustCorners(of id: UUID, to quad: ReceiptQuad?) async {
+        guard let index = scans.firstIndex(where: { $0.id == id }) else { return }
+        cropTasks.removeValue(forKey: id)?.cancel()
+        let original = scans[index].original
+        scans[index].isCropping = quad != nil
+        let cropped: UIImage? = if let quad { await cropWithQuad(original, quad) } else { nil }
+        guard let i = scans.firstIndex(where: { $0.id == id }) else { return }
+        scans[i].quad = cropped == nil ? nil : quad
+        scans[i].image = cropped ?? original
+        scans[i].isCropping = false
+        UserLog.Data.receiptCornersAdjusted(page: i + 1, wholePhoto: cropped == nil)
+    }
+
+    /// Wartet, bis alle laufenden Zuschnitte fertig sind.
+    func finishCropping() async {
+        while let task = cropTasks.values.first { await task.value }
+    }
 
     /// Mini-Ansicht: einzelne Aufnahme löschen (✕ am Vorschaubild).
     func removePage(at index: Int) {
-        guard pages.indices.contains(index) else { return }
-        pages.remove(at: index)
-        UserLog.Data.receiptPageRemoved(remaining: pages.count)
+        guard scans.indices.contains(index) else { return }
+        let removed = scans.remove(at: index)
+        cropTasks.removeValue(forKey: removed.id)?.cancel()
+        UserLog.Data.receiptPageRemoved(remaining: scans.count)
+    }
+
+    /// Ergebnis des Zuschnitts übernehmen; wurde die Aufnahme inzwischen gelöscht, verfällt es.
+    private func finishCrop(_ id: UUID, result: ReceiptPageCropper.Result) {
+        cropTasks[id] = nil
+        guard let index = scans.firstIndex(where: { $0.id == id }) else { return }
+        scans[index].quad = result.quad
+        scans[index].image = result.image
+        scans[index].isCropping = false
     }
 
     /// „Zurück“ in „Kassenzettel prüfen“: Aufnahmen bleiben, das Erkennungsergebnis wird verworfen
@@ -104,8 +156,9 @@ final class ReceiptFlowViewModel: ObservableObject {
     // MARK: - Erkennen
 
     func process() async {
-        guard !pages.isEmpty else { return }
+        guard !scans.isEmpty else { return }
         phase = .recognizing
+        await finishCropping()
         if let entries = try? await catalog?.fetchAll() {
             candidates = Array(Set(candidates + entries.map(\.name)))
             catalogPrices = Dictionary(entries.map { (CatalogOperation.key($0.name), $0.price) },
@@ -211,21 +264,27 @@ final class ReceiptFlowViewModel: ObservableObject {
     func savePrices() async {
         let store = (storeName?.isEmpty == false ? storeName : nil) ?? "Unbekannter Laden"
         let date = purchaseDate ?? Date()
+        // Die Preise verweisen nur dann auf den Bon, wenn er auch archiviert wird (Schalter an, Liste bekannt).
+        let receiptId = UUID()
+        let link = archive?.isEnabled == true && origin != nil ? receiptId : nil
         let points = lines.filter(\.isSaved).compactMap { line in
-            line.itemName.map { PricePoint(itemName: $0, storeName: store, purchasedAt: date, price: line.unitPrice) }
-        } + manualPrices.map { PricePoint(itemName: $0.item.name, storeName: store, purchasedAt: date, price: $0.price) }
+            line.itemName.map { PricePoint(itemName: $0, storeName: store, purchasedAt: date, price: line.unitPrice,
+                                           receiptId: link) }
+        } + manualPrices.map {
+            PricePoint(itemName: $0.item.name, storeName: store, purchasedAt: date, price: $0.price, receiptId: link)
+        }
         let saved = await priceBook.save(points)
-        await archiveReceipt(store: store, date: date, savedPrices: saved)
+        await archiveReceipt(id: receiptId, store: store, date: date, savedPrices: saved)
         phase = .done(saved: saved)
     }
 
-    /// Bon mit Aufnahmen ins Archiv (nur wenn Schalter an; ReceiptArchive prüft das).
-    private func archiveReceipt(store: String, date: Date, savedPrices: Int) async {
+    /// Bon mit Aufnahmen und Positionen ins Archiv (nur wenn Schalter an; ReceiptArchive prüft das).
+    private func archiveReceipt(id: UUID, store: String, date: Date, savedPrices: Int) async {
         guard let archive, let origin else { return }
         await archive.archive(ReceiptArchiveDraft(
-            pages: pages, listId: origin.listId, listTitle: origin.listTitle, createdBy: origin.createdBy,
+            id: id, pages: pages, listId: origin.listId, listTitle: origin.listTitle, createdBy: origin.createdBy,
             creatorName: origin.creatorName, storeName: store, purchasedAt: date, total: total,
-            lineCount: lines.count, savedPriceCount: savedPrices))
+            lineCount: lines.count, savedPriceCount: savedPrices, lines: lines.map(ReceiptLine.init)))
     }
 
     // MARK: - Artikelpreise

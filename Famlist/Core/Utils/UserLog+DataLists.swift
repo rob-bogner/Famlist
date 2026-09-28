@@ -53,6 +53,16 @@ extension UserLog.Data {
         UserLog.log("🧾 Aufnahme gelöscht, \(remaining) übrig")
     }
 
+    /// Kassenzettel: Kamera hat selbst ausgelöst (Auto), weil der Bon ruhig im Bild lag
+    static func receiptAutoCaptured(page: Int) {
+        UserLog.log("🧾 Teil \(page) automatisch fotografiert")
+    }
+
+    /// Kassenzettel: Ecken von Hand angepasst oder Zuschnitt verworfen („Ganzes Foto“)
+    static func receiptCornersAdjusted(page: Int, wholePhoto: Bool) {
+        UserLog.log(wholePhoto ? "🧾 Teil \(page): ganzes Foto statt Zuschnitt" : "🧾 Teil \(page): Ecken angepasst")
+    }
+
     /// Kassenzettel-Archiv: Bon mit Fotos gespeichert
     static func receiptArchived(store: String, photos: Int) {
         UserLog.log("🧾 Kassenzettel gespeichert: \(store), \(photos == 1 ? "1 Foto" : "\(photos) Fotos")")

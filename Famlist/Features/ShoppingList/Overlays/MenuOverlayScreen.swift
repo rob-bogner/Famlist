@@ -72,6 +72,8 @@ struct MenuOverlayScreen: View {
                 row(k, .manageItems, OverlayIcon.box, "Artikel verwalten")
                 row(k, .manageCategories, OverlayIcon.tag, "Kategorien verwalten")
                 row(k, .receipt, Icon.camera, "Kassenzettel scannen")
+                // Nicht gestaltet (Wunsch Robert 28.09.2026); Icon „Fotos“ aus ReceiptCapture, weil das Archiv die Bon-Fotos zeigt.
+                row(k, .receiptArchive, EKKIcon.gallery, "Gespeicherte Kassenzettel")
                 row(k, .importClipboard, OverlayIcon.clipboard, "Import aus Zwischenablage")
                 // Gruppe 3
                 PopoverMenuDivider(k: k)

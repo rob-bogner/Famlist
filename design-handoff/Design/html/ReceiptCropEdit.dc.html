@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kassenzettel – Ecken anpassen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A0F10; font-family: 'DM Sans', system-ui, sans-serif; color: #FFFFFF">
+<!-- Originalfoto (Platzhalter), eingepasst in 350 × 467 (3:4) bei left 20 / top 150. -->
+<svg aria-hidden="true" width="390" height="844" viewBox="0 0 390 844" style="position: absolute; left: 0; top: 0">
+<defs>
+<g id="scene">
+<rect x="20" y="150" width="350" height="467" fill="#3A2B1F"></rect>
+<rect x="20" y="150" width="350" height="467" fill="url(#tableShade)"></rect>
+<g transform="rotate(-7 195 384)">
+<rect x="110" y="204" width="170" height="360" rx="2" fill="#F4F1EA"></rect>
+<rect x="155" y="226" width="80" height="7" rx="3" fill="#B9B4AA"></rect>
+<rect x="128" y="254" width="134" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="270" width="108" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="286" width="134" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="302" width="90" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="318" width="122" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="334" width="134" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="350" width="100" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="366" width="134" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="382" width="80" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="398" width="134" height="4" rx="2" fill="#CFCAC0"></rect>
+<rect x="128" y="426" width="134" height="2" rx="1" fill="#B9B4AA"></rect>
+<rect x="128" y="442" width="62" height="6" rx="3" fill="#B9B4AA"></rect>
+<rect x="216" y="442" width="46" height="6" rx="3" fill="#B9B4AA"></rect>
+</g>
+</g>
+<radialGradient id="tableShade" cx="0.5" cy="0.4" r="0.8"><stop offset="0" stop-color="rgba(255,255,255,0.08)"></stop><stop offset="1" stop-color="rgba(0,0,0,0.35)"></stop></radialGradient>
+<clipPath id="loupeClip"><circle cx="52" cy="52" r="50"></circle></clipPath>
+</defs>
+<use href="#scene"></use>
+<!-- Außerhalb des Vierecks abgedunkelt (Schwarz 55 %), damit sichtbar ist, was abgeschnitten wird. -->
+<path d="M20 150H370V617H20Z {{quad.path}}" fill="rgba(0,0,0,0.55)" fill-rule="evenodd"></path>
+<!-- Kanten: Akzent hell, 2,5. -->
+<path d="{{quad.path}}" fill="none" stroke="{{light}}" stroke-width="2.5" stroke-linejoin="round"></path>
+<!-- Griffe: Kreis 28 (Treffläche 44), Weiß mit Akzent-Ring 3; der gezogene Griff wächst auf 34 und wird zum Ring. -->
+<circle cx="{{h1.x}}" cy="{{h1.y}}" r="14" fill="#FFFFFF" stroke="{{light}}" stroke-width="3" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5))"></circle>
+<circle cx="{{h2.x}}" cy="{{h2.y}}" r="14" fill="#FFFFFF" stroke="{{light}}" stroke-width="3" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5))"></circle>
+<circle cx="{{h3.x}}" cy="{{h3.y}}" r="{{h3.r}}" fill="{{h3.fill}}" stroke="{{h3.stroke}}" stroke-width="3" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5))"></circle>
+<circle cx="{{h4.x}}" cy="{{h4.y}}" r="14" fill="#FFFFFF" stroke="{{light}}" stroke-width="3" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5))"></circle>
+<!-- Lupe beim Ziehen: Kreis 104, 2,5-fach, Rand Weiß 3, Fadenkreuz Akzent hell. Sitzt in der Ecke gegenüber dem Finger. -->
+<g transform="translate(28 162)" style="display: {{loupe.display}}">
+<circle cx="52" cy="52" r="52" fill="#0A0F10" style="filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6))"></circle>
+<g clip-path="url(#loupeClip)">
+<g transform="translate(52 52) scale(2.5) translate({{loupe.tx}} {{loupe.ty}})">
+<use href="#scene"></use>
+<path d="{{quad.path}}" fill="none" stroke="{{light}}" stroke-width="1"></path>
+</g>
+<path d="M52 36V46M52 58V68M36 52H46M58 52H68" stroke="{{light}}" stroke-width="1.5" stroke-linecap="round"></path>
+</g>
+<circle cx="52" cy="52" r="50.5" fill="none" stroke="#FFFFFF" stroke-width="3"></circle>
+</g>
+</svg>
+<div style="position: absolute; left: 20px; right: 20px; top: 62px; display: flex; align-items: center; justify-content: space-between">
+<button aria-label="Abbrechen" style="position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; background: {{gnd.bg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 13px; right: 13px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gnd.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></span></button>
+<span style="padding: 8px 14px; border-radius: 18px; background: rgba(0,0,0,0.35); color: #FFFFFF; font-size: 14px; font-weight: 600">Ecken anpassen · Teil 1</span>
+<span aria-hidden="true" style="width: 48px; height: 48px"></span>
+</div>
+<span style="position: absolute; left: 32px; right: 32px; top: 641px; text-align: center; font-size: 13px; line-height: 1.4; color: rgba(255,255,255,0.8)">Griffe auf die Ecken des Bons ziehen</span>
+<!-- Unten: „Ganzes Foto“ (Glas-Pille neutral dunkel) verwirft den Zuschnitt; „Übernehmen“ wie „Prüfen“. -->
+<div style="position: absolute; left: 20px; right: 20px; bottom: 54px; height: 52px; display: flex; align-items: center; justify-content: space-between">
+<button aria-label="Ganzes Foto verwenden" style="position: relative; height: 52px; box-sizing: border-box; padding: 0 20px; border-radius: 26px; border: 0; background: {{gnd.pbg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap"><span aria-hidden="true" style="position: absolute; left: 11px; right: 11px; top: 2px; height: 18px; border-radius: 9px; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span><span style="position: relative">Ganzes Foto</span></button>
+<button aria-label="Zuschnitt übernehmen" style="position: relative; height: 52px; box-sizing: border-box; padding: 0 24px; border-radius: 26px; border: 0; background: {{cta.bg}}; box-shadow: {{cta.shadow}}; overflow: hidden; color: #04262A; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap">
+<span aria-hidden="true" style="position: absolute; left: 11px; right: 11px; top: 2px; height: 18px; border-radius: 9px; background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span>
+<span aria-hidden="true" style="position: absolute; left: 22px; right: 22px; bottom: 2px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.14); filter: blur(2.5px); pointer-events: none"></span>
+<span style="position: relative">Übernehmen</span>
+</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"dragging":{"editor":"enum","default":"no","options":["no","yes"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const gnd = {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      pbg: 'linear-gradient(180deg, #33474A 0%, #1F3033 55%, #152326 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)'
+    };
+    const cta = { bg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 22px -10px ' + rgba(accent, 0.8) };
+    // Ecken des Bons im Foto: Rechteck 170 × 360 um (195, 384), 7° gegen den Uhrzeigersinn gedreht.
+    const a = -7 * Math.PI / 180, cx = 195, cy = 384;
+    const corner = (dx, dy) => ({ x: cx + dx * Math.cos(a) - dy * Math.sin(a), y: cy + dx * Math.sin(a) + dy * Math.cos(a) });
+    const dragging = (this.props.dragging ?? 'no') === 'yes';
+    const p = [corner(-85, -180), corner(85, -180), corner(85, 180), corner(-85, 180)];
+    // Beim Ziehen liegt der Griff unten rechts noch etwas neben der Bon-Ecke.
+    if (dragging) { p[2] = { x: p[2].x + 9, y: p[2].y + 7 }; }
+    const f = (v) => v.toFixed(1);
+    const path = 'M' + p.map((q) => f(q.x) + ' ' + f(q.y)).join('L') + 'Z';
+    const h = (q) => ({ x: f(q.x), y: f(q.y) });
+    return { gnd, cta, light,
+      quad: { path },
+      h1: h(p[0]), h2: h(p[1]), h4: h(p[3]),
+      h3: Object.assign(h(p[2]), dragging ? { r: '17', fill: 'rgba(255,255,255,0.15)', stroke: '#FFFFFF' } : { r: '14', fill: '#FFFFFF', stroke: light }),
+      loupe: { display: dragging ? 'inline' : 'none', tx: f(-p[2].x), ty: f(-p[2].y) }
+    };
+  }
+}
+</script>
+</body>
+</html>
