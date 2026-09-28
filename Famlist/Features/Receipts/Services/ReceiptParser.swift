@@ -23,6 +23,7 @@
  - Reine Funktion → Unit-Tests mit Beispiel-Bons (ReceiptParserTests).
 
  📝 Last Change:
+ - 29.09.2026: Uhrzeit und Adresse des Ladens (ReceiptParser+Meta).
  - 25.09.2026: Mengenzeilen setzen die Stückzahl der passenden Position; „2 x 1,29“ ist keine Position mehr.
  - 25.09.2026: Audit-Fixes – Rabatte mit nachgestelltem/alleinstehendem Minus, Rabatt nie unter 0,
    Summenwörter nur als ganzes Wort („SUMMERROLLS“ ist keine Summe), Gewichtszeilen mit Endpreis.
@@ -50,11 +51,13 @@ enum ReceiptParser {
     private static let quantityPattern = #"^\s*\d+([.,]\d+)?\s*(stk|st|x|kg|g)\b.*\b(x|à|a)\b.*\d+[.,]\d{2}"#
     /// Reine Mengenzeile: „2 Stk x 1,29“, „3 St. x 0,99“, „2 x 1,29“. Gruppe 1 = Stückzahl, Gruppe 2 = Stückpreis.
     private static let countPattern = #"^(\d{1,3})\s*(?:STK|ST)?\.?\s*[X×*]\s*(\d{1,4}[.,]\d{2})\s*(?:€|EUR)?\s*$"#
-    private static let datePattern = #"(\d{1,2})\.(\d{1,2})\.(\d{2,4})"#
+    static let datePattern = #"(\d{1,2})\.(\d{1,2})\.(\d{2,4})"#
 
     static func parse(lines rawLines: [String]) -> ParsedReceipt {
         let lines = rawLines.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         var result = ParsedReceipt(store: detectStore(lines), date: detectDate(lines), lines: [], total: nil)
+        result.time = detectTime(lines)
+        result.address = detectAddress(lines)
         var pendingName: String?        // Artikelname ohne Preis direkt in der Zeile davor
         var pendingCount: (count: Int, amount: Decimal)?   // Mengenzeile, die vor ihrer Position steht
 

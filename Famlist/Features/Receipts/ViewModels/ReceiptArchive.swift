@@ -16,7 +16,7 @@
  - Löschen entfernt Fotos und Eintrag; Preispunkte (PriceBook) sind davon unabhängig und bleiben.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Einkaufsdaten (Adresse, Beginn, Ende) aus dem Entwurf übernehmen.
  ------------------------------------------------------------------------
  */
 
@@ -94,7 +94,8 @@ final class ReceiptArchive: ObservableObject {
                         creatorName: draft.creatorName, storeName: draft.storeName, purchasedAt: draft.purchasedAt,
                         total: draft.total, lineCount: draft.lineCount, savedPriceCount: draft.savedPriceCount,
                         photoPaths: paths, bytes: bytes, createdAt: Date(), isPending: true,
-                        lines: draft.lines)
+                        lines: draft.lines, storeAddress: draft.storeAddress, startedAt: draft.startedAt,
+                        endedAt: draft.endedAt)
     }
 
     // MARK: - Laden

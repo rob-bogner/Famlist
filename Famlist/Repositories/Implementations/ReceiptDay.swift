@@ -13,7 +13,7 @@
  - Der Kalendertag wird nach Ortszeit bestimmt und beim Lesen auf 12 Uhr gelegt, damit er sich nicht verschiebt.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - timestampString für started_at/ended_at (Migration 030).
  ------------------------------------------------------------------------
  */
 
@@ -31,6 +31,11 @@ enum ReceiptDay {
         let parts = string.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
         return Calendar.current.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 12))
+    }
+
+    /// Zeitstempel für timestamptz-Spalten („2026-09-24T15:42:00Z“).
+    static func timestampString(_ date: Date) -> String {
+        ISO8601DateFormatter().string(from: date)
     }
 
     static func timestamp(_ string: String) -> Date? {

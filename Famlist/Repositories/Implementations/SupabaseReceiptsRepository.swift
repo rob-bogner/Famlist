@@ -14,8 +14,10 @@
  - purchased_at ist eine DATE-Spalte („yyyy-MM-dd“), created_at ein Zeitstempel mit Mikrosekunden:
    Der Bruchteil wird vor dem Lesen abgeschnitten (ISO8601DateFormatter kennt nur Millisekunden).
 
+ - store_address, started_at, ended_at (Migration 030) sind optional: Ältere Bons liefern null.
+
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Einkaufsdaten: Adresse, Einkaufsbeginn und -ende (Migration 030).
  ------------------------------------------------------------------------
  */
 
@@ -46,6 +48,9 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
         let bytes: Int
         var created_at: String?
         var lines: [ReceiptLine]?
+        var store_address: String?
+        var started_at: String?
+        var ended_at: String?
         var lists: NameRow?
         var profiles: NameRow?
     }
@@ -53,7 +58,8 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
     func fetchAll() async throws -> [ArchivedReceipt] {
         let rows: [Row] = try await client.from("receipts")
             .select("id, list_id, created_by, store_name, purchased_at, total, line_count, saved_price_count, "
-                    + "photo_paths, bytes, created_at, lines, lists(title), profiles(username, full_name)")
+                    + "photo_paths, bytes, created_at, lines, store_address, started_at, ended_at, "
+                    + "lists(title), profiles(username, full_name)")
             .order("purchased_at", ascending: false)
             .order("created_at", ascending: false)
             .limit(Self.fetchLimit)
@@ -71,7 +77,9 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
         let row = Row(id: receipt.id, list_id: receipt.listId, created_by: uid, store_name: receipt.storeName,
                       purchased_at: ReceiptDay.string(receipt.purchasedAt), total: receipt.total,
                       line_count: receipt.lineCount, saved_price_count: receipt.savedPriceCount,
-                      photo_paths: receipt.photoPaths, bytes: receipt.bytes, lines: receipt.lines ?? [])
+                      photo_paths: receipt.photoPaths, bytes: receipt.bytes, lines: receipt.lines ?? [],
+                      store_address: receipt.storeAddress, started_at: receipt.startedAt.map(ReceiptDay.timestampString),
+                      ended_at: receipt.endedAt.map(ReceiptDay.timestampString))
         // ON CONFLICT DO NOTHING: wiederholtes Senden nach verlorener Antwort ist harmlos.
         try await client.from("receipts").upsert(row, onConflict: "id", ignoreDuplicates: true).execute()
     }
@@ -96,6 +104,8 @@ final class SupabaseReceiptsRepository: ReceiptsRepository {
                                purchasedAt: ReceiptDay.date(row.purchased_at) ?? Date(), total: row.total,
                                lineCount: row.line_count, savedPriceCount: row.saved_price_count,
                                photoPaths: row.photo_paths, bytes: row.bytes,
-                               createdAt: row.created_at.flatMap(ReceiptDay.timestamp) ?? Date(), lines: row.lines)
+                               createdAt: row.created_at.flatMap(ReceiptDay.timestamp) ?? Date(), lines: row.lines,
+                               storeAddress: row.store_address, startedAt: row.started_at.flatMap(ReceiptDay.timestamp),
+                               endedAt: row.ended_at.flatMap(ReceiptDay.timestamp))
     }
 }

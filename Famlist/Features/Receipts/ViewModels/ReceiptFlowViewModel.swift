@@ -21,8 +21,12 @@
  - Zuschnitt: Findet die Erkennung keinen Bon, bleibt das Foto unverändert. Das Original bleibt in
    `scans` erhalten, ins Archiv und in die Texterkennung geht das zugeschnittene Bild (`pages`).
 
+ - Einkaufsdaten: Uhrzeit und Adresse laut Bon, Zeitpunkt der ersten Aufnahme und Einkaufsbeginn laut Liste
+   gehen in den Archiv-Eintrag (ReceiptTimes); die Zeilen bekommen Kategorie, Einheit und Inhalt je Stück
+   (ReceiptLineEnricher).
+
  📝 Last Change:
- - Jede Aufnahme wird automatisch auf den Bon zugeschnitten (ReceiptPageCropper); „Prüfen“ wartet darauf.
+ - Einkaufsdaten für das Archiv; Preisvergleich nach ReceiptFlowViewModel+PriceChanges ausgelagert.
  ------------------------------------------------------------------------
  */
 
@@ -44,6 +48,11 @@ final class ReceiptFlowViewModel: ObservableObject {
     @Published var storeName: String?
     @Published var purchaseDate: Date?
     @Published private(set) var receiptTotal: Decimal?
+    /// Uhrzeit und Adresse laut Bon (nur für den Archiv-Eintrag).
+    private(set) var receiptTime: DateComponents?
+    private(set) var storeAddress: String?
+    /// Zeitpunkt der ersten Aufnahme (Ersatz für die Uhrzeit, wenn der Bon keine nennt).
+    private(set) var capturedAt: Date?
     @Published var errorMessage: String?
     /// Entscheidungen zu „Nicht auf dem Bon gefunden“, je Artikel-ID.
     @Published private(set) var missingResolutions: [String: ReceiptMissingResolution] = [:]
@@ -52,9 +61,13 @@ final class ReceiptFlowViewModel: ObservableObject {
     let checkedItems: [ItemModel]
 
     private(set) var candidates: [String]
+    /// Alle Artikel der Liste und die Kategorien des Nutzers: Kategorie und Einheit je Bon-Zeile.
+    private let listItems: [ItemModel]
+    private let categories: [CategoryDefinition]
+    private var catalogEntries: [ItemCatalogEntry] = []
     /// Bekannte Artikelpreise je Name-Schlüssel (CatalogOperation.key): aus der Liste und aus dem Artikelstamm.
-    private let listPrices: [String: Double]
-    private var catalogPrices: [String: Double] = [:]
+    let listPrices: [String: Double]
+    private(set) var catalogPrices: [String: Double] = [:]
     private let catalog: (any ItemCatalogRepository)?
     private let priceBook: PriceBook
     private let archive: ReceiptArchive?
@@ -65,14 +78,19 @@ final class ReceiptFlowViewModel: ObservableObject {
     var recognize: ([UIImage]) async -> [String] = ReceiptTextRecognizer.recognizeLines(in:)
     var cropPage: (UIImage) async -> ReceiptPageCropper.Result = ReceiptPageCropper.autoCrop(_:)
     var cropWithQuad: (UIImage, ReceiptQuad) async -> UIImage? = ReceiptPageCropper.cropInBackground(_:to:)
+    var now: () -> Date = Date.init
 
     /// `listPrices`: Artikelname → Preis der Artikel in der geöffneten Liste.
     /// `checkedItems`: abgehakte Artikel – daraus entsteht „Nicht auf dem Bon gefunden“.
+    /// `listItems`/`categories`: für Kategorie und Einheit der Bon-Zeilen im Archiv.
     init(listItemNames: [String], listPrices: [String: Double] = [:], checkedItems: [ItemModel] = [],
+         listItems: [ItemModel] = [], categories: [CategoryDefinition] = CategoryDefinition.defaults,
          catalog: (any ItemCatalogRepository)?, priceBook: PriceBook,
          archive: ReceiptArchive? = nil, origin: ReceiptArchiveOrigin? = nil) {
         self.candidates = listItemNames
         self.checkedItems = checkedItems
+        self.listItems = listItems
+        self.categories = categories
         self.listPrices = Dictionary(listPrices.map { (CatalogOperation.key($0.key), $0.value) },
                                      uniquingKeysWith: { first, _ in first })
         self.catalog = catalog
@@ -95,6 +113,7 @@ final class ReceiptFlowViewModel: ObservableObject {
     /// So bleibt die Reihenfolge erhalten, auch wenn mehrere Zuschnitte gleichzeitig laufen.
     func addPage(_ image: UIImage, automatic: Bool = false) {
         let page = ReceiptPage(original: image)
+        if capturedAt == nil { capturedAt = now() }
         scans.append(page)
         if automatic { UserLog.Data.receiptAutoCaptured(page: scans.count) }
         let crop = cropPage
@@ -150,6 +169,8 @@ final class ReceiptFlowViewModel: ObservableObject {
         storeName = nil
         purchaseDate = nil
         receiptTotal = nil
+        receiptTime = nil
+        storeAddress = nil
         errorMessage = nil
     }
 
@@ -160,6 +181,7 @@ final class ReceiptFlowViewModel: ObservableObject {
         phase = .recognizing
         await finishCropping()
         if let entries = try? await catalog?.fetchAll() {
+            catalogEntries = entries
             candidates = Array(Set(candidates + entries.map(\.name)))
             catalogPrices = Dictionary(entries.map { (CatalogOperation.key($0.name), $0.price) },
                                        uniquingKeysWith: { first, _ in first })
@@ -173,6 +195,8 @@ final class ReceiptFlowViewModel: ObservableObject {
         storeName = parsed.store
         purchaseDate = parsed.date
         receiptTotal = parsed.total
+        receiptTime = parsed.time
+        storeAddress = parsed.address
         lines = parsed.lines.map { line in
             let match = ReceiptItemMatcher.match(line.raw, candidates: candidates)
             return ReceiptReviewLine(id: line.id, raw: line.raw, price: line.price,
@@ -184,48 +208,7 @@ final class ReceiptFlowViewModel: ObservableObject {
         phase = .review
     }
 
-    // MARK: - Korrigieren
-
-    func suggestions(for line: ReceiptReviewLine) -> [String] {
-        ReceiptItemMatcher.suggestions(line.raw, candidates: candidates)
-    }
-
-    func assign(_ lineId: UUID, to name: String) {
-        guard let i = lines.firstIndex(where: { $0.id == lineId }) else { return }
-        lines[i].itemName = name
-        lines[i].status = .matched
-        lines[i].ignored = false
-    }
-
-    func confirmNew(_ lineId: UUID) {
-        guard let i = lines.firstIndex(where: { $0.id == lineId }) else { return }
-        lines[i].confirmedNew = true
-        lines[i].ignored = false
-    }
-
-    func ignore(_ lineId: UUID) {
-        guard let i = lines.firstIndex(where: { $0.id == lineId }) else { return }
-        lines[i].ignored = true
-    }
-
-    // MARK: - Nicht auf dem Bon gefunden
-
-    /// Abgehakte Artikel, zu denen keine Bon-Zeile gehört (zugeordnet oder „prüfen“; ignorierte zählen nicht).
-    var missingItems: [ItemModel] {
-        let found = Set(lines.filter { !$0.ignored && ($0.status != .new || $0.confirmedNew) }
-            .compactMap { $0.itemName.map(CatalogOperation.key) })
-        return checkedItems.filter { !found.contains(CatalogOperation.key($0.name)) }
-    }
-
-    /// Bon-Zeilen ohne Artikel („Neuer Artikel?“, weder bestätigt noch ignoriert).
-    var unassignedLines: [ReceiptReviewLine] {
-        lines.filter { $0.status == .new && !$0.confirmedNew && !$0.ignored }
-    }
-
-    /// Vorschläge für „Zuordnen“: freie Bon-Zeilen, die ähnlichste zuerst.
-    func lineSuggestions(for item: ItemModel) -> [ReceiptReviewLine] {
-        unassignedLines.sorted { ReceiptItemMatcher.score($0.raw, item.name) > ReceiptItemMatcher.score($1.raw, item.name) }
-    }
+    // MARK: - Nicht auf dem Bon gefunden (Entscheidungen)
 
     /// „Zuordnen“: Bon-Zeile gehört zu diesem Artikel → er gilt als gefunden und verlässt den Abschnitt.
     func assignLine(_ lineId: UUID, to item: ItemModel) {
@@ -252,7 +235,7 @@ final class ReceiptFlowViewModel: ObservableObject {
     }
 
     /// Von Hand eingegebene Preise der (noch) nicht gefundenen Artikel.
-    private var manualPrices: [(item: ItemModel, price: Decimal)] {
+    var manualPrices: [(item: ItemModel, price: Decimal)] {
         missingItems.compactMap { item in
             if case .some(.priced(let price)) = missingResolutions[item.id] { return (item, price) }
             return nil
@@ -281,49 +264,17 @@ final class ReceiptFlowViewModel: ObservableObject {
     /// Bon mit Aufnahmen und Positionen ins Archiv (nur wenn Schalter an; ReceiptArchive prüft das).
     private func archiveReceipt(id: UUID, store: String, date: Date, savedPrices: Int) async {
         guard let archive, let origin else { return }
+        let times = ReceiptTimes.make(day: date, time: receiptTime, capturedAt: capturedAt, listStart: origin.listStart)
         await archive.archive(ReceiptArchiveDraft(
             id: id, pages: pages, listId: origin.listId, listTitle: origin.listTitle, createdBy: origin.createdBy,
             creatorName: origin.creatorName, storeName: store, purchasedAt: date, total: total,
-            lineCount: lines.count, savedPriceCount: savedPrices, lines: lines.map(ReceiptLine.init)))
+            lineCount: lines.count, savedPriceCount: savedPrices, lines: archivedLines,
+            storeAddress: storeAddress, startedAt: times.start, endedAt: times.end))
     }
 
-    // MARK: - Artikelpreise
-
-    /// Zugeordnete Artikel, deren Bon-Preis je Stück vom gespeicherten Artikelpreis abweicht.
-    /// Neue Artikel zählen nicht (es gibt keinen Artikel, dessen Preis sich ändern könnte).
-    /// Steht ein Artikel mehrmals auf dem Bon, gilt die letzte Position.
-    var priceChanges: [ReceiptPriceChange] {
-        var latest: [String: ReceiptPriceChange] = [:]
-        for line in lines where line.isSaved && line.status != .new && line.unitPrice > 0 {
-            guard let name = line.itemName else { continue }
-            // Über den Text: NSDecimalNumber.doubleValue macht aus 2,49 den Wert 2,4899999999999998.
-            let change = ReceiptPriceChange(name: name, price: Double(line.unitPrice.description) ?? 0)
-            latest[change.key] = change
-        }
-        for manual in manualPrices {
-            let change = ReceiptPriceChange(name: manual.item.name, price: Double(manual.price.description) ?? 0)
-            latest[change.key] = change
-        }
-        return latest.values
-            .filter { change in
-                let known = [listPrices[change.key], catalogPrices[change.key]].compactMap { $0 }
-                return !known.isEmpty && known.contains { abs($0 - change.price) > 0.004 }
-            }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-
-    /// Text der Rückfrage: bis zu 5 Artikel mit neuem Preis, danach „und n weitere“.
-    static func priceChangeMessage(_ changes: [ReceiptPriceChange]) -> String {
-        let shown = changes.prefix(5).map { "\($0.name): \(PriceDisplaySetting.euro($0.price))" }
-        let more = changes.count > 5 ? ["und \(changes.count - 5) weitere"] : []
-        let intro = changes.count == 1
-            ? "Bei 1 Artikel weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab."
-            : "Bei \(changes.count) Artikeln weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab."
-        return ([intro, ""] + shown + more).joined(separator: "\n")
-    }
-
-    /// „KOKOSM. 400ML“ → „Kokosm. 400ml“ (Vorschlag für einen neuen Artikel).
-    static func suggestedName(_ raw: String) -> String {
-        raw.lowercased().split(separator: " ").map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined(separator: " ")
+    /// Positionen für das Archiv, mit Kategorie, Einheit und Inhalt je Stück des zugeordneten Artikels.
+    var archivedLines: [ReceiptLine] {
+        let enricher = ReceiptLineEnricher(listItems: listItems, catalog: catalogEntries, categories: categories)
+        return lines.map { enricher.enrich(ReceiptLine($0)) }
     }
 }

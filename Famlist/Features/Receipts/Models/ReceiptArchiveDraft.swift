@@ -12,7 +12,7 @@
  - `creatorName` und `listTitle` dienen nur der Anzeige, solange der Bon noch nicht hochgeladen ist.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Einkaufsdaten: Adresse, Einkaufsbeginn und -ende.
  ------------------------------------------------------------------------
  */
 
@@ -32,4 +32,7 @@ struct ReceiptArchiveDraft {
     var lineCount: Int
     var savedPriceCount: Int
     var lines: [ReceiptLine] = []
+    var storeAddress: String? = nil
+    var startedAt: Date? = nil
+    var endedAt: Date? = nil
 }

@@ -12,8 +12,10 @@
  - `price` ist der Betrag der Zeile („BANANEN 2,58“); stand eine Mengenzeile dabei („2 Stk x 1,29“),
    ist `quantity` 2 und `unitPrice(price:quantity:)` liefert 1,29 € je Stück.
 
+ - `time` ist die Uhrzeit laut Bon (nur Stunde und Minute), `address` die Adresse des Ladens.
+
  📝 Last Change:
- - Stückzahl je Position (für Stückpreise im Preisverlauf und als Artikelpreis).
+ - Uhrzeit und Adresse des Ladens (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -36,6 +38,10 @@ struct ParsedReceipt: Equatable {
     var lines: [Line]
     /// Summe laut Bon („SUMME“ / „ZU ZAHLEN“); fehlt sie, die Summe der Positionen.
     var total: Decimal?
+    /// Uhrzeit laut Bon („17:42“ → hour 17, minute 42).
+    var time: DateComponents? = nil
+    /// Adresse des Ladens („Leopoldstr. 82“).
+    var address: String? = nil
 
     var computedTotal: Decimal { lines.reduce(0) { $0 + $1.price } }
 

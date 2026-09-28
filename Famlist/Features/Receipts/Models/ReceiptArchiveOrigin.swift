@@ -13,7 +13,7 @@
    solange der Bon noch nicht hochgeladen ist.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - listStart: Einkaufsbeginn laut Liste für die Einkaufsdaten des Bons.
  ------------------------------------------------------------------------
  */
 
@@ -24,4 +24,6 @@ struct ReceiptArchiveOrigin: Equatable {
     var listTitle: String?
     var createdBy: UUID?
     var creatorName: String?
+    /// Einkaufsbeginn laut Liste (ShoppingStartStore) beim Öffnen des Kassenzettel-Ablaufs.
+    var listStart: Date? = nil
 }

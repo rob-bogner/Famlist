@@ -12,9 +12,10 @@
    `noteCheckChange(wasComplete:)`. Nur der Wechsel offen → erledigt setzt `shoppingCompletedEvent`.
  - Listenwechsel und Realtime-Updates laufen nicht hier durch und lösen deshalb nichts aus.
  - Rein lokal (Offline-First): liest nur `items`, kein Netzwerk.
+ - Jedes Abhaken merkt außerdem den Einkaufsbeginn (ShoppingStartStore) für die Einkaufsdaten des Bons.
 
  📝 Last Change:
- - Initial creation (Einkauf erledigt anbieten).
+ - Einkaufsbeginn laut Liste merken und zurücksetzen.
  ------------------------------------------------------------------------
  */
 
@@ -28,9 +29,15 @@ extension ListViewModel {
 
     /// Meldet den Übergang „noch offen → alles erledigt“ nach einer Nutzeraktion.
     func noteCheckChange(wasComplete: Bool) {
+        if items.contains(where: \.isChecked) { ShoppingStartStore.noteCheck(listId: listId) }
         guard !wasComplete, isShoppingComplete else { return }
         logVoid(params: (action: "shoppingCompleted", listId: listId.uuidString, count: items.count))
         UserLog.Data.shoppingCompleted(list: defaultList?.title ?? "Liste", count: items.count)
         shoppingCompletedEvent = UUID()
+    }
+
+    /// Einkauf abgeschlossen oder Bon gespeichert: Der nächste Einkauf beginnt beim nächsten Abhaken.
+    func resetShoppingStart() {
+        ShoppingStartStore.reset(listId: listId)
     }
 }

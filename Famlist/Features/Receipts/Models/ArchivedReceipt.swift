@@ -15,8 +15,10 @@
  - Fotopfade `<list_id>/<receipt_id>/<n>.jpg` in Kleinbuchstaben: Die Zugriffsregel vergleicht mit
    `list_id::text`, und Postgres schreibt UUIDs klein.
 
+ - `storeAddress`, `startedAt`, `endedAt` (Migration 030) sind nil bei Bons älterer App-Versionen.
+
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Einkaufsdaten: Adresse, Einkaufsbeginn laut Liste, Uhrzeit laut Bon.
  ------------------------------------------------------------------------
  */
 
@@ -39,6 +41,12 @@ struct ArchivedReceipt: Identifiable, Codable, Equatable, Sendable {
     var isPending = false
     /// Positionen des Bons (Migration 029). nil bei Bons von älteren App-Versionen und im lokalen Speicher von vorher.
     var lines: [ReceiptLine]? = nil
+    /// Adresse des Ladens laut Bon („Leopoldstr. 82“).
+    var storeAddress: String? = nil
+    /// Einkaufsbeginn laut Liste (erstes Abhaken); nur gesetzt, wenn plausibel.
+    var startedAt: Date? = nil
+    /// Uhrzeit laut Bon am Einkaufstag, sonst Zeitpunkt der Aufnahme am selben Tag.
+    var endedAt: Date? = nil
 
     /// Pfad des n-ten Fotos (1-basiert) im Bucket.
     static func photoPath(listId: UUID, receiptId: UUID, index: Int) -> String {

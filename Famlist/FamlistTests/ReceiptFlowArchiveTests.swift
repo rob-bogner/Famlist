@@ -14,7 +14,7 @@
  - Archiv-Dateien liegen in einem eigenen temporären Ordner und werden nach jedem Test gelöscht.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Einkaufsdaten: Adresse, Uhrzeit, Beginn laut Liste, Kategorie und Inhalt je Zeile.
  ------------------------------------------------------------------------
  */
 
@@ -126,5 +126,39 @@ final class ReceiptFlowArchiveTests: XCTestCase {
         let receipt = try JSONDecoder().decode(ArchivedReceipt.self, from: Data(old.utf8))
         XCTAssertNil(receipt.lines)
         XCTAssertEqual(receipt.storeName, "EDEKA")
+    }
+
+    /// Einkaufsdaten (Migration 030): Adresse und Uhrzeit laut Bon, Beginn laut Liste, Kategorie und Inhalt je Zeile.
+    func test_savePrices_storesShoppingData() async throws {
+        let repo = InMemoryReceiptsRepository()
+        let archive = makeArchive(repo)
+        let cal = ReceiptTimes.calendar
+        let start = cal.date(from: DateComponents(year: 2026, month: 9, day: 24, hour: 17, minute: 42))!
+        let origin = ReceiptArchiveOrigin(listId: listId, listTitle: "Liste Edeka", createdBy: UUID(),
+                                          creatorName: "Rob", listStart: start)
+        let items = [ItemModel(id: "b", name: "Kerrygold Butter", units: 250, measure: "g", category: "Milchprodukte"),
+                     ItemModel(id: "s", name: "Schokolade", units: 200, measure: "g")]
+        let flow = ReceiptFlowViewModel(listItemNames: items.map(\.name), listItems: items, catalog: nil,
+                                        priceBook: PriceBook(repository: InMemoryPricePointsRepository(), defaults: defaults),
+                                        archive: archive, origin: origin)
+        flow.recognize = { _ in ["EDEKA Center", "Leopoldstr. 82", "24.09.2026 18:05", "KERRYGOLD BUTTER   2,49 A",
+                                 "SCHOKOLADE   3,50 A", "2 x 1,75", "SUMME   5,99"] }
+        flow.addPage(UIGraphicsImageRenderer(size: CGSize(width: 40, height: 80)).image { ctx in
+            UIColor.white.setFill(); ctx.fill(CGRect(x: 0, y: 0, width: 40, height: 80))
+        })
+        await flow.process()
+        await flow.savePrices()
+        await archive.flush()
+
+        let receipt = try XCTUnwrap(repo.receipts.first)
+        XCTAssertEqual(receipt.storeAddress, "Leopoldstr. 82")
+        XCTAssertEqual(receipt.startedAt, start)
+        XCTAssertEqual(receipt.endedAt, cal.date(from: DateComponents(year: 2026, month: 9, day: 24, hour: 18, minute: 5)))
+        let lines = try XCTUnwrap(receipt.lines)
+        XCTAssertEqual(lines.map(\.category), ["Milchprodukte", CategoryDefinition.fallbackName])
+        XCTAssertEqual(lines.map(\.quantity), [1, 2])
+        XCTAssertEqual(lines.map(\.units), [250, 100])
+        XCTAssertEqual(lines.map(\.measure), ["g", "g"])
+        XCTAssertEqual(lines.map(\.itemId), ["b", "s"])
     }
 }

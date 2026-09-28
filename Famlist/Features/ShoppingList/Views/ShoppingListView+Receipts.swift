@@ -16,7 +16,7 @@
  - Preisverlauf: Schließen führt zurück zu „Artikel verwalten“ (liegt weichgezeichnet darunter).
 
  📝 Last Change:
- - Bon-Preise als neue Artikelpreise übernehmen; Listenpreise für den Vergleich an den Ablauf übergeben.
+ - Einkaufsdaten: Artikel, Kategorien und Einkaufsbeginn an den Ablauf; Beginn nach Speichern/Erledigt zurücksetzen.
  ------------------------------------------------------------------------
  */
 
@@ -37,7 +37,10 @@ extension ShoppingListView {
                                        flow.backToCapture()
                                        activeSheet = .receiptCapture
                                    },
-                                   onSaved: { activeSheet = .shoppingDone },
+                                   onSaved: {
+                                       listViewModel.resetShoppingStart()      // der Bon hat den Beginn übernommen
+                                       activeSheet = .shoppingDone
+                                   },
                                    onUpdateItemPrices: { changes in
                                        Task { await listViewModel.applyReceiptPrices(changes) }
                                    },
@@ -109,13 +112,16 @@ extension ShoppingListView {
                                            listPrices: Dictionary(listViewModel.items.map { ($0.name, $0.price) },
                                                                   uniquingKeysWith: { first, _ in first }),
                                            checkedItems: listViewModel.items.filter(\.isChecked),
+                                           listItems: listViewModel.items,
+                                           categories: categoryStore.categories,
                                            catalog: listViewModel.catalogRepository,
                                            priceBook: priceBook,
                                            archive: receiptArchive,
                                            origin: ReceiptArchiveOrigin(listId: listViewModel.listId,
                                                                         listTitle: listViewModel.defaultList?.title,
                                                                         createdBy: session.currentProfile?.id,
-                                                                        creatorName: session.currentProfile?.displayName))
+                                                                        creatorName: session.currentProfile?.displayName,
+                                                                        listStart: ShoppingStartStore.start(listId: listViewModel.listId)))
         activeSheet = .receiptCapture
     }
 
@@ -167,6 +173,7 @@ extension ShoppingListView {
 
     private func finishShopping() {
         listViewModel.stageDeletion(.checked)
+        listViewModel.resetShoppingStart()
         closeReceiptFlow()
     }
 

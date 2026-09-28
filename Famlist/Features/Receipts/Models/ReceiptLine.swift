@@ -13,9 +13,12 @@
  - `itemName` ist nil, wenn die Zeile ignoriert wurde oder keinem Artikel zugeordnet ist.
  - `isSaved`: Für diese Zeile wurde ein Preis in den Preisverlauf geschrieben.
  - Die Schlüssel im JSON sind kurz und klein geschrieben, wie in der Datenbank üblich (unit_price statt unitPrice).
+ - `category`, `units`, `measure`, `itemId` (Migration 030) fehlen bei älteren Bons; die Anzeige schlägt sie dann nach.
+   `units` ist der Inhalt je Stück: Listenmenge ÷ Stückzahl auf dem Bon (Entscheidung Robert 29.09.2026),
+   „Schokolade 200 g“ und „2 ×“ auf dem Bon ergeben also 100 g je Stück.
 
  📝 Last Change:
- - Initial creation (Kassenzettel mit seinen Artikeln).
+ - Kategorie, Inhalt je Stück, Einheit und Artikel-ID je Zeile (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -29,6 +32,14 @@ struct ReceiptLine: Codable, Equatable, Sendable {
     let unitPrice: Decimal
     let quantity: Int
     let isSaved: Bool
+    /// Kategorie-Name beim Speichern (nil = alter Bon oder nicht zugeordnet).
+    var category: String? = nil
+    /// Inhalt je Stück in `measure` (nil = unbekannt).
+    var units: Double? = nil
+    /// Einheit wie im Artikel („g“, „l“, „Stück“ …).
+    var measure: String? = nil
+    /// ID des zugeordneten Listen- oder Stammartikels.
+    var itemId: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case raw
@@ -37,6 +48,10 @@ struct ReceiptLine: Codable, Equatable, Sendable {
         case unitPrice = "unit_price"
         case quantity
         case isSaved = "saved"
+        case category
+        case units
+        case measure
+        case itemId = "item_id"
     }
 
     init(raw: String, itemName: String?, price: Decimal, unitPrice: Decimal, quantity: Int, isSaved: Bool) {

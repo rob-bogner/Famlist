@@ -14,7 +14,7 @@
  - In-Memory-SwiftData, keine Netzwerkaufrufe (PreviewItemsRepository, startImmediately: false).
 
  📝 Last Change:
- - Initial creation.
+ - Einkaufsbeginn laut Liste (ShoppingStartStore) beim Abhaken.
  ------------------------------------------------------------------------
  */
 
@@ -81,5 +81,19 @@ final class ShoppingCompletionTests: XCTestCase {
         sut.items = [item("Milch", checked: true), done]
         sut.toggleItemChecked(done)
         XCTAssertNil(sut.shoppingCompletedEvent)
+    }
+
+    /// Abhaken merkt den Einkaufsbeginn (Einkaufsdaten des Bons); ohne abgehakten Artikel passiert nichts.
+    func test_noteCheckChange_remembersShoppingStart_resetClears() {
+        ShoppingStartStore.reset(listId: listId)
+        defer { ShoppingStartStore.reset(listId: listId) }
+        sut.items = [item("Milch", checked: false), item("Brot", checked: false)]
+        sut.noteCheckChange(wasComplete: false)
+        XCTAssertNil(ShoppingStartStore.start(listId: listId))
+        sut.items[0].isChecked = true
+        sut.noteCheckChange(wasComplete: false)
+        XCTAssertNotNil(ShoppingStartStore.start(listId: listId))
+        sut.resetShoppingStart()
+        XCTAssertNil(ShoppingStartStore.start(listId: listId))
     }
 }
