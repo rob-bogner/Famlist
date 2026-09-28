@@ -166,7 +166,7 @@ Jede Aufnahme wird automatisch auf den Bon zugeschnitten (ohne neues UI). Dazu g
 
 **Von Robert gewünscht (28.09.2026), nicht gestaltet:** Menü ☰ → „Gespeicherte Kassenzettel“ (unter „Kassenzettel
 scannen“, Icon „Fotos“ aus ReceiptCapture) öffnet das Archiv direkt über der Liste; „Zurück“ schließt es dann.
-Der Bon speichert seine Positionen (Migration 029); eine Anzeige der Positionen im Bon-Detail ist noch nicht gestaltet.
+Der Bon speichert seine Positionen (Migration 029); das Bon-Detail zeigt sie seit 29.09.2026 mit Einkaufsdaten (ReceiptDetailMeta, RECEIPT_INSIGHTS_PLAN.md).
 
 **Von Robert freigegeben (25.09.2026), obwohl nicht gestaltet:** Live-Gesamtkosten in der Fortschrittskarte,
 Preis auf jeder Artikelkarte (abschaltbar: Einstellungen → „Preise anzeigen“) und der Link „Preisverlauf“ in

@@ -25,11 +25,14 @@ struct ReceiptInsightsSheet: View {
     let appearance: Appearance
     var onClose: () -> Void = {}
     var onOpenHistory: ((String, InsightTab, Date) -> Void)? = nil
+    var keyboardHeight: CGFloat = 0
 
     init(viewModel: @autoclosure @escaping () -> ReceiptInsightsViewModel, appearance: Appearance,
-         onClose: @escaping () -> Void = {}, onOpenHistory: ((String, InsightTab, Date) -> Void)? = nil) {
+         keyboardHeight: CGFloat = 0, onClose: @escaping () -> Void = {},
+         onOpenHistory: ((String, InsightTab, Date) -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: viewModel())
         self.appearance = appearance
+        self.keyboardHeight = keyboardHeight
         self.onClose = onClose
         self.onOpenHistory = onOpenHistory
     }
@@ -50,7 +53,7 @@ struct ReceiptInsightsSheet: View {
                                   canGoForward: viewModel.canGoForward, k: k,
                                   onBack: viewModel.showPreviousMonth, onForward: viewModel.showNextMonth)
                         .padding(.top, 12)
-                    SheetFadeScrollArea(t: t) { content(t: t) }
+                    SheetFadeScrollArea(t: t, extraBottom: keyboardHeight) { content(t: t) }
                 }
                 .padding(.top, 10)
                 .padding(.horizontal, 20)
@@ -72,7 +75,12 @@ struct ReceiptInsightsSheet: View {
         case .spend:
             SpendInsightsView(spend: viewModel.spend, context: viewModel.context, t: t)
         case .usage:
-            EmptyView()
+            let usage = viewModel.usage
+            UsageInsightsView(usage: usage, products: viewModel.filteredProducts(usage), search: $viewModel.search,
+                              context: viewModel.context, t: t,
+                              onOpen: onOpenHistory.map { open in
+                                  { name in open(name, viewModel.tab, viewModel.month) }
+                              })
         }
     }
 }
@@ -87,6 +95,20 @@ struct ReceiptInsightsSheet: View {
 #Preview("Auswertung – Ausgaben – Dark", traits: .fixedLayout(width: 390, height: 844)) {
     ReceiptInsightsSheet(viewModel: ReceiptInsightsViewModel(receipts: ArchivedReceipt.insightSamples,
                                                              context: .designSample,
+                                                             now: ArchivedReceipt.insightSamples[0].purchasedAt),
+                         appearance: .dark)
+}
+
+#Preview("Auswertung – Verbrauch", traits: .fixedLayout(width: 390, height: 844)) {
+    ReceiptInsightsSheet(viewModel: ReceiptInsightsViewModel(receipts: ArchivedReceipt.insightSamples,
+                                                             context: .designSample, tab: .usage,
+                                                             now: ArchivedReceipt.insightSamples[0].purchasedAt),
+                         appearance: .light)
+}
+
+#Preview("Auswertung – Verbrauch – Dark", traits: .fixedLayout(width: 390, height: 844)) {
+    ReceiptInsightsSheet(viewModel: ReceiptInsightsViewModel(receipts: ArchivedReceipt.insightSamples,
+                                                             context: .designSample, tab: .usage,
                                                              now: ArchivedReceipt.insightSamples[0].purchasedAt),
                          appearance: .dark)
 }

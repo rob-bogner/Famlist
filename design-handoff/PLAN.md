@@ -266,3 +266,17 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Watch (alle Screens) | Sehr lange Titel verkleinern sich bis 80 %, statt mit „…“ abzuschneiden | Titelzeile ist einzeilig |
 | WatchList | VoiceOver: jede Artikelzeile ist ein Element („Name, Menge“, Wert „offen/erledigt“); Doppeltippen öffnet, Aktion „Abhaken“/„Wieder öffnen“ | Design hat zwei Tippflächen je Zeile; so bleibt es für VoiceOver eine Zeile (WATCH_PLAN §5) |
 | Watch-Widgets | Smart Stack und Komplikationen skalieren nicht mit der Textgröße | Feste Flächen des Systems (44-pt-Kreis, Karte) |
+
+## 11. Einkaufsdaten & Auswertung (29.09.2026)
+
+Auftrag `RECEIPT_INSIGHTS_PROMPT.md`, Plan mit Entscheidungen und Abweichungen `RECEIPT_INSIGHTS_PLAN.md` (§5).
+Migration 030 (`receipts.store_address`, `started_at`, `ended_at`) ist live angewandt und geprüft.
+
+| Board | Umsetzung |
+|---|---|
+| ReceiptArchiveInsights | `ReceiptArchiveSheet` + `ReceiptInsightsCard` (Zahlen: `InsightsCardSummary`) |
+| ReceiptDetailMeta | `ReceiptDetailSheet` (`ReceiptMetaGrid`, `SheetSegmentControl`, `ReceiptLinesCard`) |
+| InsightSpend | `ReceiptInsightsSheet` → `SpendInsightsView` (Berechnung `ReceiptInsights`) |
+| InsightUsage | `ReceiptInsightsSheet` → `UsageInsightsView` (Berechnung `ConsumptionStatistics`) |
+
+Nicht gebaut (Auftrag): Nährwerte je Artikel (ReceiptItemNutrition) und Auswertung „Ernährung“ (InsightNutrition).

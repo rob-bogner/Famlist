@@ -21,6 +21,8 @@ import SwiftUI
 
 struct SheetFadeScrollArea<Content: View>: View {
     let t: ListAccountTokens
+    /// Zusätzlicher Platz unten, z. B. für die Tastatur (Suchfeld im Reiter „Verbrauch“).
+    var extraBottom: CGFloat = 0
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -28,8 +30,9 @@ struct SheetFadeScrollArea<Content: View>: View {
             ScrollView(showsIndicators: false) {
                 content()
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 40)
+                    .padding(.bottom, 40 + extraBottom)
             }
+            .scrollDismissesKeyboard(.interactively)
             LinearGradient(colors: [solid.opacity(0), solid], startPoint: .top, endPoint: .bottom)
                 .frame(height: 70)
                 .allowsHitTesting(false)

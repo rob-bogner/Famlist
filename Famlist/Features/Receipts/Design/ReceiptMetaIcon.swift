@@ -25,4 +25,11 @@ enum ReceiptMetaIcon {
     static let stopwatch: [SVGElement] = [.path("M12 5a8 8 0 1 0 0 16 8 8 0 1 0 0-16M12 9v4M9.5 2h5M18.5 6.5l1.5-1.5")]
     static let bag: [SVGElement] = [.path("M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2")]
     static let euro: [SVGElement] = [.path("M17 6.5A7 7 0 1 0 17 17.5M4 10h9M4 14h9")]
+    /// Karte „Auswertung“ im Archiv.
+    static let chart: [SVGElement] = [.path("M4 20V10M10 20V4M16 20v-7M22 20H2")]
+    /// Suchfeld „Produkt suchen“.
+    static let search: [SVGElement] = [.path("M11 4a7 7 0 1 0 0 14 7 7 0 1 0 0-14M20 20l-4-4")]
+    /// Veränderung zum Vormonat (Verbrauch).
+    static let trendUp: [SVGElement] = [.path("M7 14l5-5 5 5")]
+    static let trendDown: [SVGElement] = [.path("M7 10l5 5 5-5")]
 }

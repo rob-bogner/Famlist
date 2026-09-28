@@ -84,7 +84,8 @@ extension ShoppingListView {
                                 currentUserId: session.currentProfile?.id, ownedListIds: access.ownedListIds,
                                 onBack: { if fromMenu { closeSheet() } else { activeSheet = .settings } },
                                 onClose: closeSheet,
-                                onOpen: { activeSheet = .receiptDetail($0, fromMenu: fromMenu) })
+                                onOpen: { activeSheet = .receiptDetail($0, fromMenu: fromMenu) },
+                                onOpenInsights: { activeSheet = .receiptInsights(tab: .spend, fromMenu: fromMenu) })
         case .receiptDetail(let receipt, let fromMenu):
             ReceiptDetailSheet(receipt: receipt, archive: receiptArchive, appearance: appearance,
                                canDelete: receiptArchiveViewModel().canDelete(receipt),
@@ -100,6 +101,7 @@ extension ShoppingListView {
                                })
         case .receiptInsights(let tab, let month, let fromMenu):
             ReceiptInsightsSheet(viewModel: receiptInsightsViewModel(tab: tab, month: month), appearance: appearance,
+                                 keyboardHeight: keyboard.height,
                                  onClose: { activeSheet = .receiptArchive(fromMenu: fromMenu) },
                                  onOpenHistory: { name, tab, month in
                                      activeSheet = .receiptPriceHistory(catalogEntry(named: name),

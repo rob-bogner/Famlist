@@ -139,8 +139,15 @@ ohne Kategorie gibt es nur vom 28.09.2026 (zwischen Migration 029 und 030).
 8. Unter der Auswertung liegt im Board die Einkaufsliste, nicht das Archiv. Deshalb kein Sheet darunter;
    ✕ führt trotzdem ins Archiv (Auftrag).
 9. Monatswechsel: gesperrte Knöpfe sind nicht gestaltet → 40 % Deckkraft.
+10. InsightUsage zeigt „3,5 l pro Woche“ (14 l ÷ 4). Der Auftrag rechnet Monatsmenge ÷ (Tage ÷ 7):
+    14 l ÷ (30 ÷ 7) = 3,27 → „3,3 l pro Woche“ (eine Nachkommastelle). Umgesetzt nach Auftrag.
+11. „6 Laibe“: Die App kennt keine Einheit „Laib“ (Measure); Brot erscheint als „6 Stück“.
+12. „Hackfleisch 2,0 kg“ / „Kaffee 2 kg“ sind im Board uneinheitlich; die App schreibt immer „2 kg“ (QuantityFormat).
+13. Die Suche filtert nur die Liste; der Hero bleibt beim meistgekauften Produkt des Monats.
+14. Verbrauch ohne Käufe im Monat (nicht gestaltet): Hero „Verbrauch im <Monat> · 0,00 €“, Chip „Keine Einkäufe“.
+15. Board-Icons der Kategorien (eigene Glyphen) → Icons der Kategorien des Nutzers (CategoryIconCatalog), wie im Auftrag.
 
-## 6. Phasen (je Phase: Build grün, Unit-Tests grün, eigener Commit, kein Push)
+## 6. Phasen (je Phase: Build grün, Unit-Tests grün, eigener Commit, kein Push) – alle erledigt 29.09.2026
 
 1. **Daten + Parser:** Migration 030 (live + Prüfskript + REST-Rundlauf), Modelle, Repository, Parser,
    ShoppingStartTracker, ReceiptLineEnricher, Flow-ViewModel aufteilen + erweitern, Tests.

@@ -15,8 +15,10 @@
  - Beim Öffnen wird die Warteschlange gesendet und der Server-Stand geladen (offline bleibt der letzte Stand).
  - Leeres Archiv: nicht gestaltet → schlichter Hinweis in sub (PLAN §9).
 
+ - Karte „Auswertung <Monat>“ unter der Unterzeile (Board ReceiptArchiveInsights, Abstand 14), nur mit Bons.
+
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Karte „Auswertung“ als Einstieg in Ausgaben und Verbrauch (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -30,10 +32,11 @@ struct ReceiptArchiveSheet: View {
     var onBack: () -> Void
     var onClose: () -> Void
     var onOpen: (ArchivedReceipt) -> Void
+    var onOpenInsights: () -> Void
 
     init(archive: ReceiptArchive, appearance: Appearance, currentUserId: UUID? = nil, ownedListIds: Set<UUID> = [],
          onBack: @escaping () -> Void = {}, onClose: @escaping () -> Void = {},
-         onOpen: @escaping (ArchivedReceipt) -> Void = { _ in }) {
+         onOpen: @escaping (ArchivedReceipt) -> Void = { _ in }, onOpenInsights: @escaping () -> Void = {}) {
         _viewModel = StateObject(wrappedValue: ReceiptArchiveViewModel(archive: archive, currentUserId: currentUserId,
                                                                        ownedListIds: ownedListIds))
         self.archive = archive
@@ -41,6 +44,7 @@ struct ReceiptArchiveSheet: View {
         self.onBack = onBack
         self.onClose = onClose
         self.onOpen = onOpen
+        self.onOpenInsights = onOpenInsights
     }
 
     var body: some View {
@@ -57,6 +61,10 @@ struct ReceiptArchiveSheet: View {
                         .foregroundStyle(k.sub)
                         .padding(.horizontal, 4)
                         .padding(.top, 6)
+                    if let summary = InsightsCardSummary.make(archive.receipts) {
+                        ReceiptInsightsCard(summary: summary, k: k, onOpen: onOpenInsights)
+                            .padding(.top, 14)
+                    }
                     filterChips(k: k)
                         .padding(.top, 14)
                     content(t: t)

@@ -118,4 +118,24 @@ final class ReceiptArchiveUITests: XCTestCase {
         app.buttons["Schließen"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["Liste Edeka · gescannt von Rob"].waitForExistence(timeout: 5), "zurück im Detail")
     }
+
+    /// Einstieg Auswertung: Archiv → Karte → Auswertung → Verbrauch → Zeile → Preisverlauf → zurück.
+    func test_archiveCard_opensInsights_usageRow_priceHistory_andBack() {
+        let open = app.buttons["Gespeicherte Kassenzettel ansehen"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15))
+        open.tap()
+        let card = app.buttons["Auswertung September öffnen"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5), "Karte im Archiv")
+        card.tap()
+        XCTAssertTrue(app.staticTexts["Ausgegeben im September"].waitForExistence(timeout: 5), "Reiter Ausgaben")
+        app.buttons["Verbrauch"].tap()
+        let milk = app.buttons["Milch, 14 l im September, 16,66\u{00A0}€"]
+        XCTAssertTrue(milk.waitForExistence(timeout: 5), "Reiter Verbrauch")
+        milk.tap()
+        XCTAssertTrue(app.staticTexts["Preisverlauf"].waitForExistence(timeout: 5), "Preisverlauf offen")
+        app.buttons["Schließen"].firstMatch.tap()
+        XCTAssertTrue(milk.waitForExistence(timeout: 5), "zurück in „Verbrauch“ desselben Monats")
+        app.buttons["Schließen"].firstMatch.tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 5), "✕ führt ins Archiv")
+    }
 }

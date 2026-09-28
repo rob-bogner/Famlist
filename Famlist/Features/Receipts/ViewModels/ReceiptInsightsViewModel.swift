@@ -5,7 +5,8 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Zustand der Auswertung: gewählter Reiter, Monat und Suchtext; berechnet „Ausgaben“ (ReceiptInsights).
+ - Zustand der Auswertung: gewählter Reiter, Monat und Suchtext; berechnet „Ausgaben“ (ReceiptInsights)
+   und „Verbrauch“ (ConsumptionStatistics).
 
  🔰 Notes for Beginners:
  - Offline-First: rechnet nur mit den übergebenen Bons (Archiv inkl. ausstehender), kein Netz.
@@ -40,6 +41,15 @@ final class ReceiptInsightsViewModel: ObservableObject {
     }
 
     var spend: SpendInsights { ReceiptInsights.spend(receipts, month: month, context: context) }
+
+    var usage: UsageInsights { ConsumptionStatistics.usage(receipts, month: month, context: context) }
+
+    /// Produkte, deren Name den Suchtext enthält (Groß/Klein egal); leere Suche = alle.
+    func filteredProducts(_ usage: UsageInsights) -> [UsageInsights.Product] {
+        let query = search.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return usage.products }
+        return usage.products.filter { $0.name.localizedCaseInsensitiveContains(query) }
+    }
 
     /// „September 2026“
     var monthTitle: String { InsightFormat.month(month, withYear: true) }
