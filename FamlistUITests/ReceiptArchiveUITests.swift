@@ -15,7 +15,7 @@
  - Die Bons von „Rob“ gehören dem Fixture-Konto; nur sie zeigen „Löschen“.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Detail mit Einkaufsdaten: Unterzeile ohne Datum, Kacheln, Artikel; Fotos im Reiter „Bon-Foto“.
  ------------------------------------------------------------------------
  */
 
@@ -51,9 +51,12 @@ final class ReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(edeka.waitForExistence(timeout: 3))
 
         edeka.tap()
-        XCTAssertTrue(app.staticTexts["24.09.2026 · Liste Edeka · gescannt von Rob"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Summe laut Bon"].exists)
-        XCTAssertTrue(app.buttons["Vollbild"].exists)
+        // Detail mit Einkaufsdaten (Board ReceiptDetailMeta): Datum steht in den Kacheln, Artikel zuerst.
+        XCTAssertTrue(app.staticTexts["Liste Edeka · gescannt von Rob"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["Wert, 11,51\u{00A0}€, Ø 1,92\u{00A0}€ je Stück"].exists)
+        XCTAssertTrue(app.buttons["Kerrygold Butter, 1 × 250 g · je 2,49\u{00A0}€, Milchprodukte, 2,49\u{00A0}€"].exists)
+        app.buttons["Bon-Foto"].tap()
+        XCTAssertTrue(app.buttons["Vollbild"].waitForExistence(timeout: 3))
 
         app.buttons["Löschen"].tap()
         let confirm = app.buttons.matching(identifier: "Löschen").element(boundBy: 1)
@@ -74,6 +77,9 @@ final class ReceiptArchiveUITests: XCTestCase {
         let edeka = app.buttons["Edeka, 24.09.2026 · Liste Edeka, 5 Positionen, 11,51\u{00A0}€"]
         XCTAssertTrue(edeka.waitForExistence(timeout: 5))
         edeka.tap()
+        let photoTab = app.buttons["Bon-Foto"]
+        XCTAssertTrue(photoTab.waitForExistence(timeout: 5))
+        photoTab.tap()
         let fullscreen = app.buttons["Vollbild"]
         XCTAssertTrue(fullscreen.waitForExistence(timeout: 5))
         fullscreen.tap()
@@ -82,7 +88,7 @@ final class ReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(close.waitForExistence(timeout: 5), "Vollbild offen")
         close.coordinate(withNormalizedOffset: CGVector(dx: 0.22, dy: 0.5)).tap()
         XCTAssertTrue(close.waitForNonExistence(timeout: 3), "✕ schließt das Vollbild")
-        XCTAssertTrue(app.staticTexts["Summe laut Bon"].exists, "zurück im Detail")
+        XCTAssertTrue(app.staticTexts["Liste Edeka · gescannt von Rob"].exists, "zurück im Detail")
     }
 
     func test_foreignReceipt_hasNoDelete() {
@@ -92,8 +98,24 @@ final class ReceiptArchiveUITests: XCTestCase {
         let rewe = app.buttons["Rewe, 19.09.2026 · Wocheneinkauf, 23 Positionen, 64,87\u{00A0}€"]   // gescannt von Anna
         XCTAssertTrue(rewe.waitForExistence(timeout: 5))
         rewe.tap()
-        XCTAssertTrue(app.staticTexts["Summe laut Bon"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Wocheneinkauf · gescannt von Anna"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Teilen"].exists)
         XCTAssertFalse(app.buttons["Löschen"].exists)
+    }
+
+    /// Tipp auf einen zugeordneten Artikel öffnet seinen Preisverlauf; ✕ führt zurück ins Detail.
+    func test_detailArticle_opensPriceHistory_andReturns() {
+        let open = app.buttons["Gespeicherte Kassenzettel ansehen"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15))
+        open.tap()
+        let edeka = app.buttons["Edeka, 24.09.2026 · Liste Edeka, 5 Positionen, 11,51\u{00A0}€"]
+        XCTAssertTrue(edeka.waitForExistence(timeout: 5))
+        edeka.tap()
+        let butter = app.buttons["Kerrygold Butter, 1 × 250 g · je 2,49\u{00A0}€, Milchprodukte, 2,49\u{00A0}€"]
+        XCTAssertTrue(butter.waitForExistence(timeout: 5))
+        butter.tap()
+        XCTAssertTrue(app.staticTexts["Preisverlauf"].waitForExistence(timeout: 5), "Preisverlauf offen")
+        app.buttons["Schließen"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["Liste Edeka · gescannt von Rob"].waitForExistence(timeout: 5), "zurück im Detail")
     }
 }

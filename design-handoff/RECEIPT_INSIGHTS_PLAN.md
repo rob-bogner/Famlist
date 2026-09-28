@@ -77,8 +77,9 @@ damit Stückzahl × units wieder genau die Listenmenge ergibt.
 - „Milch 2 l“, Bon 2 × → „2 × 1 l“, Verbrauch 2 l. „Butter 250 g“, Bon 1 × → „1 × 250 g“.
 - Bekannte Schwäche: Wird mehr gekauft als auf der Liste steht („Milch 1 l“, Bon 2 ×), zählt nur 1 l.
 
-Alte Bons ohne diese Felder: beim Anzeigen über den Artikelnamen nachschlagen (Liste, Artikelstamm), nicht
-zurückschreiben.
+Alte Bons ohne diese Felder: beim Anzeigen über den Artikelnamen in der geöffneten Liste nachschlagen, nicht
+zurückschreiben. Umgesetzt ohne Artikelstamm (Phase 2): Der liegt hinter einem asynchronen Repository, und Bon-Zeilen
+ohne Kategorie gibt es nur vom 28.09.2026 (zwischen Migration 029 und 030).
 
 ## 3. Berechnungen (reine Funktionen, Unit-Tests)
 
@@ -128,6 +129,11 @@ zurückschreiben.
    wird die Regel aus dem Auftrag.
 3. Ort-Kachel: Board „Edeka Center“, die App kennt nur den Kettennamen („EDEKA“). Angezeigt wird der
    erkannte Laden, darunter die Adresse.
+4. ReceiptDetailMeta färbt „Konserven“ mit einem eigenen Ton (#D07A4A), den der Auftrag nicht vorsieht.
+   Umgesetzt: Palette nach Rang (im Design-Modus wie Backwaren, orange).
+5. Der weiche Auslauf (70 pt) liegt laut HTML über „Teilen“/„Löschen“; im PNG wirken die Knöpfe klarer.
+   Umgesetzt wie im HTML; beim Scrollen kommen die Knöpfe heraus.
+6. Bons ohne gespeicherte Zeilen (vor Migration 029) zeigen kein Segment, sondern direkt die Fotos.
 
 ## 6. Phasen (je Phase: Build grün, Unit-Tests grün, eigener Commit, kein Push)
 

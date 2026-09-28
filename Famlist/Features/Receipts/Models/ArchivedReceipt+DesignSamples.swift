@@ -12,9 +12,11 @@
  - Sichtbar sind im Design fünf Bons (September und August 2026); die Unterzeile nennt „12 Bons · 38 MB“.
    Die übrigen sieben liegen weiter unten (Juli und Juni) und ergänzen Anzahl und Größe.
  - Nur Läden aus den Filterchips (Edeka, Rewe, Lidl, dm), damit die Chip-Reihe dem Design entspricht.
+ - Der erste Bon (Edeka, 24.09.) hat Artikel und Einkaufsdaten wie ReceiptDetailMeta.dc.html
+   (5 Positionen, 6 Stück, 17:42 bis 18:05, Leopoldstr. 82).
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Artikel und Einkaufsdaten für den ersten Bon (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -41,7 +43,7 @@ extension ArchivedReceipt {
             ("Lidl", 2026, 6, "18", 12, "33.64", "Wocheneinkauf", "Anna", 1),
             ("Edeka", 2026, 6, "6", 8, "21.09", "Liste Edeka", "Rob", 1)
         ]
-        return rows.enumerated().map { index, r in
+        var receipts: [ArchivedReceipt] = rows.enumerated().map { index, r in
             let id = UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", index + 1)) ?? UUID()
             let date = Calendar.current.date(from: DateComponents(year: r.1, month: r.2, day: Int(r.3), hour: 12)) ?? Date()
             let paths = (1...r.8).map { photoPath(listId: designListId, receiptId: id, index: $0) }
@@ -50,5 +52,30 @@ extension ArchivedReceipt {
                                    lineCount: r.4, savedPriceCount: r.4, photoPaths: paths,
                                    bytes: sampleBytes + (index == 0 ? 38_000_000 % 12 : 0), createdAt: date)
         }
+        receipts[0].lines = edekaLines
+        receipts[0].storeAddress = "Leopoldstr. 82"
+        let berlin = ReceiptTimes.calendar
+        receipts[0].startedAt = berlin.date(from: DateComponents(year: 2026, month: 9, day: 24, hour: 17, minute: 42))
+        receipts[0].endedAt = berlin.date(from: DateComponents(year: 2026, month: 9, day: 24, hour: 18, minute: 5))
+        return receipts
     }()
+
+    /// Artikel aus ReceiptDetailMeta.dc.html (Summe 11,51 €).
+    static let edekaLines: [ReceiptLine] = [
+        sampleLine("KERRYGOLD BUTTER", "Kerrygold Butter", "2.49", "2.49", 1, "Milchprodukte", 250, "g"),
+        sampleLine("ALPRO SOJA DRINK", "Alpro Soja Drink", "2.29", "2.29", 1, "Pflanzendrinks", 1, "l"),
+        sampleLine("KOKOSM. 400ML", "Kokosmilch", "1.39", "1.39", 1, "Konserven", 400, "ml"),
+        sampleLine("MANDELDRINK O.Z.", "Mandeldrink o. Zucker", "1.85", "1.85", 1, "Pflanzendrinks", 1, "l"),
+        sampleLine("FAIRGL.VM SCHOKO", "Fairglobe Vollmilch-Schoko", "3.49", "1.75", 2, "Süßes & Snacks", 100, "g")
+    ]
+
+    static func sampleLine(_ raw: String, _ item: String?, _ price: String, _ unit: String, _ quantity: Int,
+                           _ category: String?, _ units: Double?, _ measure: String?) -> ReceiptLine {
+        var line = ReceiptLine(raw: raw, itemName: item, price: Decimal(string: price) ?? 0,
+                               unitPrice: Decimal(string: unit) ?? 0, quantity: quantity, isSaved: item != nil)
+        line.category = category
+        line.units = units
+        line.measure = measure
+        return line
+    }
 }

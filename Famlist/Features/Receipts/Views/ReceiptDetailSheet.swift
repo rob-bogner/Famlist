@@ -5,19 +5,21 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Sheet „Kassenzettel – Laden“ (Höhe 790, ReceiptDetail.dc.html): Fotos zum Blättern, Summenkarte,
-   „Teilen“ (Share Sheet mit den Fotos) und „Löschen“.
+ - Sheet „Kassenzettel – Laden“ (Höhe 790, Board ReceiptDetailMeta): Einkaufsdaten in sechs Kacheln,
+   Segment „Artikel“ · „Bon-Foto“, Artikel mit Kategorie und Betrag, „Teilen“ und „Löschen“.
 
  🔰 Notes for Beginners:
- - Unterzeile 13 sub (Abstand 6); Foto-Fläche ab 14 (ReceiptPhotoPager); Summenkarte ab 14:
-   Padding 14/16, Radius 20, Hero-Verlauf, links 13 weiß .85 + 15/600, rechts Outfit 26/600, Abstand 14.
- - Knöpfe unten (Abstand oben mind. 16, untereinander 10): 52 hoch, Radius 26, Text 15/600, Icon 18.
- - „Löschen“ fragt per System-Dialog nach (nicht gestaltet, PLAN §9) und fehlt, wenn man den Bon nicht
-   löschen darf (nur Ersteller und Listenbesitzer).
+ - Unterzeile 13 sub (Abstand 6); Kacheln ab 14 (ReceiptMetaGrid); Segment ab 14 (SheetSegmentControl);
+   darunter scrollt der Inhalt bis zum unteren Rand, Artikel-Karte ab 12, Knöpfe ab 16, weicher Auslauf 70.
+ - Ohne gespeicherte Zeilen (Bons vor Migration 029) oder ohne Fotos gibt es kein Segment; gezeigt wird,
+   was da ist.
+ - Tipp auf eine zugeordnete Zeile öffnet den Preisverlauf (`onOpenHistory`); „Zurück“ dort führt hierher.
+ - Knöpfe: 52 hoch, Radius 26, Text 15/600, Icon 18, Abstand 10. „Löschen“ fragt per System-Dialog nach
+   (nicht gestaltet, PLAN §9) und fehlt, wenn man den Bon nicht löschen darf (nur Ersteller und Listenbesitzer).
  - Teilen: Die Fotos werden als JPEG-Dateien „Kassenzettel Edeka 24.09.2026 (1).jpg“ geteilt.
 
  📝 Last Change:
- - Initial creation (Kassenzettel-Archiv).
+ - Einkaufsdaten und Artikel statt Foto-Fläche und Summenkarte (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -31,7 +33,12 @@ struct ReceiptDetailSheet: View {
     var onBack: () -> Void = {}
     var onClose: () -> Void = {}
     var onDelete: () -> Void = {}
+    /// Kategorien, Farben und Nachschlagen für ältere Bons.
+    var context: ReceiptLineContext = .empty
+    /// Tipp auf einen zugeordneten Artikel → Preisverlauf.
+    var onOpenHistory: ((String) -> Void)? = nil
 
+    @State private var tab = 0
     @State private var images: [UIImage?] = []
     @State private var shareFiles: [URL] = []
     @State private var page = 0
@@ -47,18 +54,20 @@ struct ReceiptDetailSheet: View {
             SheetSurface(k: k, height: 790) {
                 VStack(alignment: .leading, spacing: 0) {
                     SheetHeader(title: receipt.storeName, k: k, onClose: onClose, onBack: onBack)
-                    Text(ReceiptArchiveViewModel.detailSubtitle(receipt))
+                    Text(ReceiptDetailFormat.subtitle(receipt))
                         .font(AppFont.dm(13, 400))
                         .foregroundStyle(k.sub)
-                        .lineLimit(2)
+                        .lineLimit(1)
                         .padding(.horizontal, 4)
                         .padding(.top, 6)
-                    ReceiptPhotoPager(k: k, images: pagerImages, page: $page, onFullscreen: { fullscreen = true })
+                    ReceiptMetaGrid(tiles: ReceiptDetailFormat.tiles(receipt, lines: receipt.lines), t: t)
                         .padding(.top, 14)
-                    summaryCard(appearance: appearance)
-                        .padding(.top, 14)
-                    Spacer(minLength: 16)
-                    buttons(t: t)
+                    if showsSegment {
+                        SheetSegmentControl(titles: ["Artikel", "Bon-Foto"], selection: $tab, t: t,
+                                            accessibilityLabel: "Ansicht")
+                            .padding(.top, 14)
+                    }
+                    scrollArea(t: t)
                 }
                 .padding(.top, 10)
                 .padding(.horizontal, 20)
@@ -78,31 +87,43 @@ struct ReceiptDetailSheet: View {
         }
     }
 
+    private var hasLines: Bool { !(receipt.lines ?? []).isEmpty }
+    private var hasPhotos: Bool { !receipt.photoPaths.isEmpty }
+    private var showsSegment: Bool { hasLines && hasPhotos }
+    private var showsLines: Bool { hasLines && (!hasPhotos || tab == 0) }
+
+    /// Scrollt bis zum unteren Sheet-Rand (margin 0 -20 -34 im Board), unten weicher Auslauf.
+    private func scrollArea(t: ListAccountTokens) -> some View {
+        ZStack(alignment: .bottom) {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    if showsLines {
+                        ReceiptLinesCard(rows: ReceiptDetailFormat.rows(context.lines(of: receipt), context: context),
+                                         t: t, onOpen: onOpenHistory)
+                    } else {
+                        ReceiptPhotoPager(k: t.k, images: pagerImages, page: $page, onFullscreen: { fullscreen = true })
+                    }
+                    buttons(t: t)
+                        .padding(.top, 16)
+                }
+                .padding(.top, 12)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 40)
+            }
+            LinearGradient(colors: [sheetSolid(t).opacity(0), sheetSolid(t)], startPoint: .top, endPoint: .bottom)
+                .frame(height: 70)
+                .allowsHitTesting(false)
+        }
+        .padding(.horizontal, -20)
+        .padding(.bottom, -34)
+    }
+
+    /// `k.sheetSolid` im Board.
+    private func sheetSolid(_ t: ListAccountTokens) -> Color { t.isDark ? .hex("#0A1416") : .white }
+
     /// Bis zum Laden je Foto ein Platzhalter (Fläche zeigt Ladeanzeige).
     private var pagerImages: [UIImage?] {
         images.isEmpty ? Array(repeating: nil, count: max(receipt.photoPaths.count, 1)) : images
-    }
-
-    private func summaryCard(appearance: Appearance) -> some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(ReceiptArchiveViewModel.detailCounts(receipt))
-                    .font(AppFont.dm(13, 400))
-                    .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
-                Text("Summe laut Bon")
-                    .font(AppFont.dm(15, 600))
-                    .foregroundStyle(Color.white)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text(ReceiptArchiveViewModel.euro(receipt.total))
-                .font(AppFont.outfit(26, 600))
-                .foregroundStyle(Color.white)
-                .fixedSize()
-        }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 16)
-        .background(CSSBox(shape: RR(20), paint: ListTheme(appearance).heroBg))
-        .accessibilityElement(children: .combine)
     }
 
     private func buttons(t: ListAccountTokens) -> some View {
@@ -157,9 +178,11 @@ struct ReceiptDetailSheet: View {
 }
 
 #Preview("Kassenzettel – Edeka", traits: .fixedLayout(width: 390, height: 844)) {
-    ReceiptDetailSheet(receipt: ArchivedReceipt.designSamples[0], archive: .preview(), appearance: .light)
+    ReceiptDetailSheet(receipt: ArchivedReceipt.designSamples[0], archive: .preview(), appearance: .light,
+                       context: .designSample)
 }
 
 #Preview("Kassenzettel – Edeka – Dark", traits: .fixedLayout(width: 390, height: 844)) {
-    ReceiptDetailSheet(receipt: ArchivedReceipt.designSamples[0], archive: .preview(), appearance: .dark)
+    ReceiptDetailSheet(receipt: ArchivedReceipt.designSamples[0], archive: .preview(), appearance: .dark,
+                       context: .designSample)
 }

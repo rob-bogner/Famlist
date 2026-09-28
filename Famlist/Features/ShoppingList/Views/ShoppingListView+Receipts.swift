@@ -92,10 +92,38 @@ extension ShoppingListView {
                                onDelete: {
                                    activeSheet = .receiptArchive(fromMenu: fromMenu)
                                    Task { await receiptArchive.delete(receipt) }
+                               },
+                               context: receiptLineContext(),
+                               onOpenHistory: { name in
+                                   activeSheet = .receiptPriceHistory(catalogEntry(named: name),
+                                                                      back: .receiptDetail(receipt, fromMenu: fromMenu))
                                })
+        case .receiptPriceHistory(let entry, let back):
+            PriceHistorySheet(viewModel: PriceHistoryViewModel(entry: entry, priceBook: priceBook),
+                              appearance: appearance,
+                              onClose: { activeSheet = back })
         default:
             EmptyView()
         }
+    }
+
+    /// Kategorien, Farben und Nachschlagen für gespeicherte Bons (Design-Modus: Werte der Boards).
+    func receiptLineContext() -> ReceiptLineContext {
+        #if DEBUG
+        if UITestFixture.designMode { return .designSample }
+        #endif
+        return ReceiptLineContext(receipts: receiptArchive.receipts, listItems: listViewModel.items,
+                                  categories: categoryStore.categories)
+    }
+
+    /// Artikel für den Preisverlauf: aus der Liste, sonst ein Eintrag nur mit dem Namen (Verlauf kommt aus dem PriceBook).
+    func catalogEntry(named name: String) -> ItemCatalogEntry {
+        let key = CatalogOperation.key(name)
+        if let item = listViewModel.items.first(where: { CatalogOperation.key($0.name) == key }) {
+            return .from(item: item, ownerPublicId: item.ownerPublicId ?? "")
+        }
+        return ItemCatalogEntry(id: "receipt-\(key)", ownerPublicId: "", name: name, brand: nil, category: nil,
+                                productDescription: nil, measure: "", price: 0, imageData: nil)
     }
 
     /// Archiv-Anzeige: Löschen dürfen Ersteller und Besitzer der Liste (Migration 021).

@@ -11,7 +11,7 @@
    Detail → „Zurück“ → Archiv → „Zurück“ schließt (keine Einstellungen darunter).
 
  📝 Last Change:
- - Initial creation (Archiv aus dem Hamburger-Menü).
+ - Detail an der neuen Unterzeile erkennen (Einkaufsdaten).
  ------------------------------------------------------------------------
  */
 
@@ -41,7 +41,7 @@ final class ReceiptArchiveMenuUITests: XCTestCase {
 
         let edeka = app.buttons["Edeka, 24.09.2026 · Liste Edeka, 5 Positionen, 11,51\u{00A0}€"]
         edeka.tap()
-        XCTAssertTrue(app.staticTexts["Summe laut Bon"].waitForExistence(timeout: 5), "Detail")
+        XCTAssertTrue(app.staticTexts["Liste Edeka · gescannt von Rob"].waitForExistence(timeout: 5), "Detail")
         app.buttons["Zurück"].firstMatch.tap()
         XCTAssertTrue(summary.waitForExistence(timeout: 5), "zurück im Archiv")
 

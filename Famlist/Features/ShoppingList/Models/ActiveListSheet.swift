@@ -13,7 +13,7 @@
  - Die Werte tragen nur Wert-Typen (ItemModel), keine SwiftData-Modelle.
 
  📝 Last Change:
- - Kassenzettel (Aufnehmen, Prüfen, Einkauf erledigt) und Preisverlauf ergänzt (Phase 7).
+ - receiptPriceHistory: Preisverlauf aus einem Kassenzettel mit Rückweg (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -65,6 +65,8 @@ enum ActiveListSheet: Equatable, Identifiable {
     case receiptArchive(fromMenu: Bool = false)
     /// Ein gespeicherter Kassenzettel; liegt über dem Archiv.
     case receiptDetail(ArchivedReceipt, fromMenu: Bool = false)
+    /// Preisverlauf eines Artikels aus einem Kassenzettel (Detail oder Auswertung); „Zurück“ führt zu `back`.
+    indirect case receiptPriceHistory(ItemCatalogEntry, back: ActiveListSheet)
 
     var id: String {
         switch self {
@@ -94,6 +96,7 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .importClipboard: return "importClipboard"
         case .receiptArchive: return "receiptArchive"
         case .receiptDetail(let receipt, _): return "receiptDetail-\(receipt.id)"
+        case .receiptPriceHistory(let entry, _): return "receiptPriceHistory-\(entry.id)"
         }
     }
 }
@@ -109,6 +112,7 @@ extension ActiveListSheet {
         case .itemPriceHistory(let item): return .edit(item)
         case .receiptArchive(let fromMenu): return fromMenu ? nil : .settings
         case .receiptDetail(_, let fromMenu): return .receiptArchive(fromMenu: fromMenu)
+        case .receiptPriceHistory(_, let back): return back
         default: return nil
         }
     }
