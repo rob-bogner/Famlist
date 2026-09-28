@@ -134,6 +134,11 @@ ohne Kategorie gibt es nur vom 28.09.2026 (zwischen Migration 029 und 030).
 5. Der weiche Auslauf (70 pt) liegt laut HTML über „Teilen“/„Löschen“; im PNG wirken die Knöpfe klarer.
    Umgesetzt wie im HTML; beim Scrollen kommen die Knöpfe heraus.
 6. Bons ohne gespeicherte Zeilen (vor Migration 029) zeigen kein Segment, sondern direkt die Fotos.
+7. InsightSpend zeigt „Rewe 2 × · Ø 65,72 €“; 131,45 € ÷ 2 = 65,725 € rundet kaufmännisch auf 65,73 €
+   (das Board rundet vermutlich mit Gleitkomma). Die App rechnet mit Decimal → „65,73 €“.
+8. Unter der Auswertung liegt im Board die Einkaufsliste, nicht das Archiv. Deshalb kein Sheet darunter;
+   ✕ führt trotzdem ins Archiv (Auftrag).
+9. Monatswechsel: gesperrte Knöpfe sind nicht gestaltet → 40 % Deckkraft.
 
 ## 6. Phasen (je Phase: Build grün, Unit-Tests grün, eigener Commit, kein Push)
 

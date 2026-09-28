@@ -92,34 +92,22 @@ struct ReceiptDetailSheet: View {
     private var showsSegment: Bool { hasLines && hasPhotos }
     private var showsLines: Bool { hasLines && (!hasPhotos || tab == 0) }
 
-    /// Scrollt bis zum unteren Sheet-Rand (margin 0 -20 -34 im Board), unten weicher Auslauf.
+    /// Scrollt bis zum unteren Sheet-Rand, unten weicher Auslauf (SheetFadeScrollArea).
     private func scrollArea(t: ListAccountTokens) -> some View {
-        ZStack(alignment: .bottom) {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    if showsLines {
-                        ReceiptLinesCard(rows: ReceiptDetailFormat.rows(context.lines(of: receipt), context: context),
-                                         t: t, onOpen: onOpenHistory)
-                    } else {
-                        ReceiptPhotoPager(k: t.k, images: pagerImages, page: $page, onFullscreen: { fullscreen = true })
-                    }
-                    buttons(t: t)
-                        .padding(.top, 16)
+        SheetFadeScrollArea(t: t) {
+            VStack(spacing: 0) {
+                if showsLines {
+                    ReceiptLinesCard(rows: ReceiptDetailFormat.rows(context.lines(of: receipt), context: context),
+                                     t: t, onOpen: onOpenHistory)
+                } else {
+                    ReceiptPhotoPager(k: t.k, images: pagerImages, page: $page, onFullscreen: { fullscreen = true })
                 }
-                .padding(.top, 12)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
+                buttons(t: t)
+                    .padding(.top, 16)
             }
-            LinearGradient(colors: [sheetSolid(t).opacity(0), sheetSolid(t)], startPoint: .top, endPoint: .bottom)
-                .frame(height: 70)
-                .allowsHitTesting(false)
+            .padding(.top, 12)
         }
-        .padding(.horizontal, -20)
-        .padding(.bottom, -34)
     }
-
-    /// `k.sheetSolid` im Board.
-    private func sheetSolid(_ t: ListAccountTokens) -> Color { t.isDark ? .hex("#0A1416") : .white }
 
     /// Bis zum Laden je Foto ein Platzhalter (Fläche zeigt Ladeanzeige).
     private var pagerImages: [UIImage?] {

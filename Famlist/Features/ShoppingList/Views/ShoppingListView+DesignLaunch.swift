@@ -15,7 +15,7 @@
  - Im Release-Build ist diese Datei leer.
 
  📝 Last Change:
- - Initial creation (Redesign „Hybrid“, Pixel-Abgleich).
+ - receiptInsights / receiptInsightsUsage (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -64,6 +64,8 @@ extension ShoppingListView {
         case "settings": return .settings
         case "receiptArchive": return .receiptArchive()
         case "receiptDetail": return receiptArchive.receipts.first.map { .receiptDetail($0) }
+        case "receiptInsights": return .receiptInsights(tab: .spend)
+        case "receiptInsightsUsage": return .receiptInsights(tab: .usage)
         case "editProfile": return .editProfile
         case "deleteAccount": return .deleteAccount
         case "manageCategories": return .manageCategories

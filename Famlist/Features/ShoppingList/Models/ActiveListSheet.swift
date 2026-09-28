@@ -65,6 +65,8 @@ enum ActiveListSheet: Equatable, Identifiable {
     case receiptArchive(fromMenu: Bool = false)
     /// Ein gespeicherter Kassenzettel; liegt über dem Archiv.
     case receiptDetail(ArchivedReceipt, fromMenu: Bool = false)
+    /// Auswertung der Kassenzettel (Ausgaben/Verbrauch); ✕ führt ins Archiv. `month` nil = Startmonat.
+    case receiptInsights(tab: InsightTab = .spend, month: Date? = nil, fromMenu: Bool = false)
     /// Preisverlauf eines Artikels aus einem Kassenzettel (Detail oder Auswertung); „Zurück“ führt zu `back`.
     indirect case receiptPriceHistory(ItemCatalogEntry, back: ActiveListSheet)
 
@@ -97,6 +99,7 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .receiptArchive: return "receiptArchive"
         case .receiptDetail(let receipt, _): return "receiptDetail-\(receipt.id)"
         case .receiptPriceHistory(let entry, _): return "receiptPriceHistory-\(entry.id)"
+        case .receiptInsights: return "receiptInsights"
         }
     }
 }

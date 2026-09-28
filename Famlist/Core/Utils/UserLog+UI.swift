@@ -8,7 +8,7 @@
  - Nutzer-Logs der Kategorie UserLog.UI: App-Start, Navigation und Anzeige.
 
  📝 Last Change:
- - Aus UserLogger.swift ausgelagert (Audit 25.09.2026).
+ - Auswertung der Kassenzettel: geöffnet, Monat gewechselt (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
 
@@ -27,6 +27,16 @@ extension UserLog {
 
         static func viewChanged(to view: String) {
             log("👁️ Wechsel zu \(view)")
+        }
+
+        /// Kassenzettel-Auswertung geöffnet („September 2026“).
+        static func insightsOpened(month: String) {
+            log("📊 Auswertung geöffnet (\(month))")
+        }
+
+        /// Kassenzettel-Auswertung: anderer Monat.
+        static func insightsMonthChanged(to month: String) {
+            log("📊 Monat gewechselt: \(month)")
         }
 
         static func loadingImage() {

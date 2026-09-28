@@ -98,6 +98,14 @@ extension ShoppingListView {
                                    activeSheet = .receiptPriceHistory(catalogEntry(named: name),
                                                                       back: .receiptDetail(receipt, fromMenu: fromMenu))
                                })
+        case .receiptInsights(let tab, let month, let fromMenu):
+            ReceiptInsightsSheet(viewModel: receiptInsightsViewModel(tab: tab, month: month), appearance: appearance,
+                                 onClose: { activeSheet = .receiptArchive(fromMenu: fromMenu) },
+                                 onOpenHistory: { name, tab, month in
+                                     activeSheet = .receiptPriceHistory(catalogEntry(named: name),
+                                                                        back: .receiptInsights(tab: tab, month: month,
+                                                                                               fromMenu: fromMenu))
+                                 })
         case .receiptPriceHistory(let entry, let back):
             PriceHistorySheet(viewModel: PriceHistoryViewModel(entry: entry, priceBook: priceBook),
                               appearance: appearance,
@@ -114,6 +122,19 @@ extension ShoppingListView {
         #endif
         return ReceiptLineContext(receipts: receiptArchive.receipts, listItems: listViewModel.items,
                                   categories: categoryStore.categories)
+    }
+
+    /// Auswertung über alle Bons des Archivs (offline, ausstehende eingeschlossen); Design-Modus: Board-Daten.
+    func receiptInsightsViewModel(tab: InsightTab, month: Date?) -> ReceiptInsightsViewModel {
+        #if DEBUG
+        if UITestFixture.designMode {
+            let september = ReceiptTimes.calendar.date(from: DateComponents(year: 2026, month: 9, day: 28)) ?? Date()
+            return ReceiptInsightsViewModel(receipts: ArchivedReceipt.insightSamples, context: .designSample, tab: tab,
+                                            month: month, now: september)
+        }
+        #endif
+        return ReceiptInsightsViewModel(receipts: receiptArchive.receipts, context: receiptLineContext(), tab: tab,
+                                        month: month)
     }
 
     /// Artikel für den Preisverlauf: aus der Liste, sonst ein Eintrag nur mit dem Namen (Verlauf kommt aus dem PriceBook).

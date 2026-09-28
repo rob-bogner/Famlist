@@ -178,7 +178,7 @@ extension ShoppingListView {
                                 onConfirm: deleteAccount, onCancel: { activeSheet = .settings })
                 .offset(y: insets.topShift)
         case .receiptCapture, .receiptReview, .shoppingDone, .priceHistory, .itemPriceHistory, .shoppingDoneOffer,
-             .receiptArchive, .receiptDetail, .receiptPriceHistory:
+             .receiptArchive, .receiptDetail, .receiptPriceHistory, .receiptInsights:
             receiptSheetView(sheet, k: k)
         case .listName(let mode):
             ListNameSheet(mode: mode, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height) {
