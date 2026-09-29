@@ -116,7 +116,7 @@
    "radius": 44,
    "title": "Aus Zwischenablage importieren",
    "w": 390,
-   "x": 4230,
+   "x": 5640,
    "y": 10292
   },
   "ClipboardImportDark.dc.html": {
@@ -125,7 +125,7 @@
    "radius": 44,
    "title": "Aus Zwischenablage importieren – Dark",
    "w": 390,
-   "x": 4230,
+   "x": 5640,
    "y": 11296
   },
   "CopyChoice.dc.html": {
@@ -170,7 +170,7 @@
    "radius": 44,
    "title": "Neue Liste",
    "w": 390,
-   "x": 1410,
+   "x": 2820,
    "y": 10292
   },
   "CreateListDark.dc.html": {
@@ -179,7 +179,7 @@
    "radius": 44,
    "title": "Neue Liste – Dark",
    "w": 390,
-   "x": 1410,
+   "x": 2820,
    "y": 11296
   },
   "Dark.dc.html": {
@@ -233,7 +233,7 @@
    "radius": 44,
    "title": "Liste löschen – Bestätigung",
    "w": 390,
-   "x": 2820,
+   "x": 4230,
    "y": 10292
   },
   "DeleteListDialogDark.dc.html": {
@@ -242,7 +242,7 @@
    "radius": 44,
    "title": "Liste löschen – Bestätigung – Dark",
    "w": 390,
-   "x": 2820,
+   "x": 4230,
    "y": 11296
   },
   "Dock.dc.html": {
@@ -267,7 +267,7 @@
    "radius": 44,
    "title": "Kategorie bearbeiten",
    "w": 390,
-   "x": 5640,
+   "x": 7050,
    "y": 10292
   },
   "EditCategoryDark.dc.html": {
@@ -276,7 +276,7 @@
    "radius": 44,
    "title": "Kategorie bearbeiten – Dark",
    "w": 390,
-   "x": 5640,
+   "x": 7050,
    "y": 11296
   },
   "EditItem.dc.html": {
@@ -555,7 +555,7 @@
    "radius": 44,
    "title": "Letzte Liste – kann nicht gelöscht werden",
    "w": 390,
-   "x": 3290,
+   "x": 4700,
    "y": 10292
   },
   "LastListErrorDark.dc.html": {
@@ -564,7 +564,7 @@
    "radius": 44,
    "title": "Letzte Liste – kann nicht gelöscht werden – Dark",
    "w": 390,
-   "x": 3290,
+   "x": 4700,
    "y": 11296
   },
   "ListCompact.dc.html": {
@@ -591,7 +591,7 @@
    "radius": 44,
    "title": "Liste umbenennen",
    "w": 390,
-   "x": 1880,
+   "x": 3290,
    "y": 10292
   },
   "ListNameDark.dc.html": {
@@ -600,7 +600,7 @@
    "radius": 44,
    "title": "Liste umbenennen – Dark",
    "w": 390,
-   "x": 1880,
+   "x": 3290,
    "y": 11296
   },
   "ListOptions.dc.html": {
@@ -609,7 +609,7 @@
    "radius": 44,
    "title": "Listen-Optionen",
    "w": 390,
-   "x": 2350,
+   "x": 3760,
    "y": 10292
   },
   "ListOptionsDark.dc.html": {
@@ -618,7 +618,7 @@
    "radius": 44,
    "title": "Listen-Optionen – Dark",
    "w": 390,
-   "x": 2350,
+   "x": 3760,
    "y": 11296
   },
   "Main.dc.html": {
@@ -636,7 +636,7 @@
    "radius": 44,
    "title": "Kategorien verwalten",
    "w": 390,
-   "x": 5170,
+   "x": 6580,
    "y": 10292
   },
   "ManageCategoriesDark.dc.html": {
@@ -645,7 +645,7 @@
    "radius": 44,
    "title": "Kategorien verwalten – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 6580,
    "y": 11296
   },
   "ManageItems.dc.html": {
@@ -654,7 +654,7 @@
    "radius": 44,
    "title": "Artikel verwalten",
    "w": 390,
-   "x": 4700,
+   "x": 6110,
    "y": 10292
   },
   "ManageItemsDark.dc.html": {
@@ -663,7 +663,7 @@
    "radius": 44,
    "title": "Artikel verwalten – Dark",
    "w": 390,
-   "x": 4700,
+   "x": 6110,
    "y": 11296
   },
   "MenuOverlay.dc.html": {
@@ -1050,7 +1050,7 @@
    "radius": 44,
    "title": "Mitglieder & Teilen",
    "w": 390,
-   "x": 3760,
+   "x": 5170,
    "y": 10292
   },
   "ShareMembersDark.dc.html": {
@@ -1059,7 +1059,7 @@
    "radius": 44,
    "title": "Mitglieder & Teilen – Dark",
    "w": 390,
-   "x": 3760,
+   "x": 5170,
    "y": 11296
   },
   "ShoppingDone.dc.html": {
@@ -1646,6 +1646,87 @@
    "w": 390,
    "x": 1410,
    "y": 1264
+  },
+  "SlideToDelete.dc.html": {
+   "h": 560,
+   "page": "bausteine",
+   "radius": 28,
+   "title": "Schieben zum Löschen – Zustände",
+   "w": 390,
+   "x": 5070,
+   "y": 260
+  },
+  "SlideToDeleteDark.dc.html": {
+   "h": 560,
+   "page": "bausteine",
+   "radius": 28,
+   "title": "Schieben zum Löschen – Zustände – Dark",
+   "w": 390,
+   "x": 5070,
+   "y": 900
+  },
+  "MyListsSwipeLeft.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach links wischen (Löschen, Umbenennen, Duplizieren, Mitglieder)",
+   "w": 390,
+   "x": 1410,
+   "y": 10292
+  },
+  "MyListsSwipeLeftDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach links wischen (Löschen, Umbenennen, Duplizieren, Mitglieder) – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 11296
+  },
+  "MyListsSwipeRight.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach rechts wischen (Favorit)",
+   "w": 390,
+   "x": 1880,
+   "y": 10292
+  },
+  "MyListsSwipeRightDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach rechts wischen (Favorit) – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 11296
+  },
+  "MyListsUndo.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – Liste gelöscht, Rückgängig",
+   "w": 390,
+   "x": 2350,
+   "y": 10292
+  },
+  "MyListsUndoDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – Liste gelöscht, Rückgängig – Dark",
+   "w": 390,
+   "x": 2350,
+   "y": 11296
+  },
+  "MyListsSwipe.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Meine Listen – Wisch-Aktionen (Baustein, per Modus)",
+   "w": 390,
+   "x": 5560,
+   "y": 0
   }
  },
  "createdOnFiles": {
@@ -1660,9 +1741,9 @@
  "notes": {
   "bausteine": {
    "kind": "title1",
-   "maxW": 4950,
+   "maxW": 5460,
    "page": "bausteine",
-   "text": "Bausteine & Referenz — Aktionsleiste, Zustände, Kategorie-Icons, Zielstruktur",
+   "text": "Bausteine & Referenz — Aktionsleiste, Zustände, Kategorie-Icons, Zielstruktur, Schieben zum Löschen",
    "w": 240,
    "x": 0,
    "y": 0
@@ -1705,9 +1786,9 @@
   },
   "journey5": {
    "kind": "title1",
-   "maxW": 6030,
+   "maxW": 7440,
    "page": "screens",
-   "text": "5 · Menü & Listen — Menü → Meine Listen (leer) → neu / umbenennen / Optionen → löschen → Teilen → Import → Artikel & Kategorien",
+   "text": "5 · Menü & Listen — Menü → Meine Listen (leer) → wischen: links Löschen / Umbenennen / Duplizieren / Mitglieder, rechts Favorit → gelöscht + Rückgängig → neu / umbenennen / Optionen → löschen → Teilen → Import → Artikel & Kategorien",
    "w": 240,
    "x": 0,
    "y": 10032
@@ -1932,7 +2013,16 @@
   "InsightNutrition.dc.html",
   "InsightNutritionDark.dc.html",
   "InsightUsage.dc.html",
-  "InsightUsageDark.dc.html"
+  "InsightUsageDark.dc.html",
+  "SlideToDelete.dc.html",
+  "SlideToDeleteDark.dc.html",
+  "MyListsSwipeLeft.dc.html",
+  "MyListsSwipeLeftDark.dc.html",
+  "MyListsSwipeRight.dc.html",
+  "MyListsSwipeRightDark.dc.html",
+  "MyListsUndo.dc.html",
+  "MyListsUndoDark.dc.html",
+  "MyListsSwipe.dc.html"
  ],
  "pages": [
   {

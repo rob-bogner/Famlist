@@ -52,6 +52,9 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 | 5 · Menü & Listen | Kontext-Menü | MenuOverlay | ja | `MenuOverlayScreen` |
 |  | Meine Listen | MyLists | ja | `MyListsScreen` |
 |  | Meine Listen – noch keine Liste | MyListsEmpty | ja | – (nur HTML) |
+|  | Meine Listen – nach links wischen (Löschen, Umbenennen, Duplizieren, Mitglieder) | MyListsSwipeLeft | ja | – (nur HTML) |
+|  | Meine Listen – nach rechts wischen (Favorit) | MyListsSwipeRight | ja | – (nur HTML) |
+|  | Meine Listen – Liste gelöscht, Rückgängig | MyListsUndo | ja | – (nur HTML) |
 |  | Neue Liste | CreateList | ja | `CreateListScreen` |
 |  | Liste umbenennen | ListName | ja | – (nur HTML) |
 |  | Listen-Optionen | ListOptions | ja | `ListOptionsScreen` |
@@ -97,6 +100,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Dock – alle Zustände | DockStates | – | `DockView(active:pill:)` |
 |  | Kategorie-Icons (60) | CategoryIcons | – | – |
 |  | Zielstruktur (Schritt 1) | StructureMap | – | – |
+|  | Schieben zum Löschen – Zustände | SlideToDelete | ja | – |
 | Produktbilder | Obst – Stil & Regeln (Phase 1) | FruitStyle | – | – |
 |  | Obst in der Einkaufsliste | FruitList | ja | – |
 |  | Obst – alle 38 Produktbilder | FruitCatalog | ja | – |
@@ -155,8 +159,9 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 6. **Kontext-Menü ☰** (oben rechts, Glas-Knopf): Mitglieder & Teilen, Artikel verwalten, Kategorien verwalten, Kassenzettel scannen, Aus Zwischenablage importieren (ClipboardImport), Einstellungen.
 7. **Listen**
    - Tipp auf den Titel „My List ⌄“ → Meine Listen: wechseln, neue Liste erstellen. Ohne Listen: MyListsEmpty.
+   - Listen-Karten wischen (zusätzlich zum Kontextmenü bei langem Druck, wie bei Artikeln): nach rechts = Favorit an/aus (Glas-Kreis gelb, durchwischen löst direkt aus); nach links = Aktionen Löschen (rot), Umbenennen (blau), Duplizieren (türkis), Mitglieder (violett) – Kreise 48, Spalte 70, Beschriftung 11/600 (MyListsSwipeLeft/-Right). Geteilte Listen: statt „Löschen“ „Verlassen“. Löschen per Wischen ohne Rückfrage, dafür Hinweis „„<Liste>“ gelöscht“ mit „Rückgängig“ (5 s, Restzeit-Balken; wie UndoToast, 14 über „Neue Liste erstellen“) – MyListsUndo. Auch nach dem Löschen über das Kontextmenü erscheint „Rückgängig“. Letzte Liste: Hinweis wie LastListError.
    - **Langer Druck** auf eine Liste → **Listen-Optionen**: Umbenennen (ListName), Duplizieren, Favorit, Mitglieder & Teilen, Liste löschen mit Bestätigung (DeleteListDialog; bei geteilten Listen „Liste verlassen“). Die letzte Liste kann nicht gelöscht werden (LastListError).
-   - Alle Listen-Aktionen gibt es **nur** dort.
+   - Dieselben Aktionen gibt es seit 29.09.2026 zusätzlich per Wischen (siehe unten).
 8. **Teilen**
    - Mitglieder & Teilen zeigt die Mitgliederliste und hat „Einladungslink teilen“ (Share Sheet) und „Link kopieren“. Dazu die öffentliche ID mit Kopier-Knopf.
    - Hat ein Mitglied sein Konto gelöscht, sieht der Besitzer einmalig einen Hinweis in der Liste (MemberDeletedToast). In „Mitglieder“ steht die Person bis zum Ende der Frist ausgegraut als „Konto gelöscht · bis <Datum> wiederherstellbar“ mit „Entfernen“ (ShareMembersArchived) und Bestätigung (ArchivedMemberRemove). Wer nicht entfernt wird, ist nach dem Wiederherstellen automatisch wieder Mitglied.
@@ -202,7 +207,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 - **Knöpfe – ausnahmslos im Glas-Stil wie der FAB:**
   - Kreise und Pillen mit radialem bzw. senkrechtem Verlauf (Licht oben links bei 32 % / 22 %), Glanz oben und Lichtsaum unten, Maße proportional zum FAB 64.
   - Stile (`GlassStyleTokens`): Akzent, Neutral, Neutral-dunkel (Kamera/Fotos), Gefahr (rot), Apple (schwarz in Light, weiß in Dark).
-  - Gilt auch für ☰ und Filter im Listenkopf, Schließen-Knöpfe, Wisch-Aktionen und „Mit Apple anmelden“. Keine iOS-Systemdialoge (confirmationDialog/alert): Rückfragen und Auswahl erscheinen als **Aktionskarte** (seit 29.09.2026) – Karte unten (links/rechts 12, unten 30, Radius 30, Fläche/Rand/Schatten wie „Artikel erkannt“ im Barcode-Scanner, Abdunkelung ohne Blur), Symbol-Kachel 48 (Radius 16, Ton: Gefahr/Warnung/Info), Titel Outfit 19/600, Text 14 sub, darunter Glas-Knöpfe: Hauptaktion CTA bzw. rot (gd) bei Löschen, weitere Optionen neutrale Glas-Pillen, „Abbrechen“ als neutrale Glas-Pille (52 hoch, volle Breite, immer unten). Boards: ItemSyncFailedDialog, PhotoSourceDialog, DeleteListDialog, ReceiptAssignDialog, ReceiptPriceAlert, SignOutDialog, ReceiptStoreAlert, ReceiptDeleteDialog, ArchivedMemberRemove.
+  - Gilt auch für ☰ und Filter im Listenkopf, Schließen-Knöpfe, Wisch-Aktionen und „Mit Apple anmelden“. Keine iOS-Systemdialoge (confirmationDialog/alert): Rückfragen und Auswahl erscheinen als **Aktionskarte** (seit 29.09.2026) – Karte unten (links/rechts 12, unten 30, Radius 30, Fläche/Rand/Schatten wie „Artikel erkannt“ im Barcode-Scanner, Abdunkelung ohne Blur), Symbol-Kachel 48 (Radius 16, Ton: Gefahr/Warnung/Info), Titel Outfit 19/600, Text 14 sub, darunter Glas-Knöpfe: Hauptaktion CTA; endgültiges Löschen/Entfernen als **Schieben zum Löschen** (Spur 56, Radius 28, Gefahr-Ton, roter Glas-Knopf 48 mit Mülleimer, Text mittig mit »»», ab 85 % ausgelöst, sonst zurückfedern; VoiceOver: Doppeltippen; Board SlideToDelete unter „Bausteine“ – gilt auch für Konto löschen und Jetzt endgültig löschen), weitere Optionen neutrale Glas-Pillen, kein „Abbrechen“-Knopf: Schließen über den neutralen Glas-Knopf ✕ (40) oben rechts in der Karte, Tipp auf die Abdunkelung oder VoiceOver „Zurück“ (Ausnahme: „Artikelpreise aktualisieren?“ ohne ✕ – beide Wege speichern). Gilt auch für „Konto löschen“ und „Jetzt endgültig löschen“ (✕ oben rechts, 14 / 14). Boards: ItemSyncFailedDialog, PhotoSourceDialog, DeleteListDialog, ReceiptAssignDialog, ReceiptPriceAlert, SignOutDialog, ReceiptStoreAlert, ReceiptDeleteDialog, ArchivedMemberRemove.
 - **Dock:** in Light **und** Dark dunkles Glas. Keine Lichtkante an der Pille.
 - **Sheets:**
   - Oberer Radius 34, Griff 40 × 5.
