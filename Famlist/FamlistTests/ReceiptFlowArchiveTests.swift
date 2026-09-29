@@ -14,6 +14,7 @@
  - Archiv-Dateien liegen in einem eigenen temporären Ordner und werden nach jedem Test gelöscht.
 
  📝 Last Change:
+ - 29.09.2026: Ignorierte Zeilen kommen nicht ins Archiv.
  - Einkaufsdaten: Adresse, Uhrzeit, Beginn laut Liste, Kategorie und Inhalt je Zeile.
  ------------------------------------------------------------------------
  */
@@ -116,6 +117,22 @@ final class ReceiptFlowArchiveTests: XCTestCase {
         XCTAssertEqual(lines[1].price, Decimal(string: "1.39"))
         XCTAssertEqual(points.stored.count, 2)
         XCTAssertTrue(points.stored.allSatisfy { $0.receiptId == receipt.id })
+    }
+
+    /// Ignorierte Zeilen (falsch erkannter Text) landen nicht im Archiv und zählen nicht als Position.
+    func test_savePrices_skipsIgnoredLines() async throws {
+        let repo = InMemoryReceiptsRepository()
+        let archive = makeArchive(repo)
+        let flow = makeFlow(archive: archive, points: InMemoryPricePointsRepository())
+        await flow.process()
+        let schoko = try XCTUnwrap(flow.lines.first { $0.raw == "FAIRGL.VM SCHOKO" })
+        flow.ignore(schoko.id)
+        await flow.savePrices()
+        await archive.flush()
+
+        let receipt = try XCTUnwrap(repo.receipts.first)
+        XCTAssertEqual(receipt.lines?.map(\.raw), ["KERRYGOLD BUTTER", "KOKOSM. 400ML"])
+        XCTAssertEqual(receipt.lineCount, 2)
     }
 
     /// Archiv-Einträge von vorher (ohne `lines` im lokalen JSON) lassen sich weiter lesen.

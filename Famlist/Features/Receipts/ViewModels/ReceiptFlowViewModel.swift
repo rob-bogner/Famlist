@@ -26,6 +26,7 @@
    (ReceiptLineEnricher).
 
  📝 Last Change:
+ - 29.09.2026: Ignorierte Zeilen kommen nicht ins Archiv und zählen nicht als Position.
  - Einkaufsdaten für das Archiv; Preisvergleich nach ReceiptFlowViewModel+PriceChanges ausgelagert.
  ------------------------------------------------------------------------
  */
@@ -265,16 +266,18 @@ final class ReceiptFlowViewModel: ObservableObject {
     private func archiveReceipt(id: UUID, store: String, date: Date, savedPrices: Int) async {
         guard let archive, let origin else { return }
         let times = ReceiptTimes.make(day: date, time: receiptTime, capturedAt: capturedAt, listStart: origin.listStart)
+        let archived = archivedLines
         await archive.archive(ReceiptArchiveDraft(
             id: id, pages: pages, listId: origin.listId, listTitle: origin.listTitle, createdBy: origin.createdBy,
             creatorName: origin.creatorName, storeName: store, purchasedAt: date, total: total,
-            lineCount: lines.count, savedPriceCount: savedPrices, lines: archivedLines,
+            lineCount: archived.count, savedPriceCount: savedPrices, lines: archived,
             storeAddress: storeAddress, startedAt: times.start, endedAt: times.end))
     }
 
     /// Positionen für das Archiv, mit Kategorie, Einheit und Inhalt je Stück des zugeordneten Artikels.
+    /// Ignorierte Zeilen (z. B. falsch erkannter Text) kommen nicht ins Archiv.
     var archivedLines: [ReceiptLine] {
         let enricher = ReceiptLineEnricher(listItems: listItems, catalog: catalogEntries, categories: categories)
-        return lines.map { enricher.enrich(ReceiptLine($0)) }
+        return lines.filter { !$0.ignored }.map { enricher.enrich(ReceiptLine($0)) }
     }
 }

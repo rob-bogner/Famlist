@@ -221,6 +221,7 @@
 		4F4F38D77C92EFF1130E83E4 /* ListsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3419133F611FE26A1CD9CF4 /* ListsUITests.swift */; };
 		4F5E8F67E98D77ABC5667B19 /* CopyChoiceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97A479DD8A38537B7B7E92F /* CopyChoiceScreen.swift */; };
 		4F7E6A24A2BDA6A2DF21B7C9 /* SupabaseAccountRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3588F7E2C65AFACD005A962F /* SupabaseAccountRepository.swift */; };
+		4FFADF8A68382D11F809F595 /* ReceiptParserSplitLineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79057C9990E420B4C0705E3B /* ReceiptParserSplitLineTests.swift */; };
 		505E74366D6B9D8B72301904 /* WatchAddWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DC751D2C79FB1DAA002AEB /* WatchAddWidget.swift */; };
 		506BF6D4276F1ED459E43B0A /* ReceiptArchive+Preview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D728C5776726C1A4F7B29FA3 /* ReceiptArchive+Preview.swift */; };
 		508577FF098DF536B8E1252C /* SVGFilledIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13735C43132857E27E5E2955 /* SVGFilledIcon.swift */; };
@@ -1121,6 +1122,7 @@
 		77D00637D5D6EE98C4A4D01E /* DockItemModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DockItemModel.swift; sourceTree = "<group>"; };
 		77FBAA97F73CBD019E9CB54B /* WatchItemDisplay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchItemDisplay.swift; sourceTree = "<group>"; };
 		78616301DEF00D47F6BFDCB9 /* ListAccountAvatar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListAccountAvatar.swift; sourceTree = "<group>"; };
+		79057C9990E420B4C0705E3B /* ReceiptParserSplitLineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptParserSplitLineTests.swift; sourceTree = "<group>"; };
 		79172CBBD71E0343872E17E6 /* ReceiptSampleBon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptSampleBon.swift; sourceTree = "<group>"; };
 		792F9F131F4DDC9D0A9DB1C0 /* RevealWhenFocusedModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RevealWhenFocusedModifier.swift; sourceTree = "<group>"; };
 		7A009D0A64C0091C51F0F929 /* RealtimeImageEchoTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RealtimeImageEchoTests.swift; sourceTree = "<group>"; };
@@ -2485,6 +2487,7 @@
 				C66F8064B23804E891D69C2E /* ReceiptInsightsTests.swift */,
 				3406D87B5CED2CBF092AEE35 /* ReceiptInsightsViewModelTests.swift */,
 				3723F0B6676FE171A3891D9B /* ConsumptionStatisticsTests.swift */,
+				79057C9990E420B4C0705E3B /* ReceiptParserSplitLineTests.swift */,
 			);
 			path = FamlistTests;
 			sourceTree = "<group>";
@@ -4077,6 +4080,7 @@
 				ACCCFC7DBD5F428C374A27D5 /* ReceiptInsightsTests.swift in Sources */,
 				D3EE689CA6CE6FA2A95B2C87 /* ReceiptInsightsViewModelTests.swift in Sources */,
 				AF3EFDE514254710459D4B9A /* ConsumptionStatisticsTests.swift in Sources */,
+				4FFADF8A68382D11F809F595 /* ReceiptParserSplitLineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

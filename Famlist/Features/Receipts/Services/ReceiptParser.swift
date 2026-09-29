@@ -20,9 +20,15 @@
  - Rabattzeilen mit negativem Preis („-0,50“, „0,50-“, „Rabatt -0,50“) werden von der vorherigen
    Position abgezogen, aber nie unter 0.
  - Nach „SUMME“ / „ZU ZAHLEN“ (nur als ganzes Wort) folgt nur noch Zahlungsinfo → dort endet die Positionsliste.
+ - Zerknitterte Bons: Vision legt Name und Preis manchmal in zwei Zeilen („2,00 B“ über „BONUS EIS“).
+   Eine Zeile nur mit Preis (höchstens „EUR“ davor) verbindet sich mit der Namenszeile direkt davor oder danach.
+   Steht der Betrag der Summe allein in der Zeile davor oder danach („EUR 2,00“ / „SUMME“), gilt er als Summe.
+   „EUR“ allein ist nie ein Artikelname.
  - Reine Funktion → Unit-Tests mit Beispiel-Bons (ReceiptParserTests).
 
  📝 Last Change:
+ - 29.09.2026: Name und Preis in getrennten Zeilen verbinden; „EUR“ ist kein Artikel; „BONUS“ ist kein Sperrwort
+   mehr („BONUS EIS“ ist ein Artikel), dafür „GUTHABEN“ und die USt-ID-Zeile.
  - 29.09.2026: Uhrzeit und Adresse des Ladens (ReceiptParser+Meta).
  - 25.09.2026: Mengenzeilen setzen die Stückzahl der passenden Position; „2 x 1,29“ ist keine Position mehr.
  - 25.09.2026: Audit-Fixes – Rabatte mit nachgestelltem/alleinstehendem Minus, Rabatt nie unter 0,
@@ -42,7 +48,8 @@ enum ReceiptParser {
                                      "TOTAL", "ENDSUMME"]
     private static let skipWords = ["MWST", "MWST.", "STEUER", "NETTO", "BRUTTO", "BAR", "GEGEBEN", "RÜCKGELD", "RUECKGELD",
                                     "EC-KARTE", "EC KARTE", "KARTENZAHLUNG", "GIROCARD", "VISA", "MASTERCARD", "KREDITKARTE",
-                                    "PFAND", "LEERGUT", "PAYBACK", "BONUS", "TSE", "SIGNATUR", "TRANSAKTION", "KASSE", "BELEG"]
+                                    "PFAND", "LEERGUT", "PAYBACK", "GUTHABEN", "TSE", "SIGNATUR", "TRANSAKTION", "KASSE", "BELEG",
+                                    "UID", "UST-ID", "UST-IDNR"]
 
     /// Preis am Zeilenende, optional gefolgt von Steuerkennzeichen: „2,49 A“, „-0,50“, „0,50-“, „1.39 B*“, „3,49 €“.
     /// Der Preis darf auch allein in der Zeile stehen („-0,50“). Gruppe 3 = nachgestelltes Minus.
@@ -53,46 +60,80 @@ enum ReceiptParser {
     private static let countPattern = #"^(\d{1,3})\s*(?:STK|ST)?\.?\s*[X×*]\s*(\d{1,4}[.,]\d{2})\s*(?:€|EUR)?\s*$"#
     static let datePattern = #"(\d{1,2})\.(\d{1,2})\.(\d{2,4})"#
 
+    /// Was aus den Zeilen davor noch auf seine Ergänzung wartet.
+    private struct Pending {
+        /// Artikelname ohne Preis direkt in der Zeile davor.
+        var name: String?
+        /// Preis ohne Namen direkt in der Zeile davor („2,00 B“, „EUR 2,00“).
+        var price: Decimal?
+        /// Mengenzeile, die vor ihrer Position steht.
+        var count: (count: Int, amount: Decimal)?
+        /// Summenzeile ohne Betrag direkt davor → der Betrag steht in dieser Zeile.
+        var awaitingTotal = false
+    }
+
     static func parse(lines rawLines: [String]) -> ParsedReceipt {
         let lines = rawLines.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         var result = ParsedReceipt(store: detectStore(lines), date: detectDate(lines), lines: [], total: nil)
         result.time = detectTime(lines)
         result.address = detectAddress(lines)
-        var pendingName: String?        // Artikelname ohne Preis direkt in der Zeile davor
-        var pendingCount: (count: Int, amount: Decimal)?   // Mengenzeile, die vor ihrer Position steht
-
+        var pending = Pending()
         for line in lines {
-            let upper = line.uppercased()
-            if isTotalLine(upper) {
-                if result.total == nil, let price = trailingPrice(line) { result.total = price }
-                if result.total != nil { break }               // danach nur Zahlung/Steuer
-                continue
-            }
-            let nameBefore = pendingName
-            pendingName = nil
-            if isWeightLine(upper) {
-                applyWeightLine(line, nameBefore: nameBefore, to: &result)
-                continue
-            }
-            if let count = countLine(line) {
-                if !applyCount(count, toLastOf: &result) { pendingCount = count }
-                continue
-            }
-            if isSkippable(upper) || line.range(of: quantityPattern, options: [.regularExpression, .caseInsensitive]) != nil {
-                continue
-            }
-            guard let (text, price) = split(line) else { pendingName = articleName(line); continue }
-            if price < 0 { applyDiscount(price, to: &result); continue }
-            guard let name = articleName(text) else { continue }
-            var entry = ParsedReceipt.Line(raw: name, price: price)
-            if let count = pendingCount, count.count > 1, count.amount == price { entry.quantity = count.count }
-            pendingCount = nil
-            result.lines.append(entry)
+            guard consume(line, pending: &pending, into: &result) else { break }
         }
         return result
     }
 
+    /// Verarbeitet eine Zeile. false → Summe gefunden, danach folgt nur noch Zahlung/Steuer.
+    private static func consume(_ line: String, pending: inout Pending, into result: inout ParsedReceipt) -> Bool {
+        let upper = line.uppercased()
+        let before = pending
+        pending = Pending(count: before.count)
+        if isTotalLine(upper) {
+            if result.total == nil { result.total = trailingPrice(line) ?? before.price }
+            pending.awaitingTotal = result.total == nil
+            return result.total == nil
+        }
+        if before.awaitingTotal, let (text, price) = split(line), isBare(text) {
+            result.total = price
+            return false
+        }
+        if isWeightLine(upper) {
+            applyWeightLine(line, nameBefore: before.name, to: &result)
+        } else if let count = countLine(line) {
+            // Mengenzeile zwischen Name und Preis: beide warten weiter.
+            if !applyCount(count, toLastOf: &result) { pending = Pending(name: before.name, price: before.price, count: count) }
+        } else if !isSkippable(upper), line.range(of: quantityPattern, options: [.regularExpression, .caseInsensitive]) == nil {
+            consumeArticle(line, before: before, pending: &pending, into: &result)
+        }
+        return true
+    }
+
+    /// Position, Rabatt, Zeile nur mit Namen oder nur mit Preis.
+    private static func consumeArticle(_ line: String, before: Pending, pending: inout Pending, into result: inout ParsedReceipt) {
+        guard let (text, price) = split(line) else {
+            guard let name = articleName(line) else { return }
+            if let price = before.price { append(name, price, pending: &pending, to: &result) } else { pending.name = name }
+            return
+        }
+        if price < 0 { applyDiscount(price, to: &result); return }
+        if isBare(text) {
+            if let name = before.name { append(name, price, pending: &pending, to: &result) } else { pending.price = price }
+            return
+        }
+        guard let name = articleName(text) else { return }
+        append(name, price, pending: &pending, to: &result)
+    }
+
     // MARK: - Positionen
+
+    /// Neue Position; eine wartende Mengenzeile mit passendem Betrag setzt die Stückzahl.
+    private static func append(_ name: String, _ price: Decimal, pending: inout Pending, to result: inout ParsedReceipt) {
+        var entry = ParsedReceipt.Line(raw: name, price: price)
+        if let count = pending.count, count.count > 1, count.amount == price { entry.quantity = count.count }
+        pending.count = nil
+        result.lines.append(entry)
+    }
 
     /// Rabatt: von der vorherigen Position abziehen, nie unter 0.
     private static func applyDiscount(_ discount: Decimal, to result: inout ParsedReceipt) {
@@ -129,11 +170,17 @@ enum ReceiptParser {
         }
     }
 
-    /// Bereinigter Artikelname, wenn er Buchstaben enthält und mind. 2 Zeichen lang ist.
+    /// Bereinigter Artikelname, wenn er außer „EUR“ Buchstaben enthält und mind. 2 Zeichen lang ist.
     private static func articleName(_ text: String) -> String? {
         let name = clean(text)
-        guard name.rangeOfCharacter(from: .letters) != nil, name.count >= 2 else { return nil }
+        guard !isBare(name), name.count >= 2 else { return nil }
         return name
+    }
+
+    /// true, wenn der Text außer „EUR“/„€“ keine Buchstaben enthält (Zeile trägt nur einen Preis).
+    private static func isBare(_ text: String) -> Bool {
+        text.replacingOccurrences(of: #"\bEUR\b"#, with: "", options: [.regularExpression, .caseInsensitive])
+            .rangeOfCharacter(from: .letters) == nil
     }
 
     // MARK: - Teile

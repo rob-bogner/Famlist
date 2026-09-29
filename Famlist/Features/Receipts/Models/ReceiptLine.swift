@@ -10,7 +10,8 @@
 
  🔰 Notes for Beginners:
  - Entsteht beim „Preise speichern“ aus den Zeilen von „Kassenzettel prüfen“ (ReceiptReviewLine).
- - `itemName` ist nil, wenn die Zeile ignoriert wurde oder keinem Artikel zugeordnet ist.
+ - Ignorierte Zeilen werden nicht gespeichert (seit 29.09.2026; ältere Bons enthalten sie noch).
+ - `itemName` ist nil, wenn die Zeile keinem Artikel zugeordnet ist.
  - `isSaved`: Für diese Zeile wurde ein Preis in den Preisverlauf geschrieben.
  - Die Schlüssel im JSON sind kurz und klein geschrieben, wie in der Datenbank üblich (unit_price statt unitPrice).
  - `category`, `units`, `measure`, `itemId` (Migration 030) fehlen bei älteren Bons; die Anzeige schlägt sie dann nach.
@@ -63,7 +64,7 @@ struct ReceiptLine: Codable, Equatable, Sendable {
         self.isSaved = isSaved
     }
 
-    /// Aus „Kassenzettel prüfen“: Ignorierte und nicht bestätigte neue Zeilen behalten keinen Artikel.
+    /// Aus „Kassenzettel prüfen“: Nicht bestätigte neue Zeilen behalten keinen Artikel.
     init(_ line: ReceiptReviewLine) {
         self.init(raw: line.raw, itemName: line.isSaved ? line.itemName : nil, price: line.price,
                   unitPrice: line.unitPrice, quantity: line.quantity, isSaved: line.isSaved)

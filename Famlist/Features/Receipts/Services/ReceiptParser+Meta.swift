@@ -14,9 +14,12 @@
  - TSE-Zeitstempel mit „Z“ oder „+00:00“ sind UTC und werden nach Europe/Berlin umgerechnet.
  - Adresse: erste Zeile mit Straße und Hausnummer („Leopoldstr. 82“) in den Zeilen nach dem Laden,
    sonst eine Zeile „PLZ Ort“ („80802 München“). Findet sich nichts, bleibt das Feld leer.
+   Von der Straßenzeile zählt nur „Straße Hausnummer“: Legt Vision andere Wörter in dieselbe Zeile
+   („Josephsburgstr. 37   REWE“), fallen sie weg.
  - Reine Funktionen → Unit-Tests (ReceiptParserMetaTests).
 
  📝 Last Change:
+ - 29.09.2026: Adresse ohne fremde Wörter aus derselben OCR-Zeile.
  - Initial creation (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
  */
@@ -93,8 +96,8 @@ extension ReceiptParser {
         } ?? 0
         // Zeilen mit Preis („BIO RING 2,49“) sind Positionen, keine Adresse.
         let window = head.dropFirst(start).filter { $0.range(of: #"\d,\d{2}"#, options: .regularExpression) == nil }
-        let found = window.first { firstMatch(streetPattern, in: $0, options: .caseInsensitive) != nil }
-            ?? window.first { firstMatch(postalPattern, in: $0) != nil }
+        let street = window.lazy.compactMap { firstMatch(streetPattern, in: $0, options: .caseInsensitive)?[0] }.first
+        let found = street ?? window.first { firstMatch(postalPattern, in: $0) != nil }
         return found.map { String(tidy($0).prefix(200)) }
     }
 
