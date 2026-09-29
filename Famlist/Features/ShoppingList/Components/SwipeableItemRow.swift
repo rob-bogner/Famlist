@@ -24,6 +24,7 @@
  - VoiceOver erreicht dieselben Aktionen über Accessibility-Actions.
 
  📝 Last Change:
+ - 29.09.2026: Einstellung „Artikel abhaken“ – bei „Kreis“ kein Rechts-Wisch; ohne Kreis VoiceOver-Aktion „Abhaken“.
  - Glas-Aktionen nach GlassActionButton ausgelagert (gemeinsam mit den Listen-Karten).
  - Abgehakte Artikel: Rechts-Wischen löscht (gleiche Zwei-Stufen-Mechanik wie Abhaken).
  ------------------------------------------------------------------------
@@ -48,6 +49,10 @@ struct SwipeableItemRow: View {
     var isRecentlySynced: Bool = false
     var onRetry: (() -> Void)? = nil
 
+    /// Einstellung „Artikel abhaken“: bei „Kreis“ ist der Rechts-Wisch aus (leadingWidth 0).
+    @AppStorage(CheckGesture.storageKey) private var checkGestureRaw = CheckGesture.defaultValue.rawValue
+    private var checkGesture: CheckGesture { CheckGesture.from(checkGestureRaw) }
+
     @State private var dragX: CGFloat = 0
     @State private var isDragging = false
     @State private var isPastThreshold = false
@@ -65,7 +70,8 @@ struct SwipeableItemRow: View {
     /// Rechts offen: 96 pt (Button sichtbar, antippbar). Durchwischen ab 180 pt löst aus.
     private static let leadingWidth: CGFloat = 96
     private var physics: SwipeRevealPhysics {
-        SwipeRevealPhysics(revealWidth: revealWidth, leadingWidth: Self.leadingWidth, trailingFullSwipe: item.isChecked)
+        SwipeRevealPhysics(revealWidth: revealWidth, leadingWidth: checkGesture.allowsSwipe ? Self.leadingWidth : 0,
+                           trailingFullSwipe: item.isChecked)
     }
     private var rest: SwipeRevealPhysics.Rest { openRow?.id == item.id ? (openRow?.rest ?? .closed) : .closed }
     private var cardOffset: CGFloat {
@@ -138,6 +144,8 @@ struct SwipeableItemRow: View {
             Button("Zurück auf die Liste", action: onToggleChecked)
             Button("Löschen", action: onDelete)
         } else {
+            // Ohne Kreis (Einstellung „Wischen“) bleibt Abhaken für VoiceOver erreichbar.
+            if !checkGesture.showsCircle { Button("Abhaken", action: onToggleChecked) }
             Button("Bearbeiten", action: onEdit)
             Button(item.isUnavailable ? "Wieder verfügbar" : "Nicht verfügbar", action: onToggleUnavailable)
             Button("Löschen", action: onDelete)

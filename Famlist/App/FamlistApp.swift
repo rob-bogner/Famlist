@@ -18,9 +18,11 @@
 
  📝 Last Change:
  - DEBUG only: launch argument -uiTestFixture shows ShoppingListView with in-memory data (UITestFixture) for UI tests.
+ - 29.09.2026: DiagnosticsReporter (MetricKit-Absturz-/Hängerberichte → diagnostic_reports).
  ------------------------------------------------------------------------
  */
 
+import Combine // Publishers.Merge für den Sende-Anlass der Absturzberichte.
 import SwiftUI // SwiftUI defines the App protocol and view system used in this project.
 import SwiftData // SwiftData provides the local model container for offline-first storage.
 
@@ -38,6 +40,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
     private let receiptArchive: ReceiptArchive // Kassenzettel-Archiv (Fotos, offline zuerst), Migration 021.
     private let watchBridge: WatchBridge? // Apple Watch: Anmeldung, Sofort-Weg, Konto (Watch-Plan §2).
     private let watchService: WatchConnectivityService? // WCSession – früh aktiviert (Wecken im Hintergrund).
+    private let diagnosticsReporter: DiagnosticsReporter? // Absturz-/Hängerberichte (MetricKit) → Supabase, Migration 032.
 
     // MARK: - Init (Dependency Composition)
     /// Initializes repositories and view models for the app.
@@ -158,6 +161,11 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
                 (priceBook?.pending.count ?? 0) + (categoryStore?.unsentChangeCount ?? 0)
                     + (receiptArchive?.pendingCount ?? 0)
             }
+            // Absturz- und Hängerberichte von iOS sichern und senden; erneut bei Netz zurück und nach Anmeldung.
+            let reporter = DiagnosticsReporter(repository: SupabaseDiagnosticsRepository(client: client))
+            reporter.start(retryTrigger: Publishers.Merge(connectivityMonitor.$isOnline,
+                                                          self.sessionViewModel.$isAuthenticated).eraseToAnyPublisher())
+            self.diagnosticsReporter = reporter
         } else { // Fallback when Supabase config is missing: use preview/in-memory repos.
             // In-memory repositories for previews/offline demo.
             let itemsRepo = PreviewItemsRepository() // Items repo in memory.
@@ -184,6 +192,7 @@ struct FamlistApp: App { // Conforms to App to define app lifecycle and scenes.
             self.receiptArchive = ReceiptArchive(repository: nil) // Ohne Supabase bleiben Bons lokal.
             self.watchService = nil
             self.watchBridge = nil
+            self.diagnosticsReporter = nil
         }
     }
 

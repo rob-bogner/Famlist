@@ -20,6 +20,7 @@
    Berührung fest, dann ließe sich die Zeile nicht wischen, wenn der Daumen dort aufsetzt.
 
  📝 Last Change:
+ - 29.09.2026: Kreis nur, wenn die Einstellung „Artikel abhaken“ ihn zeigt (nicht bei „Wischen“).
  - Aus ListScreen des Design-Pakets MyListUI übernommen, an ItemModel angebunden.
  ------------------------------------------------------------------------
  */
@@ -42,6 +43,8 @@ struct ItemCard: View {
     @State private var showRetryConfirmation = false
     /// Einstellungen → Liste → „Preise anzeigen“.
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    /// Einstellung „Artikel abhaken“: bei „Wischen“ kein Kreis (Design: ListSwipeOnly).
+    @AppStorage(CheckGesture.storageKey) private var checkGestureRaw = CheckGesture.defaultValue.rawValue
 
     private var dimmed: Bool { item.isChecked || item.isUnavailable }
 
@@ -138,7 +141,7 @@ struct ItemCard: View {
     /// Rechte Spalte (vertikal zentriert): kleine Checkbox (32), darunter rechtsbündig der Preis.
     private var trailingColumn: some View {
         VStack(alignment: .trailing, spacing: 6) {
-            checkButton
+            if CheckGesture.from(checkGestureRaw).showsCircle { checkButton }
             if hasPrice { priceLabel }
         }
     }

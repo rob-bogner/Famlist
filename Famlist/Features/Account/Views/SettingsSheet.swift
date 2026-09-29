@@ -6,7 +6,7 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - Sheet „Einstellungen“ (Höhe 790): Profilkarte (einziger Weg zu „Profil bearbeiten“),
-   Erscheinungsbild System/Hell/Dunkel, Liste, Kassenzettel, Benachrichtigungen, Abmelden, Konto löschen.
+   Erscheinungsbild System/Hell/Dunkel, Liste (Preise, Artikel abhaken), Kassenzettel, Benachrichtigungen, Abmelden, Konto löschen.
 
  🔰 Notes for Beginners:
  - Vorlage: SettingsScreen in design-handoff/MyListUI/Screens/AccountScreens.swift (Settings.dc.html).
@@ -15,6 +15,7 @@
    (siehe design-handoff/PLAN.md, Risiko R5).
 
  📝 Last Change:
+ - 29.09.2026: Liste → „Artikel abhaken“ (Wischen · Kreis · Beides).
  - Abschnitt „Kassenzettel“: „Fotos der Bons speichern“ und „Gespeicherte Kassenzettel“ (Archiv).
  ------------------------------------------------------------------------
  */
@@ -25,6 +26,7 @@ struct SettingsSheet: View {
     @EnvironmentObject var session: AppSessionViewModel
     @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    @AppStorage(CheckGesture.storageKey) private var checkGestureRaw = CheckGesture.defaultValue.rawValue
     @AppStorage(ReceiptArchiveSetting.storageKey) private var saveReceipts = ReceiptArchiveSetting.defaultValue
     @EnvironmentObject var receiptArchive: ReceiptArchive
     let appearance: Appearance
@@ -84,6 +86,8 @@ struct SettingsSheet: View {
                         subtitle: "Auf Artikelkarten und in der Fortschrittskarte", hasTopLine: false) {
                 ListAccountToggle(t: t, isOn: $showPrices, label: "Preise anzeigen")
             }
+            // Wischen · Kreis · Beides (nur dieses Gerät)
+            CheckGestureSettingRow(t: t, raw: $checkGestureRaw)
         }
         .padding(.top, 10)
 
