@@ -1,6 +1,8 @@
 # PLAN – Redesign „Hybrid“ (vollständig)
 
-Stand: 24.09.2026 · Branch `redesign-hybrid` (abgezweigt von `main` 20ea307)
+Stand: 27.09.2026 · Branch `main` (Redesign ursprünglich auf `redesign-hybrid`, abgezweigt von `main` 20ea307, inzwischen zusammengeführt)
+
+Design-Quelle: `Design/html/` = 1:1-Kopie des Canvas (`Design/SYNC.md`), Übersicht in SPEC.md §2.
 
 ## Fortschritt
 
@@ -17,6 +19,15 @@ Stand: 24.09.2026 · Branch `redesign-hybrid` (abgezweigt von `main` 20ea307)
     in „Artikel verwalten“ (Übergangslösung SPEC §5). PriceBook (offline zuerst) in FamlistApp.
   - Nachtrag aus Roberts Gerätetest: „Artikel verwalten“ öffnet das Bearbeiten nur noch über den Pfeil
     (Karte ist kein Button mehr, Wischen greift überall); „Kategorien verwalten“ hat Wischen zum Löschen.
+- [x] Nachträge 26.–27.09.2026 (Details §10)
+  - Suchleiste oben filtert nur die Liste; Hinzufügen über Plus mit Eingabe unten über der Tastatur (ersetzt SearchEmpty/SearchResults).
+  - Alle Knöpfe im Glas-Stil wie der FAB (`GlassStyleTokens`, `GlassOrb`, `GlassPillBackground`, `PillGlassReflection`).
+  - Wischen: abgehakte Artikel nach rechts = löschen; Wisch-Aktionen als runde 56-pt-Glasknöpfe.
+  - Menge direkt eintippen mit Schnellwahl, Schritt je Einheit, Kommazahlen (1,5 kg); Watch synchron.
+  - Kassenzettel-Archiv, mitklappender Listenkopf, Apple-Watch-App.
+- [ ] Konto archivieren, nach 60 Tagen löschen, wiederherstellen – Design freigegeben 27.09.2026, Auftrag: `ACCOUNT_ARCHIVE_PROMPT.md`
+- [ ] Produktbilder Obst (38 SVG in `Design/html/assets/fruit/`) – Design freigegeben, noch nicht in der App
+- [x] Produktdetails (28.09.2026): ein Screen für neu / ansehen / bearbeiten ersetzt NewItemSheet, EditItemSheet und ProductImageSheet (`ProductDetailSheet`, als Sheet 790 mit Stift unten rechts am Bild) – Build und Tests stehen noch aus
 ---
 
 ## 1. Ausgangslage (geprüft, nicht angenommen)
@@ -83,7 +94,7 @@ Folge für Phase 1: Die Dateien aus `Support/` und `Theme/` werden nicht noch ei
 | `SortMenuScreen` | Sortier-`Menu` in `ListDock`, `SortOrder` (global, nicht gespeichert) | neu; Modus „Manuell“ und Speichern pro Liste neu |
 | `CopyChoiceScreen` / `CopyDoneScreen` | – | neu |
 | `DeleteChoiceScreen` / `UndoToastScreen` | `confirmationDialog` + `deleteCheckedItems`/`deleteAllItems` | ersetzen; Rückgängig neu |
-| `SearchEmptyScreen` / `SearchResultsScreen` | `ItemSearchSheet` (2 Abschnitte „Deine Artikel“/„OpenFood“) | angleichen: eine Trefferliste „n Treffer“; Scan-Knopf neu |
+| ~~`SearchEmptyScreen` / `SearchResultsScreen`~~ | `ItemSearchSheet` | **ersetzt am 26.09.2026:** Filter oben = `ListFilterField` + `ListTextFilter` (Board SearchInline); Hinzufügen = `InlineAddOverlay` + `InlineSearchResultRow` (Boards AddInline, AddInlineNoResults) |
 | `NewItemScreen` | `NewItemSheet` | angleichen; FAB öffnet es direkt |
 | `EditItemScreen` | `EditItemSheet` | angleichen (ohne Preisverlauf-Link, SPEC §5) |
 | `ProductImageScreen` | `ProductImageSheet` | angleichen |
@@ -213,7 +224,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ManageItems | Zweite Zeile „Marke · 1 Einheit“ bzw. „Kategorie · 1 Einheit“ | Artikelstamm speichert Einheit, keine Packungsgröße („250 g“ im Design) |
 | BarcodeScan | Ohne Kamera (Simulator) Hinweis „Kamera nicht verfügbar“ statt „Kamerabild“; Knopf „Licht“ gedimmt | Platzhalter des Designs |
 | BarcodeScan | Mengen-Kreis erhöht per Tippen 1×…9× | Design zeigt nur „1×“ |
-| Suchen | Eigene Artikel und Open-Food-Facts in EINER Liste „n Treffer“ | Design SearchResults; vorher zwei Abschnitte |
+| Artikel hinzufügen (AddInline) | Eigene Artikel und Open-Food-Facts in EINER Vorschlagsliste | Design AddInline (früher SearchResults) |
 | ListOptions | „Liste löschen“ mit Untertitel „Mit allen Artikeln, für alle Mitglieder“; bei geteilten Listen „Liste verlassen“ / „Die Liste bleibt für die anderen erhalten“ | Design-Untertitel „Bei geteilten Listen: „Liste verlassen““ ist eine Anmerkung |
 | ListOptions | „Umbenennen“ bei geteilten Listen gedimmt | Nur Besitzer dürfen umbenennen (RLS list_update_owner) |
 | ListOptions → Löschen | System-Rückfrage vor dem Löschen einer Liste | Löschen ist endgültig und betrifft alle Mitglieder; Design zeigt keinen Zwischenzustand |
@@ -239,9 +250,9 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | PriceHistory | Zweite Zeile ohne Packungsgröße („250 g“); Hinweis „Noch keine Preise · …“ nur ohne Preise; Monate ohne Preis haben keinen Punkt | Artikelstamm speichert keine Packungsgröße; „Beispielwerte“ ist Design-Text |
 | Liste | Sortierung „Alphabetisch/Zuletzt/Manuell“ zeigt eine flache Liste ohne Kategorie-Kopf | Design zeigt nur „Nach Kategorie“ |
 | Liste (Fortschrittskarte, ItemCard) | Gesamtkosten und Preis je Karte („1,49 €“, bei mehreren Stück zusätzlich „je …“); bei g/kg/ml/l/cm/m zählt der Preis einmal | Nicht gestaltet; von Robert am 25.09.2026 freigegeben (SPEC §5) |
-| EditItem | Link „Preisverlauf“ unter dem Preis (Trend-Icon, Zeile 52 pt, Chevron) | Nicht gestaltet; von Robert am 25.09.2026 freigegeben (SPEC §5) |
+| EditItem | Link „Preisverlauf“ unter dem Preis (Trend-Icon, Zeile 52 pt, Chevron) | Inzwischen im Board EditItem gestaltet; beim nächsten Abgleich prüfen |
 | Settings | Schalter „Preise anzeigen“ | Gehört zur freigegebenen Preis-Anzeige |
-| ShoppingDone | Variante ohne Kassenzettel: Karte „Kassenzettel scannen?“ statt Summe; öffnet sich 0,7 s nach dem letzten Abhaken | Kein eigenes Design (ShoppingDoneScan.dc.html existiert nicht); Aufbau aus ShoppingDone.dc.html abgeleitet |
+| ShoppingDone | Variante ohne Kassenzettel: Karte „Kassenzettel scannen?“ statt Summe; öffnet sich 0,7 s nach dem letzten Abhaken | Inzwischen gestaltet (ShoppingDoneScan.dc.html, 27.09.2026) – beim nächsten Abgleich gegen das Board prüfen |
 | AcceptInvite / ShareMembers | Fehler (Einladung abgelaufen, Link offline nicht erstellbar) als Glas-Toast wie in SignIn | Fehlerzustände nicht gestaltet |
 | ReceiptArchive | Mini-Bon zeigt das verkleinerte erste Foto; gezeichneter Bon nur, solange es lädt oder fehlt | KASSENZETTEL_ARCHIV.md „Mini-Bon = verkleinertes erstes Foto“ |
 | ReceiptArchive | Noch nicht hochgeladene Bons: dritte Zeile „n Positionen · wird hochgeladen“ | KASSENZETTEL_ARCHIV.md verlangt einen dezenten Hinweis; Ort nicht gestaltet |
@@ -249,7 +260,7 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | ReceiptArchive | Filterchips scrollen waagerecht; Monate darunter scrollen | Design zeigt 5 Chips und 2 Monate |
 | ReceiptDetail | Echtes Foto statt gezeichnetem Bon (250 breit, −1,5°, unten abgeschnitten); bei nur einem Foto keine Seitenzahl und keine Punkte | Design zeigt einen Bon mit 2 Fotos |
 | ReceiptDetail | „Löschen“ → System-Rückfrage „Kassenzettel löschen?“; der Knopf fehlt, wenn man weder Ersteller noch Besitzer der Liste ist („Teilen“ dann volle Breite) | Löschen betrifft alle Mitglieder (wie Liste löschen); Server erlaubt nur Ersteller/Besitzer (Migration 021) |
-| ReceiptDetail | Vollbild: schwarzer Hintergrund, Zoom 1–5-fach, Doppeltippen 2,5-fach, ✕ oben rechts | KASSENZETTEL_ARCHIV.md „Vollbild mit Zoom“; Vollbild nicht gestaltet |
+| ReceiptDetail | Vollbild: schwarzer Hintergrund, Zoom 1–5-fach, Doppeltippen 2,5-fach, ✕ oben rechts | Inzwischen gestaltet (ReceiptFullscreen) – beim nächsten Abgleich prüfen |
 
 | Watch (alle Screens) | Titel oben links zeichnet die App selbst; die System-Navigationsleiste ist aus. Die Uhrzeit rechts zeichnet watchOS an seiner Stelle | watchOS 26 setzt Toolbar-Titel in eine eigene Zeile unter die Uhrzeit (Screenshot 26.09.2026) |
 | Watch (alle Screens) | Textzeilen haben die CSS-Höhe; Schriftkanten weichen im Pixelvergleich leicht ab (mittlere Abweichung 2,5–3,0 von 255, ohne Uhrzeit) | Chrome und CoreText glätten Schrift unterschiedlich; Lage, Größe und Farben stimmen auf 1 px |
@@ -266,6 +277,23 @@ Jede Phase endet mit: Build grün, Tests grün (außer R6), Previews Light/Dark 
 | Watch (alle Screens) | Sehr lange Titel verkleinern sich bis 80 %, statt mit „…“ abzuschneiden | Titelzeile ist einzeilig |
 | WatchList | VoiceOver: jede Artikelzeile ist ein Element („Name, Menge“, Wert „offen/erledigt“); Doppeltippen öffnet, Aktion „Abhaken“/„Wieder öffnen“ | Design hat zwei Tippflächen je Zeile; so bleibt es für VoiceOver eine Zeile (WATCH_PLAN §5) |
 | Watch-Widgets | Smart Stack und Komplikationen skalieren nicht mit der Textgröße | Feste Flächen des Systems (44-pt-Kreis, Karte) |
+| EditItem (Menge) | Kommazahlen (1,5 kg), Schritt 0,1 bei kg/l/m, Halten = grober Schritt | App seit 26.09.2026; Board EditItemAmount zeigt noch Ziffern ohne Komma – Design-Nachtrag offen |
+
+## 10. Nachträge nach Phase 7 (26.–27.09.2026)
+
+Alle Punkte sind im Canvas gestaltet und in `Design/html/` enthalten (SPEC.md §2/§3).
+
+| Thema | Boards | Umsetzung in der App |
+|---|---|---|
+| Liste filtern (Suchleiste oben) | SearchInline, FilterOpenEmpty, FilterDoneEmpty | `ListFilterField`, `ListTextFilter` (Name + Marke, ohne Groß-/Kleinschreibung und Akzente), `ListFilterAddBridge`; Tests `ListTextFilterTests` |
+| Artikel hinzufügen über der Tastatur | AddInline, AddInlineNoResults | `InlineAddOverlay` (ehemals InlineSearchOverlay), `InlineSearchResultRow` (56 pt, Glas-„+“ 40 pt); Dock ausgeblendet während Filter/Eingabe |
+| Glas-Knöpfe überall | alle Screens | `GlassStyleTokens` (accent, neutral, neutralDark, danger, apple), `GlassOrb`, `GlassCircleBackground`, `GlassPillBackground`, `PillGlassReflection` |
+| Wischen | SwipeCheck, Checked, SwipeDelete, SwipeActions | abgehakt + nach rechts = löschen (`LeadingCheckAction`), runde Aktionen (`GlassActionButton isRound`) |
+| Menge eintippen | EditItemAmount | `QuantityPresets`, `QuantityPresetBar`, `SheetQuantityStepper`; Watch mit gleicher Logik |
+| Zustände und Dialoge | u. a. SignInLinkSent, ItemUnavailable, ItemSyncFailed(+Dialog), PhotoSourceDialog, BarcodeLookup, BarcodeNoCamera, MyListsEmpty, DeleteListDialog, LastListError, ReceiptReading, ReceiptAssignDialog, ReceiptStoreAlert, ReceiptPriceAlert, SignOutDialog, ReceiptArchiveEmpty, ReceiptDeleteDialog | teils als Übergangslösung gebaut (§9); Stand je Board nicht geprüft – gegen die Boards abgleichen |
+| Konto archivieren / wiederherstellen | DeleteAccount (neuer Text), RestoreAccount(+Loading/Offline), RestorePurgeDialog, MemberDeletedToast, ShareMembersArchived, ArchivedMemberRemove | offen – `ACCOUNT_ARCHIVE_PROMPT.md` |
+| Produktbilder Obst | FruitStyle, FruitSizes, FruitList, FruitAdd, FruitCatalog | offen – 38 SVG in `Design/html/assets/fruit/`, IDs `fruit.<englisch>` |
+| Produktdetails (neu / ansehen / bearbeiten) | ProductNew, ProductDetail, ProductDetailEdit, ProductDetailAmount (alte Boards NewItem, EditItem, EditItemAmount, ProductImage im Archiv) | `ProductDetailSheet` (+ `ProductDetailMode`, `ProductDetailHero`, `ProductDetailCard`, `ProductDetailCardValue`, `ProductDetailPriceField`, `ProductDetailIcon`); `SheetQuantityStepper(compact:)`; eingebunden in `ShoppingListView+Sheets` für `.newItem`, `.edit`, `.productImage`, `.editCatalog`. NewItemSheet/EditItemSheet/ProductImageSheet sind ungenutzt und können entfernt werden. |
 
 ## 11. Einkaufsdaten & Auswertung (29.09.2026)
 

@@ -21,11 +21,11 @@ input::placeholder{color:inherit;opacity:0.75}
 <dc-import name="Settings" theme="{{theme}}" accent="{{accent}}" hint-size="390px,844px"></dc-import>
 </div>
 <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: {{k.scrim}}; backdrop-filter: blur(3px)"></div>
-<div role="alertdialog" aria-labelledby="del-title" style="position: absolute; left: 24px; right: 24px; top: 250px; box-sizing: border-box; padding: 24px 20px 18px 20px; border-radius: 28px; background: {{k.menu}}; border: 1px solid {{k.menuBorder}}; box-shadow: {{k.menuShadow}}; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px">
+<div role="alertdialog" aria-labelledby="del-title" style="position: absolute; left: 24px; right: 24px; top: 214px; box-sizing: border-box; padding: 24px 20px 18px 20px; border-radius: 28px; background: {{k.menu}}; border: 1px solid {{k.menuBorder}}; box-shadow: {{k.menuShadow}}; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px">
 <span style="width: 56px; height: 56px; border-radius: 50%; background: {{k.dangerSoft}}; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{k.danger}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4zM12 10v4.5M12 17.3v.2"></path></svg></span>
 <h2 id="del-title" style="margin: 4px 0 0 0; font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 600">Konto löschen?</h2>
-<p style="margin: 0; font-size: 14px; line-height: 1.5; color: {{k.sub}}">Deine eigenen Listen, Artikel und Fotos werden dauerhaft gelöscht. Aus geteilten Listen wirst du entfernt. Das lässt sich nicht rückgängig machen.</p>
-<button style="margin-top: 8px; width: 100%; height: 52px; border: 0; border-radius: 26px; background: {{k.danger}}; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer">Konto endgültig löschen</button>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: {{k.sub}}">Dein Konto wird sofort deaktiviert. Deine geteilten Listen verschwinden bei allen Mitgliedern, und aus Listen anderer wirst du entfernt.</p><p style="margin: 0; padding: 10px 12px; border-radius: 14px; background: {{k.field}}; font-size: 13px; line-height: 1.45; color: {{k.sub}}">Meldest du dich innerhalb von <span style="font-weight: 600; color: {{k.text}}">60 Tagen</span> wieder an, kannst du alles wiederherstellen. Danach wird alles endgültig gelöscht.</p>
+<button style="margin-top: 8px; width: 100%; height: 52px; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer; position: relative; overflow: hidden; border: 0; border-radius: 26px; background: {{gd.pbg}}; box-shadow: {{gd.shadow}}"><span aria-hidden="true" style="position: absolute; left: 16px; right: 16px; top: 3px; height: 20px; border-radius: 10px; background: linear-gradient(180deg, {{gd.gloss}}, rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 36px; right: 36px; bottom: 3px; height: 7px; border-radius: 3px; background: {{gd.glow}}; filter: blur(3px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center; gap: 6px">Konto löschen</span></button>
 <button style="width: 100%; height: 48px; border: 0; border-radius: 24px; background: transparent; color: {{k.accentText}}; font-size: 16px; font-weight: 600; cursor: pointer">Abbrechen</button>
 </div>
 </div>
@@ -65,7 +65,33 @@ class Component extends DCLogic {
     const cta = dark
       ? { bg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', text: '#04262A', shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 20px -12px ' + rgba(accent, 0.6) }
       : { bg: 'linear-gradient(180deg, ' + accent + ' 0%, ' + deep + ' 100%)', text: '#FFFFFF', shadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 6px rgba(0,30,34,0.2), 0 14px 26px -12px ' + rgba(accent, 0.8) };
-    return { k, cta, theme, accent, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
+    // Glas-Knöpfe (Designsprache wie FAB): gp = Akzent, gn = neutral, gnd = neutral dunkel (Kamera/Bild), gd = Gefahr
+    const gp = {
+      bg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      pbg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 50%, ' + deep + ' 100%)',
+      shadow: dark ? 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 14px -7px ' + rgba(accent, 0.55) : 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 16px -6px ' + rgba(accent, 0.7) + ', 0 0 18px ' + rgba(accent, 0.25),
+      gloss: 'rgba(255,255,255,0.6)', glow: 'rgba(255,255,255,0.22)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(0,40,45,0.35))'
+    };
+    const gnDark = {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      pbg: 'linear-gradient(180deg, #33474A 0%, #1F3033 55%, #152326 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)', icon: '#D3E6E8', iconShadow: 'none'
+    };
+    const gn = dark ? gnDark : {
+      bg: 'radial-gradient(circle at 32% 22%, #FFFFFF 0%, #EEF4F5 50%, #D3DFE1 100%)',
+      pbg: 'linear-gradient(180deg, #FFFFFF 0%, #EEF4F5 55%, #DCE6E8 100%)',
+      shadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 8px 16px -8px rgba(12,40,44,0.35)',
+      gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E', iconShadow: 'none'
+    };
+    const gnd = gnDark;
+    const gd = {
+      bg: 'radial-gradient(circle at 32% 22%, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      pbg: 'linear-gradient(180deg, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4), 0 10px 20px -10px rgba(229,72,77,0.6)',
+      gloss: 'rgba(255,255,255,0.5)', glow: 'rgba(255,255,255,0.2)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(80,0,0,0.3))'
+    };
+    return { gp, gn, gnd, gd, k, cta, theme, accent, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
   }
 }
 </script>

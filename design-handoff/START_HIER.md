@@ -6,7 +6,7 @@
 - `PROMPT.md`: One-Shot-Prompt für Claude Code
 - `MyListUI/`: SwiftUI-Referenzcode aller 33 Screens in Hell und Dunkel, dazu Dock, Overlays und Previews
 - `Design/html/`: Original-Design als HTML/CSS (Wahrheitsquelle)
-- `Design/png/`: 66 Referenzbilder @2x, dazu Zielstruktur und Dock-Zustände
+- `Design/png/`: 161 Referenzbilder @2x aller Canvas-Boards (Stand 27.09.2026), dazu Zielstruktur und Dock-Zustände
 - `CLAUDE.md-Snippet.md`: Regeln, die Claude Code dauerhaft kennen soll
 
 ## So gehst du vor

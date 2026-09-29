@@ -1,747 +1,1964 @@
 {
-  "v": 3,
-  "attachments": {},
-  "boards": {
-    "Checked.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Abgehakt – Zurück",
-      "w": 390,
-      "x": 1880,
-      "y": 1300,
-      "page": "screens"
-    },
-    "CheckedDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Abgehakt – Zurück – Dark",
-      "w": 390,
-      "x": 1880,
-      "y": 2504,
-      "page": "screens"
-    },
-    "Dark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Fresh Glass – Dark",
-      "w": 390,
-      "x": 470,
-      "y": 0,
-      "page": "archiv"
-    },
-    "EditItem.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Artikel bearbeiten",
-      "w": 390,
-      "x": 2820,
-      "y": 1300,
-      "page": "screens"
-    },
-    "EditItemDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Artikel bearbeiten – Dark",
-      "w": 390,
-      "x": 2820,
-      "y": 2504,
-      "page": "screens"
-    },
-    "Hybrid.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Hybrid – Light",
-      "w": 390,
-      "x": 0,
-      "y": 0,
-      "page": "screens"
-    },
-    "HybridDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Hybrid – Dark",
-      "w": 390,
-      "x": 470,
-      "y": 0,
-      "page": "screens"
-    },
-    "Main.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Fresh Glass – Light",
-      "w": 390,
-      "x": 0,
-      "y": 0,
-      "page": "archiv"
-    },
-    "NewItem.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Neuer Artikel",
-      "w": 390,
-      "x": 1410,
-      "y": 1300,
-      "page": "screens"
-    },
-    "NewItemDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Neuer Artikel – Dark",
-      "w": 390,
-      "x": 1410,
-      "y": 2504,
-      "page": "screens"
-    },
-    "ProductImage.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Produktbild",
-      "w": 390,
-      "x": 0,
-      "y": 1300,
-      "page": "screens"
-    },
-    "ProductImageDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Produktbild – Dark",
-      "w": 390,
-      "x": 0,
-      "y": 2504,
-      "page": "screens"
-    },
-    "SearchEmpty.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Artikel suchen – leer",
-      "w": 390,
-      "x": 470,
-      "y": 1300,
-      "page": "screens"
-    },
-    "SearchEmptyDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Artikel suchen – leer – Dark",
-      "w": 390,
-      "x": 470,
-      "y": 2504,
-      "page": "screens"
-    },
-    "SearchResults.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Artikel suchen – Treffer",
-      "w": 390,
-      "x": 940,
-      "y": 1300,
-      "page": "screens"
-    },
-    "SearchResultsDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Artikel suchen – Treffer – Dark",
-      "w": 390,
-      "x": 940,
-      "y": 2504,
-      "page": "screens"
-    },
-    "SwipeActions.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Wisch-Aktionen",
-      "w": 390,
-      "x": 2350,
-      "y": 1300,
-      "page": "screens"
-    },
-    "SwipeActionsDark.dc.html": {
-      "h": 844,
-      "radius": 44,
-      "title": "Wisch-Aktionen – Dark",
-      "w": 390,
-      "x": 2350,
-      "y": 2504,
-      "page": "screens"
-    },
-    "MyLists.dc.html": {
-      "x": 3290,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Meine Listen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "MyListsDark.dc.html": {
-      "x": 3290,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Meine Listen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "HybridCompactTop.dc.html": {
-      "x": 940,
-      "y": 0,
-      "w": 390,
-      "h": 844,
-      "title": "Vorschlag 1 – Kompakter Kopf (oben)",
-      "radius": 44,
-      "page": "archiv"
-    },
-    "HybridCompact.dc.html": {
-      "x": 1410,
-      "y": 0,
-      "w": 390,
-      "h": 844,
-      "title": "Vorschlag 1 – Kompakter Kopf (gescrollt)",
-      "radius": 44,
-      "page": "archiv"
-    },
-    "MenuOverlay.dc.html": {
-      "x": 3760,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Kontext-Menü",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ShareMembers.dc.html": {
-      "x": 4230,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Mitglieder & Teilen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "MenuOverlayDark.dc.html": {
-      "x": 3760,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Kontext-Menü – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ShareMembersDark.dc.html": {
-      "x": 4230,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Mitglieder & Teilen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "StructureMap.dc.html": {
-      "x": 0,
-      "y": 3700,
-      "w": 1760,
-      "h": 1320,
-      "title": "Zielstruktur (Schritt 1)",
-      "radius": 24,
-      "page": "screens"
-    },
-    "DeleteChoice.dc.html": {
-      "x": 4700,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Artikel löschen – Auswahl",
-      "radius": 44,
-      "page": "screens"
-    },
-    "DeleteChoiceDark.dc.html": {
-      "x": 4700,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Artikel löschen – Auswahl – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ManageItems.dc.html": {
-      "x": 5170,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Artikel verwalten",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ManageItemsDark.dc.html": {
-      "x": 5170,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Artikel verwalten – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "UndoToast.dc.html": {
-      "x": 5640,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Gelöscht – Rückgängig",
-      "radius": 44,
-      "page": "screens"
-    },
-    "UndoToastDark.dc.html": {
-      "x": 5640,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Gelöscht – Rückgängig – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "CreateList.dc.html": {
-      "x": 6110,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Neue Liste",
-      "radius": 44,
-      "page": "screens"
-    },
-    "CreateListDark.dc.html": {
-      "x": 6110,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Neue Liste – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ListOptions.dc.html": {
-      "x": 6580,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Listen-Optionen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ListOptionsDark.dc.html": {
-      "x": 6580,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Listen-Optionen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "EditProfile.dc.html": {
-      "x": 7050,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Profil bearbeiten",
-      "radius": 44,
-      "page": "screens"
-    },
-    "EditProfileDark.dc.html": {
-      "x": 7050,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Profil bearbeiten – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "Settings.dc.html": {
-      "x": 7520,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Einstellungen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "SettingsDark.dc.html": {
-      "x": 7520,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Einstellungen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "DeleteAccount.dc.html": {
-      "x": 7990,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Konto löschen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "DeleteAccountDark.dc.html": {
-      "x": 7990,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Konto löschen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "SignIn.dc.html": {
-      "x": 8460,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Anmelden",
-      "radius": 44,
-      "page": "screens"
-    },
-    "SignInDark.dc.html": {
-      "x": 8460,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Anmelden – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ProfileSetup.dc.html": {
-      "x": 8930,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Profil anlegen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ProfileSetupDark.dc.html": {
-      "x": 8930,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Profil anlegen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "AcceptInvite.dc.html": {
-      "x": 9400,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Einladung annehmen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "AcceptInviteDark.dc.html": {
-      "x": 9400,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Einladung annehmen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "EmptyList.dc.html": {
-      "x": 9870,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Leere Liste",
-      "radius": 44,
-      "page": "screens"
-    },
-    "EmptyListDark.dc.html": {
-      "x": 9870,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Leere Liste – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ManageCategories.dc.html": {
-      "x": 10340,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Kategorien verwalten",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ManageCategoriesDark.dc.html": {
-      "x": 10340,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Kategorien verwalten – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "EditCategory.dc.html": {
-      "x": 10810,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Kategorie bearbeiten",
-      "radius": 44,
-      "page": "screens"
-    },
-    "EditCategoryDark.dc.html": {
-      "x": 10810,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Kategorie bearbeiten – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "BarcodeScan.dc.html": {
-      "x": 11280,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Barcode-Scanner (Kamera, immer dunkel)",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ReceiptCapture.dc.html": {
-      "x": 11750,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Kassenzettel fotografieren (Kamera, immer dunkel)",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ReceiptReview.dc.html": {
-      "x": 12220,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Kassenzettel prüfen",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ReceiptReviewDark.dc.html": {
-      "x": 12220,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Kassenzettel prüfen – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ShoppingDone.dc.html": {
-      "x": 12690,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Einkauf erledigt",
-      "radius": 44,
-      "page": "screens"
-    },
-    "ShoppingDoneDark.dc.html": {
-      "x": 12690,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Einkauf erledigt – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "PriceHistory.dc.html": {
-      "x": 13160,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Preisverlauf",
-      "radius": 44,
-      "page": "screens"
-    },
-    "PriceHistoryDark.dc.html": {
-      "x": 13160,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Preisverlauf – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "SortMenu.dc.html": {
-      "x": 13630,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Sortieren",
-      "radius": 44,
-      "page": "screens"
-    },
-    "SortMenuDark.dc.html": {
-      "x": 13630,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Sortieren – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "CopyChoice.dc.html": {
-      "x": 14100,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "In Zwischenablage kopieren",
-      "radius": 44,
-      "page": "screens"
-    },
-    "CopyChoiceDark.dc.html": {
-      "x": 14100,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "In Zwischenablage kopieren – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "CopyDone.dc.html": {
-      "x": 14570,
-      "y": 1300,
-      "w": 390,
-      "h": 844,
-      "title": "Kopiert – Bestätigung",
-      "radius": 44,
-      "page": "screens"
-    },
-    "CopyDoneDark.dc.html": {
-      "x": 14570,
-      "y": 2504,
-      "w": 390,
-      "h": 844,
-      "title": "Kopiert – Bestätigung – Dark",
-      "radius": 44,
-      "page": "screens"
-    },
-    "DockStates.dc.html": {
-      "x": 1860,
-      "y": 3700,
-      "w": 1240,
-      "h": 1060,
-      "title": "Dock – alle Zustände",
-      "radius": 24,
-      "page": "screens"
-    }
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "AcceptInvite.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einladung annehmen",
+   "w": 390,
+   "x": 1880,
+   "y": 260
   },
-  "createdOnFiles": {
-    "at": "2026-09-23T21:34:54Z",
-    "v": 1
+  "AcceptInviteDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einladung annehmen – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 1264
   },
-  "designSystems": [],
-  "launch": {
-    "view": "canvas"
+  "AddInline.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen (Plus → Eingabe unten)",
+   "w": 390,
+   "x": 0,
+   "y": 5276
   },
-  "notes": {
-    "hybridDark": {
-      "kind": "title1",
-      "maxW": 14960,
-      "text": "Hybrid – Screens Dark",
-      "w": 240,
-      "x": 0,
-      "y": 2244,
-      "page": "screens"
-    },
-    "hybridLight": {
-      "kind": "title1",
-      "maxW": 14960,
-      "text": "Hybrid – Screens Light",
-      "w": 240,
-      "x": 0,
-      "y": 1040,
-      "page": "screens"
-    }
+  "AddInlineDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen (Plus → Eingabe unten) – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 6280
   },
-  "order": [
-    "Main.dc.html",
-    "Dark.dc.html",
-    "Hybrid.dc.html",
-    "HybridDark.dc.html",
-    "ProductImage.dc.html",
-    "SearchEmpty.dc.html",
-    "SearchResults.dc.html",
-    "NewItem.dc.html",
-    "Checked.dc.html",
-    "SwipeActions.dc.html",
-    "EditItem.dc.html",
-    "ProductImageDark.dc.html",
-    "SearchEmptyDark.dc.html",
-    "SearchResultsDark.dc.html",
-    "NewItemDark.dc.html",
-    "CheckedDark.dc.html",
-    "SwipeActionsDark.dc.html",
-    "EditItemDark.dc.html",
-    "MyLists.dc.html",
-    "MyListsDark.dc.html",
-    "HybridCompactTop.dc.html",
-    "HybridCompact.dc.html",
-    "MenuOverlay.dc.html",
-    "ShareMembers.dc.html",
-    "MenuOverlayDark.dc.html",
-    "ShareMembersDark.dc.html",
-    "StructureMap.dc.html",
-    "DeleteChoice.dc.html",
-    "DeleteChoiceDark.dc.html",
-    "ManageItems.dc.html",
-    "ManageItemsDark.dc.html",
-    "UndoToast.dc.html",
-    "UndoToastDark.dc.html",
-    "CreateList.dc.html",
-    "CreateListDark.dc.html",
-    "ListOptions.dc.html",
-    "ListOptionsDark.dc.html",
-    "EditProfile.dc.html",
-    "EditProfileDark.dc.html",
-    "Settings.dc.html",
-    "SettingsDark.dc.html",
-    "DeleteAccount.dc.html",
-    "DeleteAccountDark.dc.html",
-    "SignIn.dc.html",
-    "SignInDark.dc.html",
-    "ProfileSetup.dc.html",
-    "ProfileSetupDark.dc.html",
-    "AcceptInvite.dc.html",
-    "AcceptInviteDark.dc.html",
-    "EmptyList.dc.html",
-    "EmptyListDark.dc.html",
-    "ManageCategories.dc.html",
-    "ManageCategoriesDark.dc.html",
-    "EditCategory.dc.html",
-    "EditCategoryDark.dc.html",
-    "BarcodeScan.dc.html",
-    "ReceiptCapture.dc.html",
-    "ReceiptReview.dc.html",
-    "ReceiptReviewDark.dc.html",
-    "ShoppingDone.dc.html",
-    "ShoppingDoneDark.dc.html",
-    "PriceHistory.dc.html",
-    "PriceHistoryDark.dc.html",
-    "SortMenu.dc.html",
-    "SortMenuDark.dc.html",
-    "CopyChoice.dc.html",
-    "CopyChoiceDark.dc.html",
-    "CopyDone.dc.html",
-    "CopyDoneDark.dc.html",
-    "DockStates.dc.html"
-  ],
-  "pages": [
-    {
-      "id": "screens",
-      "name": "Screens"
-    },
-    {
-      "id": "archiv",
-      "name": "Archiv"
-    }
-  ],
-  "title": "My List – Redesign"
+  "AddInlineNoResults.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen – keine Treffer",
+   "w": 390,
+   "x": 470,
+   "y": 5276
+  },
+  "AddInlineNoResultsDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen – keine Treffer – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 6280
+  },
+  "BarcodeLookup.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Barcode – Artikel wird gesucht",
+   "w": 390,
+   "x": 2350,
+   "y": 5276
+  },
+  "BarcodeNoCamera.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Barcode – Kamera nicht verfügbar",
+   "w": 390,
+   "x": 2820,
+   "y": 5276
+  },
+  "BarcodeScan.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Barcode-Scanner (Kamera, immer dunkel)",
+   "w": 390,
+   "x": 1880,
+   "y": 5276
+  },
+  "CategoryIcons.dc.html": {
+   "h": 1640,
+   "page": "bausteine",
+   "radius": 24,
+   "title": "Kategorie-Icons (60)",
+   "w": 1240,
+   "x": 1830,
+   "y": 260
+  },
+  "Checked.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abgehakt – zurück auf die Liste (nach links wischen)",
+   "w": 390,
+   "x": 3290,
+   "y": 2768
+  },
+  "CheckedDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abgehakt – zurück auf die Liste – Dark",
+   "w": 390,
+   "x": 3290,
+   "y": 3772
+  },
+  "ClipboardImport.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Aus Zwischenablage importieren",
+   "w": 390,
+   "x": 4230,
+   "y": 10292
+  },
+  "ClipboardImportDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Aus Zwischenablage importieren – Dark",
+   "w": 390,
+   "x": 4230,
+   "y": 11296
+  },
+  "CopyChoice.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "In Zwischenablage kopieren",
+   "w": 390,
+   "x": 470,
+   "y": 7784
+  },
+  "CopyChoiceDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "In Zwischenablage kopieren – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 8788
+  },
+  "CopyDone.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kopiert – Bestätigung",
+   "w": 390,
+   "x": 940,
+   "y": 7784
+  },
+  "CopyDoneDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kopiert – Bestätigung – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 8788
+  },
+  "CreateList.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neue Liste",
+   "w": 390,
+   "x": 1410,
+   "y": 10292
+  },
+  "CreateListDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neue Liste – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 11296
+  },
+  "Dark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Fresh Glass – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 0
+  },
+  "DeleteAccount.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Konto löschen",
+   "w": 390,
+   "x": 3760,
+   "y": 15308
+  },
+  "DeleteAccountDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Konto löschen – Dark",
+   "w": 390,
+   "x": 3760,
+   "y": 16312
+  },
+  "DeleteChoice.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel löschen – Auswahl",
+   "w": 390,
+   "x": 1410,
+   "y": 7784
+  },
+  "DeleteChoiceDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel löschen – Auswahl – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 8788
+  },
+  "DeleteListDialog.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste löschen – Bestätigung",
+   "w": 390,
+   "x": 2820,
+   "y": 10292
+  },
+  "DeleteListDialogDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste löschen – Bestätigung – Dark",
+   "w": 390,
+   "x": 2820,
+   "y": 11296
+  },
+  "Dock.dc.html": {
+   "h": 120,
+   "page": "bausteine",
+   "w": 350,
+   "x": 0,
+   "y": 260
+  },
+  "DockStates.dc.html": {
+   "h": 1060,
+   "page": "bausteine",
+   "radius": 24,
+   "title": "Dock – alle Zustände",
+   "w": 1240,
+   "x": 470,
+   "y": 260
+  },
+  "EditCategory.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kategorie bearbeiten",
+   "w": 390,
+   "x": 5640,
+   "y": 10292
+  },
+  "EditCategoryDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kategorie bearbeiten – Dark",
+   "w": 390,
+   "x": 5640,
+   "y": 11296
+  },
+  "EditItem.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Artikel bearbeiten (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 2820,
+   "y": 0
+  },
+  "EditItemAmount.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Menge eintippen (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 3290,
+   "y": 0
+  },
+  "EditItemAmountDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Menge eintippen – Dark (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 3290,
+   "y": 1004
+  },
+  "EditItemDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Dark (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 2820,
+   "y": 1004
+  },
+  "EditProfile.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Profil bearbeiten",
+   "w": 390,
+   "x": 940,
+   "y": 15308
+  },
+  "EditProfileDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Profil bearbeiten – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 16312
+  },
+  "EmptyList.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Leere Liste",
+   "w": 390,
+   "x": 940,
+   "y": 2768
+  },
+  "EmptyListDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Leere Liste – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 3772
+  },
+  "FilterDoneEmpty.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Tab „Erledigt“ – noch nichts abgehakt",
+   "w": 390,
+   "x": 2350,
+   "y": 2768
+  },
+  "FilterDoneEmptyDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Tab „Erledigt“ – noch nichts abgehakt – Dark",
+   "w": 390,
+   "x": 2350,
+   "y": 3772
+  },
+  "FilterOpenEmpty.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Tab „Offen“ – alles erledigt",
+   "w": 390,
+   "x": 1880,
+   "y": 2768
+  },
+  "FilterOpenEmptyDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Tab „Offen“ – alles erledigt – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 3772
+  },
+  "FruitAdd.dc.html": {
+   "h": 844,
+   "page": "produkte",
+   "radius": 44,
+   "title": "Obst in den Vorschlägen (Plus)",
+   "w": 390,
+   "x": 1440,
+   "y": 1264
+  },
+  "FruitAddDark.dc.html": {
+   "h": 844,
+   "page": "produkte",
+   "radius": 44,
+   "title": "Obst in den Vorschlägen (Plus) – Dark",
+   "w": 390,
+   "x": 1910,
+   "y": 1264
+  },
+  "FruitCatalog.dc.html": {
+   "h": 2642,
+   "page": "produkte",
+   "radius": 24,
+   "title": "Obst – alle 38 Produktbilder",
+   "w": 1320,
+   "x": 2420,
+   "y": 260
+  },
+  "FruitCatalogDark.dc.html": {
+   "h": 2642,
+   "page": "produkte",
+   "radius": 24,
+   "title": "Obst – alle 38 Produktbilder (Dark)",
+   "w": 1320,
+   "x": 3860,
+   "y": 260
+  },
+  "FruitList.dc.html": {
+   "h": 844,
+   "page": "produkte",
+   "radius": 44,
+   "title": "Obst in der Einkaufsliste",
+   "w": 390,
+   "x": 1440,
+   "y": 260
+  },
+  "FruitListDark.dc.html": {
+   "h": 844,
+   "page": "produkte",
+   "radius": 44,
+   "title": "Obst in der Einkaufsliste – Dark",
+   "w": 390,
+   "x": 1910,
+   "y": 260
+  },
+  "FruitSizes.dc.html": {
+   "h": 560,
+   "page": "produkte",
+   "radius": 24,
+   "title": "Obst – Vergleich in UI-Größe",
+   "w": 1320,
+   "x": 0,
+   "y": 2080
+  },
+  "FruitStyle.dc.html": {
+   "h": 1700,
+   "page": "produkte",
+   "radius": 24,
+   "title": "Obst – Stil & Regeln (Phase 1)",
+   "w": 1320,
+   "x": 0,
+   "y": 260
+  },
+  "Hybrid.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkaufsliste",
+   "w": 390,
+   "x": 0,
+   "y": 2768
+  },
+  "HybridCompact.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Vorschlag 1 – Kompakter Kopf (gescrollt)",
+   "w": 390,
+   "x": 1410,
+   "y": 0
+  },
+  "HybridCompactTop.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Vorschlag 1 – Kompakter Kopf (oben)",
+   "w": 390,
+   "x": 940,
+   "y": 0
+  },
+  "HybridDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkaufsliste – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 3772
+  },
+  "ItemSyncFailed.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Sync fehlgeschlagen",
+   "w": 390,
+   "x": 5640,
+   "y": 2768
+  },
+  "ItemSyncFailedDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Sync fehlgeschlagen – Dark",
+   "w": 390,
+   "x": 5640,
+   "y": 3772
+  },
+  "ItemSyncFailedDialog.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Sync fehlgeschlagen – erneut versuchen?",
+   "w": 390,
+   "x": 6110,
+   "y": 2768
+  },
+  "ItemSyncFailedDialogDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Sync fehlgeschlagen – erneut versuchen? – Dark",
+   "w": 390,
+   "x": 6110,
+   "y": 3772
+  },
+  "ItemUnavailable.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel nicht verfügbar",
+   "w": 390,
+   "x": 4700,
+   "y": 2768
+  },
+  "ItemUnavailableDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel nicht verfügbar – Dark",
+   "w": 390,
+   "x": 4700,
+   "y": 3772
+  },
+  "LastListError.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Letzte Liste – kann nicht gelöscht werden",
+   "w": 390,
+   "x": 3290,
+   "y": 10292
+  },
+  "LastListErrorDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Letzte Liste – kann nicht gelöscht werden – Dark",
+   "w": 390,
+   "x": 3290,
+   "y": 11296
+  },
+  "ListCompact.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – Kopf kompakt (beim Scrollen)",
+   "w": 390,
+   "x": 470,
+   "y": 2768
+  },
+  "ListCompactDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – Kopf kompakt – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 3772
+  },
+  "ListName.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste umbenennen",
+   "w": 390,
+   "x": 1880,
+   "y": 10292
+  },
+  "ListNameDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste umbenennen – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 11296
+  },
+  "ListOptions.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Listen-Optionen",
+   "w": 390,
+   "x": 2350,
+   "y": 10292
+  },
+  "ListOptionsDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Listen-Optionen – Dark",
+   "w": 390,
+   "x": 2350,
+   "y": 11296
+  },
+  "Main.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Fresh Glass – Light",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "ManageCategories.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kategorien verwalten",
+   "w": 390,
+   "x": 5170,
+   "y": 10292
+  },
+  "ManageCategoriesDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kategorien verwalten – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 11296
+  },
+  "ManageItems.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel verwalten",
+   "w": 390,
+   "x": 4700,
+   "y": 10292
+  },
+  "ManageItemsDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel verwalten – Dark",
+   "w": 390,
+   "x": 4700,
+   "y": 11296
+  },
+  "MenuOverlay.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kontext-Menü",
+   "w": 390,
+   "x": 0,
+   "y": 10292
+  },
+  "MenuOverlayDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kontext-Menü – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 11296
+  },
+  "MyLists.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen",
+   "w": 390,
+   "x": 470,
+   "y": 10292
+  },
+  "MyListsDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 11296
+  },
+  "MyListsEmpty.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – noch keine Liste",
+   "w": 390,
+   "x": 940,
+   "y": 10292
+  },
+  "MyListsEmptyDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – noch keine Liste – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 11296
+  },
+  "NewItem.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Neuer Artikel (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 2350,
+   "y": 0
+  },
+  "NewItemDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Neuer Artikel – Dark (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 2350,
+   "y": 1004
+  },
+  "PhotoSourceDialog.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Foto hinzufügen – Quelle wählen",
+   "w": 390,
+   "x": 1410,
+   "y": 5276
+  },
+  "PhotoSourceDialogDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Foto hinzufügen – Quelle wählen – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 6280
+  },
+  "PriceHistory.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Preisverlauf",
+   "w": 390,
+   "x": 5170,
+   "y": 5276
+  },
+  "PriceHistoryDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Preisverlauf – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 6280
+  },
+  "ProductImage.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Produktbild (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 3760,
+   "y": 0
+  },
+  "ProductImageDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Produktbild – Dark (ersetzt durch Produktdetails)",
+   "w": 390,
+   "x": 3760,
+   "y": 1004
+  },
+  "ProfileSetup.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Profil anlegen",
+   "w": 390,
+   "x": 1410,
+   "y": 260
+  },
+  "ProfileSetupDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Profil anlegen – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 1264
+  },
+  "ReceiptArchive.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv",
+   "w": 390,
+   "x": 1410,
+   "y": 15308
+  },
+  "ReceiptArchiveDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 16312
+  },
+  "ReceiptArchiveEmpty.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv – leer",
+   "w": 390,
+   "x": 1880,
+   "y": 15308
+  },
+  "ReceiptArchiveEmptyDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv – leer – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 16312
+  },
+  "ReceiptAssignDialog.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Bon-Zeile zuordnen",
+   "w": 390,
+   "x": 2350,
+   "y": 12800
+  },
+  "ReceiptAssignDialogDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Bon-Zeile zuordnen – Dark",
+   "w": 390,
+   "x": 2350,
+   "y": 13804
+  },
+  "ReceiptCapture.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel fotografieren (Kamera, immer dunkel)",
+   "w": 390,
+   "x": 940,
+   "y": 12800
+  },
+  "ReceiptDeleteDialog.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel löschen – Bestätigung",
+   "w": 390,
+   "x": 3290,
+   "y": 15308
+  },
+  "ReceiptDeleteDialogDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel löschen – Bestätigung – Dark",
+   "w": 390,
+   "x": 3290,
+   "y": 16312
+  },
+  "ReceiptDetail.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel – Detail",
+   "w": 390,
+   "x": 2350,
+   "y": 15308
+  },
+  "ReceiptDetailDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel – Detail – Dark",
+   "w": 390,
+   "x": 2350,
+   "y": 16312
+  },
+  "ReceiptFullscreen.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel – Vollbild (immer dunkel)",
+   "w": 390,
+   "x": 2820,
+   "y": 15308
+  },
+  "ReceiptPriceAlert.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikelpreise aktualisieren?",
+   "w": 390,
+   "x": 3760,
+   "y": 12800
+  },
+  "ReceiptPriceAlertDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikelpreise aktualisieren? – Dark",
+   "w": 390,
+   "x": 3760,
+   "y": 13804
+  },
+  "ReceiptReading.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel wird gelesen",
+   "w": 390,
+   "x": 1410,
+   "y": 12800
+  },
+  "ReceiptReadingDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel wird gelesen – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 13804
+  },
+  "ReceiptReview.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel prüfen",
+   "w": 390,
+   "x": 1880,
+   "y": 12800
+  },
+  "ReceiptReviewDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel prüfen – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 13804
+  },
+  "ReceiptReviewMissing.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel prüfen – nicht gefunden",
+   "w": 390,
+   "x": 3290,
+   "y": 12800
+  },
+  "ReceiptReviewMissingDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Kassenzettel prüfen – nicht gefunden – Dark",
+   "w": 390,
+   "x": 3290,
+   "y": 13804
+  },
+  "ReceiptStoreAlert.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Laden ändern",
+   "w": 390,
+   "x": 2820,
+   "y": 12800
+  },
+  "ReceiptStoreAlertDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Laden ändern – Dark",
+   "w": 390,
+   "x": 2820,
+   "y": 13804
+  },
+  "SearchInline.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste filtern (Suchleiste oben)",
+   "w": 390,
+   "x": 1410,
+   "y": 2768
+  },
+  "SearchInlineDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste filtern (Suchleiste oben) – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 3772
+  },
+  "Settings.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen",
+   "w": 390,
+   "x": 0,
+   "y": 15308
+  },
+  "SettingsDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 16312
+  },
+  "ShareMembers.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Mitglieder & Teilen",
+   "w": 390,
+   "x": 3760,
+   "y": 10292
+  },
+  "ShareMembersDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Mitglieder & Teilen – Dark",
+   "w": 390,
+   "x": 3760,
+   "y": 11296
+  },
+  "ShoppingDone.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt",
+   "w": 390,
+   "x": 0,
+   "y": 12800
+  },
+  "ShoppingDoneDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 13804
+  },
+  "ShoppingDoneScan.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt – ohne Kassenzettel",
+   "w": 390,
+   "x": 470,
+   "y": 12800
+  },
+  "ShoppingDoneScanDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt – ohne Kassenzettel – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 13804
+  },
+  "SignIn.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Anmelden",
+   "w": 390,
+   "x": 470,
+   "y": 260
+  },
+  "SignInDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Anmelden – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 1264
+  },
+  "SignInLinkSent.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Anmelden – Link gesendet",
+   "w": 390,
+   "x": 940,
+   "y": 260
+  },
+  "SignInLinkSentDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Anmelden – Link gesendet – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 1264
+  },
+  "SignOutDialog.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abmelden – ungesendete Änderungen",
+   "w": 390,
+   "x": 470,
+   "y": 15308
+  },
+  "SignOutDialogDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abmelden – ungesendete Änderungen – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 16312
+  },
+  "SortMenu.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Sortieren",
+   "w": 390,
+   "x": 0,
+   "y": 7784
+  },
+  "SortMenuDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Sortieren – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 8788
+  },
+  "SplashBrand.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Splash F – Marke mit Muster (nicht gewählt)",
+   "w": 390,
+   "x": 1880,
+   "y": 0
+  },
+  "SplashTomatoesBottom.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Splash (App-Start)",
+   "w": 390,
+   "x": 0,
+   "y": 260
+  },
+  "StructureMap.dc.html": {
+   "h": 1320,
+   "page": "bausteine",
+   "radius": 24,
+   "title": "Zielstruktur (Schritt 1)",
+   "w": 1760,
+   "x": 3190,
+   "y": 260
+  },
+  "SwipeActions.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Wisch-Aktionen offen (nach links wischen)",
+   "w": 390,
+   "x": 4230,
+   "y": 2768
+  },
+  "SwipeActionsDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Wisch-Aktionen offen – Dark",
+   "w": 390,
+   "x": 4230,
+   "y": 3772
+  },
+  "SwipeCheck.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abhaken (nach rechts wischen)",
+   "w": 390,
+   "x": 2820,
+   "y": 2768
+  },
+  "SwipeCheckDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abhaken (nach rechts wischen) – Dark",
+   "w": 390,
+   "x": 2820,
+   "y": 3772
+  },
+  "SwipeDelete.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abgehakt löschen (nach rechts wischen)",
+   "w": 390,
+   "x": 3760,
+   "y": 2768
+  },
+  "SwipeDeleteDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abgehakt löschen (nach rechts wischen) – Dark",
+   "w": 390,
+   "x": 3760,
+   "y": 3772
+  },
+  "UndoToast.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Gelöscht – Rückgängig",
+   "w": 390,
+   "x": 5170,
+   "y": 2768
+  },
+  "UndoToastDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Gelöscht – Rückgängig – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 3772
+  },
+  "WatchAdd.dc.html": {
+   "h": 248,
+   "page": "watch",
+   "radius": 40,
+   "title": "Watch – Artikel hinzufügen",
+   "w": 208,
+   "x": 864,
+   "y": 0
+  },
+  "WatchDone.dc.html": {
+   "h": 248,
+   "page": "watch",
+   "radius": 40,
+   "title": "Watch – Alles erledigt",
+   "w": 208,
+   "x": 1152,
+   "y": 0
+  },
+  "WatchFace.dc.html": {
+   "h": 248,
+   "page": "watch",
+   "radius": 40,
+   "title": "Watch – Zifferblatt & Smart Stack",
+   "w": 208,
+   "x": 1440,
+   "y": 0
+  },
+  "WatchItem.dc.html": {
+   "h": 248,
+   "page": "watch",
+   "radius": 40,
+   "title": "Watch – Artikel",
+   "w": 208,
+   "x": 576,
+   "y": 0
+  },
+  "WatchList.dc.html": {
+   "h": 248,
+   "page": "watch",
+   "radius": 40,
+   "title": "Watch – Einkaufsliste",
+   "w": 208,
+   "x": 288,
+   "y": 0
+  },
+  "WatchLists.dc.html": {
+   "h": 248,
+   "page": "watch",
+   "radius": 40,
+   "title": "Watch – Listen",
+   "w": 208,
+   "x": 0,
+   "y": 0
+  },
+  "RestoreAccount.dc.html": {
+   "x": 4230,
+   "y": 15308,
+   "w": 390,
+   "h": 844,
+   "title": "Konto wiederherstellen (nach Anmeldung)",
+   "page": "screens",
+   "radius": 44
+  },
+  "RestoreAccountDark.dc.html": {
+   "x": 4230,
+   "y": 16312,
+   "w": 390,
+   "h": 844,
+   "title": "Konto wiederherstellen (nach Anmeldung) – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "RestoreAccountLoading.dc.html": {
+   "x": 4700,
+   "y": 15308,
+   "w": 390,
+   "h": 844,
+   "title": "Wiederherstellen – lädt",
+   "page": "screens",
+   "radius": 44
+  },
+  "RestoreAccountLoadingDark.dc.html": {
+   "x": 4700,
+   "y": 16312,
+   "w": 390,
+   "h": 844,
+   "title": "Wiederherstellen – lädt – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "RestoreAccountOffline.dc.html": {
+   "x": 5170,
+   "y": 15308,
+   "w": 390,
+   "h": 844,
+   "title": "Wiederherstellen – offline",
+   "page": "screens",
+   "radius": 44
+  },
+  "RestoreAccountOfflineDark.dc.html": {
+   "x": 5170,
+   "y": 16312,
+   "w": 390,
+   "h": 844,
+   "title": "Wiederherstellen – offline – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "RestorePurgeDialog.dc.html": {
+   "x": 5640,
+   "y": 15308,
+   "w": 390,
+   "h": 844,
+   "title": "Jetzt endgültig löschen",
+   "page": "screens",
+   "radius": 44
+  },
+  "RestorePurgeDialogDark.dc.html": {
+   "x": 5640,
+   "y": 16312,
+   "w": 390,
+   "h": 844,
+   "title": "Jetzt endgültig löschen – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "MemberDeletedToast.dc.html": {
+   "x": 6110,
+   "y": 15308,
+   "w": 390,
+   "h": 844,
+   "title": "Hinweis für Listenbesitzer",
+   "page": "screens",
+   "radius": 44
+  },
+  "MemberDeletedToastDark.dc.html": {
+   "x": 6110,
+   "y": 16312,
+   "w": 390,
+   "h": 844,
+   "title": "Hinweis für Listenbesitzer – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "ShareMembersArchived.dc.html": {
+   "x": 6580,
+   "y": 15308,
+   "w": 390,
+   "h": 844,
+   "title": "Mitglieder – Konto gelöscht",
+   "page": "screens",
+   "radius": 44
+  },
+  "ShareMembersArchivedDark.dc.html": {
+   "x": 6580,
+   "y": 16312,
+   "w": 390,
+   "h": 844,
+   "title": "Mitglieder – Konto gelöscht – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "ArchivedMemberRemove.dc.html": {
+   "x": 7050,
+   "y": 15308,
+   "w": 390,
+   "h": 844,
+   "title": "Gelöschtes Mitglied entfernen",
+   "page": "screens",
+   "radius": 44
+  },
+  "ArchivedMemberRemoveDark.dc.html": {
+   "x": 7050,
+   "y": 16312,
+   "w": 390,
+   "h": 844,
+   "title": "Gelöschtes Mitglied entfernen – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductDetail.dc.html": {
+   "x": 3290,
+   "y": 5276,
+   "w": 390,
+   "h": 844,
+   "title": "Produktdetails (Tipp auf das Artikelbild)",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductDetailDark.dc.html": {
+   "x": 3290,
+   "y": 6280,
+   "w": 390,
+   "h": 844,
+   "title": "Produktdetails (Tipp auf das Artikelbild) – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductDetailEdit.dc.html": {
+   "x": 4230,
+   "y": 5276,
+   "w": 390,
+   "h": 844,
+   "title": "Artikel bearbeiten (Produktdetails)",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductDetailEditDark.dc.html": {
+   "x": 4230,
+   "y": 6280,
+   "w": 390,
+   "h": 844,
+   "title": "Artikel bearbeiten (Produktdetails) – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductNew.dc.html": {
+   "x": 940,
+   "y": 5276,
+   "w": 390,
+   "h": 844,
+   "title": "Neuer Artikel (Produktdetails)",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductNewDark.dc.html": {
+   "x": 940,
+   "y": 6280,
+   "w": 390,
+   "h": 844,
+   "title": "Neuer Artikel (Produktdetails) – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductDetailAmount.dc.html": {
+   "x": 4700,
+   "y": 5276,
+   "w": 390,
+   "h": 844,
+   "title": "Artikel bearbeiten – Menge eintippen",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductDetailAmountDark.dc.html": {
+   "x": 4700,
+   "y": 6280,
+   "w": 390,
+   "h": 844,
+   "title": "Artikel bearbeiten – Menge eintippen – Dark",
+   "page": "screens",
+   "radius": 44
+  },
+  "ProductDetailPhoto.dc.html": {
+   "y": 5276,
+   "w": 390,
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – eigenes Foto füllt den Kopf",
+   "x": 3760
+  },
+  "ProductDetailPhotoDark.dc.html": {
+   "y": 6280,
+   "w": 390,
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – eigenes Foto füllt den Kopf – Dark",
+   "x": 3760
+  },
+  "ReceiptArchiveInsights.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv – Einstieg Auswertung",
+   "w": 390,
+   "x": 0,
+   "y": 260
+  },
+  "ReceiptArchiveInsightsDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv – Einstieg Auswertung – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 1264
+  },
+  "ReceiptDetailMeta.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel – Detail mit Metadaten",
+   "w": 390,
+   "x": 470,
+   "y": 260
+  },
+  "ReceiptDetailMetaDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel – Detail mit Metadaten – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 1264
+  },
+  "ReceiptItemNutrition.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Kassenzettel – Artikel mit Nährwerten (Entwurf, später)",
+   "w": 390,
+   "x": 4620,
+   "y": 0
+  },
+  "ReceiptItemNutritionDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Kassenzettel – Artikel mit Nährwerten – Dark (Entwurf, später)",
+   "w": 390,
+   "x": 4620,
+   "y": 1004
+  },
+  "InsightSpend.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Ausgaben",
+   "w": 390,
+   "x": 940,
+   "y": 260
+  },
+  "InsightSpendDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Ausgaben – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 1264
+  },
+  "InsightNutrition.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Auswertung – Ernährung (Entwurf, später)",
+   "w": 390,
+   "x": 5090,
+   "y": 0
+  },
+  "InsightNutritionDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Auswertung – Ernährung – Dark (Entwurf, später)",
+   "w": 390,
+   "x": 5090,
+   "y": 1004
+  },
+  "InsightUsage.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Verbrauch",
+   "w": 390,
+   "x": 1410,
+   "y": 260
+  },
+  "InsightUsageDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Verbrauch – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 1264
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-09-23T21:34:54Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "page": "screens",
+  "view": "canvas"
+ },
+ "notes": {
+  "bausteine": {
+   "kind": "title1",
+   "maxW": 4950,
+   "page": "bausteine",
+   "text": "Bausteine & Referenz — Aktionsleiste, Zustände, Kategorie-Icons, Zielstruktur",
+   "w": 240,
+   "x": 0,
+   "y": 0
+  },
+  "journey1": {
+   "kind": "title1",
+   "maxW": 2270,
+   "page": "screens",
+   "text": "1 · Start & Anmeldung — Splash → Anmelden → Link gesendet → Profil anlegen → Einladung annehmen",
+   "w": 240,
+   "x": 0,
+   "y": 0
+  },
+  "journey2": {
+   "kind": "title1",
+   "maxW": 6500,
+   "page": "screens",
+   "text": "2 · Einkaufsliste — Liste → kompakt → leer → filtern → Tabs → abhaken → zurück → abgehakt löschen → Aktionen → nicht verfügbar → rückgängig → Sync-Fehler",
+   "w": 240,
+   "x": 0,
+   "y": 2508
+  },
+  "journey3": {
+   "kind": "title1",
+   "maxW": 5560,
+   "page": "screens",
+   "text": "3 · Artikel hinzufügen & bearbeiten — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf",
+   "w": 240,
+   "x": 0,
+   "y": 5016
+  },
+  "journey4": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "screens",
+   "text": "4 · Aktionsleiste — Sortieren → Kopieren → kopiert → Löschen",
+   "w": 240,
+   "x": 0,
+   "y": 7524
+  },
+  "journey5": {
+   "kind": "title1",
+   "maxW": 6030,
+   "page": "screens",
+   "text": "5 · Menü & Listen — Menü → Meine Listen (leer) → neu / umbenennen / Optionen → löschen → Teilen → Import → Artikel & Kategorien",
+   "w": 240,
+   "x": 0,
+   "y": 10032
+  },
+  "journey6": {
+   "kind": "title1",
+   "maxW": 4150,
+   "page": "screens",
+   "text": "6 · Einkauf abschließen — alles abgehakt → fotografieren → lesen → prüfen → zuordnen → Laden → nicht gefunden → Preise übernehmen",
+   "w": 240,
+   "x": 0,
+   "y": 12540
+  },
+  "journey7": {
+   "kind": "title1",
+   "maxW": 7440,
+   "page": "screens",
+   "text": "7 · Einstellungen & Konto — Einstellungen → abmelden → Profil → Archiv (leer) → Detail → Vollbild → Bon löschen → Konto löschen (60 Tage) → wieder anmelden: Konto wiederherstellen → lädt → offline → endgültig löschen · Listenbesitzer: Hinweis → Mitglieder (Konto gelöscht) → entfernen",
+   "w": 240,
+   "x": 0,
+   "y": 15048
+  },
+  "produkte": {
+   "kind": "title1",
+   "maxW": 5180,
+   "page": "produkte",
+   "text": "Produktbilder · Obst — Phase 1 (Stil) + Phase 2: alle 38 Obstsorten",
+   "w": 240,
+   "x": 0,
+   "y": 0
+  },
+  "proto1": {
+   "kind": "title1",
+   "maxW": 2740,
+   "page": "prototypes",
+   "text": "Einkaufsdaten & Auswertung — freigegeben 28.09.2026: Archiv mit Einstieg → Bon mit Metadaten → Ausgaben · Verbrauch (RECEIPT_INSIGHTS_PROMPT.md)",
+   "w": 240,
+   "x": 0,
+   "y": 0
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Dark.dc.html",
+  "Hybrid.dc.html",
+  "HybridDark.dc.html",
+  "ProductImage.dc.html",
+  "NewItem.dc.html",
+  "Checked.dc.html",
+  "SwipeActions.dc.html",
+  "EditItem.dc.html",
+  "ProductImageDark.dc.html",
+  "NewItemDark.dc.html",
+  "CheckedDark.dc.html",
+  "SwipeActionsDark.dc.html",
+  "EditItemDark.dc.html",
+  "MyLists.dc.html",
+  "MyListsDark.dc.html",
+  "HybridCompactTop.dc.html",
+  "HybridCompact.dc.html",
+  "MenuOverlay.dc.html",
+  "ShareMembers.dc.html",
+  "MenuOverlayDark.dc.html",
+  "ShareMembersDark.dc.html",
+  "StructureMap.dc.html",
+  "DeleteChoice.dc.html",
+  "DeleteChoiceDark.dc.html",
+  "ManageItems.dc.html",
+  "ManageItemsDark.dc.html",
+  "UndoToast.dc.html",
+  "UndoToastDark.dc.html",
+  "CreateList.dc.html",
+  "CreateListDark.dc.html",
+  "ListOptions.dc.html",
+  "ListOptionsDark.dc.html",
+  "EditProfile.dc.html",
+  "EditProfileDark.dc.html",
+  "Settings.dc.html",
+  "SettingsDark.dc.html",
+  "DeleteAccount.dc.html",
+  "DeleteAccountDark.dc.html",
+  "SignIn.dc.html",
+  "SignInDark.dc.html",
+  "ProfileSetup.dc.html",
+  "ProfileSetupDark.dc.html",
+  "AcceptInvite.dc.html",
+  "AcceptInviteDark.dc.html",
+  "EmptyList.dc.html",
+  "EmptyListDark.dc.html",
+  "ManageCategories.dc.html",
+  "ManageCategoriesDark.dc.html",
+  "EditCategory.dc.html",
+  "EditCategoryDark.dc.html",
+  "BarcodeScan.dc.html",
+  "ReceiptCapture.dc.html",
+  "ReceiptReview.dc.html",
+  "ReceiptReviewDark.dc.html",
+  "ShoppingDone.dc.html",
+  "ShoppingDoneDark.dc.html",
+  "PriceHistory.dc.html",
+  "PriceHistoryDark.dc.html",
+  "SortMenu.dc.html",
+  "SortMenuDark.dc.html",
+  "CopyChoice.dc.html",
+  "CopyChoiceDark.dc.html",
+  "CopyDone.dc.html",
+  "CopyDoneDark.dc.html",
+  "DockStates.dc.html",
+  "Dock.dc.html",
+  "WatchLists.dc.html",
+  "WatchList.dc.html",
+  "WatchItem.dc.html",
+  "WatchAdd.dc.html",
+  "WatchDone.dc.html",
+  "WatchFace.dc.html",
+  "CategoryIcons.dc.html",
+  "SplashBrand.dc.html",
+  "SplashTomatoesBottom.dc.html",
+  "ShoppingDoneScan.dc.html",
+  "ShoppingDoneScanDark.dc.html",
+  "ReceiptReviewMissing.dc.html",
+  "ReceiptReviewMissingDark.dc.html",
+  "ReceiptArchive.dc.html",
+  "ReceiptArchiveDark.dc.html",
+  "ReceiptDetail.dc.html",
+  "ReceiptDetailDark.dc.html",
+  "ListCompact.dc.html",
+  "ListCompactDark.dc.html",
+  "SearchInline.dc.html",
+  "SearchInlineDark.dc.html",
+  "AddInline.dc.html",
+  "AddInlineDark.dc.html",
+  "EditItemAmount.dc.html",
+  "EditItemAmountDark.dc.html",
+  "ListName.dc.html",
+  "ListNameDark.dc.html",
+  "ClipboardImport.dc.html",
+  "ClipboardImportDark.dc.html",
+  "ReceiptFullscreen.dc.html",
+  "SwipeCheck.dc.html",
+  "SwipeCheckDark.dc.html",
+  "SwipeDelete.dc.html",
+  "SwipeDeleteDark.dc.html",
+  "SignInLinkSent.dc.html",
+  "SignInLinkSentDark.dc.html",
+  "ItemUnavailable.dc.html",
+  "ItemUnavailableDark.dc.html",
+  "ItemSyncFailed.dc.html",
+  "ItemSyncFailedDark.dc.html",
+  "ItemSyncFailedDialog.dc.html",
+  "ItemSyncFailedDialogDark.dc.html",
+  "FilterOpenEmpty.dc.html",
+  "FilterOpenEmptyDark.dc.html",
+  "FilterDoneEmpty.dc.html",
+  "FilterDoneEmptyDark.dc.html",
+  "AddInlineNoResults.dc.html",
+  "AddInlineNoResultsDark.dc.html",
+  "PhotoSourceDialog.dc.html",
+  "PhotoSourceDialogDark.dc.html",
+  "BarcodeLookup.dc.html",
+  "BarcodeNoCamera.dc.html",
+  "MyListsEmpty.dc.html",
+  "MyListsEmptyDark.dc.html",
+  "DeleteListDialog.dc.html",
+  "DeleteListDialogDark.dc.html",
+  "LastListError.dc.html",
+  "LastListErrorDark.dc.html",
+  "ReceiptReading.dc.html",
+  "ReceiptReadingDark.dc.html",
+  "ReceiptAssignDialog.dc.html",
+  "ReceiptAssignDialogDark.dc.html",
+  "ReceiptStoreAlert.dc.html",
+  "ReceiptStoreAlertDark.dc.html",
+  "ReceiptPriceAlert.dc.html",
+  "ReceiptPriceAlertDark.dc.html",
+  "SignOutDialog.dc.html",
+  "SignOutDialogDark.dc.html",
+  "ReceiptArchiveEmpty.dc.html",
+  "ReceiptArchiveEmptyDark.dc.html",
+  "ReceiptDeleteDialog.dc.html",
+  "ReceiptDeleteDialogDark.dc.html",
+  "FruitStyle.dc.html",
+  "FruitSizes.dc.html",
+  "FruitList.dc.html",
+  "FruitListDark.dc.html",
+  "FruitAdd.dc.html",
+  "FruitAddDark.dc.html",
+  "FruitCatalog.dc.html",
+  "FruitCatalogDark.dc.html",
+  "RestoreAccount.dc.html",
+  "RestoreAccountDark.dc.html",
+  "RestoreAccountLoading.dc.html",
+  "RestoreAccountLoadingDark.dc.html",
+  "RestoreAccountOffline.dc.html",
+  "RestoreAccountOfflineDark.dc.html",
+  "RestorePurgeDialog.dc.html",
+  "RestorePurgeDialogDark.dc.html",
+  "MemberDeletedToast.dc.html",
+  "MemberDeletedToastDark.dc.html",
+  "ShareMembersArchived.dc.html",
+  "ShareMembersArchivedDark.dc.html",
+  "ArchivedMemberRemove.dc.html",
+  "ArchivedMemberRemoveDark.dc.html",
+  "ProductDetail.dc.html",
+  "ProductDetailDark.dc.html",
+  "ProductDetailEdit.dc.html",
+  "ProductDetailEditDark.dc.html",
+  "ProductNew.dc.html",
+  "ProductNewDark.dc.html",
+  "ProductDetailAmount.dc.html",
+  "ProductDetailAmountDark.dc.html",
+  "ProductDetailPhoto.dc.html",
+  "ProductDetailPhotoDark.dc.html",
+  "ReceiptArchiveInsights.dc.html",
+  "ReceiptArchiveInsightsDark.dc.html",
+  "ReceiptDetailMeta.dc.html",
+  "ReceiptDetailMetaDark.dc.html",
+  "ReceiptItemNutrition.dc.html",
+  "ReceiptItemNutritionDark.dc.html",
+  "InsightSpend.dc.html",
+  "InsightSpendDark.dc.html",
+  "InsightNutrition.dc.html",
+  "InsightNutritionDark.dc.html",
+  "InsightUsage.dc.html",
+  "InsightUsageDark.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "screens",
+   "name": "User Journey"
+  },
+  {
+   "id": "prototypes",
+   "name": "Prototypes"
+  },
+  {
+   "id": "produkte",
+   "name": "Produktbilder"
+  },
+  {
+   "id": "bausteine",
+   "name": "Bausteine & Referenz"
+  },
+  {
+   "id": "watch",
+   "name": "Watch"
+  },
+  {
+   "id": "archiv",
+   "name": "Archiv"
+  }
+ ],
+ "title": "My List – Redesign"
 }

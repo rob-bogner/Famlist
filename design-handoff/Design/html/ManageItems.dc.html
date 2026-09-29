@@ -27,9 +27,9 @@ input::placeholder{color:inherit;opacity:1}
 <div style="width: 40px; height: 5px; border-radius: 3px; background: {{k.grabber}}"></div>
 <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: 12px">
 <h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em">Artikel verwalten</h1>
-<button aria-label="Schließen" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: {{k.close}}; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{k.icon}}" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
-</button>
+<button aria-label="Schließen" style="position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: {{gn.bg}}; box-shadow: {{gn.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, {{gn.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gn.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{gn.icon}}" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</span></button>
 </div>
 <label style="width: 100%; margin-top: 16px; height: 50px; box-sizing: border-box; padding: 0 16px; border-radius: 25px; background: {{k.field}}; border: 1px solid {{k.fieldBorder}}; display: flex; align-items: center; gap: 12px; color: {{k.sub}}">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.sub}}" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4 4"></path></svg>
@@ -107,7 +107,33 @@ class Component extends DCLogic {
       { name: 'Milch Mandel ohne Zucker', meta: 'Lidl · 1 l' },
       { name: 'Soyamilch', meta: 'alpro · 1 l' }
     ];
-    return { k, filters, items, theme, accent };
+    // Glas-Knöpfe (Designsprache wie FAB): gp = Akzent, gn = neutral, gnd = neutral dunkel (Kamera/Bild), gd = Gefahr
+    const gp = {
+      bg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      pbg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 50%, ' + deep + ' 100%)',
+      shadow: dark ? 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 14px -7px ' + rgba(accent, 0.55) : 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 16px -6px ' + rgba(accent, 0.7) + ', 0 0 18px ' + rgba(accent, 0.25),
+      gloss: 'rgba(255,255,255,0.6)', glow: 'rgba(255,255,255,0.22)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(0,40,45,0.35))'
+    };
+    const gnDark = {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      pbg: 'linear-gradient(180deg, #33474A 0%, #1F3033 55%, #152326 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)', icon: '#D3E6E8', iconShadow: 'none'
+    };
+    const gn = dark ? gnDark : {
+      bg: 'radial-gradient(circle at 32% 22%, #FFFFFF 0%, #EEF4F5 50%, #D3DFE1 100%)',
+      pbg: 'linear-gradient(180deg, #FFFFFF 0%, #EEF4F5 55%, #DCE6E8 100%)',
+      shadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 8px 16px -8px rgba(12,40,44,0.35)',
+      gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E', iconShadow: 'none'
+    };
+    const gnd = gnDark;
+    const gd = {
+      bg: 'radial-gradient(circle at 32% 22%, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      pbg: 'linear-gradient(180deg, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4), 0 10px 20px -10px rgba(229,72,77,0.6)',
+      gloss: 'rgba(255,255,255,0.5)', glow: 'rgba(255,255,255,0.2)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(80,0,0,0.3))'
+    };
+    return { gp, gn, gnd, gd, k, filters, items, theme, accent };
   }
 }
 </script>

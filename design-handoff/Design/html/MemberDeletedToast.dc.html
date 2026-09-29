@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Hinweis: Mitglied hat Konto gelöscht</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" state="default" hint-size="390px,844px"></dc-import>
+</div>
+
+<div role="status" aria-live="polite" style="position: absolute; left: 20px; right: 20px; bottom: 114px; box-sizing: border-box; padding: 12px 16px; border-radius: 20px; background: {{k.toast}}; border: 1px solid {{k.toastBorder}}; box-shadow: {{k.toastShadow}}; backdrop-filter: blur(24px) saturate(160%); display: flex; align-items: center; gap: 12px; overflow: hidden"><span style="width: 36px; height: 36px; border-radius: 50%; background: {{k.undoBg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{k.undo}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.8-3.3 3.3-5.1 6.5-5.1 1.4 0 2.6.3 3.6.9"></path><path d="M16 17h6"></path></svg></span><span style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 15px; font-weight: 600; color: #FFFFFF">Sofie hat ihr Konto gelöscht</span><span style="font-size: 13px; line-height: 1.35; color: rgba(255,255,255,0.72)">Sie ist nicht mehr Mitglied dieser Liste. Stellt sie ihr Konto wieder her, ist sie automatisch wieder dabei.</span></span><div style="position: absolute; left: 0; bottom: 0; height: 3px; width: 62%; background: {{k.timer}}"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const k = dark ? {
+      toast: 'rgba(30,48,52,0.95)', toastBorder: 'rgba(255,255,255,0.12)', toastShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 16px 32px -14px rgba(0,0,0,0.8)',
+      icon: 'rgba(255,255,255,0.75)', undo: light, undoBg: rgba(accent, 0.16), timer: rgba(accent, 0.8)
+    } : {
+      toast: 'rgba(15,27,29,0.94)', toastBorder: 'rgba(255,255,255,0.1)', toastShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 32px -14px rgba(12,30,33,0.5)',
+      icon: 'rgba(255,255,255,0.75)', undo: light, undoBg: rgba(accent, 0.18), timer: rgba(accent, 0.9)
+    };
+    return { k, theme, accent };
+  }
+}
+</script>
+</body>
+</html>

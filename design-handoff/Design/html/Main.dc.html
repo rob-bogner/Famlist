@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>My List – Fresh Glass</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif; background: {{t.bg}}; color: {{t.text}}">
+
+<!-- ambient light -->
+<div style="position: absolute; left: -120px; top: 360px; width: 320px; height: 320px; border-radius: 50%; background: {{glowA}}; filter: blur(70px); pointer-events: none"></div>
+<div style="position: absolute; right: -140px; top: 560px; width: 300px; height: 300px; border-radius: 50%; background: {{glowB}}; filter: blur(80px); pointer-events: none"></div>
+
+<!-- header -->
+<header style="position: absolute; left: 0; top: 0; width: 390px; height: 312px; border-radius: 0 0 44px 44px; background: {{headerBg}}; box-shadow: {{headerShadow}}; overflow: hidden">
+<div style="position: absolute; left: -80px; top: -140px; width: 360px; height: 300px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,0.42), rgba(255,255,255,0)); pointer-events: none"></div>
+<div style="position: absolute; right: -60px; top: 40px; width: 220px; height: 220px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.14); pointer-events: none"></div>
+<div style="position: absolute; right: -10px; top: 90px; width: 120px; height: 120px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.12); pointer-events: none"></div>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.55), rgba(255,255,255,0)); pointer-events: none"></div>
+
+<div style="position: relative; padding: 70px 22px 0 22px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.78)">Einkaufsliste</span>
+<h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 38px; font-weight: 700; letter-spacing: -0.02em; color: #ffffff; text-shadow: 0 2px 14px rgba(0,30,34,0.25)">My List</h1>
+</div>
+<div style="display: flex; gap: 10px">
+<button aria-label="Ansicht wechseln" style="width: 44px; height: 44px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.38); background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.1)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 16px rgba(0,35,40,0.2); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="7" rx="2"></rect><path d="M4 15.5h16M4 19.5h16"></path></svg>
+</button>
+<button aria-label="Mehr" style="width: 44px; height: 44px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.38); background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.1)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 16px rgba(0,35,40,0.2); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"></path></svg>
+</button>
+</div>
+</div>
+
+<!-- progress glass card -->
+<div style="position: relative; padding: 16px 18px 18px 16px; border-radius: 24px; background: linear-gradient(160deg, rgba(255,255,255,0.26), rgba(255,255,255,0.08)); border: 1px solid rgba(255,255,255,0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,40,45,0.12), 0 14px 34px -10px rgba(0,35,40,0.45); backdrop-filter: blur(18px); display: flex; flex-direction: column; gap: 14px; overflow: hidden">
+<div style="position: absolute; left: -40px; top: -60px; width: 260px; height: 90px; transform: rotate(-12deg); background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0)); pointer-events: none"></div>
+<div style="position: relative; display: flex; align-items: center; gap: 14px">
+<div style="width: 46px; height: 46px; border-radius: 15px; background: linear-gradient(160deg, #ffffff, #e6f3f4); box-shadow: inset 0 -2px 0 rgba(0,60,66,0.08), 0 8px 18px -4px rgba(0,35,40,0.4); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{accentDeep}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-1.6 8.2a2 2 0 0 1-2 1.8H6.6a2 2 0 0 1-2-1.8L3 10z"></path><path d="M8 10l3-6M16 10l-3-6M9 14v3M12 14v3M15 14v3"></path></svg>
+</div>
+<div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
+<span style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85)">Fortschritt</span>
+<span style="font-size: 16px; font-weight: 600; color: #ffffff">0 von 1 Artikeln</span>
+</div>
+<span style="font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 600; color: #ffffff; letter-spacing: -0.02em">0<span style="font-size: 16px; opacity: 0.8"> %</span></span>
+</div>
+<div style="position: relative; height: 10px; border-radius: 999px; background: rgba(0,40,45,0.28); box-shadow: inset 0 1px 3px rgba(0,25,28,0.45), 0 1px 0 rgba(255,255,255,0.25)">
+<div style="position: absolute; left: 1px; top: 1px; width: 8px; height: 8px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 10px 3px rgba(255,255,255,0.75)"></div>
+</div>
+</div>
+</div>
+</header>
+
+<!-- list -->
+<main style="position: absolute; left: 0; top: 340px; width: 390px; padding: 0 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 32px; height: 32px; border-radius: 11px; background: {{chipGrad}}; box-shadow: {{chipShadow}}; display: flex; align-items: center; justify-content: center">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="8" cy="8" r="1.4"></circle></svg>
+</div>
+<h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; color: {{t.text}}">Sonstiges</h2>
+</div>
+<span style="min-width: 28px; height: 26px; padding: 0 9px; box-sizing: border-box; border-radius: 999px; background: {{t.pillBg}}; border: 1px solid {{t.pillBorder}}; color: {{t.pillText}}; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</span>
+</div>
+
+<!-- item card -->
+<div style="position: relative; padding: 14px 14px 14px 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; overflow: hidden">
+<div style="position: absolute; left: 0; right: 0; top: 0; height: 50%; background: {{t.cardSheen}}; pointer-events: none"></div>
+<div style="position: relative; width: 68px; height: 68px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg>
+</div>
+<div style="position: relative; display: flex; flex-direction: column; gap: 8px; flex-grow: 1; align-items: flex-start">
+<span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">Butter</span>
+<span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{t.chipText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}">1 Packung</span>
+</div>
+<button aria-label="Butter abhaken" style="position: relative; width: 44px; height: 44px; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}; padding: 0; cursor: pointer; flex-shrink: 0"></button>
+</div>
+</main>
+
+<!-- floor glow under dock -->
+<div style="position: absolute; left: 95px; bottom: 16px; width: 200px; height: 40px; border-radius: 50%; background: {{floorGlow}}; filter: blur(22px); pointer-events: none"></div>
+
+<!-- dock -->
+<nav style="position: absolute; left: 18px; bottom: 34px; width: 354px; height: 76px; box-sizing: border-box; border-radius: 38px; background: {{t.dock}}; border: 1px solid {{t.dockBorder}}; box-shadow: {{t.dockShadow}}; backdrop-filter: blur(24px) saturate(180%); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; overflow: hidden">
+<div style="position: absolute; left: 22px; right: 22px; top: 1px; height: 34px; border-radius: 30px 30px 60px 60px; background: {{t.dockSheen}}; pointer-events: none"></div>
+<div style="position: relative; display: flex; gap: 8px">
+<button aria-label="Alle abhaken" style="width: 48px; height: 48px; border-radius: 16px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 12.2l2.4 2.4 4.6-4.8"></path></svg>
+</button>
+<button aria-label="Sortieren" style="width: 48px; height: 48px; border-radius: 16px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19V5M4.5 8.5 8 5l3.5 3.5M16 5v14M12.5 15.5 16 19l3.5-3.5"></path></svg>
+</button>
+</div>
+<div style="position: relative; display: flex; gap: 8px">
+<button aria-label="Liste duplizieren" style="width: 48px; height: 48px; border-radius: 16px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="3"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
+</button>
+<button aria-label="Erledigte löschen" style="width: 48px; height: 48px; border-radius: 16px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 11.2a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8L17.5 7M10 11v5M14 11v5"></path></svg>
+</button>
+</div>
+</nav>
+
+<!-- FAB -->
+<button aria-label="Artikel hinzufügen" style="position: absolute; left: 157px; bottom: 58px; width: 76px; height: 76px; border-radius: 50%; border: 0; padding: 0; background: {{fabBg}}; box-shadow: {{fabShadow}}; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center">
+<span style="position: absolute; left: 13px; right: 13px; top: 5px; height: 30px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0)); pointer-events: none"></span>
+<span style="position: absolute; left: 20px; right: 20px; bottom: 4px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.22); filter: blur(3px); pointer-events: none"></span>
+<svg style="position: relative; filter: drop-shadow(0 2px 3px rgba(0,40,45,0.35))" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+</button>
+
+<p style="margin: 0">https://dribbble.com/shots/26901317-Doctor-Appointment-Mobile-App-Design-DocSpot</p></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const dark = (this.props.theme ?? 'light') === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.55 : 0.42);
+    const deeper = mix(accent, 0, 0.72);
+
+    const t = dark ? {
+      bg: 'radial-gradient(120% 60% at 50% 100%, ' + rgba(accent, 0.1) + ', rgba(0,0,0,0) 60%), #071012',
+      text: '#EAF5F6',
+      pillBg: 'rgba(255,255,255,0.06)', pillBorder: 'rgba(255,255,255,0.1)', pillText: '#A9C4C8',
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03))',
+      cardBorder: 'rgba(255,255,255,0.09)',
+      cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 18px 36px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.2)',
+      cardSheen: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0))',
+      thumb: 'linear-gradient(150deg, ' + rgba(accent, 0.22) + ', ' + rgba(accent, 0.06) + ')',
+      thumbShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -8px 16px rgba(0,0,0,0.25)',
+      thumbIcon: light,
+      chipBg: rgba(accent, 0.16), chipText: light, chipInset: 'inset 0 0 0 1px ' + rgba(accent, 0.3),
+      checkRing: rgba(accent, 0.55), checkBg: 'rgba(0,0,0,0.25)', checkShadow: 'inset 0 2px 4px rgba(0,0,0,0.5), 0 0 14px ' + rgba(accent, 0.25),
+      dock: 'rgba(16,28,31,0.72)', dockBorder: 'rgba(255,255,255,0.1)',
+      dockShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 24px 44px -12px rgba(0,0,0,0.8)',
+      dockSheen: 'linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0))',
+      icon: '#D3E6E8'
+    } : {
+      bg: 'linear-gradient(180deg, #EEF5F6 0%, #F6F9F9 55%, #EDF4F5 100%)',
+      text: '#0F2528',
+      pillBg: '#ffffff', pillBorder: rgba(accent, 0.18), pillText: deep,
+      card: 'linear-gradient(180deg, #ffffff, #FAFDFD)',
+      cardBorder: rgba(accent, 0.1),
+      cardShadow: 'inset 0 1px 0 #ffffff, 0 1px 2px rgba(12,60,66,0.06), 0 16px 34px -12px ' + rgba(accent, 0.35),
+      cardSheen: 'linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0))',
+      thumb: 'linear-gradient(150deg, ' + rgba(accent, 0.12) + ', ' + rgba(accent, 0.24) + ')',
+      thumbShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -6px 14px ' + rgba(accent, 0.12),
+      thumbIcon: deep,
+      chipBg: rgba(accent, 0.1), chipText: deep, chipInset: 'inset 0 0 0 1px ' + rgba(accent, 0.16),
+      checkRing: rgba(accent, 0.45), checkBg: 'linear-gradient(180deg, #F2F8F8, #ffffff)', checkShadow: 'inset 0 2px 4px rgba(12,60,66,0.12)',
+      dock: 'rgba(255,255,255,0.74)', dockBorder: 'rgba(255,255,255,0.95)',
+      dockShadow: 'inset 0 1px 0 #ffffff, inset 0 -1px 0 ' + rgba(accent, 0.1) + ', 0 2px 6px rgba(12,60,66,0.08), 0 24px 44px -12px ' + rgba(accent, 0.45),
+      dockSheen: 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0))',
+      icon: '#1E3A3E'
+    };
+
+    return {
+      t,
+      accentDeep: deep,
+      headerBg: dark
+        ? 'linear-gradient(160deg, ' + deep + ' 0%, ' + deeper + ' 70%, #06181B 100%)'
+        : 'linear-gradient(155deg, ' + light + ' 0%, ' + accent + ' 40%, ' + deep + ' 100%)',
+      headerShadow: dark
+        ? '0 24px 60px -18px ' + rgba(accent, 0.55) + ', inset 0 -1px 0 rgba(255,255,255,0.12)'
+        : '0 26px 50px -18px ' + rgba(accent, 0.7) + ', inset 0 -1px 0 rgba(255,255,255,0.3)',
+      glowA: rgba(accent, dark ? 0.22 : 0.2),
+      glowB: dark ? 'rgba(90,120,255,0.14)' : 'rgba(120,200,255,0.22)',
+      chipGrad: 'linear-gradient(150deg, ' + light + ', ' + deep + ')',
+      chipShadow: 'inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 14px -4px ' + rgba(accent, 0.7),
+      floorGlow: rgba(accent, dark ? 0.45 : 0.35),
+      fabBg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      fabShadow: '0 0 0 6px ' + (dark ? '#0B1719' : 'rgba(255,255,255,0.92)') + ', 0 0 0 7px ' + rgba(accent, 0.25) + ', 0 18px 30px -6px ' + rgba(accent, 0.75) + ', 0 0 44px ' + rgba(accent, 0.45) + ', inset 0 -4px 10px rgba(0,30,34,0.3)'
+    };
+  }
+}
+</script>
+</body>
+</html>

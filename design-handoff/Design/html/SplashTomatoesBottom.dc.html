@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Splash G – Tomaten, Logo unten</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+@keyframes famspin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #071012; font-family: 'DM Sans', system-ui, sans-serif">
+<img alt="" src="assets/img/splash-tomatoes.jpg" style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; object-fit: cover; "><div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,16,18,0.35) 0%, rgba(7,16,18,0.05) 22%, rgba(7,16,18,0.25) 42%, rgba(7,16,18,0.84) 68%, rgba(7,16,18,0.97) 100%)"></div><div style="position: absolute; left: 0; right: 0; top: 486px; display: flex; flex-direction: column; align-items: center"><div style="position: relative; width: 104px; height: 104px; border-radius: 32px; background: {{tileBg}}; box-shadow: {{tileShadow}};  overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><div style="position: absolute; left: -30px; top: -46px; width: 120px; height: 96px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,0.45), rgba(255,255,255,0)); pointer-events: none"></div><svg style="position: relative; filter: drop-shadow(0 2px 4px rgba(0,40,45,0.3))" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2 11h10.5l2-8H7"></path><path d="M10.7 19a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0zM17.7 19a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0z"></path></svg></div><span style="margin-top: 22px; font-family: 'Outfit', sans-serif; font-size: 36px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; color: #FFFFFF"><span style="color: {{light}}">Fam</span>list</span><span style="margin-top: 4px; font-size: 15px; line-height: 20px; color: rgba(255,255,255,0.75)">Gemeinsam einkaufen</span></div><div role="progressbar" aria-label="Wird geladen" style="position: absolute; left: 179px; bottom: 72px; width: 32px; height: 32px"><svg style="animation: famspin 1s linear infinite" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="3.5"></circle><path d="M16 3a13 13 0 0 1 13 13" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"></path></svg></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32), deep = mix(accent, 0, 0.4), deeper = mix(accent, 0, 0.6);
+    return {
+      accent, light, deep,
+      tileBg: 'linear-gradient(150deg, ' + light + ' 0%, ' + accent + ' 42%, ' + deep + ' 100%)',
+      tileShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,30,34,0.2), 0 22px 40px -16px ' + rgba(accent, 0.65),
+      heroBg: 'linear-gradient(160deg, ' + light + ' 0%, ' + accent + ' 38%, ' + deeper + ' 100%)',
+      glass: 'linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))',
+      tint: rgba(accent, 0.22), tintDeep: 'rgba(4,38,42,0.55)'
+    };
+  }
+}
+</script>
+</body>
+</html>

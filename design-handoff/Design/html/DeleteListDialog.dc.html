@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Liste löschen – Bestätigung</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<dc-import name="ListOptions" theme="{{theme}}" accent="{{accent}}" hint-size="390px,844px"></dc-import>
+</div>
+<!-- iOS-Systemdialog (confirmationDialog) -->
+<div style="position: absolute; inset: 0; background: {{d.scrim}}"></div>
+<div role="dialog" style="position: absolute; left: 8px; right: 8px; bottom: 34px; display: flex; flex-direction: column; gap: 8px; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">
+<div style="border-radius: 14px; background: {{d.bg}}; backdrop-filter: blur(30px); overflow: hidden; display: flex; flex-direction: column"><div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; text-align: center"><span style="font-size: 13px; font-weight: 600; color: {{d.title}}">„My List“ löschen?</span><span style="font-size: 13px; color: {{d.title}}; line-height: 1.35">Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.</span></div><button style="height: 57px; border: 0; border-top: 0.5px solid {{d.line}}; background: transparent; font-size: 20px; color: {{d.red}}; cursor: pointer; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">Löschen</button></div>
+<button style="height: 57px; border: 0; border-radius: 14px; background: {{d.cancel}}; font-size: 20px; font-weight: 600; color: {{d.blue}}; cursor: pointer; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">Abbrechen</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    // iOS-Systemdialoge (confirmationDialog / alert) – Farben wie iOS 17
+    const d = dark ? {
+      scrim: 'rgba(0,0,0,0.45)', bg: 'rgba(44,44,46,0.94)', cancel: 'rgba(44,44,46,0.98)', line: 'rgba(84,84,88,0.65)',
+      title: 'rgba(235,235,245,0.6)', text: '#FFFFFF', blue: '#0A84FF', red: '#FF453A', field: '#1C1C1E'
+    } : {
+      scrim: 'rgba(0,0,0,0.2)', bg: 'rgba(242,242,247,0.94)', cancel: '#FFFFFF', line: 'rgba(60,60,67,0.29)',
+      title: 'rgba(60,60,67,0.6)', text: '#000000', blue: '#007AFF', red: '#FF3B30', field: '#FFFFFF'
+    };
+    // Hinweis unten (StatusToast): dunkles Glas, Symbol-Kreis 40
+    const ts = dark ? {
+      bg: 'rgba(30,48,52,0.95)', border: 'rgba(255,255,255,0.12)', shadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 16px 32px -14px rgba(0,0,0,0.8)',
+      ok: rgba(accent, 0.18), okIcon: light, err: 'rgba(229,72,77,0.22)', errIcon: '#FF7A7E'
+    } : {
+      bg: 'rgba(15,27,29,0.94)', border: 'rgba(255,255,255,0.1)', shadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 32px -14px rgba(12,30,33,0.5)',
+      ok: rgba(accent, 0.22), okIcon: light, err: 'rgba(229,72,77,0.22)', errIcon: '#FF7A7E'
+    };
+    // Sheet-Fläche (zum Überdecken von Inhalten in Zustands-Boards)
+    const sh = dark ? { bg: 'linear-gradient(180deg, #0E1D1F 0%, #0A1416 100%)', text: '#EAF5F6', sub: '#93ADB1', spin: light, track: 'rgba(255,255,255,0.12)' }
+                    : { bg: '#FFFFFF', text: '#0F2528', sub: '#5F7579', spin: accent, track: 'rgba(15,37,40,0.1)' };
+    return { d, ts, sh, theme, accent };
+  }
+}
+</script>
+</body>
+</html>

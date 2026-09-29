@@ -22,16 +22,16 @@ button{font-family:inherit}
 <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: {{k.scrim}}; backdrop-filter: blur(3px)"></div>
 
 <section aria-label="Mitglieder und Teilen" style="position: absolute; left: 0; bottom: 0; width: 390px; height: 708px; box-sizing: border-box; border-radius: 34px 34px 0 0; background: {{k.sheet}}; border-top: 1px solid {{k.sheetBorder}}; box-shadow: {{k.sheetShadow}}; overflow: hidden; padding: 10px 20px 34px 20px; display: flex; flex-direction: column">
-<div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: {{k.grabber}}"></div>
+<div style="align-self: center; width: 40px; height: 5px; flex-shrink: 0; border-radius: 3px; background: {{k.grabber}}"></div>
 <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px">
 <h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em">Mitglieder &amp; Teilen</h1>
-<button aria-label="Schließen" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: {{k.close}}; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{k.icon}}" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
-</button>
+<button aria-label="Schließen" style="position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: {{gn.bg}}; box-shadow: {{gn.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, {{gn.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gn.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{gn.icon}}" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</span></button>
 </div>
 
 <!-- Mitglieder -->
-<span style="margin-top: 20px; padding: 0 4px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{k.sub}}">Mitglieder · 1</span>
+<span style="margin-top: 20px; padding: 0 4px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{k.sub}}">Mitglieder · {{memberCount}}</span>
 <div style="margin-top: 10px; padding: 13px 14px; border-radius: 22px; background: {{k.card}}; border: 1px solid {{k.cardBorder}}; box-shadow: {{k.cardShadow}}; display: flex; align-items: center; gap: 14px">
 <span style="width: 44px; height: 44px; border-radius: 50%; background: {{avatarBg}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center; color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; flex-shrink: 0">R</span>
 <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
@@ -39,23 +39,25 @@ button{font-family:inherit}
 <span style="font-size: 13px; color: {{k.sub}}">Besitzer</span>
 </span>
 </div>
-<div style="margin-top: 10px; padding: 12px 14px; border-radius: 18px; border: 1.5px dashed {{k.dashed}}; display: flex; align-items: center; gap: 12px; color: {{k.sub}}">
+<sc-if value="{{solo}}" hint-placeholder-val="{{ true }}"><div style="margin-top: 10px; padding: 12px 14px; border-radius: 18px; border: 1.5px dashed {{k.dashed}}; display: flex; align-items: center; gap: 12px; color: {{k.sub}}">
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{k.accentText}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 8a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zM2.5 19c1-3 3.5-4.5 6.5-4.5 1.6 0 3 .4 4.2 1.2M18 14v6M15 17h6"></path></svg>
 <span style="font-size: 14px; line-height: 1.4">Noch niemand eingeladen. Teile den Link, um Familie oder Freunde dazuzuholen.</span>
 </div>
 
+</sc-if><sc-if value="{{archived}}" hint-placeholder-val="{{ false }}"><div style="margin-top: 10px; padding: 13px 14px; border-radius: 22px; background: {{k.card}}; border: 1px solid {{k.cardBorder}}; box-shadow: {{k.cardShadow}}; display: flex; align-items: center; gap: 14px"><span style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(150deg, #F7B48A, #D9713C); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center; color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; flex-shrink: 0">A</span><span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1"><span style="font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 600">Anna</span><span style="font-size: 13px; color: {{k.sub}}">Mitglied</span></span></div><div style="margin-top: 10px; padding: 13px 14px; border-radius: 22px; background: {{k.card}}; border: 1px solid {{k.cardBorder}}; box-shadow: {{k.cardShadow}}; display: flex; align-items: center; gap: 14px; border-style: dashed"><span style="width: 44px; height: 44px; border-radius: 50%; background: {{k.field}}; border: 1.5px dashed {{k.fieldBorder}}; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: {{k.sub}}; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; flex-shrink: 0">S</span><span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0"><span style="font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 600; color: {{k.sub}}">Sofie</span><span style="font-size: 13px; line-height: 1.35; color: {{k.sub}}">Konto gelöscht · bis 26.11. wiederherstellbar</span></span><button style="position: relative; overflow: hidden; height: 36px; padding: 0 14px; flex-shrink: 0; border: 0; border-radius: 18px; background: {{gn.pbg}}; box-shadow: {{gn.shadow}}; color: {{k.danger}}; font-size: 14px; font-weight: 600; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 11px; right: 11px; top: 2px; height: 14px; border-radius: 7px; background: linear-gradient(180deg, {{gn.gloss}}, rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 25px; right: 25px; bottom: 3px; height: 5px; border-radius: 3px; background: {{gn.glow}}; filter: blur(3px); pointer-events: none"></span><span style="position: relative">Entfernen</span></button></div></sc-if>
 <!-- Einladen -->
 <span style="margin-top: 24px; padding: 0 4px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{k.sub}}">Einladen</span>
 <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px">
 <button style="position: relative; width: 100%; height: 56px; border-radius: 28px; border: 0; padding: 0; background: {{cta.bg}}; box-shadow: {{cta.shadow}}; color: {{cta.text}}; font-size: 16px; font-weight: 600; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 10px">
-<span style="position: absolute; left: 24px; right: 24px; top: 2px; height: 22px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0)); pointer-events: none"></span>
+<span aria-hidden="true" style="position: absolute; left: 16px; right: 16px; top: 3px; height: 22px; border-radius: 11px; background: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span>
+<span aria-hidden="true" style="position: absolute; left: 40px; right: 40px; bottom: 3px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.16); filter: blur(3px); pointer-events: none"></span>
 <svg style="position: relative" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{cta.text}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg>
 <span style="position: relative">Einladungslink teilen</span>
 </button>
-<button style="width: 100%; height: 52px; box-sizing: border-box; border-radius: 26px; border: 1px solid {{k.fieldBorder}}; background: {{k.field}}; color: {{k.accentText}}; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+<button style="width: 100%; height: 52px; box-sizing: border-box; color: {{k.accentText}}; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; position: relative; overflow: hidden; border: 0; border-radius: 26px; background: {{gn.pbg}}; box-shadow: {{gn.shadow}}"><span aria-hidden="true" style="position: absolute; left: 16px; right: 16px; top: 3px; height: 20px; border-radius: 10px; background: linear-gradient(180deg, {{gn.gloss}}, rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 36px; right: 36px; bottom: 3px; height: 7px; border-radius: 3px; background: {{gn.glow}}; filter: blur(3px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center; gap: 10px">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{k.accentText}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zM16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
 Link kopieren
-</button>
+</span></button>
 <span style="padding: 0 8px; font-size: 13px; color: {{k.sub}}; text-align: center">Der Link funktioniert nur mit installierter Famlist-App.</span>
 </div>
 
@@ -67,14 +69,15 @@ Link kopieren
 <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 15px; color: {{k.text}}">test_public_id</span>
 <span style="font-size: 12px; color: {{k.sub}}; line-height: 1.35">Andere können dich damit finden und einladen.</span>
 </span>
-<button aria-label="ID kopieren" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid {{k.fieldBorder}}; background: {{k.field}}; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0">
+<button aria-label="ID kopieren" style="position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: {{gn.bg}}; box-shadow: {{gn.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 16px; border-radius: 50%; background: linear-gradient(180deg, {{gn.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gn.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{k.accentText}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zM16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
-</button>
+</span></button>
 </div>
 </section>
+<sc-if value="{{confirm}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; inset: 0; background: {{d.scrim}}"></div><div role="dialog" style="position: absolute; left: 8px; right: 8px; bottom: 34px; display: flex; flex-direction: column; gap: 8px; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif"><div style="border-radius: 14px; background: {{d.bg}}; backdrop-filter: blur(30px); overflow: hidden; display: flex; flex-direction: column"><div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; text-align: center"><span style="font-size: 13px; font-weight: 600; color: {{d.title}}">Sofie aus der Liste entfernen?</span><span style="font-size: 13px; color: {{d.title}}; line-height: 1.35">Stellt sie ihr Konto wieder her, kommt sie nicht mehr automatisch zurück. Du kannst sie später neu einladen.</span></div><button style="height: 57px; border: 0; border-top: 0.5px solid {{d.line}}; background: transparent; font-size: 20px; color: {{d.red}}; cursor: pointer; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">Entfernen</button></div><button style="height: 57px; border: 0; border-radius: 14px; background: {{d.cancel}}; font-size: 20px; font-weight: 600; color: {{d.blue}}; cursor: pointer; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">Abbrechen</button></div></sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"members":{"editor":"enum","default":"solo","options":["solo","archived","confirmRemove"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -89,17 +92,46 @@ class Component extends DCLogic {
       sheet: 'linear-gradient(180deg, #102022 0%, #0A1416 100%)', sheetBorder: 'rgba(255,255,255,0.08)', sheetShadow: '0 -24px 50px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
       text: '#EAF5F6', sub: '#93ADB1', close: 'rgba(255,255,255,0.08)', icon: '#D3E6E8', grabber: 'rgba(255,255,255,0.18)', scrim: 'rgba(0,0,0,0.6)',
       card: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', cardBorder: 'rgba(255,255,255,0.08)', cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px -14px rgba(0,0,0,0.7)',
-      field: 'rgba(255,255,255,0.05)', fieldBorder: 'rgba(255,255,255,0.09)', dashed: rgba(accent, 0.4), line: 'rgba(255,255,255,0.08)', accentText: light
+      field: 'rgba(255,255,255,0.05)', fieldBorder: 'rgba(255,255,255,0.09)', dashed: rgba(accent, 0.4), line: 'rgba(255,255,255,0.08)', accentText: light, danger: '#FF7A7E'
     } : {
       sheet: '#FFFFFF', sheetBorder: 'rgba(255,255,255,0)', sheetShadow: '0 -20px 40px -20px rgba(8,30,33,0.35)',
       text: '#0F2528', sub: '#5F7579', close: '#F1F5F5', icon: '#1E3A3E', grabber: '#D5DEDF', scrim: 'rgba(8,24,27,0.42)',
       card: '#FFFFFF', cardBorder: '#EDF2F2', cardShadow: '0 1px 2px rgba(12,40,44,0.05), 0 10px 22px -14px rgba(12,40,44,0.22)',
-      field: '#F4F7F7', fieldBorder: '#E6EDEE', dashed: rgba(accent, 0.4), line: '#EDF1F2', accentText: deep
+      field: '#F4F7F7', fieldBorder: '#E6EDEE', dashed: rgba(accent, 0.4), line: '#EDF1F2', accentText: deep, danger: '#C8363B'
     };
     const cta = dark
       ? { bg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', text: '#04262A', shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 20px -12px ' + rgba(accent, 0.6) }
       : { bg: 'linear-gradient(180deg, ' + accent + ' 0%, ' + deep + ' 100%)', text: '#FFFFFF', shadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 6px rgba(0,30,34,0.2), 0 14px 26px -12px ' + rgba(accent, 0.8) };
-    return { k, cta, theme, accent, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
+    // Glas-Knöpfe (Designsprache wie FAB): gp = Akzent, gn = neutral, gnd = neutral dunkel (Kamera/Bild), gd = Gefahr
+    const gp = {
+      bg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      pbg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 50%, ' + deep + ' 100%)',
+      shadow: dark ? 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 14px -7px ' + rgba(accent, 0.55) : 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 16px -6px ' + rgba(accent, 0.7) + ', 0 0 18px ' + rgba(accent, 0.25),
+      gloss: 'rgba(255,255,255,0.6)', glow: 'rgba(255,255,255,0.22)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(0,40,45,0.35))'
+    };
+    const gnDark = {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      pbg: 'linear-gradient(180deg, #33474A 0%, #1F3033 55%, #152326 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)', icon: '#D3E6E8', iconShadow: 'none'
+    };
+    const gn = dark ? gnDark : {
+      bg: 'radial-gradient(circle at 32% 22%, #FFFFFF 0%, #EEF4F5 50%, #D3DFE1 100%)',
+      pbg: 'linear-gradient(180deg, #FFFFFF 0%, #EEF4F5 55%, #DCE6E8 100%)',
+      shadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 8px 16px -8px rgba(12,40,44,0.35)',
+      gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E', iconShadow: 'none'
+    };
+    const gnd = gnDark;
+    const gd = {
+      bg: 'radial-gradient(circle at 32% 22%, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      pbg: 'linear-gradient(180deg, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4), 0 10px 20px -10px rgba(229,72,77,0.6)',
+      gloss: 'rgba(255,255,255,0.5)', glow: 'rgba(255,255,255,0.2)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(80,0,0,0.3))'
+    };
+    const members = this.props.members ?? 'solo';
+    const d = dark ? { scrim: 'rgba(0,0,0,0.45)', bg: 'rgba(44,44,46,0.94)', cancel: 'rgba(44,44,46,0.98)', line: 'rgba(84,84,88,0.65)', title: 'rgba(235,235,245,0.6)', blue: '#0A84FF', red: '#FF453A' }
+                   : { scrim: 'rgba(0,0,0,0.2)', bg: 'rgba(242,242,247,0.94)', cancel: '#FFFFFF', line: 'rgba(60,60,67,0.29)', title: 'rgba(60,60,67,0.6)', blue: '#007AFF', red: '#FF3B30' };
+    return { d, solo: members === 'solo', archived: members !== 'solo', confirm: members === 'confirmRemove', memberCount: members === 'solo' ? 1 : 3, gp, gn, gnd, gd, k, cta, theme, accent, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
   }
 }
 </script>

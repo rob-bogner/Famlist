@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Liste filtern</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif; color: {{k.text}}">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" hint-size="390px,844px"></dc-import>
+</div>
+<!-- Filter aktiv: Fortschritt, Tabs und Dock blenden aus; die Liste zeigt nur Treffer (live beim Tippen) -->
+<div style="position: absolute; left: 0; right: 0; top: 116px; bottom: 0; background: {{f.bg}}"></div>
+
+<!-- Filterfeld (aktiv), gleiche Position wie in der Liste: top 124, 52 hoch -->
+<label style="position: absolute; left: 20px; right: 20px; top: 124px; height: 52px; box-sizing: border-box; padding: 0 6px 0 18px; border-radius: 26px; background: {{k.fieldSolid}}; border: 1.5px solid {{k.ring}}; box-shadow: 0 0 0 4px {{k.ringSoft}}, 0 8px 20px -12px {{k.ringGlow}}; display: flex; align-items: center; gap: 12px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.accentText}}" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4 4"></path></svg>
+<input type="text" aria-label="In dieser Liste filtern" value="milch" style="flex-grow: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: 16px; font-weight: 500; color: {{k.text}}">
+<button aria-label="Filter aufheben" style="position: relative; width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; background: {{gn.bg}}; box-shadow: {{gn.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span style="position: absolute; left: 7px; right: 7px; top: 2px; height: 15px; border-radius: 50%; background: linear-gradient(180deg, {{gn.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span style="position: absolute; left: 11px; right: 11px; bottom: 2px; height: 5px; border-radius: 50%; background: {{gn.glow}}; filter: blur(2px); pointer-events: none"></span><svg style="position: relative; filter: {{gn.iconShadow}}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{gn.icon}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</label>
+
+<!-- Trefferzeile -->
+<div style="position: absolute; left: 24px; right: 24px; top: 190px; height: 22px; display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 13px; font-weight: 600; color: {{k.sub}}">2 von 9 Artikeln · auch abgehakte</span>
+</div>
+
+<!-- Treffer als normale Artikel-Karten (abhaken, wischen, bearbeiten wie gewohnt) -->
+<div style="position: absolute; left: 20px; right: 20px; top: 224px; display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{hits}}" as="h" hint-placeholder-count="2">
+<div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{k.card}}; border: 1px solid {{k.cardBorder}}; box-shadow: {{f.cardShadow}}; display: flex; align-items: center; gap: 16px">
+<div style="width: 64px; height: 64px; border-radius: 18px; background: {{k.thumb}}; box-shadow: {{k.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{h.op}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{k.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; align-items: flex-start; min-width: 0; opacity: {{h.op}}">
+<span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{k.text}}; text-decoration: {{h.strike}}; white-space: nowrap">{{h.pre}}<span style="color: {{k.accentText}}; background: {{k.hl}}; border-radius: 5px; padding: 0 1px">{{h.hit}}</span>{{h.post}}</span>
+<span style="padding: 4px 11px; border-radius: 999px; background: {{f.chipBg}}; color: {{k.accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{f.chipInset}}">{{h.qty}}</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0">
+<sc-if value="{{h.done}}" hint-placeholder-val="{{ false }}"><span style="width: 32px; height: 32px; border-radius: 50%; background: {{f.checkOn}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></sc-if>
+<sc-if value="{{h.open}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{f.checkRing}}; background: {{f.checkBg}}; box-shadow: {{f.checkShadow}}"></span></sc-if>
+<span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{k.text}}; opacity: {{h.op}}">{{h.price}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+
+<!-- Brücke zum Hinzufügen: nicht auf der Liste? → öffnet die Eingabe unten mit dem Suchbegriff -->
+<button style="position: absolute; left: 20px; right: 20px; top: 448px; height: 60px; box-sizing: border-box; padding: 0 10px 0 16px; border-radius: 18px; border: 1.5px dashed {{f.dashed}}; background: transparent; display: flex; align-items: center; gap: 12px; cursor: pointer; color: {{k.accentText}}; font-size: 15px; font-weight: 600; text-align: left">
+<span style="flex-grow: 1">„milch“ zur Liste hinzufügen</span>
+<span style="position: relative; width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; background: {{gp.bg}}; box-shadow: {{gp.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span style="position: absolute; left: 7px; right: 7px; top: 2px; height: 15px; border-radius: 50%; background: linear-gradient(180deg, {{gp.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span style="position: absolute; left: 11px; right: 11px; bottom: 2px; height: 5px; border-radius: 50%; background: {{gp.glow}}; filter: blur(2px); pointer-events: none"></span><svg style="position: relative; filter: {{gp.iconShadow}}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{gp.icon}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg></span>
+</button>
+
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 291px; box-sizing: border-box; padding: 8px 3px 0 3px; background: {{k.kb}}; display: flex; flex-direction: column; gap: 11px; align-items: center">
+<div style="display: flex; gap: 4px"><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">q</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">w</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">e</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">r</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">t</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">z</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">u</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">i</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">o</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">p</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">ü</span></div>
+<div style="display: flex; gap: 4px"><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">a</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">s</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">d</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">f</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">g</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">h</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">j</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">k</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">l</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">ö</span><span style="width: 31px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">ä</span></div>
+<div style="display: flex; gap: 4px"><span style="width: 40px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">y</span><span style="width: 40px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">x</span><span style="width: 40px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">c</span><span style="width: 40px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">v</span><span style="width: 40px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">b</span><span style="width: 40px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">n</span><span style="width: 40px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; box-shadow: 0 1px 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{k.kbText}}">m</span></div>
+<div style="display: flex; gap: 6px"><span style="width: 90px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; opacity: 0.7"></span><span style="width: 180px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; display: flex; align-items: center; justify-content: center; font-size: 15px; color: {{k.kbText}}">Leerzeichen</span><span style="width: 90px; height: 42px; border-radius: 5px; background: {{k.kbKey}}; opacity: 0.7; display: flex; align-items: center; justify-content: center; font-size: 15px; color: {{k.kbText}}">Fertig</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const k = dark ? {
+      sheet: 'linear-gradient(180deg, #102022 0%, #0A1416 100%)', sheetBorder: 'rgba(255,255,255,0.08)', sheetShadow: '0 -24px 50px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+      text: '#EAF5F6', sub: '#93ADB1', close: 'rgba(255,255,255,0.08)', icon: '#D3E6E8', grabber: 'rgba(255,255,255,0.18)', scrim: 'rgba(0,0,0,0.6)',
+      fieldFocus: 'rgba(255,255,255,0.06)', ring: rgba(accent, 0.7), ringSoft: rgba(accent, 0.12), ringGlow: rgba(accent, 0.4),
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', cardBorder: 'rgba(255,255,255,0.08)', cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px -14px rgba(0,0,0,0.7)',
+      thumb: 'linear-gradient(150deg, ' + rgba(accent, 0.22) + ', ' + rgba(accent, 0.06) + ')', thumbShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)', thumbIcon: light,
+      addBg: rgba(accent, 0.14), addBorder: rgba(accent, 0.35), addShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+      footer: 'linear-gradient(180deg, rgba(10,20,22,0) 0%, #0A1416 30%)', accentText: light, pop: 'rgba(20,34,37,0.97)', fieldSolid: '#102124', popBorder: 'rgba(255,255,255,0.1)', popShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 48px -16px rgba(0,0,0,0.8)', line: 'rgba(255,255,255,0.08)', scrimList: 'rgba(0,0,0,0.55)', kb: '#2B2F31', kbKey: '#5A5E61', kbText: '#FFFFFF', round: 'rgba(255,255,255,0.08)', roundBorder: 'rgba(255,255,255,0.12)', hl: rgba(accent, 0.22)
+    } : {
+      sheet: '#FFFFFF', sheetBorder: 'rgba(255,255,255,0)', sheetShadow: '0 -20px 40px -20px rgba(8,30,33,0.35)',
+      text: '#0F2528', sub: '#5F7579', close: '#F1F5F5', icon: '#1E3A3E', grabber: '#D5DEDF', scrim: 'rgba(8,24,27,0.42)',
+      fieldFocus: '#FFFFFF', ring: rgba(accent, 0.75), ringSoft: rgba(accent, 0.12), ringGlow: rgba(accent, 0.45),
+      card: '#FFFFFF', cardBorder: '#EDF2F2', cardShadow: '0 1px 2px rgba(12,40,44,0.05), 0 10px 22px -14px rgba(12,40,44,0.22)',
+      thumb: 'linear-gradient(150deg, #F2F7F7, #E4EEEF)', thumbShadow: 'inset 0 1px 0 #ffffff', thumbIcon: '#7D9498',
+      addBg: 'linear-gradient(180deg, #FFFFFF, ' + rgba(accent, 0.1) + ')', addBorder: rgba(accent, 0.25), addShadow: 'inset 0 1px 0 #ffffff, 0 6px 14px -8px ' + rgba(accent, 0.6),
+      footer: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #FFFFFF 30%)', accentText: deep, pop: 'rgba(255,255,255,0.98)', fieldSolid: '#FFFFFF', popBorder: 'rgba(15,37,40,0.08)', popShadow: '0 24px 48px -16px rgba(12,40,44,0.35), 0 2px 6px rgba(12,40,44,0.06)', line: '#EDF1F2', scrimList: 'rgba(8,24,27,0.28)', kb: '#D1D4D9', kbKey: '#FFFFFF', kbText: '#0F2528', round: '#FFFFFF', roundBorder: '#E6EDEE', hl: rgba(accent, 0.16)
+    };
+
+    // Glas-Knöpfe (Designsprache wie FAB): gp = Akzent (Primäraktion), gn = neutral (Schließen, Scannen, Leeren)
+    const gp = {
+      bg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      shadow: dark ? 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 14px -7px ' + rgba(accent, 0.55) : 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 16px -6px ' + rgba(accent, 0.7) + ', 0 0 18px ' + rgba(accent, 0.25),
+      gloss: 'rgba(255,255,255,0.6)', glow: 'rgba(255,255,255,0.22)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(0,40,45,0.35))'
+    };
+    const gn = dark ? {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)', icon: '#D3E6E8', iconShadow: 'none'
+    } : {
+      bg: 'radial-gradient(circle at 32% 22%, #FFFFFF 0%, #EEF4F5 50%, #D3DFE1 100%)',
+      shadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 8px 16px -8px rgba(12,40,44,0.35)',
+      gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E', iconShadow: 'none'
+    };
+    const cta = dark
+      ? { bg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', text: '#04262A', shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 20px -12px ' + rgba(accent, 0.6) }
+      : { bg: 'linear-gradient(180deg, ' + accent + ' 0%, ' + deep + ' 100%)', text: '#FFFFFF', shadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 6px rgba(0,30,34,0.2), 0 14px 26px -12px ' + rgba(accent, 0.8) };
+    const _unused = [
+      { pre: '', hit: 'Milch', post: '', meta: 'Weihenstephan · 1 l', badge: 'Auf der Liste', inList: true },
+      { pre: 'Soya', hit: 'milch', post: '', meta: 'alpro · 1 l', badge: '', inList: false },
+      { pre: '', hit: 'Milch', post: ' Mandel ohne Zucker', meta: 'Lidl · 1 l', badge: '', inList: false },
+      { pre: 'Kokos', hit: 'milch', post: '', meta: 'Freshona · 400 ml', badge: '', inList: false }
+    ].map((i) => Object.assign({ addLabel: i.pre + i.hit + i.post + (i.inList ? ' – Menge erhöhen' : ' hinzufügen'), notInList: !i.inList }, i));
+    const f = dark ? {
+      bg: 'radial-gradient(120% 60% at 50% 100%, ' + rgba(accent, 0.1) + ', rgba(0,0,0,0) 60%), #071012', cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 18px 36px -12px rgba(0,0,0,0.7)',
+      chipBg: rgba(accent, 0.16), chipInset: 'inset 0 0 0 1px ' + rgba(accent, 0.3), checkRing: rgba(accent, 0.55), checkBg: 'rgba(0,0,0,0.25)', checkShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)', dashed: rgba(accent, 0.45)
+    } : {
+      bg: '#FFFFFF', cardShadow: '0 1px 2px rgba(12,40,44,0.05), 0 14px 32px -14px rgba(12,40,44,0.22)',
+      chipBg: rgba(accent, 0.1), chipInset: 'inset 0 0 0 1px ' + rgba(accent, 0.16), checkRing: '#CFDCDE', checkBg: '#FFFFFF', checkShadow: 'inset 0 2px 3px rgba(12,40,44,0.08)', dashed: rgba(accent, 0.4)
+    };
+    f.checkOn = 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)';
+    const hits = [
+      { pre: '', hit: 'Milch', post: '', qty: '2 Liter', price: '2,38 €', done: false, op: 1, strike: 'none' },
+      { pre: 'Butter', hit: 'milch', post: '', qty: '1 Becher', price: '0,79 €', done: true, op: 0.55, strike: 'line-through' }
+    ].map((h) => Object.assign({ open: !h.done }, h));
+    return { k, gp, gn, f, cta, theme, accent, hits };
+  }
+}
+</script>
+</body>
+</html>

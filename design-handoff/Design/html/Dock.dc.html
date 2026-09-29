@@ -20,6 +20,10 @@ button{font-family:inherit}
      Alle anderen: 44er-Icon ohne Fläche. Ruhezustand = „Alle abhaken“ ausgewählt. FAB 64 · Abstand 10 -->
 <div style="width: 350px; height: 64px; display: flex; align-items: center; gap: 10px; font-family: 'DM Sans', system-ui, sans-serif">
 <nav aria-label="Listen-Aktionen" style="position: relative; width: 276px; height: 64px; box-sizing: border-box; border-radius: 32px; background: {{t.nav}}; border: 1px solid {{t.navBorder}}; box-shadow: {{t.navShadow}}; backdrop-filter: blur(24px) saturate(160%); display: flex; align-items: center; justify-content: space-between; padding: 4px; overflow: hidden">
+<!-- Glas-Spiegelungen wie beim Plus-Knopf: Glanz oben als Pille mit runden Enden (links/rechts 14, top 3, Höhe 26,
+     Radius 13, weiß .32 → 0, blur 1) + weicher Lichtschein unten (links/rechts 36, unten 3, Höhe 8, Radius 4, weiß .14, blur 3) -->
+<span aria-hidden="true" style="position: absolute; left: 14px; right: 14px; top: 3px; height: 26px; border-radius: 13px; background: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span>
+<span aria-hidden="true" style="position: absolute; left: 36px; right: 36px; bottom: 3px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.14); filter: blur(3px); pointer-events: none"></span>
 <sc-for list="{{items}}" as="b" hint-placeholder-count="4">
 <button aria-label="{{b.label}}" aria-pressed="{{b.selected}}" aria-disabled="{{b.disabled}}" style="position: relative; width: {{b.w}}; height: {{b.h}}; box-sizing: border-box; padding: 0; border-radius: 27px; background: {{b.bg}}; border: 1px solid {{b.border}}; box-shadow: {{b.shadow}}; opacity: {{b.opacity}}; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; color: {{b.color}}; font-size: 13px; font-weight: 600; letter-spacing: -0.005em; white-space: nowrap; flex-shrink: 0">
 <svg aria-hidden="true" width="{{b.iconSize}}" height="{{b.iconSize}}" viewBox="0 0 24 24" fill="none" stroke="{{b.color}}" stroke-width="{{b.stroke}}" stroke-linecap="round" stroke-linejoin="round"><path d="{{b.icon}}"></path></svg>
@@ -49,9 +53,9 @@ class Component extends DCLogic {
 
     // Leiste: in beiden Modi dunkles Glas
     const t = dark ? {
-      nav: 'rgba(22,36,39,0.78)', navBorder: 'rgba(255,255,255,0.1)', navShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 44px -12px rgba(0,0,0,0.85)'
+      nav: 'rgba(8,17,19,0.88)', navBorder: 'rgba(255,255,255,0.1)', navShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 44px -12px rgba(0,0,0,0.85)'
     } : {
-      nav: 'rgba(15,27,29,0.84)', navBorder: 'rgba(255,255,255,0.1)', navShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 36px -12px rgba(12,30,33,0.5)'
+      nav: 'rgba(6,14,16,0.9)', navBorder: 'rgba(255,255,255,0.1)', navShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 36px -12px rgba(12,30,33,0.5)'
     };
     const icon = '#D3E6E8';
     const empty = pillState === 'empty';

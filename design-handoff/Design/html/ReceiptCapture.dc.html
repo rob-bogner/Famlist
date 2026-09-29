@@ -18,9 +18,9 @@ input::placeholder{color:inherit;opacity:0.75}
 </helmet>
 <div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 40%, #2B3A3C 0%, #121A1B 70%, #0A0F10 100%); font-family: 'DM Sans', system-ui, sans-serif; color: #FFFFFF">
 <div style="position: absolute; left: 20px; right: 20px; top: 62px; display: flex; align-items: center; justify-content: space-between">
-<button aria-label="Schließen" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+<button aria-label="Schließen" style="position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; background: {{gnd.bg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 13px; right: 13px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gnd.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></span></button>
 <span style="padding: 8px 14px; border-radius: 18px; background: rgba(0,0,0,0.35); color: #FFFFFF; font-size: 14px; font-weight: 600">{{title}}</span>
-<button aria-label="Licht" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg></button>
+<button aria-label="Licht" style="position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; background: {{gnd.bg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 13px; right: 13px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gnd.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg></span></button>
 </div>
 <span style="position: absolute; left: 0; right: 0; top: 360px; text-align: center; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25)">Kamerabild</span>
 <div style="position: absolute; left: 20px; top: 126px; width: 350px; height: 504px">
@@ -51,12 +51,13 @@ input::placeholder{color:inherit;opacity:0.75}
 </sc-if>
 <div style="position: absolute; left: 20px; right: 20px; bottom: 40px; height: 80px; display: flex; align-items: center; justify-content: space-between">
 <div style="width: 112px; display: flex; justify-content: flex-start">
-<button aria-label="Aus Fotos wählen" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.14); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 16l4.5-4.5 4 4 3-3L20 17"></path><path d="M16 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"></path></svg></button>
+<button aria-label="Aus Fotos wählen" style="position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; background: {{gnd.bg}}; box-shadow: {{gnd.shadow}}; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer"><span aria-hidden="true" style="position: absolute; left: 8px; right: 8px; top: 3px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, {{gnd.gloss}}, rgba(255,255,255,0)); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 13px; right: 13px; bottom: 3px; height: 6px; border-radius: 50%; background: {{gnd.glow}}; filter: blur(2px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 16l4.5-4.5 4 4 3-3L20 17"></path><path d="M16 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"></path></svg></span></button>
 </div>
 <button aria-label="Foto aufnehmen" style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.9); background: transparent; padding: 5px; box-sizing: border-box; cursor: pointer; flex-shrink: 0"><span style="display: block; width: 100%; height: 100%; border-radius: 50%; background: #FFFFFF"></span></button>
 <div style="width: 112px; display: flex; justify-content: flex-end">
 <button aria-label="{{done.label}}" aria-disabled="{{done.disabled}}" style="position: relative; height: 52px; box-sizing: border-box; padding: 0 12px 0 16px; border-radius: 26px; border: 0; background: {{done.bg}}; box-shadow: {{done.shadow}}; opacity: {{done.opacity}}; color: {{done.text}}; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; overflow: hidden; white-space: nowrap">
-<span style="position: absolute; left: 14px; right: 14px; top: 2px; height: 18px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0)); pointer-events: none"></span>
+<span aria-hidden="true" style="position: absolute; left: 11px; right: 11px; top: 2px; height: 18px; border-radius: 9px; background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span>
+<span aria-hidden="true" style="position: absolute; left: 22px; right: 22px; bottom: 2px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.14); filter: blur(2.5px); pointer-events: none"></span>
 <span style="position: relative">Prüfen</span>
 <span style="position: relative; min-width: 24px; height: 24px; box-sizing: border-box; padding: 0 6px; border-radius: 12px; background: {{done.badgeBg}}; color: {{done.badgeText}}; font-size: 13px; font-weight: 700; line-height: 24px; text-align: center">{{count}}</span>
 </button>
@@ -115,7 +116,33 @@ class Component extends DCLogic {
       bg: 'rgba(255,255,255,0.14)', text: '#FFFFFF', opacity: '0.45', disabled: 'true', shadow: 'none',
       badgeBg: 'rgba(255,255,255,0.2)', badgeText: '#FFFFFF', label: 'Prüfen – erst ein Foto aufnehmen'
     };
-    return {
+    // Glas-Knöpfe (Designsprache wie FAB): gp = Akzent, gn = neutral, gnd = neutral dunkel (Kamera/Bild), gd = Gefahr
+    const gp = {
+      bg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      pbg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 50%, ' + deep + ' 100%)',
+      shadow: dark ? 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 14px -7px ' + rgba(accent, 0.55) : 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 16px -6px ' + rgba(accent, 0.7) + ', 0 0 18px ' + rgba(accent, 0.25),
+      gloss: 'rgba(255,255,255,0.6)', glow: 'rgba(255,255,255,0.22)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(0,40,45,0.35))'
+    };
+    const gnDark = {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      pbg: 'linear-gradient(180deg, #33474A 0%, #1F3033 55%, #152326 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)', icon: '#D3E6E8', iconShadow: 'none'
+    };
+    const gn = dark ? gnDark : {
+      bg: 'radial-gradient(circle at 32% 22%, #FFFFFF 0%, #EEF4F5 50%, #D3DFE1 100%)',
+      pbg: 'linear-gradient(180deg, #FFFFFF 0%, #EEF4F5 55%, #DCE6E8 100%)',
+      shadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 8px 16px -8px rgba(12,40,44,0.35)',
+      gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E', iconShadow: 'none'
+    };
+    const gnd = gnDark;
+    const gd = {
+      bg: 'radial-gradient(circle at 32% 22%, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      pbg: 'linear-gradient(180deg, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4), 0 10px 20px -10px rgba(229,72,77,0.6)',
+      gloss: 'rgba(255,255,255,0.5)', glow: 'rgba(255,255,255,0.2)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(80,0,0,0.3))'
+    };
+    return { gp, gn, gnd, gd,
       k, cta, theme, accent, bg, heroBg, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')',
       shots, hasShots: n > 0, count: String(n), done,
       title: n === 0 ? 'Kassenzettel' : 'Kassenzettel · Teil ' + (n + 1),
