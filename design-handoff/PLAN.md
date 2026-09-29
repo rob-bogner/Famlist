@@ -28,6 +28,7 @@ Design-Quelle: `Design/html/` = 1:1-Kopie des Canvas (`Design/SYNC.md`), Übersi
 - [ ] Konto archivieren, nach 60 Tagen löschen, wiederherstellen – Design freigegeben 27.09.2026, Auftrag: `ACCOUNT_ARCHIVE_PROMPT.md`
 - [ ] Produktbilder Obst (38 SVG in `Design/html/assets/fruit/`) – Design freigegeben, noch nicht in der App
 - [x] Produktdetails (28.09.2026): ein Screen für neu / ansehen / bearbeiten ersetzt NewItemSheet, EditItemSheet und ProductImageSheet (`ProductDetailSheet`, als Sheet 790 mit Stift unten rechts am Bild) – Build und Tests stehen noch aus
+- [x] Aktionskarten statt iOS-Systemdialoge (29.09.2026): `.actionCard(isPresented:k:content:)` (ActionCardContent/-View/-Host/-Tokens, View+ActionCard) für Sync fehlgeschlagen, Foto hinzufügen, Liste löschen, Bon-Zeile zuordnen, Laden ändern, Artikelpreise aktualisieren, Abmelden, Kassenzettel löschen, Mitglied entfernen; „Abbrechen“/„Weiter scannen“ überall als neutrale Glas-Pille (auch Konto löschen, Endgültig löschen, Artikel löschen – Auswahl). UI-Tests angepasst – Build und Tests stehen noch aus
 ---
 
 ## 1. Ausgangslage (geprüft, nicht angenommen)

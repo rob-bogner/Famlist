@@ -165,7 +165,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 10. **Konto**
     - ☰ → Einstellungen. Oben ist eine Profilkarte; sie ist der **einzige** Weg zu Profil bearbeiten.
     - Erscheinungsbild: System / Hell / Dunkel. Benachrichtigungen: geteilte Listen, Einladungen.
-    - Abmelden; mit ungesendeten Änderungen fragt ein Systemdialog nach (SignOutDialog).
+    - Abmelden; mit ungesendeten Änderungen fragt eine Aktionskarte nach (SignOutDialog).
     - **Konto löschen** (Pflicht für den App Store): archiviert das Konto 60 Tage. Geteilte Listen verschwinden sofort bei allen Mitgliedern, aus fremden Listen wird man entfernt. Details: `ACCOUNT_ARCHIVE_PROMPT.md`.
     - **Konto wiederherstellen:** Wer sich innerhalb der 60 Tage anmeldet, sieht RestoreAccount (Laden: RestoreAccountLoading, offline: RestoreAccountOffline) mit „Konto wiederherstellen“, „Abmelden“ und „Endgültig löschen“ (Bestätigung RestorePurgeDialog).
 11. **Artikel verwalten**
@@ -202,7 +202,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 - **Knöpfe – ausnahmslos im Glas-Stil wie der FAB:**
   - Kreise und Pillen mit radialem bzw. senkrechtem Verlauf (Licht oben links bei 32 % / 22 %), Glanz oben und Lichtsaum unten, Maße proportional zum FAB 64.
   - Stile (`GlassStyleTokens`): Akzent, Neutral, Neutral-dunkel (Kamera/Fotos), Gefahr (rot), Apple (schwarz in Light, weiß in Dark).
-  - Gilt auch für ☰ und Filter im Listenkopf, Schließen-Knöpfe, Wisch-Aktionen und „Mit Apple anmelden“. Systemdialoge (confirmationDialog/alert) bleiben im iOS-Stil.
+  - Gilt auch für ☰ und Filter im Listenkopf, Schließen-Knöpfe, Wisch-Aktionen und „Mit Apple anmelden“. Keine iOS-Systemdialoge (confirmationDialog/alert): Rückfragen und Auswahl erscheinen als **Aktionskarte** (seit 29.09.2026) – Karte unten (links/rechts 12, unten 30, Radius 30, Fläche/Rand/Schatten wie „Artikel erkannt“ im Barcode-Scanner, Abdunkelung ohne Blur), Symbol-Kachel 48 (Radius 16, Ton: Gefahr/Warnung/Info), Titel Outfit 19/600, Text 14 sub, darunter Glas-Knöpfe: Hauptaktion CTA bzw. rot (gd) bei Löschen, weitere Optionen neutrale Glas-Pillen, „Abbrechen“ als neutrale Glas-Pille (52 hoch, volle Breite, immer unten). Boards: ItemSyncFailedDialog, PhotoSourceDialog, DeleteListDialog, ReceiptAssignDialog, ReceiptPriceAlert, SignOutDialog, ReceiptStoreAlert, ReceiptDeleteDialog, ArchivedMemberRemove.
 - **Dock:** in Light **und** Dark dunkles Glas. Keine Lichtkante an der Pille.
 - **Sheets:**
   - Oberer Radius 34, Griff 40 × 5.

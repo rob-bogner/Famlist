@@ -13,21 +13,16 @@
 <style>
 body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
 button,input{font-family:inherit}
+input::placeholder{color:inherit;opacity:0.75}
 </style>
 </helmet>
 <div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif">
-<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
+<div style="z-index: 0; position: absolute; left: 0; top: 0; width: 390px; height: 844px">
 <dc-import name="ReceiptReview" theme="{{theme}}" accent="{{accent}}" hint-size="390px,844px"></dc-import>
 </div>
-<!-- iOS-Systemdialog (alert) -->
-<div style="position: absolute; inset: 0; background: {{d.scrim}}"></div>
-<div role="alertdialog" style="position: absolute; left: 60px; width: 270px; top: 50%; transform: translateY(-50%); border-radius: 14px; background: {{d.bg}}; backdrop-filter: blur(30px); overflow: hidden; text-align: center; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">
-<div style="padding: 19px 16px 16px 16px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 600; color: {{d.text}}">Artikelpreise aktualisieren?</span><span style="font-size: 13px; color: {{d.text}}; line-height: 1.35; white-space: pre-line">Bei 2 Artikeln weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab.
-
-Butter: 2,49 €
-Soyamilch: 2,29 €</span></div>
-<div style="display: flex; flex-direction: column"><div style="display: flex; border-top: 0.5px solid {{d.line}}"><button style="flex: 1; height: 44px; border: 0; background: transparent; font-size: 17px; font-weight: 400; color: {{d.blue}}; cursor: pointer; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">Preise übernehmen</button></div><div style="display: flex; border-top: 0.5px solid {{d.line}}"><button style="flex: 1; height: 44px; border: 0; background: transparent; font-size: 17px; font-weight: 600; color: {{d.blue}}; cursor: pointer; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif">Nur Preisverlauf</button></div></div>
-</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: {{dc.scrim}}"></div>
+<section role="alertdialog" aria-label="Artikelpreise aktualisieren" style="position: absolute; left: 12px; right: 12px; bottom: 30px; box-sizing: border-box; padding: 20px 16px 16px 16px; border-radius: 30px; background: {{dc.bg}}; border: 1px solid {{dc.border}}; box-shadow: {{dc.shadow}}; display: flex; flex-direction: column; gap: 16px; color: {{dc.text}}; font-family: 'DM Sans', system-ui, sans-serif">
+<div style="display: flex; align-items: flex-start; gap: 14px"><span aria-hidden="true" style="width: 48px; height: 48px; border-radius: 16px; background: {{dc.infoSoft}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{dc.info}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM6.6 8a1.4 1.4 0 1 0 2.8 0 1.4 1.4 0 1 0-2.8 0"></path></svg></span><span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; padding-top: 2px"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em">Artikelpreise aktualisieren?</span><span style="font-size: 14px; line-height: 1.45; color: {{dc.sub}}">Bei 2 Artikeln weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab.</span></span></div><div style="border-radius: 20px; background: {{dc.field}}; border: 1px solid {{dc.fieldBorder}}; overflow: hidden; display: flex; flex-direction: column"><div style=""><div style="padding: 11px 14px; display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; font-size: 15px; font-weight: 600">Butter</span><span style="font-size: 13px; color: {{dc.strike}}; text-decoration: line-through">2,19 €</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{dc.sub}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg><span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; color: {{dc.warn}}">2,49 €</span></div></div><div style="border-top: 1px solid {{dc.line}}"><div style="padding: 11px 14px; display: flex; align-items: center; gap: 10px"><span style="flex-grow: 1; font-size: 15px; font-weight: 600">Soyamilch</span><span style="font-size: 13px; color: {{dc.strike}}; text-decoration: line-through">2,49 €</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{dc.sub}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg><span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; color: {{k.ok}}">2,29 €</span></div></div></div><div style="display: flex; flex-direction: column; gap: 10px; margin-top: 2px"><button style="position: relative; width: 100%; height: 56px; flex-shrink: 0; border-radius: 28px; border: 0; padding: 0; background: {{cta.bg}}; box-shadow: {{cta.shadow}}; color: {{cta.text}}; font-size: 16px; font-weight: 600; cursor: pointer; overflow: hidden"><span aria-hidden="true" style="position: absolute; left: 16px; right: 16px; top: 3px; height: 22px; border-radius: 11px; background: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 40px; right: 40px; bottom: 3px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.16); filter: blur(3px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{cta.text}}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Preise übernehmen</span></button><button style="position: relative; width: 100%; height: 52px; flex-shrink: 0; border-radius: 26px; border: 0; padding: 0; background: {{gn.pbg}}; box-shadow: {{gn.shadow}}; color: {{dc.text}}; font-size: 15px; font-weight: 600; cursor: pointer; overflow: hidden"><span aria-hidden="true" style="position: absolute; left: 16px; right: 16px; top: 3px; height: 20px; border-radius: 10px; background: linear-gradient(180deg, {{gn.gloss}}, rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span><span aria-hidden="true" style="position: absolute; left: 40px; right: 40px; bottom: 3px; height: 7px; border-radius: 4px; background: {{gn.glow}}; filter: blur(3px); pointer-events: none"></span><span style="position: relative; display: flex; align-items: center; justify-content: center; gap: 8px">Nur im Preisverlauf speichern</span></button></div></section>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
@@ -40,26 +35,72 @@ class Component extends DCLogic {
     const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
     const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
     const light = mix(accent, 255, 0.32);
-    // iOS-Systemdialoge (confirmationDialog / alert) – Farben wie iOS 17
-    const d = dark ? {
-      scrim: 'rgba(0,0,0,0.45)', bg: 'rgba(44,44,46,0.94)', cancel: 'rgba(44,44,46,0.98)', line: 'rgba(84,84,88,0.65)',
-      title: 'rgba(235,235,245,0.6)', text: '#FFFFFF', blue: '#0A84FF', red: '#FF453A', field: '#1C1C1E'
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const k = dark ? {
+      sheet: 'linear-gradient(180deg, #102022 0%, #0A1416 100%)', sheetBorder: 'rgba(255,255,255,0.08)', sheetShadow: '0 -24px 50px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+      text: '#EAF5F6', sub: '#93ADB1', close: 'rgba(255,255,255,0.08)', icon: '#D3E6E8', grabber: 'rgba(255,255,255,0.18)', scrim: 'rgba(0,0,0,0)',
+      card: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', cardBorder: 'rgba(255,255,255,0.08)', cardShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px -14px rgba(0,0,0,0.7)',
+      field: 'rgba(255,255,255,0.05)', fieldBorder: 'rgba(255,255,255,0.09)', fieldFocus: 'rgba(255,255,255,0.06)', ring: rgba(accent, 0.7), ringSoft: rgba(accent, 0.12),
+      line: 'rgba(255,255,255,0.08)', accentText: light, danger: '#FF7A7E', dangerSoft: 'rgba(255,122,126,0.12)',
+      toggleOn: 'linear-gradient(180deg, ' + light + ', ' + accent + ')', toggleOff: 'rgba(255,255,255,0.14)',
+      segBg: 'rgba(255,255,255,0.06)', segOn: 'rgba(255,255,255,0.14)', segOnText: '#FFFFFF',
+      menu: 'rgba(20,34,37,0.97)', menuBorder: 'rgba(255,255,255,0.1)', menuShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 48px -16px rgba(0,0,0,0.8)',
+      tile: 'linear-gradient(150deg, ' + rgba(accent, 0.24) + ', ' + rgba(accent, 0.06) + ')', dashed: rgba(accent, 0.45), appleBg: '#FFFFFF', appleText: '#000000', ok: '#4FD1A1', chip: rgba(accent, 0.16), ringBase: '#132426', warn: '#F2B24C', warnBorder: 'rgba(242,178,76,0.5)', okSoft: 'rgba(79,209,161,0.14)', dotFill: '#0A1416', areaFill: rgba(accent, 0.16)
     } : {
-      scrim: 'rgba(0,0,0,0.2)', bg: 'rgba(242,242,247,0.94)', cancel: '#FFFFFF', line: 'rgba(60,60,67,0.29)',
-      title: 'rgba(60,60,67,0.6)', text: '#000000', blue: '#007AFF', red: '#FF3B30', field: '#FFFFFF'
+      sheet: '#FFFFFF', sheetBorder: 'rgba(255,255,255,0)', sheetShadow: '0 -20px 40px -20px rgba(8,30,33,0.35)',
+      text: '#0F2528', sub: '#5F7579', close: '#F1F5F5', icon: '#1E3A3E', grabber: '#D5DEDF', scrim: 'rgba(0,0,0,0)',
+      card: '#FFFFFF', cardBorder: '#EDF2F2', cardShadow: '0 1px 2px rgba(12,40,44,0.05), 0 10px 22px -14px rgba(12,40,44,0.22)',
+      field: '#F4F7F7', fieldBorder: '#E6EDEE', fieldFocus: '#FFFFFF', ring: rgba(accent, 0.75), ringSoft: rgba(accent, 0.12),
+      line: '#EDF1F2', accentText: deep, danger: '#C8363B', dangerSoft: 'rgba(200,54,59,0.08)',
+      toggleOn: 'linear-gradient(180deg, ' + accent + ', ' + deep + ')', toggleOff: '#DCE5E6',
+      segBg: '#F1F5F5', segOn: '#FFFFFF', segOnText: '#0F2528',
+      menu: 'rgba(255,255,255,0.97)', menuBorder: 'rgba(15,37,40,0.08)', menuShadow: '0 24px 48px -16px rgba(12,40,44,0.35)',
+      tile: 'linear-gradient(150deg, #F4F8F8, #E2ECED)', dashed: rgba(accent, 0.45), appleBg: '#000000', appleText: '#FFFFFF', ok: '#1F8A5B', chip: rgba(accent, 0.1), ringBase: '#FFFFFF', warn: '#B7791F', warnBorder: 'rgba(183,121,31,0.45)', okSoft: 'rgba(31,138,91,0.1)', dotFill: '#FFFFFF', areaFill: rgba(accent, 0.12)
     };
-    // Hinweis unten (StatusToast): dunkles Glas, Symbol-Kreis 40
-    const ts = dark ? {
-      bg: 'rgba(30,48,52,0.95)', border: 'rgba(255,255,255,0.12)', shadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 16px 32px -14px rgba(0,0,0,0.8)',
-      ok: rgba(accent, 0.18), okIcon: light, err: 'rgba(229,72,77,0.22)', errIcon: '#FF7A7E'
+    const cta = dark
+      ? { bg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', text: '#04262A', shadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 10px 20px -12px ' + rgba(accent, 0.6) }
+      : { bg: 'linear-gradient(180deg, ' + accent + ' 0%, ' + deep + ' 100%)', text: '#FFFFFF', shadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 6px rgba(0,30,34,0.2), 0 14px 26px -12px ' + rgba(accent, 0.8) };
+    const bg = dark ? 'radial-gradient(120% 60% at 50% 100%, ' + rgba(accent, 0.1) + ', rgba(0,0,0,0) 60%), #071012' : '#FFFFFF';
+    const heroBg = 'linear-gradient(150deg, ' + light + ' 0%, ' + accent + ' 42%, ' + (dark ? mix(accent, 0, 0.6) : deep) + ' 100%)';
+    // Glas-Knöpfe (Designsprache wie FAB): gp = Akzent, gn = neutral, gnd = neutral dunkel (Kamera/Bild), gd = Gefahr
+    const gp = {
+      bg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
+      pbg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 50%, ' + deep + ' 100%)',
+      shadow: dark ? 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 14px -7px ' + rgba(accent, 0.55) : 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 16px -6px ' + rgba(accent, 0.7) + ', 0 0 18px ' + rgba(accent, 0.25),
+      gloss: 'rgba(255,255,255,0.6)', glow: 'rgba(255,255,255,0.22)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(0,40,45,0.35))'
+    };
+    const gnDark = {
+      bg: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)',
+      pbg: 'linear-gradient(180deg, #33474A 0%, #1F3033 55%, #152326 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 16px -8px rgba(0,0,0,0.8)',
+      gloss: 'rgba(255,255,255,0.28)', glow: 'rgba(255,255,255,0.1)', icon: '#D3E6E8', iconShadow: 'none'
+    };
+    const gn = dark ? gnDark : {
+      bg: 'radial-gradient(circle at 32% 22%, #FFFFFF 0%, #EEF4F5 50%, #D3DFE1 100%)',
+      pbg: 'linear-gradient(180deg, #FFFFFF 0%, #EEF4F5 55%, #DCE6E8 100%)',
+      shadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 8px 16px -8px rgba(12,40,44,0.35)',
+      gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E', iconShadow: 'none'
+    };
+    const gnd = gnDark;
+    const gd = {
+      bg: 'radial-gradient(circle at 32% 22%, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      pbg: 'linear-gradient(180deg, #FF8A80 0%, #E5484D 55%, #B4232A 100%)',
+      shadow: 'inset 0 -3px 6px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4), 0 10px 20px -10px rgba(229,72,77,0.6)',
+      gloss: 'rgba(255,255,255,0.5)', glow: 'rgba(255,255,255,0.2)', icon: '#FFFFFF', iconShadow: 'drop-shadow(0 1px 2px rgba(80,0,0,0.3))'
+    };
+    // Aktionskarte (ersetzt iOS-Systemdialoge): Fläche wie „Artikel erkannt“, Abdunkelung wie Sheets
+    const dc = dark ? {
+      scrim: 'rgba(0,0,0,0.55)', bg: 'rgba(20,34,37,0.97)', border: 'rgba(255,255,255,0.1)', shadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 48px -16px rgba(0,0,0,0.8)',
+      text: '#EAF5F6', sub: '#93ADB1', line: 'rgba(255,255,255,0.08)', field: 'rgba(255,255,255,0.05)', fieldBorder: 'rgba(255,255,255,0.09)',
+      danger: '#FF7A7E', dangerSoft: 'rgba(255,122,126,0.14)', warn: '#F2B24C', warnSoft: 'rgba(242,178,76,0.14)', info: light, infoSoft: rgba(accent, 0.16),
+      ring: rgba(accent, 0.7), ringSoft: rgba(accent, 0.14), chip: rgba(accent, 0.16), strike: 'rgba(147,173,177,0.8)'
     } : {
-      bg: 'rgba(15,27,29,0.94)', border: 'rgba(255,255,255,0.1)', shadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 32px -14px rgba(12,30,33,0.5)',
-      ok: rgba(accent, 0.22), okIcon: light, err: 'rgba(229,72,77,0.22)', errIcon: '#FF7A7E'
+      scrim: 'rgba(8,24,27,0.42)', bg: 'rgba(255,255,255,0.97)', border: 'rgba(15,37,40,0.08)', shadow: '0 24px 48px -16px rgba(12,40,44,0.35)',
+      text: '#0F2528', sub: '#5F7579', line: '#EDF1F2', field: '#F4F7F7', fieldBorder: '#E6EDEE',
+      danger: '#C8363B', dangerSoft: 'rgba(200,54,59,0.08)', warn: '#B7791F', warnSoft: 'rgba(183,121,31,0.1)', info: deep, infoSoft: rgba(accent, 0.1),
+      ring: rgba(accent, 0.75), ringSoft: rgba(accent, 0.12), chip: rgba(accent, 0.1), strike: 'rgba(95,117,121,0.8)'
     };
-    // Sheet-Fläche (zum Überdecken von Inhalten in Zustands-Boards)
-    const sh = dark ? { bg: 'linear-gradient(180deg, #0E1D1F 0%, #0A1416 100%)', text: '#EAF5F6', sub: '#93ADB1', spin: light, track: 'rgba(255,255,255,0.12)' }
-                    : { bg: '#FFFFFF', text: '#0F2528', sub: '#5F7579', spin: accent, track: 'rgba(15,37,40,0.1)' };
-    return { d, ts, sh, theme, accent };
+    return { dc, gp, gn, gnd, gd, k, cta, theme, accent, bg, heroBg, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
   }
 }
 </script>
