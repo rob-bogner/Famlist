@@ -75,10 +75,11 @@ struct DeleteAccountDialog: View {
 
                 Button(action: onCancel) {
                     Text("Abbrechen")
-                        .font(AppFont.dm(16, 600))
-                        .foregroundStyle(t.accentText)
+                        .font(AppFont.dm(15, 600))
+                        .foregroundStyle(k.text)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 48)
+                        .frame(height: 52)
+                        .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 52))
                         .contentShape(Pill)
                 }
                 .buttonStyle(.plain)

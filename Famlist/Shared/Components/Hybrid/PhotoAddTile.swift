@@ -40,15 +40,12 @@ struct PhotoAddTile: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(image == nil ? "Foto hinzufügen" : "Foto ändern")
-        .confirmationDialog("Foto", isPresented: $showSource, titleVisibility: .hidden) {
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button("Foto aufnehmen") { source = .camera; showPicker = true }
-            }
-            Button("Aus Mediathek wählen") { source = .photoLibrary; showPicker = true }
-            if image != nil {
-                Button("Foto entfernen", role: .destructive) { image = nil }
-            }
-            Button("Abbrechen", role: .cancel) {}
+        // Aktionskarte statt Systemdialog (Design: PhotoSourceDialog)
+        .actionCard(isPresented: $showSource, k: k) {
+            .photoSource(k: k, hasImage: image != nil,
+                         onCamera: { source = .camera; showPicker = true },
+                         onLibrary: { source = .photoLibrary; showPicker = true },
+                         onRemove: { image = nil })
         }
         .sheet(isPresented: $showPicker) {
             ImagePicker(selectedImage: $image, isPresented: $showPicker, sourceType: source)

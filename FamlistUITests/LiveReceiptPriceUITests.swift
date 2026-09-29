@@ -64,10 +64,10 @@ final class LiveReceiptPriceUITests: XCTestCase {
         XCTAssertTrue(steps.waitUntil(20) { save.isEnabled }, "Positionen erkannt und zugeordnet")
         shot("2-review")
         save.tap()
-        let alert = app.alerts["Artikelpreise aktualisieren?"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 5), "Rückfrage erscheint")
+        let accept = app.buttons["Preise übernehmen"]                          // Aktionskarte
+        XCTAssertTrue(accept.waitForExistence(timeout: 5), "Rückfrage erscheint")
         shot("3-alert")
-        alert.buttons["Preise übernehmen"].tap()
+        accept.tap()
         let keep = app.buttons["Liste behalten"]
         XCTAssertTrue(keep.waitForExistence(timeout: 10), "Einkauf erledigt")
         keep.tap()
@@ -115,9 +115,9 @@ final class LiveReceiptPriceUITests: XCTestCase {
         XCTAssertTrue(save.waitForExistence(timeout: 10), "Kassenzettel prüfen")
         XCTAssertTrue(steps.waitUntil(20) { save.isEnabled }, "Positionen erkannt und zugeordnet")
         save.tap()
-        let alert = app.alerts["Artikelpreise aktualisieren?"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 5), "Rückfrage erscheint")
-        alert.buttons["Preise übernehmen"].tap()
+        let accept = app.buttons["Preise übernehmen"]                          // Aktionskarte
+        XCTAssertTrue(accept.waitForExistence(timeout: 5), "Rückfrage erscheint")
+        accept.tap()
         let finish = app.buttons["Abgehakte löschen & fertig"]
         XCTAssertTrue(finish.waitForExistence(timeout: 10), "Einkauf erledigt")
         shot("6-done")

@@ -42,13 +42,23 @@ extension ReceiptFlowViewModel {
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
+    /// Bisher gespeicherter Preis des Artikels (Liste vor Artikelstamm) – „alter Preis“ in der Rückfrage.
+    func knownPrice(for change: ReceiptPriceChange) -> Double? {
+        listPrices[change.key] ?? catalogPrices[change.key]
+    }
+
+    /// Einleitungssatz der Rückfrage (Aktionskarte „Artikelpreise aktualisieren?“).
+    static func priceChangeIntro(_ changes: [ReceiptPriceChange]) -> String {
+        changes.count == 1
+            ? "Bei 1 Artikel weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab."
+            : "Bei \(changes.count) Artikeln weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab."
+    }
+
     /// Text der Rückfrage: bis zu 5 Artikel mit neuem Preis, danach „und n weitere“.
     static func priceChangeMessage(_ changes: [ReceiptPriceChange]) -> String {
         let shown = changes.prefix(5).map { "\($0.name): \(PriceDisplaySetting.euro($0.price))" }
         let more = changes.count > 5 ? ["und \(changes.count - 5) weitere"] : []
-        let intro = changes.count == 1
-            ? "Bei 1 Artikel weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab."
-            : "Bei \(changes.count) Artikeln weicht der Preis auf dem Kassenzettel vom gespeicherten Preis ab."
+        let intro = priceChangeIntro(changes)
         return ([intro, ""] + shown + more).joined(separator: "\n")
     }
 

@@ -52,7 +52,8 @@ struct HybridSheetLayer<Content: View>: View {
     }
 
     private var dismissDrag: some Gesture {
-        DragGesture(minimumDistance: 8)
+        // Global messen: der Kopf wandert mit dem Sheet mit, lokal gemessen würde der Weg springen (Ruckeln).
+        DragGesture(minimumDistance: 8, coordinateSpace: .global)
             .onChanged { value in
                 dragOffset = max(0, value.translation.height)
             }

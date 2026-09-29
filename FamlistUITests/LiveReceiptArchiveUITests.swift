@@ -73,7 +73,7 @@ final class LiveReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["5,07\u{00A0}€"].exists, "Summe 5,07 €")
         shot("detail")
         app.buttons["Löschen"].tap()
-        let confirm = app.buttons.matching(identifier: "Löschen").element(boundBy: 1)
+        let confirm = app.buttons["Kassenzettel löschen"]                   // Aktionskarte
         XCTAssertTrue(confirm.waitForExistence(timeout: 3), "Rückfrage")
         confirm.tap()
         XCTAssertTrue(archiveRow().waitForNonExistence(timeout: 5), "Bon aus dem Archiv entfernt")
@@ -93,8 +93,8 @@ final class LiveReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(save.waitForExistence(timeout: 10), "Kassenzettel prüfen")
         XCTAssertTrue(steps.waitUntil(20) { save.isEnabled }, "Positionen erkannt und zugeordnet")
         save.tap()
-        let alert = app.alerts["Artikelpreise aktualisieren?"]
-        if alert.waitForExistence(timeout: 3) { alert.buttons["Nur Preisverlauf"].tap() }
+        let onlyHistory = app.buttons["Nur im Preisverlauf speichern"]          // Aktionskarte (Preise weichen ab)
+        if onlyHistory.waitForExistence(timeout: 3) { onlyHistory.tap() }
         let keep = app.buttons["Liste behalten"]
         XCTAssertTrue(keep.waitForExistence(timeout: 15), "Einkauf erledigt")
         keep.tap()

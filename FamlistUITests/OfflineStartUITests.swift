@@ -108,7 +108,7 @@ final class OfflineStartUITests: XCTestCase {
         let warning = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "noch nicht gesendet")).firstMatch
         XCTAssertTrue(warning.waitForExistence(timeout: 10), "Rückfrage zu ungesendeten Änderungen")
         XCTAssertTrue(app.buttons["Trotzdem abmelden"].exists, "bewusstes Verwerfen möglich")
-        // iOS 26 zeigt keinen eigenen Abbrechen-Knopf: Tippen neben die Sprechblase bricht ab (Titel des Sheets).
+        // Tippen auf die Abdunkelung über der Aktionskarte bricht ab.
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
         XCTAssertTrue(warning.waitForNonExistence(timeout: 5), "Rückfrage geschlossen")
         XCTAssertFalse(app.buttons["Weiter mit E-Mail"].waitForExistence(timeout: 2), "weiter angemeldet")

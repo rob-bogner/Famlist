@@ -11,7 +11,7 @@
  🔰 Notes for Beginners:
  - Vorlage: ShareMembers.dc.html, Variante archived (Board ShareMembersArchived).
    Karte wie die übrigen Mitglieder (padding 13 14, Radius 22, gap 14), Rahmen gestrichelt.
- - „Entfernen“ fragt per confirmationDialog nach (Board ArchivedMemberRemove); das erledigt ShareMembersSheet.
+ - „Entfernen“ fragt per Aktionskarte nach (Board ArchivedMemberRemove); das erledigt ShareMembersSheet.
 
  📝 Last Change:
  - Initial creation (Konto-Archiv, Phase 4).

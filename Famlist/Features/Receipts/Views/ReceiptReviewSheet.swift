@@ -121,25 +121,52 @@ struct ReceiptReviewSheet: View {
                 .background { Color.clear.contentShape(Rectangle()).onTapGesture(perform: dismissKeyboard) }
             }
         }
-        .confirmationDialog(correcting.map { "„\($0.raw)“ zuordnen" } ?? "", isPresented: correctingBinding,
-                            titleVisibility: .visible, presenting: correcting) { line in
-            ForEach(flow.suggestions(for: line), id: \.self) { name in
-                Button(name) { flow.assign(line.id, to: name) }
+        // Aktionskarten statt Systemdialoge (Design: ReceiptAssignDialog, ReceiptStoreAlert, ReceiptPriceAlert)
+        .actionCard(isPresented: correctingBinding, k: SheetTheme(appearance)) {
+            correcting.map { line in
+                ActionCardContent(
+                    icon: Icon.link, tone: .info, title: "Bon-Zeile zuordnen",
+                    message: "Zu welchem Artikel gehört diese Zeile?",
+                    buttons: [ActionCardButton(title: "Als neuen Artikel speichern", icon: Icon.plus,
+                                               tint: SheetTheme(appearance).accentText) { flow.confirmNew(line.id) },
+                              ActionCardButton(title: "Zeile ignorieren", icon: Icon.minus,
+                                               tint: ActionCardTokens(SheetTheme(appearance)).danger) { flow.ignore(line.id) },
+                              .cancel()],
+                    accessory: { close in
+                        AnyView(ReceiptAssignChoices(
+                            k: SheetTheme(appearance), raw: line.raw,
+                            price: line.price.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE"))),
+                            suggestions: flow.suggestions(for: line),
+                            onPick: { name in close { flow.assign(line.id, to: name) } }))
+                    })
             }
-            Button("Als neuen Artikel speichern") { flow.confirmNew(line.id) }
-            Button("Ignorieren", role: .destructive) { flow.ignore(line.id) }
-            Button("Abbrechen", role: .cancel) {}
         }
-        .alert("Laden", isPresented: $editingStore) {
-            TextField("z. B. Edeka", text: $storeDraft)
-            Button("Übernehmen") { flow.storeName = storeDraft.trimmingCharacters(in: .whitespaces) }
-            Button("Abbrechen", role: .cancel) {}
+        .actionCard(isPresented: $editingStore, k: SheetTheme(appearance)) {
+            ActionCardContent(
+                icon: Icon.store, tone: .info, title: "Laden ändern",
+                message: "Wo hast du eingekauft? Der Laden erscheint im Preisverlauf und im Kassenzettel-Archiv.",
+                buttons: [ActionCardButton(title: "Übernehmen", icon: Icon.check, role: .primary) {
+                              flow.storeName = storeDraft.trimmingCharacters(in: .whitespaces)
+                          },
+                          .cancel()],
+                accessory: { _ in
+                    AnyView(ReceiptStoreField(k: SheetTheme(appearance), text: $storeDraft,
+                                              stores: Array(ReceiptParser.knownStores.prefix(4))))
+                })
         }
-        .alert("Artikelpreise aktualisieren?", isPresented: $askingPriceUpdate) {
-            Button("Preise übernehmen") { persist(updating: pendingPriceChanges) }
-            Button("Nur Preisverlauf", role: .cancel) { persist(updating: []) }
-        } message: {
-            Text(ReceiptFlowViewModel.priceChangeMessage(pendingPriceChanges))
+        .actionCard(isPresented: $askingPriceUpdate, k: SheetTheme(appearance)) {
+            ActionCardContent(
+                icon: Icon.tag, tone: .info, title: "Artikelpreise aktualisieren?",
+                message: ReceiptFlowViewModel.priceChangeIntro(pendingPriceChanges),
+                buttons: [ActionCardButton(title: "Preise übernehmen", icon: Icon.check, role: .primary) {
+                              persist(updating: pendingPriceChanges)
+                          },
+                          ActionCardButton(title: "Nur im Preisverlauf speichern") { persist(updating: []) }],
+                accessory: { _ in
+                    AnyView(ReceiptPriceChangeRows(k: SheetTheme(appearance), rows: pendingPriceChanges.map {
+                        .init(name: $0.name, oldPrice: flow.knownPrice(for: $0), newPrice: $0.price)
+                    }))
+                })
         }
     }
 

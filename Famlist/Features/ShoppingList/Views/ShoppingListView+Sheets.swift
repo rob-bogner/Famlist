@@ -60,12 +60,14 @@ extension ShoppingListView {
         }
         .environment(\.hybridSheetMaxHeight, maxHeight)
         .ignoresSafeArea()
-        .confirmationDialog(listToDelete.map { "„\($0.title)“ löschen?" } ?? "", isPresented: deleteListBinding,
-                            titleVisibility: .visible, presenting: listToDelete) { list in
-            Button("Löschen", role: .destructive) { deleteList(list) }
-            Button("Abbrechen", role: .cancel) {}
-        } message: { _ in
-            Text("Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.")
+        // Aktionskarte statt Systemdialog (Design: DeleteListDialog)
+        .actionCard(isPresented: deleteListBinding, k: k) {
+            listToDelete.map { list in
+                ActionCardContent(icon: Icon.trash, tone: .danger, title: "„\(list.title)“ löschen?",
+                                  message: "Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.",
+                                  buttons: [ActionCardButton(title: "Liste löschen", icon: Icon.trash, role: .destructive) { deleteList(list) },
+                                            .cancel()])
+            }
         }
     }
 
@@ -107,8 +109,8 @@ extension ShoppingListView {
                                 onCreateNew: { activeSheet = .newItem(initialName: $0) })
             }
         case .newItem(let name, let barcode):
-            NewItemSheet(initialName: name, barcode: barcode, k: k, maxHeight: maxHeight,
-                         keyboardHeight: keyboard.height, onClose: closeSheet)
+            ProductDetailSheet(newItemName: name, barcode: barcode, k: k, keyboardHeight: keyboard.height,
+                               onClose: closeSheet)
         case .barcode:
             BarcodeScanSheet(viewModel: BarcodeScanViewModel(catalog: listViewModel.catalogRepository,
                                                              global: listViewModel.globalCatalogRepository),
@@ -124,17 +126,23 @@ extension ShoppingListView {
                                  onPriceHistory: { activeSheet = .priceHistory($0) })
             }
         case .editCatalog(let entry):
-            EditItemSheet(item: entry.toEditableItem(), k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
-                          onClose: { hideKeyboard(); activeSheet = .manageItems },
-                          onSave: { saveCatalogEdit(from: entry, to: entry.applying($0)) })
+            ProductDetailSheet(item: entry.toEditableItem(), startInEdit: true, k: k, keyboardHeight: keyboard.height,
+                               showsQuantity: false,
+                               onClose: { hideKeyboard(); activeSheet = .manageItems },
+                               onSave: { saveCatalogEdit(from: entry, to: entry.applying($0)) })
         case .edit(let item):
-            EditItemSheet(item: item, draft: editDraft, k: k, maxHeight: maxHeight, keyboardHeight: keyboard.height,
-                          onClose: closeSheet,
-                          onPriceHistory: { draft in hideKeyboard(); editDraft = draft; activeSheet = .itemPriceHistory(item) },
-                          lastPriceText: { await lastPriceText(for: item) },
-                          onPriceChanged: { recordPrice(for: $0) })
+            ProductDetailSheet(item: item, draft: editDraft, startInEdit: true, k: k, keyboardHeight: keyboard.height,
+                               onClose: closeSheet,
+                               onPriceHistory: { draft in hideKeyboard(); editDraft = draft; activeSheet = .itemPriceHistory(item) },
+                               lastPriceText: { await lastPriceText(for: item) },
+                               onPriceChanged: { recordPrice(for: $0) })
         case .productImage(let item):
-            ProductImageSheet(item: item, k: k, maxHeight: maxHeight, onClose: closeSheet)
+            // Tipp auf den Artikel bzw. sein Bild: Produktdetails ansehen (Stift → an Ort und Stelle bearbeiten).
+            ProductDetailSheet(item: item, startInEdit: false, k: k, keyboardHeight: keyboard.height,
+                               onClose: closeSheet,
+                               onPriceHistory: { draft in hideKeyboard(); editDraft = draft; activeSheet = .itemPriceHistory(item) },
+                               lastPriceText: { await lastPriceText(for: item) },
+                               onPriceChanged: { recordPrice(for: $0) })
         case .importClipboard:
             ClipboardImportSheet(k: k, maxHeight: maxHeight, onClose: closeSheet)
         case .lists:

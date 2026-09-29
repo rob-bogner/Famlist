@@ -79,11 +79,12 @@ struct ReceiptDetailSheet: View {
         .fullScreenCover(isPresented: $fullscreen) {
             ReceiptFullscreenViewer(images: pagerImages, page: $page, onClose: { fullscreen = false })
         }
-        .confirmationDialog("Kassenzettel löschen?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Löschen", role: .destructive, action: onDelete)
-            Button("Abbrechen", role: .cancel) {}
-        } message: {
-            Text("Die Fotos werden für alle in der Liste gelöscht. Die Preise im Preisverlauf bleiben.")
+        // Aktionskarte statt Systemdialog (Design: ReceiptDeleteDialog)
+        .actionCard(isPresented: $confirmDelete, k: SheetTheme(appearance)) {
+            ActionCardContent(icon: Icon.receipt, tone: .danger, title: "Kassenzettel löschen?",
+                              message: "Die Fotos werden für alle in der Liste gelöscht. Die Preise im Preisverlauf bleiben.",
+                              buttons: [ActionCardButton(title: "Kassenzettel löschen", icon: Icon.trash, role: .destructive, action: onDelete),
+                                        .cancel()])
         }
     }
 

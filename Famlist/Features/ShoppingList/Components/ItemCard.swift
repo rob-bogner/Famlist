@@ -86,11 +86,12 @@ struct ItemCard: View {
         .contentShape(RR(24))
         .background(CSSBox(shape: RR(24), paint: t.card, border: 1, borderColor: t.cardBorder, shadows: t.cardShadow))
         .remoteSyncHighlight(isActive: isRecentlySynced, cornerRadius: 24)
-        .confirmationDialog("Sync fehlgeschlagen", isPresented: $showRetryConfirmation, titleVisibility: .visible) {
-            Button("Erneut synchronisieren") { onRetry?() }
-            Button("Abbrechen", role: .cancel) {}
-        } message: {
-            Text("Der Artikel konnte nicht synchronisiert werden. Soll ein neuer Versuch gestartet werden?")
+        // Aktionskarte statt Systemdialog (Design: ItemSyncFailedDialog)
+        .actionCard(isPresented: $showRetryConfirmation, k: SheetTheme(t.appearance)) {
+            ActionCardContent(icon: Icon.sync, tone: .warn, title: "Sync fehlgeschlagen",
+                              message: "„\(item.name)“ konnte nicht synchronisiert werden. Soll ein neuer Versuch gestartet werden?",
+                              buttons: [ActionCardButton(title: "Erneut synchronisieren", icon: Icon.sync, role: .primary) { onRetry?() },
+                                        .cancel()])
         }
     }
 

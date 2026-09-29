@@ -143,12 +143,14 @@ struct SettingsSheet: View {
             }
             .buttonStyle(.plain)
             // Ungesendete Änderungen (z. B. offline): nachfragen statt still verwerfen (Audit 2, Befund S4).
-            // Am Knopf verankert: iOS 26 zeigt den Systemdialog als Sprechblase, die auf „Abmelden“ zeigt.
-            .confirmationDialog(unsentTitle, isPresented: unsentBinding, titleVisibility: .visible) {
-                Button("Trotzdem abmelden", role: .destructive) { session.signOut(discardingUnsentChanges: true) }
-                Button("Abbrechen", role: .cancel) {}
-            } message: {
-                Text("Verbinde dich mit dem Internet und warte kurz, dann wird alles gesendet.")
+            // Aktionskarte statt Systemdialog (Design: SignOutDialog).
+            .actionCard(isPresented: unsentBinding, k: t.k) {
+                ActionCardContent(icon: Icon.logout, tone: .warn, title: "Trotzdem abmelden?",
+                                  message: unsentTitle + " Verbinde dich mit dem Internet und warte kurz, dann wird alles gesendet.",
+                                  buttons: [ActionCardButton(title: "Trotzdem abmelden", icon: Icon.logout, role: .destructive) {
+                                                session.signOut(discardingUnsentChanges: true)
+                                            },
+                                            .cancel()])
             }
             Button(action: onDeleteAccount) {
                 SettingsRow(t: t, title: "Konto löschen", titleColor: t.danger,

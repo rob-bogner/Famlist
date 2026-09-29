@@ -32,6 +32,8 @@ struct SheetQuantityStepper: View {
     /// true, solange die Zahl per Ziffernblock bearbeitet wird.
     var isEditing: Binding<Bool> = .constant(false)
     var range: ClosedRange<Double> = QuantityFormat.range
+    /// Kompakt (Karte „Menge“ in Produktdetails): Knöpfe 32, Zahl Outfit 18, ohne eigene Fläche, volle Breite.
+    var compact = false
 
     @State private var text = ""
     @FocusState private var focused: Bool
@@ -43,19 +45,19 @@ struct SheetQuantityStepper: View {
     var body: some View {
         HStack(spacing: 0) {
             HoldRepeatButton(onTap: { change(up: false, step: step) }, onRepeat: { change(up: false, step: coarseStep) }) {
-                GlassOrb(style: .neutral, appearance: k.appearance, accent: k.a, icon: Icon.minus, size: 40,
-                         iconSize: 16, iconColor: canDecrease ? nil : k.stepOffIcon, lineWidth: 2.6)
+                GlassOrb(style: .neutral, appearance: k.appearance, accent: k.a, icon: Icon.minus, size: orbSize,
+                         iconSize: compact ? 14 : 16, iconColor: canDecrease ? nil : k.stepOffIcon, lineWidth: 2.6)
                     .frame(width: 44, height: 44)             // Trefferfläche 44, Optik 40
                     .contentShape(Circle())
             }
-            .padding(-2)                                      // 44er-Trefferfläche ohne Layout-Versatz
+            .padding(-(44 - orbSize) / 2)                     // 44er-Trefferfläche ohne Layout-Versatz
             .disabled(!canDecrease)
             .accessibilityLabel("Menge verringern")
 
             TextField("", text: $text)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.center)
-                .font(AppFont.outfit(19, 600))
+                .font(AppFont.outfit(compact ? 18 : 19, 600))
                 .foregroundStyle(k.text)
                 .tint(k.a.base.color())
                 .focused($focused)
@@ -64,18 +66,19 @@ struct SheetQuantityStepper: View {
                 .onChange(of: text) { _, newValue in apply(newValue) }
 
             HoldRepeatButton(onTap: { change(up: true, step: step) }, onRepeat: { change(up: true, step: coarseStep) }) {
-                GlassOrb(style: .accent, appearance: k.appearance, accent: k.a, icon: Icon.plus, size: 40,
-                         iconSize: 16, lineWidth: 2.6)
+                GlassOrb(style: .accent, appearance: k.appearance, accent: k.a, icon: Icon.plus, size: orbSize,
+                         iconSize: compact ? 14 : 16, lineWidth: 2.6)
                     .frame(width: 44, height: 44)             // Trefferfläche 44, Optik 40
                     .contentShape(Circle())
             }
-            .padding(-2)                                      // 44er-Trefferfläche ohne Layout-Versatz
+            .padding(-(44 - orbSize) / 2)                     // 44er-Trefferfläche ohne Layout-Versatz
             .disabled(quantity >= range.upperBound)
             .accessibilityLabel("Menge erhöhen")
         }
-        .padding(.horizontal, 6)                        // 1 border + 5 padding
-        .frame(width: 148, height: 52)
-        .background(background)
+        .padding(.horizontal, compact ? 0 : 6)          // 1 border + 5 padding
+        .frame(width: compact ? nil : 148, height: compact ? 36 : 52)
+        .frame(maxWidth: compact ? .infinity : nil)
+        .background { if !compact { background } }
         .revealsWhenFocused(focused)            // über Schnellwahl-Leiste und Ziffernblock halten
         .animation(.easeOut(duration: 0.15), value: focused)
         .accessibilityElement(children: .contain)
@@ -99,6 +102,8 @@ struct SheetQuantityStepper: View {
             CSSBox(shape: Pill, paint: .color(k.field), border: 1, borderColor: k.fieldBorder)
         }
     }
+
+    private var orbSize: CGFloat { compact ? 32 : 40 }
 
     private var canDecrease: Bool { quantity > QuantityPresets.minimum(forStep: step) }
 

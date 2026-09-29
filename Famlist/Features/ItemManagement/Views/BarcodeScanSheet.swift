@@ -190,14 +190,15 @@ struct BarcodeScanSheet: View {
                 }
             }
 
+            // „Weiter scannen“: neutrale Glas-Pille 52 (29.09.2026, vorher Textknopf)
             Button(action: vm.resume) {
                 Text("Weiter scannen")
-                    .font(AppFont.dm(14, 600))
-                    .foregroundStyle(k.accentText)
+                    .font(AppFont.dm(15, 600))
+                    .foregroundStyle(k.text)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)                                // Trefferfläche 44 (Design 40)
-                    .padding(.vertical, -2)
-                    .contentShape(Rectangle())
+                    .frame(height: 52)
+                    .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 52))
+                    .contentShape(Pill)
             }
             .buttonStyle(.plain)
         }

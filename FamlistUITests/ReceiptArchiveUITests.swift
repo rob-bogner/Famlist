@@ -59,7 +59,7 @@ final class ReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Vollbild"].waitForExistence(timeout: 3))
 
         app.buttons["Löschen"].tap()
-        let confirm = app.buttons.matching(identifier: "Löschen").element(boundBy: 1)
+        let confirm = app.buttons["Kassenzettel löschen"]                   // Aktionskarte
         XCTAssertTrue(confirm.waitForExistence(timeout: 3), "Rückfrage erscheint")
         confirm.tap()
 

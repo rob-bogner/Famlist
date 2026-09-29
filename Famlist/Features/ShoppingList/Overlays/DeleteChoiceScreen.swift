@@ -48,16 +48,20 @@ struct DeleteChoiceScreen: View {
                                action: onDeleteAll)
                 PopoverMenuDivider(k: k)
 
-                // „Abbrechen“: Höhe 48, Radius 16, 15/600 Akzent, zentriert
+                // „Abbrechen“: neutrale Glas-Pille 44 (Padding 4 / 6 / 6), 15/600 Textfarbe (29.09.2026)
                 Button(action: onDismiss) {
                     Text("Abbrechen")
                         .font(AppFont.dm(15, 600))
-                        .foregroundStyle(k.accentText)
+                        .foregroundStyle(k.text)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .contentShape(RR(16))
+                        .frame(height: 44)
+                        .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 44))
+                        .contentShape(Pill)
                 }
                 .buttonStyle(.plain)
+                .padding(.top, 4)
+                .padding(.horizontal, 6)
+                .padding(.bottom, 6)
             }
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Artikel löschen")

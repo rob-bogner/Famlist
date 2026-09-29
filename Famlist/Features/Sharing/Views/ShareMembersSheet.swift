@@ -72,13 +72,15 @@ struct ShareMembersSheet: View {
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: vm.errorMessage)
-        .confirmationDialog(archivedToRemove.map { "\($0.name) aus der Liste entfernen?" } ?? "",
-                            isPresented: Binding(get: { archivedToRemove != nil }, set: { if !$0 { archivedToRemove = nil } }),
-                            titleVisibility: .visible, presenting: archivedToRemove) { member in
-            Button("Entfernen", role: .destructive) { vm.removeArchived(member) }
-            Button("Abbrechen", role: .cancel) {}
-        } message: { member in
-            Text("Wird das Konto wiederhergestellt, kommt \(member.name) nicht mehr automatisch zurück. Du kannst \(member.name) später neu einladen.")
+        // Aktionskarte statt Systemdialog (Design: ArchivedMemberRemove)
+        .actionCard(isPresented: Binding(get: { archivedToRemove != nil }, set: { if !$0 { archivedToRemove = nil } }),
+                    k: SheetTheme(appearance)) {
+            archivedToRemove.map { member in
+                ActionCardContent(icon: Icon.userRemove, tone: .danger, title: "\(member.name) aus der Liste entfernen?",
+                                  message: "Wird das Konto wiederhergestellt, kommt \(member.name) nicht mehr automatisch zurück. Du kannst \(member.name) später neu einladen.",
+                                  buttons: [ActionCardButton(title: "Entfernen", icon: Icon.userRemove, role: .destructive) { vm.removeArchived(member) },
+                                            .cancel()])
+            }
         }
         .task { await vm.load() }
     }
