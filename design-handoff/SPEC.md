@@ -75,6 +75,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Kassenzettel prüfen – nicht gefunden | ReceiptReviewMissing | ja | – (nur HTML) |
 |  | Artikelpreise aktualisieren? | ReceiptPriceAlert | ja | – (nur HTML) |
 | 7 · Einstellungen & Konto | Einstellungen | Settings | ja | `SettingsScreen` |
+|  | Einstellungen – Artikel abhaken: nur Wischen | SettingsCheckMode | ja | – (nur HTML) |
+|  | Liste – nur Wischen (ohne Kreis) | ListSwipeOnly | ja | – (nur HTML) |
 |  | Abmelden – ungesendete Änderungen | SignOutDialog | ja | – (nur HTML) |
 |  | Profil bearbeiten | EditProfile | ja | `EditProfileScreen` |
 |  | Kassenzettel-Archiv | ReceiptArchive | ja | – (nur HTML) |
@@ -170,6 +172,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 10. **Konto**
     - ☰ → Einstellungen. Oben ist eine Profilkarte; sie ist der **einzige** Weg zu Profil bearbeiten.
     - Erscheinungsbild: System / Hell / Dunkel. Benachrichtigungen: geteilte Listen, Einladungen.
+    - Liste → „Artikel abhaken“ (Segment Wischen · Kreis · Beides, Standard Beides, lokal gespeichert): Wischen = kein Kreis auf der Karte, abhaken nur per Rechts-Wisch (ListSwipeOnly); Kreis = Rechts-Wisch aus (Links-Wisch-Aktionen bleiben); Beides = wie bisher. Unterzeile erklärt die Wahl (SettingsCheckMode).
     - Abmelden; mit ungesendeten Änderungen fragt eine Aktionskarte nach (SignOutDialog).
     - **Konto löschen** (Pflicht für den App Store): archiviert das Konto 60 Tage. Geteilte Listen verschwinden sofort bei allen Mitgliedern, aus fremden Listen wird man entfernt. Details: `ACCOUNT_ARCHIVE_PROMPT.md`.
     - **Konto wiederherstellen:** Wer sich innerhalb der 60 Tage anmeldet, sieht RestoreAccount (Laden: RestoreAccountLoading, offline: RestoreAccountOffline) mit „Konto wiederherstellen“, „Abmelden“ und „Endgültig löschen“ (Bestätigung RestorePurgeDialog).

@@ -197,7 +197,7 @@
    "radius": 44,
    "title": "Konto löschen",
    "w": 390,
-   "x": 3760,
+   "x": 4700,
    "y": 15308
   },
   "DeleteAccountDark.dc.html": {
@@ -206,7 +206,7 @@
    "radius": 44,
    "title": "Konto löschen – Dark",
    "w": 390,
-   "x": 3760,
+   "x": 4700,
    "y": 16312
   },
   "DeleteChoice.dc.html": {
@@ -321,7 +321,7 @@
    "radius": 44,
    "title": "Profil bearbeiten",
    "w": 390,
-   "x": 940,
+   "x": 1880,
    "y": 15308
   },
   "EditProfileDark.dc.html": {
@@ -330,7 +330,7 @@
    "radius": 44,
    "title": "Profil bearbeiten – Dark",
    "w": 390,
-   "x": 940,
+   "x": 1880,
    "y": 16312
   },
   "EmptyList.dc.html": {
@@ -816,7 +816,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv",
    "w": 390,
-   "x": 1410,
+   "x": 2350,
    "y": 15308
   },
   "ReceiptArchiveDark.dc.html": {
@@ -825,7 +825,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – Dark",
    "w": 390,
-   "x": 1410,
+   "x": 2350,
    "y": 16312
   },
   "ReceiptArchiveEmpty.dc.html": {
@@ -834,7 +834,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer",
    "w": 390,
-   "x": 1880,
+   "x": 2820,
    "y": 15308
   },
   "ReceiptArchiveEmptyDark.dc.html": {
@@ -843,7 +843,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer – Dark",
    "w": 390,
-   "x": 1880,
+   "x": 2820,
    "y": 16312
   },
   "ReceiptAssignDialog.dc.html": {
@@ -879,7 +879,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung",
    "w": 390,
-   "x": 3290,
+   "x": 4230,
    "y": 15308
   },
   "ReceiptDeleteDialogDark.dc.html": {
@@ -888,7 +888,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung – Dark",
    "w": 390,
-   "x": 3290,
+   "x": 4230,
    "y": 16312
   },
   "ReceiptDetail.dc.html": {
@@ -897,7 +897,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail",
    "w": 390,
-   "x": 2350,
+   "x": 3290,
    "y": 15308
   },
   "ReceiptDetailDark.dc.html": {
@@ -906,7 +906,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail – Dark",
    "w": 390,
-   "x": 2350,
+   "x": 3290,
    "y": 16312
   },
   "ReceiptFullscreen.dc.html": {
@@ -915,7 +915,7 @@
    "radius": 44,
    "title": "Kassenzettel – Vollbild (immer dunkel)",
    "w": 390,
-   "x": 2820,
+   "x": 3760,
    "y": 15308
   },
   "ReceiptPriceAlert.dc.html": {
@@ -1140,7 +1140,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen",
    "w": 390,
-   "x": 470,
+   "x": 1410,
    "y": 15308
   },
   "SignOutDialogDark.dc.html": {
@@ -1149,7 +1149,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen – Dark",
    "w": 390,
-   "x": 470,
+   "x": 1410,
    "y": 16312
   },
   "SortMenu.dc.html": {
@@ -1324,7 +1324,7 @@
    "y": 0
   },
   "RestoreAccount.dc.html": {
-   "x": 4230,
+   "x": 5170,
    "y": 15308,
    "w": 390,
    "h": 844,
@@ -1333,7 +1333,7 @@
    "radius": 44
   },
   "RestoreAccountDark.dc.html": {
-   "x": 4230,
+   "x": 5170,
    "y": 16312,
    "w": 390,
    "h": 844,
@@ -1342,7 +1342,7 @@
    "radius": 44
   },
   "RestoreAccountLoading.dc.html": {
-   "x": 4700,
+   "x": 5640,
    "y": 15308,
    "w": 390,
    "h": 844,
@@ -1351,7 +1351,7 @@
    "radius": 44
   },
   "RestoreAccountLoadingDark.dc.html": {
-   "x": 4700,
+   "x": 5640,
    "y": 16312,
    "w": 390,
    "h": 844,
@@ -1360,7 +1360,7 @@
    "radius": 44
   },
   "RestoreAccountOffline.dc.html": {
-   "x": 5170,
+   "x": 6110,
    "y": 15308,
    "w": 390,
    "h": 844,
@@ -1369,7 +1369,7 @@
    "radius": 44
   },
   "RestoreAccountOfflineDark.dc.html": {
-   "x": 5170,
+   "x": 6110,
    "y": 16312,
    "w": 390,
    "h": 844,
@@ -1378,7 +1378,7 @@
    "radius": 44
   },
   "RestorePurgeDialog.dc.html": {
-   "x": 5640,
+   "x": 6580,
    "y": 15308,
    "w": 390,
    "h": 844,
@@ -1387,7 +1387,7 @@
    "radius": 44
   },
   "RestorePurgeDialogDark.dc.html": {
-   "x": 5640,
+   "x": 6580,
    "y": 16312,
    "w": 390,
    "h": 844,
@@ -1396,7 +1396,7 @@
    "radius": 44
   },
   "MemberDeletedToast.dc.html": {
-   "x": 6110,
+   "x": 7050,
    "y": 15308,
    "w": 390,
    "h": 844,
@@ -1405,7 +1405,7 @@
    "radius": 44
   },
   "MemberDeletedToastDark.dc.html": {
-   "x": 6110,
+   "x": 7050,
    "y": 16312,
    "w": 390,
    "h": 844,
@@ -1414,7 +1414,7 @@
    "radius": 44
   },
   "ShareMembersArchived.dc.html": {
-   "x": 6580,
+   "x": 7520,
    "y": 15308,
    "w": 390,
    "h": 844,
@@ -1423,7 +1423,7 @@
    "radius": 44
   },
   "ShareMembersArchivedDark.dc.html": {
-   "x": 6580,
+   "x": 7520,
    "y": 16312,
    "w": 390,
    "h": 844,
@@ -1432,7 +1432,7 @@
    "radius": 44
   },
   "ArchivedMemberRemove.dc.html": {
-   "x": 7050,
+   "x": 7990,
    "y": 15308,
    "w": 390,
    "h": 844,
@@ -1441,7 +1441,7 @@
    "radius": 44
   },
   "ArchivedMemberRemoveDark.dc.html": {
-   "x": 7050,
+   "x": 7990,
    "y": 16312,
    "w": 390,
    "h": 844,
@@ -1727,6 +1727,42 @@
    "w": 390,
    "x": 5560,
    "y": 0
+  },
+  "SettingsCheckMode.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikel abhaken: nur Wischen",
+   "w": 390,
+   "x": 470,
+   "y": 15308
+  },
+  "SettingsCheckModeDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikel abhaken: nur Wischen – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 16312
+  },
+  "ListSwipeOnly.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – nur Wischen (ohne Kreis)",
+   "w": 390,
+   "x": 940,
+   "y": 15308
+  },
+  "ListSwipeOnlyDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – nur Wischen (ohne Kreis) – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 16312
   }
  },
  "createdOnFiles": {
@@ -1804,9 +1840,9 @@
   },
   "journey7": {
    "kind": "title1",
-   "maxW": 7440,
+   "maxW": 8380,
    "page": "screens",
-   "text": "7 · Einstellungen & Konto — Einstellungen → abmelden → Profil → Archiv (leer) → Detail → Vollbild → Bon löschen → Konto löschen (60 Tage) → wieder anmelden: Konto wiederherstellen → lädt → offline → endgültig löschen · Listenbesitzer: Hinweis → Mitglieder (Konto gelöscht) → entfernen",
+   "text": "7 · Einstellungen & Konto — Einstellungen → Artikel abhaken (Wischen / Kreis / Beides) → abmelden → Profil → Archiv (leer) → Detail → Vollbild → Bon löschen → Konto löschen (60 Tage) → wieder anmelden: Konto wiederherstellen → lädt → offline → endgültig löschen · Listenbesitzer: Hinweis → Mitglieder (Konto gelöscht) → entfernen",
    "w": 240,
    "x": 0,
    "y": 15048
@@ -2022,7 +2058,11 @@
   "MyListsSwipeRightDark.dc.html",
   "MyListsUndo.dc.html",
   "MyListsUndoDark.dc.html",
-  "MyListsSwipe.dc.html"
+  "MyListsSwipe.dc.html",
+  "SettingsCheckMode.dc.html",
+  "SettingsCheckModeDark.dc.html",
+  "ListSwipeOnly.dc.html",
+  "ListSwipeOnlyDark.dc.html"
  ],
  "pages": [
   {

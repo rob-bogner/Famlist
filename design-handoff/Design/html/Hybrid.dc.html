@@ -109,7 +109,7 @@ input::placeholder{color:inherit;opacity:1}
 <div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px">
 <div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; overflow: hidden; flex-shrink: 0"><img src="{{f.img}}" alt="" width="64" height="64" style="display: block; width: 64px; height: 64px"></div>
 <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">{{f.name}}</span><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap">{{f.qty}}</span></div>
-<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{f.price}}</span></div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{f.price}}</span></div>
 </div>
 </sc-for>
 </div>
@@ -188,12 +188,12 @@ input::placeholder{color:inherit;opacity:1}
 <button aria-label="Sync fehlgeschlagen. Tippen zum erneuten Synchronisieren." style="width: 32px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{na.text}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"></path></svg></button>
 </sc-if>
 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0">
-<sc-if value="{{checked}}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{checkedCircle}}" hint-placeholder-val="{{ false }}">
 <button aria-label="Butter ist abgehakt" style="position: relative; width: 32px; height: 32px; border-radius: 50%; border: 0; background: {{fabBg}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 5px 11px -5px {{accentGlow}}; padding: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
 </button>
 </sc-if>
-<sc-if value="{{unchecked}}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{uncheckedCircle}}" hint-placeholder-val="{{ true }}">
 <button aria-label="Butter abhaken" style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}; padding: 0; cursor: pointer; flex-shrink: 0"></button>
 </sc-if>
 <sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}; opacity: {{itemOpacity}}">1,49 €</span></sc-if>
@@ -205,7 +205,7 @@ input::placeholder{color:inherit;opacity:1}
 <div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; margin-top: -6px">
 <div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div>
 <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">{{m.name}}</span><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}">{{m.qty}}</span></div>
-<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span><sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{m.price}}</span></sc-if></div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{m.price}}</span></sc-if></div>
 </div>
 </sc-for>
 </sc-if>
@@ -235,7 +235,7 @@ input::placeholder{color:inherit;opacity:1}
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"check":{"editor":"enum","default":"both","options":["both","swipe","circle"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -317,6 +317,10 @@ class Component extends DCLogic {
       heroShadowCompact: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,30,34,0.2), 0 12px 24px -12px ' + rgba(accent, dark ? 0.6 : 0.65),
       t, dark, showPrices: this.props.prices ?? true, theme: dark ? 'dark' : 'light', pillState: state === 'empty' ? 'empty' : (checked ? 'allDone' : 'open'),
       checked, unchecked: !checked, swipe, actions,
+      // Einstellung „Artikel abhaken“: both = Wischen + Kreis, swipe = nur Wischen (kein Kreis), circle = nur Kreis
+      circles: (this.props.check ?? 'both') !== 'swipe',
+      checkedCircle: checked && (this.props.check ?? 'both') !== 'swipe',
+      uncheckedCircle: !checked && (this.props.check ?? 'both') !== 'swipe',
       leading, lead, undoShown: state === 'checked',
       cardLeft: swipe ? '-256px' : (leading ? '96px' : (checked ? '-86px' : '0px')),
       itemOpacity: (checked || state === 'unavailable') ? '0.55' : '1',
@@ -324,11 +328,11 @@ class Component extends DCLogic {
       empty: state === 'empty', hasItems: state !== 'empty' && !filterEmpty && state !== 'fruit', filterEmpty,
       fruit: state === 'fruit',
       fruits: [
-        { name: 'Bananen', qty: '6 Stück', price: '1,49 €', img: 'assets/fruit/fruit.banana.svg' },
-        { name: 'Äpfel', qty: '1 kg', price: '2,49 €', img: 'assets/fruit/fruit.apple.svg' },
-        { name: 'Orangen', qty: '4 Stück', price: '2,99 €', img: 'assets/fruit/fruit.orange.svg' },
-        { name: 'Erdbeeren', qty: '500 g', price: '3,49 €', img: 'assets/fruit/fruit.strawberry.svg' },
-        { name: 'Ananas', qty: '1 Stück', price: '2,29 €', img: 'assets/fruit/fruit.pineapple.svg' }
+        { name: 'Bananen', qty: '6 Stück', price: '1,49 €', img: '/_blob/ee69b7c1fecda2d6553e3661b2e82ff0' },
+        { name: 'Äpfel', qty: '1 kg', price: '2,49 €', img: '/_blob/26aaa558bbe91fa9089e79727ce86e72' },
+        { name: 'Orangen', qty: '4 Stück', price: '2,99 €', img: '/_blob/f7fa851c8bcdb26e339f481144dbd34d' },
+        { name: 'Erdbeeren', qty: '500 g', price: '3,49 €', img: '/_blob/a9c56126129793a59b87514384b39686' },
+        { name: 'Ananas', qty: '1 Stück', price: '2,29 €', img: '/_blob/a5a49f115427c5904ae8823264634837' }
       ],
       fe: state === 'openEmpty' ? { title: 'Alles erledigt', message: 'Auf dieser Liste sind keine offenen Artikel mehr.' }
                                 : { title: 'Noch nichts abgehakt', message: 'Abgehakte Artikel erscheinen hier.' },
