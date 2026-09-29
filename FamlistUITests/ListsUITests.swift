@@ -9,12 +9,12 @@
 
  🔰 Notes for Beginners:
  - Fixture (-uiTestFixture): „My List“ (aktiv, Standard, eigene), „Drogerie“ (eigene), „WG-Einkauf“ (geteilt).
- - Redesign „Hybrid“ (24.09.2026): keine Wischaktionen mehr auf Listenkarten; alle Listen-Aktionen gibt es
-   nur in den Listen-Optionen (SPEC §3.6).
+ - Listen-Aktionen gibt es in den Listen-Optionen (langer Druck) und seit 29.09.2026 auch per Wischen:
+   links Löschen/Umbenennen/Duplizieren/Mitglieder, rechts Favorit; Löschen zeigt 5 s „Rückgängig“.
  - Speichern (Anlegen, Umbenennen, Favorit) prüfen die Unit-Tests; die Fixture hat kein Listen-Repository.
 
  📝 Last Change:
- - Auf langen Druck und Listen-Optionen umgestellt (Handoff 24.09.2026).
+ - 29.09.2026: Wisch-Aktionen und Rückgängig nach dem Löschen.
  ------------------------------------------------------------------------
  */
 
@@ -72,10 +72,39 @@ final class ListsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Favorit entfernen"].waitForExistence(timeout: 3))
     }
 
-    func test_E_swipe_hasNoActions() {
+    func test_E_swipeLeft_revealsListActions() {
         drag(card("Drogerie"), dx: -200)
-        XCTAssertFalse(app.buttons["Löschen"].exists)
-        XCTAssertFalse(app.buttons["Umbenennen"].exists)
+        for label in ["Löschen", "Umbenennen", "Duplizieren", "Mitglieder"] {
+            XCTAssertTrue(app.staticTexts[label].waitForExistence(timeout: 3), "Wisch-Aktion „\(label)“")
+        }
+    }
+
+    func test_E2_sharedList_swipeLeft_offersLeave() {
+        drag(card("WG-Einkauf"), dx: -200)
+        XCTAssertTrue(app.staticTexts["Verlassen"].waitForExistence(timeout: 3))
+    }
+
+    func test_J_swipeDelete_showsUndo_andUndoRestoresList() {
+        drag(card("Drogerie"), dx: -200)
+        tapSwipeAction("Löschen")
+        XCTAssertTrue(app.staticTexts["„Drogerie“ gelöscht"].waitForExistence(timeout: 3), "Hinweis mit Rückgängig")
+        XCTAssertTrue(card("Drogerie").waitForNonExistence(timeout: 3), "Liste sofort ausgeblendet")
+        app.buttons["Rückgängig"].tap()
+        XCTAssertTrue(card("Drogerie").waitForExistence(timeout: 3), "Rückgängig holt die Liste zurück")
+    }
+
+    func test_K_swipeRight_marksFavorite() {
+        drag(card("Drogerie"), dx: 110)
+        XCTAssertTrue(app.staticTexts["Favorit"].waitForExistence(timeout: 3), "gelber Favorit-Knopf links")
+    }
+
+    /// Glas-Knöpfe sind vor VoiceOver verborgen (Aktionen hängen an der Zeile) → Tippen per Koordinate:
+    /// Knopfmitte liegt 36 pt über der Mitte der Beschriftung (48/2 + 5 + 14/2).
+    private func tapSwipeAction(_ label: String) {
+        let text = app.staticTexts.matching(NSPredicate(format: "label == %@", label))
+            .allElementsBoundByIndex.first { $0.isHittable }
+        XCTAssertNotNil(text, "Beschriftung „\(label)“ sichtbar")
+        text?.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: -36)).tap()
     }
 
     func test_F_tapOutsideOptions_returnsToLists() {

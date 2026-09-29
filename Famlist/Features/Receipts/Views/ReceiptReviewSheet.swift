@@ -130,8 +130,7 @@ struct ReceiptReviewSheet: View {
                     buttons: [ActionCardButton(title: "Als neuen Artikel speichern", icon: Icon.plus,
                                                tint: SheetTheme(appearance).accentText) { flow.confirmNew(line.id) },
                               ActionCardButton(title: "Zeile ignorieren", icon: Icon.minus,
-                                               tint: ActionCardTokens(SheetTheme(appearance)).danger) { flow.ignore(line.id) },
-                              .cancel()],
+                                               tint: ActionCardTokens(SheetTheme(appearance)).danger) { flow.ignore(line.id) }],
                     accessory: { close in
                         AnyView(ReceiptAssignChoices(
                             k: SheetTheme(appearance), raw: line.raw,
@@ -147,8 +146,7 @@ struct ReceiptReviewSheet: View {
                 message: "Wo hast du eingekauft? Der Laden erscheint im Preisverlauf und im Kassenzettel-Archiv.",
                 buttons: [ActionCardButton(title: "Übernehmen", icon: Icon.check, role: .primary) {
                               flow.storeName = storeDraft.trimmingCharacters(in: .whitespaces)
-                          },
-                          .cancel()],
+                          }],
                 accessory: { _ in
                     AnyView(ReceiptStoreField(k: SheetTheme(appearance), text: $storeDraft,
                                               stores: Array(ReceiptParser.knownStores.prefix(4))))
@@ -166,7 +164,8 @@ struct ReceiptReviewSheet: View {
                     AnyView(ReceiptPriceChangeRows(k: SheetTheme(appearance), rows: pendingPriceChanges.map {
                         .init(name: $0.name, oldPrice: flow.knownPrice(for: $0), newPrice: $0.price)
                     }))
-                })
+                },
+                closable: false)                                  // beide Wege speichern – kein ✕
         }
     }
 

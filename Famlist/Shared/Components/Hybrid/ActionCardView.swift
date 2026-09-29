@@ -51,16 +51,26 @@ struct ActionCardView: View {
                 }
                 .padding(.top, 2)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                if content.closable {
+                    // ✕ statt „Abbrechen“ (Canvas: Glas-Knopf 40, oben rechts, −6 / −4 nach außen)
+                    GlassCircleButton(style: .neutral, appearance: k.appearance, accent: k.a, icon: Icon.close,
+                                      label: "Schließen", size: 40, iconSize: 16) { close(nil) }
+                        .accessibilityIdentifier("actionCardClose")
+                        .padding(.top, -6)
+                        .padding(.trailing, -4)
+                }
             }
             if let accessory = content.accessory {
                 accessory(close)
             }
-            VStack(spacing: 10) {
-                ForEach(Array(content.buttons.enumerated()), id: \.offset) { _, button in
-                    ActionCardButtonView(button: button, k: k, tokens: d) { close(button.action) }
+            if !content.buttons.isEmpty {
+                VStack(spacing: 10) {
+                    ForEach(Array(content.buttons.enumerated()), id: \.offset) { _, button in
+                        ActionCardButtonView(button: button, k: k, tokens: d) { close(button.action) }
+                    }
                 }
+                .padding(.top, 2)
             }
-            .padding(.top, 2)
         }
         .padding(.top, 21)                                                    // 20 + 1 Rahmen
         .padding(.horizontal, 17)                                             // 16 + 1 Rahmen
@@ -76,8 +86,7 @@ struct ActionCardView: View {
     let k = SheetTheme(.light)
     ActionCardView(content: ActionCardContent(icon: Icon.trash, tone: .danger, title: "„My List“ löschen?",
                                               message: "Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.",
-                                              buttons: [ActionCardButton(title: "Liste löschen", icon: Icon.trash, role: .destructive),
-                                                        .cancel()]),
+                                              buttons: [ActionCardButton(title: "Liste löschen", role: .slide)]),
                    k: k, close: { _ in })
         .padding(12)
         .frame(maxHeight: .infinity, alignment: .bottom)
@@ -88,8 +97,7 @@ struct ActionCardView: View {
     let k = SheetTheme(.dark)
     ActionCardView(content: ActionCardContent(icon: Icon.sync, tone: .warn, title: "Sync fehlgeschlagen",
                                               message: "„Butter“ konnte nicht synchronisiert werden. Soll ein neuer Versuch gestartet werden?",
-                                              buttons: [ActionCardButton(title: "Erneut synchronisieren", icon: Icon.sync, role: .primary),
-                                                        .cancel()]),
+                                              buttons: [ActionCardButton(title: "Erneut synchronisieren", icon: Icon.sync, role: .primary)]),
                    k: k, close: { _ in })
         .padding(12)
         .frame(maxHeight: .infinity, alignment: .bottom)

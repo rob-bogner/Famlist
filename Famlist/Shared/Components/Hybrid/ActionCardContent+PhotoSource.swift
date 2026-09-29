@@ -32,7 +32,6 @@ extension ActionCardContent {
             buttons.append(ActionCardButton(title: "Foto entfernen", icon: Icon.trash,
                                             tint: ActionCardTokens(k).danger, action: onRemove))
         }
-        buttons.append(.cancel())
         return ActionCardContent(
             icon: Icon.camera, tone: .info, title: hasImage ? "Foto ändern" : "Foto hinzufügen",
             message: "Nimm ein Foto auf oder wähle eines aus deiner Mediathek.",

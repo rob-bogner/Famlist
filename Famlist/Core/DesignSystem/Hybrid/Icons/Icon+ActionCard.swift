@@ -32,6 +32,8 @@ extension Icon {
     static let image: [SVGElement] = [.path("M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9.5a1.5 1.5 0 1 0 0-.01")]
     /// Kettenglied (Bon-Zeile zuordnen).
     static let link: [SVGElement] = [.path("M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1")]
+    /// Drei Winkel nach rechts (Hinweis „Schieben zum Löschen“).
+    static let chevronsRight: [SVGElement] = [.path("M4 7l5 5-5 5M10 7l5 5-5 5M16 7l5 5-5 5")]
     /// Pfeil nach rechts (Auswahl-Zeile, Preis alt → neu).
     static let arrowRight: [SVGElement] = [.path("M5 12h14M13 6l6 6-6 6")]
 }

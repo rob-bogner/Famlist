@@ -65,8 +65,7 @@ extension ShoppingListView {
             listToDelete.map { list in
                 ActionCardContent(icon: Icon.trash, tone: .danger, title: "„\(list.title)“ löschen?",
                                   message: "Die Liste und alle ihre Artikel werden für alle Mitglieder gelöscht.",
-                                  buttons: [ActionCardButton(title: "Liste löschen", icon: Icon.trash, role: .destructive) { deleteList(list) },
-                                            .cancel()])
+                                  buttons: [ActionCardButton(title: "Liste löschen", role: .slide) { deleteList(list) }])
             }
         }
     }
@@ -148,7 +147,12 @@ extension ShoppingListView {
         case .lists:
             MyListsSheet(k: k, maxHeight: maxHeight, onClose: closeSheet,
                          onCreate: { activeSheet = .createList },
-                         onOptions: { activeSheet = .listOptions($0) })
+                         onOptions: { activeSheet = .listOptions($0) },
+                         onRename: { activeSheet = .listName(.rename($0)) },
+                         onDuplicate: { list in
+                             listViewModel.duplicateList(list, ownerId: session.currentProfile?.id ?? list.ownerId)
+                         },
+                         onMembers: { activeSheet = .shareMembers($0) })
         case .createList:
             CreateListSheet(appearance: appearance, keyboardHeight: keyboard.height,
                             onClose: { hideKeyboard(); activeSheet = .lists },
@@ -247,7 +251,8 @@ extension ShoppingListView {
                                        activeSheet = .lists
                                        listToDelete = list
                                    } else if let me = session.currentProfile?.id {
-                                       listViewModel.leaveList(list, profileId: me)
+                                       // Verlassen mit 5 s „Rückgängig“ (wie Löschen)
+                                       listViewModel.stageListRemoval(list, kind: .leave(profileId: me))
                                        activeSheet = .lists
                                    }
                                },
@@ -259,8 +264,9 @@ extension ShoppingListView {
         Binding(get: { listToDelete != nil }, set: { if !$0 { listToDelete = nil } })
     }
 
+    /// Nach „Schieben zum Löschen“: Liste ausblenden, 5 s „Rückgängig“ in „Meine Listen“ (MyListsUndo).
     private func deleteList(_ list: ListModel) {
-        withAnimation(.easeInOut(duration: 0.3)) { listViewModel.deleteList(list) }
+        listViewModel.stageListRemoval(list, kind: .delete)
         listToDelete = nil
     }
 

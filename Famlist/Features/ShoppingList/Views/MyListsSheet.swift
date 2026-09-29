@@ -13,7 +13,8 @@
    Favorit, Mitglieder & Teilen, Löschen/Verlassen). Alle Listen-Aktionen gibt es NUR dort (SPEC §3.6).
 
  📝 Last Change:
- - Wischaktionen und Kontextmenü entfernt, langer Druck → Listen-Optionen (Handoff 24.09.2026).
+ - 29.09.2026: Wisch-Aktionen wie bei Artikeln (SwipeableListRow) + „Rückgängig“ nach Löschen/Verlassen;
+   langer Druck → Listen-Optionen bleibt.
  ------------------------------------------------------------------------
  */
 
@@ -29,6 +30,12 @@ struct MyListsSheet: View {
     let onClose: () -> Void
     var onCreate: () -> Void = {}
     var onOptions: (ListModel) -> Void = { _ in }
+    /// Wisch-Aktionen (Design: MyListsSwipeLeft/-Right): Umbenennen, Duplizieren, Mitglieder.
+    var onRename: (ListModel) -> Void = { _ in }
+    var onDuplicate: (ListModel) -> Void = { _ in }
+    var onMembers: (ListModel) -> Void = { _ in }
+
+    @State private var openRow: OpenSwipeRow?
 
     private var lists: [ListModel] { listViewModel.allLists }
     private var currentUserId: UUID? { session.currentProfile?.id }
@@ -51,7 +58,16 @@ struct MyListsSheet: View {
                 CTAButton(title: "Neue Liste erstellen", k: k, action: onCreate)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 34)
+
+                // „„Drogerie“ gelöscht“ + Rückgängig (MyListsUndo): 14 über dem Knopf
+                if let pending = listViewModel.pendingListRemoval {
+                    undoToast(pending)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 34 + 56 + 14)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: listViewModel.pendingListRemoval?.id)
         }
         .onAppear(perform: loadLists)
     }
@@ -77,22 +93,38 @@ struct MyListsSheet: View {
     }
 
     private func card(for list: ListModel) -> some View {
-        let isOwner = list.ownerId == currentUserId
+        let isOwner = currentUserId == nil || list.ownerId == currentUserId
         let isActive = list.id == listViewModel.listId
-        return ListSummaryCard(k: k, list: list,
-                               itemCount: listViewModel.listItemCounts[list.id] ?? 0,
-                               isSelected: isActive,
-                               isShared: currentUserId != nil && !isOwner,
-                               isFavorite: session.isFavorite(list))
-            .onTapGesture { select(list) }
-            .onLongPressGesture(minimumDuration: 0.45) {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                onOptions(list)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityLabel(isActive ? "\(list.title), aktive Liste" : "\(list.title) öffnen")
-            .accessibilityAction(named: "Listen-Optionen") { onOptions(list) }
+        let isFavorite = session.isFavorite(list)
+        // Wisch-Aktionen wie bei Artikeln; Tippen öffnet, langer Druck zeigt die Listen-Optionen.
+        return SwipeableListRow(k: k, id: list.id.uuidString, isFavorite: isFavorite, isOwner: isOwner, openRow: $openRow,
+                                onTap: { select(list) },
+                                onLongPress: { onOptions(list) },
+                                onToggleFavorite: { session.toggleFavorite(list) },
+                                onDelete: { remove(list, isOwner: isOwner) },
+                                onRename: { onRename(list) },
+                                onDuplicate: { onDuplicate(list) },
+                                onMembers: { onMembers(list) }) {
+            ListSummaryCard(k: k, list: list,
+                            itemCount: listViewModel.listItemCounts[list.id] ?? 0,
+                            isSelected: isActive,
+                            isShared: !isOwner,
+                            isFavorite: isFavorite)
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(isActive ? "\(list.title), aktive Liste" : "\(list.title) öffnen")
+                .accessibilityAction(named: "Listen-Optionen") { onOptions(list) }
+        }
+    }
+
+    /// Hinweis mit Restzeit-Balken (5 s), gleiche Gestaltung wie beim Löschen von Artikeln.
+    private func undoToast(_ pending: PendingListRemoval) -> some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+            let left = pending.deadline.timeIntervalSince(context.date)
+            UndoToast(k: OverlayTheme(k.appearance), message: pending.message,
+                      remaining: CGFloat(max(0, min(1, left / PendingListRemoval.undoDuration))),
+                      onUndo: { listViewModel.undoListRemoval() })
+        }
     }
 
     // MARK: - Actions
@@ -100,6 +132,15 @@ struct MyListsSheet: View {
     private func loadLists() {
         if let ownerId = currentUserId ?? listViewModel.defaultList?.ownerId {
             listViewModel.loadAllLists(ownerId: ownerId)
+        }
+    }
+
+    /// Wisch-Aktion „Löschen“ / „Verlassen“: ohne Rückfrage, dafür 5 s „Rückgängig“.
+    private func remove(_ list: ListModel, isOwner: Bool) {
+        if isOwner {
+            listViewModel.stageListRemoval(list, kind: .delete)
+        } else if let me = currentUserId {
+            listViewModel.stageListRemoval(list, kind: .leave(profileId: me))
         }
     }
 

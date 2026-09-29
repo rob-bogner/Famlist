@@ -23,7 +23,7 @@ import SwiftUI
 /// Glass action shown behind a swiped card.
 struct GlassActionButton: View {
     enum Style {
-        case delete, edit, unavailable, favorite
+        case delete, edit, unavailable, favorite, duplicate, members
 
         var colors: (String, String, String, Color) {
             switch self {
@@ -31,6 +31,8 @@ struct GlassActionButton: View {
             case .edit:        return ("#8DB8FF", "#3B7BF6", "#1F4FC0", .rgba(59, 123, 246, 0.6))
             case .unavailable: return ("#FFC08A", "#F08A2C", "#BD5F0E", .rgba(240, 138, 44, 0.6))
             case .favorite:    return ("#FFE38A", "#F5B521", "#C98A06", .rgba(201, 138, 6, 0.7))
+            case .duplicate:   return ("#7FE3D9", "#14B8A6", "#0F766E", .rgba(20, 184, 166, 0.6))
+            case .members:     return ("#C9B8FF", "#8B6CFF", "#5B3FD6", .rgba(139, 108, 255, 0.6))
             }
         }
     }
@@ -42,17 +44,22 @@ struct GlassActionButton: View {
     var columnHeight: CGFloat = 94
     /// Rund 56 × 56 wie der „Zurück“-Knopf (Artikel-Karten); sonst 64 × 52, Radius 20.
     var isRound = false
+    /// Durchmesser im runden Stil (Meine Listen: 48).
+    var roundSize: CGFloat = 56
+    /// Spaltenbreite und Schriftgröße der Beschriftung (Meine Listen: 70 / 11).
+    var columnWidth: CGFloat = 76
+    var labelSize: CGFloat = 12
     let action: () -> Void
 
     /// Radius 28 bei 56 × 56 = Kreis; CSSBox braucht eine InsettableShape.
-    private var shape: RoundedRectangle { RR(isRound ? 28 : 20) }
+    private var shape: RoundedRectangle { RR(isRound ? roundSize / 2 : 20) }
 
     var body: some View {
         let (c1, c2, c3, glow) = style.colors
         VStack(spacing: 6) {
             Button(action: action) {
-                SVGIcon(icon, size: 22, color: .white, lineWidth: 2.1)
-                    .frame(width: isRound ? 56 : 64, height: isRound ? 56 : 52)
+                SVGIcon(icon, size: isRound && roundSize < 56 ? 20 : 22, color: .white, lineWidth: 2.1)
+                    .frame(width: isRound ? roundSize : 64, height: isRound ? roundSize : 52)
                     .background(alignment: .top) {
                         GlossEllipse(opacity: isRound ? 0.65 : 0.5)
                             .frame(height: 20)
@@ -73,13 +80,13 @@ struct GlassActionButton: View {
             .accessibilityHidden(true)
 
             Text(title)
-                .font(AppFont.dm(12, 600))
+                .font(AppFont.dm(labelSize, 600))
                 .foregroundStyle(labelColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .fixedSize()           // white-space: nowrap – darf mittig über 76 pt hinausragen
         }
-        .frame(width: 76, height: columnHeight)
+        .frame(width: columnWidth, height: columnHeight)
     }
 }
 

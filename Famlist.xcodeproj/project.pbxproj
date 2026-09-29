@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DD95F406E53DEF634594B89C /* SwipeableListRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE05FF4F7105F312A0855DB /* SwipeableListRow.swift */; };
+		E0777E8D7DBFA2008485FDB7 /* LeadingFavoriteAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9394840F82A67F09C807284B /* LeadingFavoriteAction.swift */; };
+		C6D24DC7A63F9BDAA316D4F0 /* ListViewModel+ListUndo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C6F77225833B3B2A3A8276C /* ListViewModel+ListUndo.swift */; };
+		E2395AEA77B7B1D57FE34B0E /* PendingListRemoval.swift in Sources */ = {isa = PBXBuildFile; fileRef = C434185CED6648BF939AC3FB /* PendingListRemoval.swift */; };
+		5FB4C338067810CEC7035BBF /* SlideToConfirm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16183C4FD86374D338D67582 /* SlideToConfirm.swift */; };
 		1338F4ADF833FE32769EDBAB /* ReceiptPriceChangeRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4AA68185AC0B692245A52F2 /* ReceiptPriceChangeRows.swift */; };
 		2CD6D243B53A0C5DAC11B61E /* ReceiptStoreField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F03A21E5C18916C8BEDFA703 /* ReceiptStoreField.swift */; };
 		428E11D034DDF54606623BFB /* ReceiptAssignChoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D21DBDCCFBED4B4A6D3623 /* ReceiptAssignChoices.swift */; };
@@ -1092,6 +1097,8 @@
 		5C8BA02E9EA3F7EC6A169D58 /* ImageStorage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageStorage.swift; sourceTree = "<group>"; };
 		5D2C25136A0ACE6E107C1DBF /* WatchSyncCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSyncCoordinatorTests.swift; sourceTree = "<group>"; };
 		5D9E331FDD7001A633F2561E /* LeadingCheckAction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LeadingCheckAction.swift; sourceTree = "<group>"; };
+		4AE05FF4F7105F312A0855DB /* SwipeableListRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SwipeableListRow.swift; sourceTree = "<group>"; };
+		9394840F82A67F09C807284B /* LeadingFavoriteAction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LeadingFavoriteAction.swift; sourceTree = "<group>"; };
 		5E30A4008D50DCE754396797 /* QuantityMergeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuantityMergeTests.swift; sourceTree = "<group>"; };
 		5E7EFB22790B90FA076820C3 /* InviteError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InviteError.swift; sourceTree = "<group>"; };
 		5EA69735CAAD66D218C66C03 /* InvitePreviewInfo.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvitePreviewInfo.swift; sourceTree = "<group>"; };
@@ -1249,6 +1256,7 @@
 		A59B27DA136986D30128F513 /* GlassCircleBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCircleBackground.swift; sourceTree = "<group>"; };
 		A5A5DACBDCACCDF00BFDE86C /* CompactProgressBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CompactProgressBar.swift; sourceTree = "<group>"; };
 		A5EB19CFC7187F61054270FE /* PendingItemDeletion.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingItemDeletion.swift; sourceTree = "<group>"; };
+		C434185CED6648BF939AC3FB /* PendingListRemoval.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingListRemoval.swift; sourceTree = "<group>"; };
 		A5EE5628E6D35D46FAFBEF32 /* ListSortSettings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListSortSettings.swift; sourceTree = "<group>"; };
 		A601C770897250F04A6A1E90 /* MemberDeletedToast.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MemberDeletedToast.swift; sourceTree = "<group>"; };
 		A62645B84BF34F06F54A21B7 /* ReceiptMissingResolution.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptMissingResolution.swift; sourceTree = "<group>"; };
@@ -1280,6 +1288,7 @@
 		B472D0C386283DEE8908C5D9 /* SearchResultCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultCard.swift; sourceTree = "<group>"; };
 		B538BB3EFC8C274FB874709C /* ListScrollOffsetKey.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListScrollOffsetKey.swift; sourceTree = "<group>"; };
 		B53C093ECB1B703DB70437DD /* CTAButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CTAButton.swift; sourceTree = "<group>"; };
+		16183C4FD86374D338D67582 /* SlideToConfirm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlideToConfirm.swift; sourceTree = "<group>"; };
 		7668BEB23F3FE27D4855F20B /* PhotoSourceTiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSourceTiles.swift; sourceTree = "<group>"; };
 		ECC80C6AAAC1474081956BD1 /* ActionCardContent+PhotoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActionCardContent+PhotoSource.swift"; sourceTree = "<group>"; };
 		6288CB10A019822C16EE1E51 /* View+ActionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+ActionCard.swift"; sourceTree = "<group>"; };
@@ -1360,6 +1369,7 @@
 		D1295D6B5C1644C630DCCB55 /* WatchListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchListViewModelTests.swift; sourceTree = "<group>"; };
 		D1BF0429DE129E13BC69AC85 /* CategoryResolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryResolver.swift; sourceTree = "<group>"; };
 		D2B4DB4240DF849D3414670C /* ListViewModel+UndoDelete.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ListViewModel+UndoDelete.swift"; sourceTree = "<group>"; };
+		8C6F77225833B3B2A3A8276C /* ListViewModel+ListUndo.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ListViewModel+ListUndo.swift"; sourceTree = "<group>"; };
 		D38F17A3E00FF9748C504098 /* HoldRepeatButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HoldRepeatButton.swift; sourceTree = "<group>"; };
 		D39533751677ABB50FBDF7FE /* ListViewModel+Sections.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ListViewModel+Sections.swift"; sourceTree = "<group>"; };
 		D3B1B7E264421DBD3A1070F3 /* InsightPalette.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightPalette.swift; sourceTree = "<group>"; };
@@ -1673,6 +1683,7 @@
 			isa = PBXGroup;
 			children = (
 				B53C093ECB1B703DB70437DD /* CTAButton.swift */,
+				16183C4FD86374D338D67582 /* SlideToConfirm.swift */,
 				7668BEB23F3FE27D4855F20B /* PhotoSourceTiles.swift */,
 				ECC80C6AAAC1474081956BD1 /* ActionCardContent+PhotoSource.swift */,
 				6288CB10A019822C16EE1E51 /* View+ActionCard.swift */,
@@ -2189,6 +2200,7 @@
 				A5EE5628E6D35D46FAFBEF32 /* ListSortSettings.swift */,
 				9BA54AF0172B4665425044A4 /* ManualOrderStore.swift */,
 				A5EB19CFC7187F61054270FE /* PendingItemDeletion.swift */,
+				C434185CED6648BF939AC3FB /* PendingListRemoval.swift */,
 				730F62771B1F0A50C9BD95F4 /* QuantityFormat.swift */,
 				F810635E0B706C7EA34F4C96 /* QuantityMerge.swift */,
 				0E888DCD64ED71F6E6F6FAA1 /* ShoppingStartStore.swift */,
@@ -2732,6 +2744,8 @@
 				ED086311F8CF5CE7E402FA80 /* SwipeableItemRow.swift */,
 				34A66C65C84486945E55C34E /* ListEmptyState.swift */,
 				5D9E331FDD7001A633F2561E /* LeadingCheckAction.swift */,
+				4AE05FF4F7105F312A0855DB /* SwipeableListRow.swift */,
+				9394840F82A67F09C807284B /* LeadingFavoriteAction.swift */,
 				3784F5CF4E5A4043F5C21709 /* UndoActionButton.swift */,
 			);
 			path = Components;
@@ -2777,6 +2791,7 @@
 				FAD24040FAD24040FAD24040 /* ListViewModel+Pagination.swift */,
 				D39533751677ABB50FBDF7FE /* ListViewModel+Sections.swift */,
 				D2B4DB4240DF849D3414670C /* ListViewModel+UndoDelete.swift */,
+				8C6F77225833B3B2A3A8276C /* ListViewModel+ListUndo.swift */,
 				988186C88D3631BD7ECDA6B1 /* ListViewModel+ShoppingCompletion.swift */,
 				E5E6CE08F3205587F3E4E317 /* ListViewModel+Categories.swift */,
 				77BABDBF58F86B75E51D8AB4 /* ListViewModel+CatalogEdits.swift */,
@@ -3670,6 +3685,7 @@
 				33A4B5E2145B17922C0A7A1E /* ListTheme.swift in Sources */,
 				DF15146058A3642C21272C3A /* SheetTheme.swift in Sources */,
 				FB32AF6528D37004C30501AF /* CTAButton.swift in Sources */,
+				5FB4C338067810CEC7035BBF /* SlideToConfirm.swift in Sources */,
 				1338F4ADF833FE32769EDBAB /* ReceiptPriceChangeRows.swift in Sources */,
 				2CD6D243B53A0C5DAC11B61E /* ReceiptStoreField.swift in Sources */,
 				428E11D034DDF54606623BFB /* ReceiptAssignChoices.swift in Sources */,
@@ -3772,6 +3788,7 @@
 				885B68F7F3F6D16D70C62D10 /* ListSortSettings.swift in Sources */,
 				0B1B8C377962E1D8FAFFFAD3 /* ManualOrderStore.swift in Sources */,
 				D25E6E5594AC23B42E98FE5C /* PendingItemDeletion.swift in Sources */,
+				E2395AEA77B7B1D57FE34B0E /* PendingListRemoval.swift in Sources */,
 				4F5E8F67E98D77ABC5667B19 /* CopyChoiceScreen.swift in Sources */,
 				1999BE2B4A5B23F0C187816B /* CopyDoneToast.swift in Sources */,
 				1E0854C39A483C41BE2E56C3 /* DeleteChoiceScreen.swift in Sources */,
@@ -3785,6 +3802,7 @@
 				6D8A4F7DED1B1886F2C9E64F /* ListSectionBuilder.swift in Sources */,
 				EBC7BACFBF66FA9DA0BEF0D8 /* ListViewModel+Sections.swift in Sources */,
 				5DCB94D0CAB0A98EFD091968 /* ListViewModel+UndoDelete.swift in Sources */,
+				C6D24DC7A63F9BDAA316D4F0 /* ListViewModel+ListUndo.swift in Sources */,
 				E593F6BB52679A1799E7B960 /* ListViewModel+ShoppingCompletion.swift in Sources */,
 				B95C756217F26FA666D2EE2B /* ShoppingListView+Overlays.swift in Sources */,
 				E32E6C268F745910F99BA8A6 /* ShoppingListView+Sheets.swift in Sources */,
@@ -3910,6 +3928,8 @@
 				249EDE4F5BDF970DF9C7A627 /* ClipboardImportParser+Quantity.swift in Sources */,
 				3E02F1ACD589D43AFA1DA284 /* ClipboardImportParser+Units.swift in Sources */,
 				11B6BDBED75A3A02BF6E80BE /* LeadingCheckAction.swift in Sources */,
+				DD95F406E53DEF634594B89C /* SwipeableListRow.swift in Sources */,
+				E0777E8D7DBFA2008485FDB7 /* LeadingFavoriteAction.swift in Sources */,
 				E9CDF43A4C00D48320D52A79 /* UndoActionButton.swift in Sources */,
 				FDB11F8500CDD4F0D497B9AE /* ListViewModel+Configuration.swift in Sources */,
 				06FD8F135A1219E95E55DE78 /* ListViewModel+Feedback.swift in Sources */,

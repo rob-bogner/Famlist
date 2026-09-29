@@ -90,6 +90,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Läuft ab, sobald der Rückgängig-Toast ausgeblendet wird; schreibt dann die Löschung.
     internal var pendingDeletionTask: Task<Void, Never>?
 
+    /// Gelöschte bzw. verlassene Liste, die noch per „Rückgängig“ zurückkommen kann (Meine Listen, 5 s).
+    @Published var pendingListRemoval: PendingListRemoval?
+
+    /// Läuft ab, sobald der Listen-Hinweis verschwindet; sendet dann den Auftrag.
+    internal var pendingListRemovalTask: Task<Void, Never>?
+
     // MARK: - Pagination State (FAM-40)
 
     /// True when more remote pages might be available for the current list.

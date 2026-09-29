@@ -149,8 +149,7 @@ struct SettingsSheet: View {
                                   message: unsentTitle + " Verbinde dich mit dem Internet und warte kurz, dann wird alles gesendet.",
                                   buttons: [ActionCardButton(title: "Trotzdem abmelden", icon: Icon.logout, role: .destructive) {
                                                 session.signOut(discardingUnsentChanges: true)
-                                            },
-                                            .cancel()])
+                                            }])
             }
             Button(action: onDeleteAccount) {
                 SettingsRow(t: t, title: "Konto löschen", titleColor: t.danger,

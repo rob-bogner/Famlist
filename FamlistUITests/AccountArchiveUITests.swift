@@ -45,7 +45,7 @@ final class AccountArchiveUITests: XCTestCase {
 
         app.buttons["Endgültig löschen"].tap()
         XCTAssertTrue(app.staticTexts["Jetzt endgültig löschen?"].waitForExistence(timeout: 3))
-        app.buttons["Abbrechen"].tap()
+        app.buttons["actionCardClose"].tap()                                 // ✕ statt „Abbrechen“
         XCTAssertTrue(app.staticTexts["Jetzt endgültig löschen?"].waitForNonExistence(timeout: 3))
     }
 
@@ -62,12 +62,21 @@ final class AccountArchiveUITests: XCTestCase {
         XCTAssertTrue(element(app, startingWith: "Sofie, Konto gelöscht").waitForExistence(timeout: 5))
         app.buttons["Sofie entfernen"].tap()
         XCTAssertTrue(app.staticTexts["Sofie aus der Liste entfernen?"].waitForExistence(timeout: 3))
-        app.buttons["Entfernen"].firstMatch.tap()
+        let remove = app.buttons["Mitglied entfernen"]                          // Schieben zum Löschen
+        XCTAssertTrue(remove.waitForExistence(timeout: 3))
+        slide(remove)
         XCTAssertTrue(element(app, startingWith: "Sofie, Konto gelöscht").waitForNonExistence(timeout: 3))
     }
 
     func test_memberDeletedToast_appearsInList() {
         let app = launch(["-designOverlay", "memberDeleted"])
         XCTAssertTrue(element(app, startingWith: "Sofie hat das Konto gelöscht").waitForExistence(timeout: 5))
+    }
+
+    /// „Schieben zum Löschen“: vom linken Rand der Spur bis ganz nach rechts ziehen.
+    private func slide(_ element: XCUIElement) {
+        let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5))
+        let end = element.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end)
     }
 }

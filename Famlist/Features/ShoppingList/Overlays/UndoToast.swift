@@ -22,6 +22,8 @@ import SwiftUI
 struct UndoToast: View {
     let k: OverlayTheme
     var count = 1
+    /// Eigener Text (z. B. „„Drogerie“ gelöscht“); sonst „n Artikel gelöscht“.
+    var message: String? = nil
     /// Restzeit-Balken, Anteil der Padding-Box (0…1).
     var remaining: CGFloat = 0.62
     var onUndo: () -> Void = {}
@@ -30,7 +32,7 @@ struct UndoToast: View {
         // links/rechts 20, unten 114, Höhe 56, padding 0 8 0 16, Radius 20, overflow hidden
         GlassToast(k: k, height: 56, radius: 20, leading: 16, trailing: 8) {
             SVGIcon(Icon.trash, size: 20, color: k.toastIcon, lineWidth: 1.9)
-            Text("\(count) Artikel gelöscht")
+            Text(message ?? "\(count) Artikel gelöscht")
                 .font(AppFont.dm(15, 500))
                 .foregroundStyle(k.toastText)
                 .fixedSize(horizontal: false, vertical: true)

@@ -40,7 +40,7 @@ struct ActionCardHost: View {
                 .opacity(visible ? 1 : 0)
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
-                .onTapGesture { close(nil) }
+                .onTapGesture { if content?.closable ?? true { close(nil) } }
                 .accessibilityHidden(true)
             if visible, let content {
                 ActionCardView(content: content, k: k, close: close)
@@ -56,7 +56,7 @@ struct ActionCardHost: View {
                 visible = true
             }
         }
-        .accessibilityAction(.escape) { close(nil) }
+        .accessibilityAction(.escape) { if content?.closable ?? true { close(nil) } }
     }
 
     private func close(_ then: (() -> Void)?) {

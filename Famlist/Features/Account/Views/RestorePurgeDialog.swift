@@ -50,32 +50,10 @@ struct RestorePurgeDialog: View {
                 .cssLineHeight(21, font: AppFont.ui(.dmSans, 14, 400))       // line-height 1.5
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button(action: onConfirm) {
-                ZStack {
-                    Text("Endgültig löschen")
-                        .font(AppFont.dm(16, 600))
-                        .foregroundStyle(.white)
-                        .opacity(isWorking ? 0 : 1)
-                    if isWorking { ProgressView().tint(.white) }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(GlassPillBackground(style: .danger, appearance: k.appearance, accent: k.a, height: 52))
-                .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 8)
+            // Schieben zum Löschen statt Knopf (29.09.2026)
+            SlideToConfirm(title: "Endgültig löschen", k: k, isWorking: isWorking, action: onConfirm)
+                .padding(.top, 8)
 
-            Button(action: onCancel) {
-                Text("Abbrechen")
-                    .font(AppFont.dm(15, 600))
-                    .foregroundStyle(k.text)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(GlassPillBackground(style: .neutral, appearance: k.appearance, accent: k.a, height: 52))
-                    .contentShape(Pill)
-            }
-            .buttonStyle(.plain)
         }
         .allowsHitTesting(!isWorking)
         .padding(.top, 25)                                                   // 24 + 1 Rahmen
@@ -84,6 +62,15 @@ struct RestorePurgeDialog: View {
         .frame(maxWidth: .infinity)
         .background(CSSBox(shape: RR(28), paint: .color(t.menu), border: 1, borderColor: t.menuBorder,
                            shadows: t.menuShadow))
+        .overlay(alignment: .topTrailing) {
+            // ✕ statt „Abbrechen“ (Canvas: Glas-Knopf 40, oben rechts 14 / 14)
+            GlassCircleButton(style: .neutral, appearance: k.appearance, accent: k.a, icon: Icon.close,
+                              label: "Schließen", size: 40, iconSize: 16, action: onCancel)
+                .accessibilityIdentifier("actionCardClose")
+                .padding(.top, 14)
+                .padding(.trailing, 14)
+                .disabled(isWorking)
+        }
         .padding(.horizontal, 24)
         .padding(.top, 236)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

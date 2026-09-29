@@ -73,9 +73,9 @@ final class LiveReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["5,07\u{00A0}€"].exists, "Summe 5,07 €")
         shot("detail")
         app.buttons["Löschen"].tap()
-        let confirm = app.buttons["Kassenzettel löschen"]                   // Aktionskarte
+        let confirm = app.buttons["Kassenzettel löschen"]                   // Aktionskarte: Schieben zum Löschen
         XCTAssertTrue(confirm.waitForExistence(timeout: 3), "Rückfrage")
-        confirm.tap()
+        slide(confirm)
         XCTAssertTrue(archiveRow().waitForNonExistence(timeout: 5), "Bon aus dem Archiv entfernt")
 
         XCTAssertTrue(steps.waitUntil(15) { self.serverRows(self.bonFilter + "&select=id").isEmpty }, "Server: Zeile gelöscht")
@@ -147,5 +147,12 @@ final class LiveReceiptArchiveUITests: XCTestCase {
     private func shot(_ name: String) {
         guard let shots else { return }
         try? XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: "\(shots)/\(name).png"))
+    }
+
+    /// „Schieben zum Löschen“: vom linken Rand der Spur bis ganz nach rechts ziehen.
+    private func slide(_ element: XCUIElement) {
+        let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5))
+        let end = element.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end)
     }
 }

@@ -90,8 +90,7 @@ struct ItemCard: View {
         .actionCard(isPresented: $showRetryConfirmation, k: SheetTheme(t.appearance)) {
             ActionCardContent(icon: Icon.sync, tone: .warn, title: "Sync fehlgeschlagen",
                               message: "„\(item.name)“ konnte nicht synchronisiert werden. Soll ein neuer Versuch gestartet werden?",
-                              buttons: [ActionCardButton(title: "Erneut synchronisieren", icon: Icon.sync, role: .primary) { onRetry?() },
-                                        .cancel()])
+                              buttons: [ActionCardButton(title: "Erneut synchronisieren", icon: Icon.sync, role: .primary) { onRetry?() }])
         }
     }
 

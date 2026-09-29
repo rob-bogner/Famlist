@@ -83,8 +83,7 @@ struct ReceiptDetailSheet: View {
         .actionCard(isPresented: $confirmDelete, k: SheetTheme(appearance)) {
             ActionCardContent(icon: Icon.receipt, tone: .danger, title: "Kassenzettel löschen?",
                               message: "Die Fotos werden für alle in der Liste gelöscht. Die Preise im Preisverlauf bleiben.",
-                              buttons: [ActionCardButton(title: "Kassenzettel löschen", icon: Icon.trash, role: .destructive, action: onDelete),
-                                        .cancel()])
+                              buttons: [ActionCardButton(title: "Kassenzettel löschen", role: .slide, action: onDelete)])
         }
     }
 

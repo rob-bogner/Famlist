@@ -30,6 +30,8 @@ struct ActionCardButtonView: View {
         switch button.role {
         case .primary:
             CTAButton(title: button.title, k: k, isEnabled: button.isEnabled, icon: button.icon, action: tap)
+        case .slide:
+            SlideToConfirm(title: button.title, k: k, action: tap)
         case .destructive:
             pill(height: 56, style: .danger, color: .white, fontSize: 16, iconSize: 19)
         case .secondary, .cancel:

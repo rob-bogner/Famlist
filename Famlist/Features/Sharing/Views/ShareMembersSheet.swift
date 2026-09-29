@@ -78,8 +78,7 @@ struct ShareMembersSheet: View {
             archivedToRemove.map { member in
                 ActionCardContent(icon: Icon.userRemove, tone: .danger, title: "\(member.name) aus der Liste entfernen?",
                                   message: "Wird das Konto wiederhergestellt, kommt \(member.name) nicht mehr automatisch zurück. Du kannst \(member.name) später neu einladen.",
-                                  buttons: [ActionCardButton(title: "Entfernen", icon: Icon.userRemove, role: .destructive) { vm.removeArchived(member) },
-                                            .cancel()])
+                                  buttons: [ActionCardButton(title: "Mitglied entfernen", role: .slide) { vm.removeArchived(member) }])
             }
         }
         .task { await vm.load() }

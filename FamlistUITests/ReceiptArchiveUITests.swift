@@ -59,9 +59,9 @@ final class ReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Vollbild"].waitForExistence(timeout: 3))
 
         app.buttons["Löschen"].tap()
-        let confirm = app.buttons["Kassenzettel löschen"]                   // Aktionskarte
+        let confirm = app.buttons["Kassenzettel löschen"]                   // Aktionskarte: Schieben zum Löschen
         XCTAssertTrue(confirm.waitForExistence(timeout: 3), "Rückfrage erscheint")
-        confirm.tap()
+        slide(confirm)
 
         let remaining = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH '11 Bons · '")).firstMatch
         XCTAssertTrue(remaining.waitForExistence(timeout: 5), "Archiv zählt einen Bon weniger")
@@ -137,5 +137,12 @@ final class ReceiptArchiveUITests: XCTestCase {
         XCTAssertTrue(milk.waitForExistence(timeout: 5), "zurück in „Verbrauch“ desselben Monats")
         app.buttons["Schließen"].firstMatch.tap()
         XCTAssertTrue(card.waitForExistence(timeout: 5), "✕ führt ins Archiv")
+    }
+
+    /// „Schieben zum Löschen“: vom linken Rand der Spur bis ganz nach rechts ziehen.
+    private func slide(_ element: XCUIElement) {
+        let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5))
+        let end = element.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end)
     }
 }
