@@ -9,6 +9,7 @@
 
  📝 Last Change:
  - Initial creation (Redesign „Hybrid“, Phase 6).
+ - Spalte `color` (Migration 033, Kategorie-Farbe).
  ------------------------------------------------------------------------
  */
 
@@ -28,20 +29,21 @@ final class SupabaseCategoryDefinitionsRepository: CategoryDefinitionsRepository
         let name: String
         let icon: String?
         let position: Int
+        let color: String?
     }
 
     func fetch(profileId: UUID) async throws -> [CategoryDefinition] {
         let rows: [Row] = try await client.from("categories")
-            .select("id, profile_id, name, icon, position")
+            .select("id, profile_id, name, icon, position, color")
             .eq("profile_id", value: profileId.uuidString)
             .order("position", ascending: true)
             .execute().value
-        return rows.map { CategoryDefinition(id: $0.id, name: $0.name, icon: $0.icon ?? "tag", position: $0.position) }
+        return rows.map { CategoryDefinition(id: $0.id, name: $0.name, icon: $0.icon ?? "tag", position: $0.position, color: $0.color) }
     }
 
     func upsert(_ categories: [CategoryDefinition], profileId: UUID) async throws {
         guard !categories.isEmpty else { return }
-        let rows = categories.map { Row(id: $0.id, profile_id: profileId, name: $0.name, icon: $0.icon, position: $0.position) }
+        let rows = categories.map { Row(id: $0.id, profile_id: profileId, name: $0.name, icon: $0.icon, position: $0.position, color: $0.color) }
         try await client.from("categories").upsert(rows, onConflict: "id").execute()
     }
 

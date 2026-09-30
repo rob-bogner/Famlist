@@ -95,6 +95,19 @@ final class CategoryStoreTests: XCTestCase {
         XCTAssertEqual(store.categories[1].name, "Molkerei")
     }
 
+    func test_color_isStoredAndKeptWhenNil() async {
+        let store = await makeStore()
+        let milk = store.categories[1]
+        XCTAssertEqual(CategoryColor.hex(for: milk), "#4799E1", "Standardfarbe Milchprodukte")
+        _ = store.update(milk.id, name: milk.name, icon: milk.icon, color: "#C72933")
+        XCTAssertEqual(store.categories[1].color, "#C72933")
+        _ = store.update(milk.id, name: milk.name, icon: "cup")
+        XCTAssertEqual(store.categories[1].color, "#C72933", "ohne Farbe bleibt die gewählte")
+        XCTAssertTrue(store.add(name: "Drogerie", icon: "bag", color: "#8F47E1"))
+        XCTAssertEqual(store.categories.first { $0.name == "Drogerie" }?.color, "#8F47E1")
+        XCTAssertEqual(CategoryColor.palette.count, 36)
+    }
+
     func test_fallback_cannotBeDeletedOrRenamed() async {
         let store = await makeStore()
         let fallback = store.categories.first(where: \.isFallback)!

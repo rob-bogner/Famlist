@@ -533,6 +533,7 @@
 		B6F90D79343934176E47F9CB /* ReceiptMissingItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D0EADCB514C2BD58B6AFBB /* ReceiptMissingItemCard.swift */; };
 		B7271CCE34F844D762B3DA0B /* ListSectionBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A58436567CB6C273918E2C /* ListSectionBuilderTests.swift */; };
 		B72992046BDE83E099B5778C /* CategoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 023F9ADD0EB5B9E1936DA7A0 /* CategoryStore.swift */; };
+		F87CFB7DA0C02BE6F1A88472 /* CategoryColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F776353DD65069E9F4321079 /* CategoryColor.swift */; };
 		B732B5CBEE9EA8B2BA4C5EBE /* CatalogUsageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6040B7B34FF9DD1E561EAB9A /* CatalogUsageTests.swift */; };
 		B737AC069ECD0B672D8EBEDB /* OperationQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC58BD02ED1F86D000D3915 /* OperationQueue.swift */; };
 		B738EDAC8E4ED98F24D2B254 /* AllListsRealtimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC163A92C5F01752A534FA1 /* AllListsRealtimeTests.swift */; };
@@ -1349,6 +1350,7 @@
 		C1B4BA8DDB715B5A35A34BDF /* ListViewModel+TestSeeding.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ListViewModel+TestSeeding.swift"; sourceTree = "<group>"; };
 		C20C9B2D776854E07EF04F03 /* SupabaseReceiptsRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SupabaseReceiptsRepository.swift; sourceTree = "<group>"; };
 		C2A9E7AAE3EF037D518E9D9B /* CategoryIconCatalog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryIconCatalog.swift; sourceTree = "<group>"; };
+		F776353DD65069E9F4321079 /* CategoryColor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryColor.swift; sourceTree = "<group>"; };
 		C2BEF2B2627C28B4E567F941 /* ListScrollState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ListScrollState.swift; sourceTree = "<group>"; };
 		C2DC91AA0C0A617B20AF0927 /* OpenSwipeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSwipeRow.swift; sourceTree = "<group>"; };
 		C310138D57EEA5E62756EAC3 /* PricePoint.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PricePoint.swift; sourceTree = "<group>"; };
@@ -1660,6 +1662,7 @@
 			isa = PBXGroup;
 			children = (
 				C2A9E7AAE3EF037D518E9D9B /* CategoryIconCatalog.swift */,
+				F776353DD65069E9F4321079 /* CategoryColor.swift */,
 				D1BF0429DE129E13BC69AC85 /* CategoryResolver.swift */,
 			);
 			name = Services;
@@ -3904,6 +3907,7 @@
 				AA10E3C3B790BE0DB831519B /* CategoryIconCatalog.swift in Sources */,
 				B15439E43D3CBA7B6CD2925F /* CategoryResolver.swift in Sources */,
 				B72992046BDE83E099B5778C /* CategoryStore.swift in Sources */,
+				F87CFB7DA0C02BE6F1A88472 /* CategoryColor.swift in Sources */,
 				B4D568F4CF62D9DBFE065FD7 /* EKKFlexRow.swift in Sources */,
 				19DBEBCC149AE12D75EE6271 /* EditCategorySheet.swift in Sources */,
 				316A47168810F4EE22E103FE /* ManageCategoriesSheet.swift in Sources */,

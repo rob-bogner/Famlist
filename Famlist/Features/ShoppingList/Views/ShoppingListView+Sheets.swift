@@ -183,7 +183,7 @@ extension ShoppingListView {
             EditCategorySheet(appearance: appearance, category: category, keyboardHeight: keyboard.height,
                               isNameAvailable: { categoryStore.isAvailable($0, except: category?.id) },
                               onClose: { hideKeyboard(); activeSheet = .manageCategories },
-                              onSave: { saveCategory(category, name: $0, icon: $1) },
+                              onSave: { saveCategory(category, name: $0, icon: $1, color: $2) },
                               onDelete: { deleteCategory(category) })
         case .deleteAccount:
             DeleteAccountDialog(appearance: appearance, isWorking: isDeletingAccount, errorText: deleteAccountError,
@@ -297,15 +297,15 @@ extension ShoppingListView {
 
     // MARK: - Kategorien
 
-    private func saveCategory(_ category: CategoryDefinition?, name: String, icon: String) {
+    private func saveCategory(_ category: CategoryDefinition?, name: String, icon: String, color: String) {
         hideKeyboard()
         if let category {
-            if let oldName = categoryStore.update(category.id, name: name, icon: icon),
+            if let oldName = categoryStore.update(category.id, name: name, icon: icon, color: color),
                let newName = categoryStore.categories.first(where: { $0.id == category.id })?.name {
                 listViewModel.reassignCategory(from: oldName, to: newName)
             }
         } else {
-            categoryStore.add(name: name, icon: icon)
+            categoryStore.add(name: name, icon: icon, color: color)
         }
         activeSheet = .manageCategories
     }

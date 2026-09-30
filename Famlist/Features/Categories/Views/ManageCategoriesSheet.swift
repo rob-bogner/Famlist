@@ -17,6 +17,7 @@
  - Mehr als 4 Kategorien (Design) → der Bereich scrollt.
 
  📝 Last Change:
+ - Kachel in der Kategorie-Farbe mit weißem Icon, Untertitel „Tippen: Name, Farbe, Icon“ (30.09.2026).
  - Wischen zum Löschen; Name ist kein Button mehr (Wischen wurde sonst blockiert).
  ------------------------------------------------------------------------
  */
@@ -132,9 +133,10 @@ struct ManageCategoriesSheet: View {
                 .frame(minWidth: 0, idealWidth: 22, maxWidth: 22)
                 .accessibilityHidden(true)
 
-            SVGIcon(c.svgIcon, size: 22, color: k.accentText, lineWidth: 1.9)
+            SVGIcon(c.svgIcon, size: 22, color: .white, lineWidth: 1.9)
                 .frame(width: 44, height: 44)
-                .background(CSSBox(shape: RR(14), paint: t.tile, shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.4))]))
+                .background(CSSBox(shape: RR(14), paint: CategoryColor.tilePaint(CategoryColor.rgb(for: c)),
+                                   shadows: CategoryColor.tileShadow(CategoryColor.rgb(for: c))))
                 .accessibilityHidden(true)
 
             // Kein Button: Er hielte die Berührung fest und blockierte das Wischen (View+SwipeFriendlyTap).
@@ -144,7 +146,7 @@ struct ManageCategoriesSheet: View {
                     .foregroundStyle(k.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
-                Text(c.isFallback ? "Standard · kann nicht gelöscht werden" : "Tippen zum Bearbeiten")
+                Text(c.isFallback ? "Standard · kann nicht gelöscht werden" : "Tippen: Name, Farbe, Icon")
                     .font(AppFont.dm(12, 400))
                     .foregroundStyle(k.sub)
                     .fixedSize(horizontal: false, vertical: true)

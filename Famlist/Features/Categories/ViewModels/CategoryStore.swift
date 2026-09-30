@@ -17,6 +17,7 @@
  - Schreibaufträge an Supabase laufen strikt nacheinander (sonst könnten schnelle Änderungen vertauscht ankommen).
 
  📝 Last Change:
+ - add/update mit Farbe (30.09.2026).
  - Offline zuerst mit gemerkten offenen Änderungen und Senden bei Netz (Audit 25.09.2026, M4).
  ------------------------------------------------------------------------
  */
@@ -101,19 +102,20 @@ final class CategoryStore: ObservableObject {
 
     /// Neue Kategorie ans Ende vor „Sonstiges“. Liefert false bei leerem oder doppeltem Namen.
     @discardableResult
-    func add(name raw: String, icon: String) -> Bool {
+    func add(name raw: String, icon: String, color: String? = nil) -> Bool {
         let name = raw.trimmingCharacters(in: .whitespaces)
         guard isAvailable(name) else { return false }
         var list = categories
         let insertAt = list.firstIndex(where: \.isFallback) ?? list.count
-        list.insert(CategoryDefinition(id: UUID(), name: name, icon: icon, position: 0), at: insertAt)
+        list.insert(CategoryDefinition(id: UUID(), name: name, icon: icon, position: 0, color: color), at: insertAt)
         apply(list, changed: nil)
         UserLog.Data.categoryCreated(name: name)
         return true
     }
 
-    /// Name/Icon ändern. Liefert den alten Namen, wenn er sich geändert hat (Artikel neu zuordnen).
-    func update(_ id: UUID, name raw: String, icon: String) -> String? {
+    /// Name/Icon/Farbe ändern (`color` nil = Farbe bleibt). Liefert den alten Namen, wenn er sich geändert hat
+    /// (Artikel neu zuordnen).
+    func update(_ id: UUID, name raw: String, icon: String, color: String? = nil) -> String? {
         guard let index = categories.firstIndex(where: { $0.id == id }) else { return nil }
         var list = categories
         let old = list[index]
@@ -121,6 +123,7 @@ final class CategoryStore: ObservableObject {
         guard name == old.name || isAvailable(name, except: id) else { return nil }
         list[index].name = name
         list[index].icon = icon
+        if let color { list[index].color = color }
         apply(list, changed: [list[index]])
         UserLog.Data.categoryUpdated(name: name)
         return name == old.name ? nil : old.name

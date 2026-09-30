@@ -19,6 +19,7 @@
    Beim Hochscrollen geht er erst in der letzten Übergangsstrecke vor dem Listenanfang wieder auf.
 
  📝 Last Change:
+ - Tabs bekommen die Anzahl offener / erledigter Artikel (30.09.2026).
  - Filter-Modus (Suchleiste filtert die Liste), Knöpfe ☰/Suche als neutrale Glas-Knöpfe.
  ------------------------------------------------------------------------
  */
@@ -87,7 +88,7 @@ struct CollapsingListHeader: View {
                 searchBlock
                 heroBlock
                     .padding(.top, Self.gap)
-                ListFilterTabs(t: t, selection: $filter)
+                ListFilterTabs(t: t, selection: $filter, openCount: max(total - checked, 0), doneCount: checked)
                     .padding(.top, Self.gap)
                     .background { GeometryReader { g in Color.clear.onAppear { tabsHeight = g.size.height }
                         .onChange(of: g.size.height) { _, h in tabsHeight = h } } }

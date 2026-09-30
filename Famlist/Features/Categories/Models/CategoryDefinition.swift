@@ -14,6 +14,7 @@
  - Standard-Kategorien für neue Konten = die bisherigen 8 festen Kategorien in ihrer Reihenfolge.
 
  📝 Last Change:
+ - Feld `color` (#RRGGBB, optional; Migration 033) (30.09.2026).
  - Initial creation (Redesign „Hybrid“, Phase 6).
  ------------------------------------------------------------------------
  */
@@ -27,6 +28,8 @@ struct CategoryDefinition: Codable, Identifiable, Hashable {
     var icon: String
     /// Reihenfolge im Ladenweg (0 = zuerst).
     var position: Int
+    /// Farbe (#RRGGBB) aus der Palette „Kategorie bearbeiten → Farbe“. nil = Standardfarbe (CategoryColor).
+    var color: String? = nil
 
     static let fallbackName = ItemCategory.sonstiges.rawValue
 

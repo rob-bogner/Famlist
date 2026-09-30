@@ -10,8 +10,8 @@
 
  🔰 Notes for Beginners:
  - Breite 260, Innenabstand 6, Radius 20, Fläche menu (fast deckend) mit großem weichem Schatten.
- - Zeilen 44 hoch, Symbol-Kachel 28 (Radius 9, Akzent-Tönung), gewählt = getönte Fläche + Haken.
- - Höchstens 7 Zeilen sichtbar, der Rest scrollt. Suchen filtert sofort; gibt es den Namen noch nicht,
+ - Zeilen 44 hoch, Symbol-Kachel 28 (Radius 9, in der Kategorie-Farbe getönt), gewählt = getönte Fläche + Haken.
+ - Höchstens 6 Zeilen sichtbar, der Rest scrollt (passt über bzw. unter die Karte). Suchen filtert sofort; gibt es den Namen noch nicht,
    heißt die letzte Zeile „„Name“ anlegen“ und legt die Kategorie an (Symbol-Vorschlag aus dem Namen).
  - Position und Schließen (Tippen daneben) regelt ProductDetailSheet über einen Anker.
 
@@ -36,7 +36,7 @@ struct ProductDetailCategoryPopover: View {
 
     static let width: CGFloat = 260
     private static let rowHeight: CGFloat = 44
-    private static let maxRows = 7
+    private static let maxRows = 6
 
     private var trimmed: String { query.trimmingCharacters(in: .whitespaces) }
     private var filtered: [CategoryDefinition] {
@@ -111,9 +111,10 @@ struct ProductDetailCategoryPopover: View {
         let isOn = category.name == selection
         return Button { pick(category.name) } label: {
             HStack(spacing: 10) {
-                SVGIcon(category.svgIcon, size: 15, color: k.accentText, lineWidth: 2)
+                let rgb = CategoryColor.rgb(for: category)
+                SVGIcon(category.svgIcon, size: 15, color: rgb.color(), lineWidth: 2)
                     .frame(width: 28, height: 28)
-                    .background(RR(9).fill(k.a.base.color(k.isDark ? 0.2 : 0.12)))
+                    .background(RR(9).fill(CategoryColor.softFill(rgb, dark: k.isDark)))
                 Text(category.name)
                     .font(AppFont.dm(15, isOn ? 600 : 500))
                     .foregroundStyle(k.text)

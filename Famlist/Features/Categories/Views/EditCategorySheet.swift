@@ -5,7 +5,7 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Sheet „Kategorie bearbeiten“ (Höhe 594): Name, Icon (5 × 2), „Speichern“, „Kategorie löschen“
+ - Sheet „Kategorie bearbeiten“ (Höhe 760): Name, Farbe (36), Icon, „Speichern“, „Kategorie löschen“
    mit Hinweis „Artikel dieser Kategorie wandern nach „Sonstiges““. Auch für „Neue Kategorie“.
 
  🔰 Notes for Beginners:
@@ -15,10 +15,12 @@
 
  📝 Last Change:
  - Initial creation (Redesign „Hybrid“, Phase 6).
+ - Abschnitt „Farbe“ (9 × 4 Kreise 30, gewählt Ring + Haken); große Kachel in der gewählten Farbe (30.09.2026).
  ------------------------------------------------------------------------
  */
 
 import SwiftUI
+import UIKit
 
 struct EditCategorySheet: View {
     let appearance: Appearance
@@ -27,11 +29,12 @@ struct EditCategorySheet: View {
     var keyboardHeight: CGFloat = 0
     var isNameAvailable: (String) -> Bool = { _ in true }
     var onClose: () -> Void = {}
-    var onSave: (_ name: String, _ icon: String) -> Void = { _, _ in }
+    var onSave: (_ name: String, _ icon: String, _ color: String) -> Void = { _, _, _ in }
     var onDelete: () -> Void = {}
 
     @State private var name = ""
     @State private var icon = "drop"
+    @State private var color = CategoryColor.newCategoryHex
     /// true, sobald der Nutzer selbst ein Icon gewählt hat → kein automatischer Vorschlag mehr.
     @State private var iconTouched = false
     @FocusState private var nameFocused: Bool
@@ -47,15 +50,16 @@ struct EditCategorySheet: View {
         EKKSheetStage(k: k, background: {
             DesignListScreen(appearance: appearance)
         }) {
-            SheetSurface(k: k, height: 704) {                // +110 für das gruppierte Icon-Raster
+            SheetSurface(k: k, height: 760) {                // gruppiertes Icon-Raster + Abschnitt „Farbe“
                 VStack(alignment: .leading, spacing: 0) {
                     SheetHeader(title: category == nil ? "Neue Kategorie" : "Kategorie bearbeiten", k: k, onClose: onClose)
 
                     HStack(spacing: 14) {
                         SVGIcon(CategoryIconCatalog.icon(for: icon), size: 30, color: .white, lineWidth: 1.9)
                             .frame(width: 64, height: 64)
-                            .background(CSSBox(shape: RR(20), paint: t.avatarBg,
-                                               shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.4))]))
+                            .background(CSSBox(shape: RR(20), paint: CategoryColor.tilePaint(RGB(hex: color)),
+                                               shadows: CategoryColor.tileShadow(RGB(hex: color))))
+                            .animation(.easeOut(duration: 0.2), value: color)
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 6) {
                             FieldLabel(text: "Name", k: k)
@@ -76,15 +80,21 @@ struct EditCategorySheet: View {
                     .padding(.top, 20)
 
                     VStack(alignment: .leading, spacing: 8) {
+                        FieldLabel(text: "Farbe", k: k)
+                        colorGrid(k: k)
+                    }
+                    .padding(.top, 18)
+
+                    VStack(alignment: .leading, spacing: 8) {
                         FieldLabel(text: "Icon", k: k)
                         iconGrid(k: k)
                     }
-                    .padding(.top, 20)
+                    .padding(.top, 16)
 
                     Spacer(minLength: 0)
 
                     VStack(spacing: 8) {
-                        CTAButton(title: "Speichern", k: k, isEnabled: canSave) { onSave(trimmed, icon) }
+                        CTAButton(title: "Speichern", k: k, isEnabled: canSave) { onSave(trimmed, icon, color) }
                         if category != nil {
                             EKKTextButton(title: "Kategorie löschen", color: t.danger, action: onDelete)
                                 .opacity(isFallback ? 0.45 : 1)
@@ -111,11 +121,12 @@ struct EditCategorySheet: View {
         .onAppear {
             name = category?.name ?? ""
             icon = category.map { CategoryIconCatalog.displayKey(name: $0.name, icon: $0.icon) } ?? "tag"
+            color = category.map { CategoryColor.hex(for: $0) } ?? CategoryColor.newCategoryHex
             if category == nil { nameFocused = true }
         }
     }
 
-    /// Gruppiertes Icon-Raster (60 Icons, 8 Gruppen), scrollt innerhalb von 284 pt.
+    /// Gruppiertes Icon-Raster (60 Icons, 8 Gruppen), scrollt innerhalb von 196 pt.
     /// Oben/unten 14 pt weich ausgeblendet, damit sichtbar ist, dass es weitergeht.
     private func iconGrid(k: SheetTheme) -> some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
@@ -139,7 +150,7 @@ struct EditCategorySheet: View {
                 }
                 .padding(.vertical, 14)
             }
-            .frame(height: 284)
+            .frame(height: 196)
             .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.05),
                                          .init(color: .black, location: 0.95), .init(color: .clear, location: 1)],
                                  startPoint: .top, endPoint: .bottom))
@@ -151,6 +162,45 @@ struct EditCategorySheet: View {
             guard category == nil, !iconTouched, let suggestion = CategoryIconCatalog.suggestedKey(for: newName) else { return }
             withAnimation(.easeOut(duration: 0.2)) { icon = suggestion }
         }
+    }
+
+    /// Farben 9 × 4: Kreis 30 im Farbverlauf, Zeilenabstand 9; gewählt = Ring 2 (2 Abstand) + weißer Haken.
+    private func colorGrid(k: SheetTheme) -> some View {
+        VStack(spacing: 9) {
+            ForEach(0..<(CategoryColor.palette.count / CategoryColor.columns), id: \.self) { row in
+                HStack(spacing: 0) {
+                    ForEach(0..<CategoryColor.columns, id: \.self) { column in
+                        if column > 0 { Spacer(minLength: 0) }
+                        swatch(CategoryColor.palette[row * CategoryColor.columns + column])
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 2)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Farbe")
+    }
+
+    private func swatch(_ swatch: CategoryColor.Swatch) -> some View {
+        let isOn = swatch.hex.caseInsensitiveCompare(color) == .orderedSame
+        return Button {
+            UISelectionFeedbackGenerator().selectionChanged()
+            withAnimation(.easeOut(duration: 0.18)) { color = swatch.hex }
+        } label: {
+            ZStack {
+                CSSBox(shape: Circle(), paint: CategoryColor.tilePaint(swatch.rgb),
+                       shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.35)), .inner(0, -2, 4, 0, .rgba(0, 0, 0, 0.12))])
+                if isOn { SVGIcon(Icon.check, size: 14, color: .white, lineWidth: 3) }
+            }
+            .frame(width: 30, height: 30)
+            .background {
+                if isOn { Circle().stroke(swatch.rgb.color(), lineWidth: 2).frame(width: 36, height: 36) }
+            }
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(swatch.name)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
     /// Icon-Taste: Höhe 52, Radius 16; normal Rahmen 1 fieldBorder auf field, gewählt Rahmen 2 ring auf ringSoft.

@@ -14,6 +14,7 @@
  - „Alle abhaken“ hakt nur die offenen Artikel dieser Kategorie ab.
 
  📝 Last Change:
+ - Kachel in der Kategorie-Farbe statt Akzent (30.09.2026).
  - Aus ListScreen des Design-Pakets MyListUI übernommen, an echte Kategorien angebunden.
  ------------------------------------------------------------------------
  */
@@ -44,9 +45,11 @@ struct ListSectionHeader: View {
     private func categoryHeader(_ category: CategoryDefinition) -> some View {
         HStack(spacing: 0) {
             HStack(spacing: 10) {
+                // Kachel in der Kategorie-Farbe (Kategorie bearbeiten → Farbe)
+                let rgb = CategoryColor.rgb(for: category)
                 SVGIcon(category.svgIcon, size: 16, color: .white, lineWidth: 2.1)
                     .frame(width: 30, height: 30)
-                    .background(CSSBox(shape: RR(10), paint: t.chipGrad, shadows: t.chipShadow))
+                    .background(CSSBox(shape: RR(10), paint: CategoryColor.tilePaint(rgb), shadows: CategoryColor.tileShadow(rgb)))
                 Text(category.name)
                     .font(AppFont.outfit(20, 600))
                     .foregroundStyle(t.text)
