@@ -65,7 +65,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Mitglieder & Teilen | ShareMembers | ja | `ShareMembersScreen` |
 |  | Aus Zwischenablage importieren | ClipboardImport | ja | – (nur HTML) |
 |  | Artikel verwalten | ManageItems | ja | `ManageItemsScreen` |
-|  | Kategorien verwalten | ManageCategories | ja | `ManageCategoriesScreen` |
+|  | Kategorien verwalten („Neue Kategorie“ oben; Kopf fest, nur die Liste scrollt) | ManageCategories | ja | `ManageCategoriesScreen` |
 |  | Kategorie bearbeiten (Name, Farbe, Icon) | EditCategory | ja | `EditCategoryScreen` |
 | 6 · Einkauf abschließen | Einkauf erledigt | ShoppingDone | ja | `ShoppingDoneScreen` |
 |  | Einkauf erledigt – ohne Kassenzettel | ShoppingDoneScan | ja | – (nur HTML) |
@@ -137,7 +137,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
    - Der **Plus-Button (FAB)** öffnet die Eingabe unten über der Tastatur (AddInline). Das Popup mit Vorschlägen wächst nach oben; jeder Vorschlag hat einen runden Glas-„+“.
    - Senden/Return fügt den besten Treffer hinzu. Kein Treffer → „„…“ als neuen Artikel anlegen“ → Neuer Artikel (Name vorbefüllt), siehe AddInlineNoResults.
    - **Produktdetails** (ProductDetail, seit 28.09.2026) ist EIN Screen für neu, ansehen und bearbeiten: Sheet (790 hoch, oben Radius 34, Griff, Herunterziehen schließt) über der abgedunkelten Liste, oben großes Produktbild (330, unten Radius 40), ✕ oben rechts (14 / 16), Glas-Stift „Bearbeiten“ unten rechts am Bild (nur Ansehen; beim Bearbeiten sitzt dort der Kamera-Knopf „Bild ändern“). Darunter Name + Marke links, aktueller Preis rechts, Karten Kategorie · Maßeinheit · Menge in der Liste · Preisverlauf, dann Beschreibung.
-   - Tipp auf das Artikelbild in der Liste → Ansehen; Stift → dieselben Stellen werden Eingabefelder (ProductDetailEdit), „Speichern“ → zurück zu Ansehen. Wischaktion „Bearbeiten“ öffnet direkt das Bearbeiten. Neuer Artikel = ProductNew (leere Felder, gestrichelte Kachel „Foto hinzufügen“, „Zur Liste hinzufügen“).
+   - Tipp auf das Artikelbild in der Liste → Ansehen; Stift → dieselben Stellen werden Eingabefelder (ProductDetailEdit), „Speichern“ → zurück zu Ansehen. Wischaktion „Bearbeiten“ öffnet direkt das Bearbeiten. Neuer Artikel = ProductNew (leere Felder, Platzhalter „Foto hinzufügen“ füllt den ganzen Bildbereich wie ein Foto – gestrichelt, 12 pt Rand, 24 oben unter dem Griff, Kamera-Kugel 72, „Kamera oder Mediathek“; „Zur Liste hinzufügen“).
    - Öffnet ohne Fokus; Tastatur offen → Sheet volle Höhe. Kategorie öffnet das Glas-Menü (ProductDetailCategory: Suche, 6 Zeilen, „Ohne Kategorie“, „Neue Kategorie“), Maßeinheit klappt darunter die Einheiten auf (ProductDetailUnit: Zählen · Gewicht · Volumen · Länge). Beide klappen zu, sobald ein anderes Feld den Fokus bekommt.
    - Bild im Kopf: Bilder aus der Produktbibliothek (freigestellt, z. B. Obst) stehen mittig mit 300 × 300; ein eigenes Foto füllt den ganzen Kopf (390 × 330, unten Radius 40) mit leichtem Schatten oben für Griff und ✕ (ProductDetailPhoto).
    - Kategorie und Maßeinheit sind beim Bearbeiten Auswahlmenüs, die Menge ein kompakter Stepper in der Karte (Eintippen: ProductDetailAmount mit Schnellwahl über dem Ziffernblock).

@@ -341,3 +341,10 @@ Zum Ausprobieren in der App, noch nicht in der User Journey des Canvas (erst nac
 | Hybrid (Tabs) | `ListFilterTabs(openCount:doneCount:)` ← `CollapsingListHeader` |
 
 Watch: zeigt Kategorien nur als Text, dort ändert sich nichts (liest `color` aber mit – Migration 033 vorher ausführen).
+
+## Kategorien verwalten & Foto-Platzhalter (freigegeben und umgesetzt 30.09.2026)
+
+| Board | Umsetzung |
+|---|---|
+| ManageCategories („Neue Kategorie“ oben, Kopf fest) | `ManageCategoriesSheet`: Hinweis, Knopf und Anzahl fest; nur die Kategorien im `ScrollView` (Ausblenden oben 12 / unten 44) |
+| ProductNew (Platzhalter füllt den Kopf) | `ProductDetailHero` (Bearbeiten/Neu ohne Foto): gestrichelt, 12 Rand, oben 24, Radius 22/30, Glas-Kamera 72 |
