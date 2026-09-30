@@ -20,6 +20,7 @@
    Berührung fest, dann ließe sich die Zeile nicht wischen, wenn der Daumen dort aufsetzt.
 
  📝 Last Change:
+ - Bild-Kachel nur mit „Artikelbilder anzeigen“; ohne öffnet der Name die Produktdetails (30.09.2026).
  - 29.09.2026: Kreis nur, wenn die Einstellung „Artikel abhaken“ ihn zeigt (nicht bei „Wischen“).
  - Aus ListScreen des Design-Pakets MyListUI übernommen, an ItemModel angebunden.
  ------------------------------------------------------------------------
@@ -43,6 +44,7 @@ struct ItemCard: View {
     @State private var showRetryConfirmation = false
     /// Einstellungen → Liste → „Preise anzeigen“.
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
     /// Einstellung „Artikel abhaken“: bei „Wischen“ kein Kreis (Design: ListSwipeOnly).
     @AppStorage(CheckGesture.storageKey) private var checkGestureRaw = CheckGesture.defaultValue.rawValue
 
@@ -60,9 +62,11 @@ struct ItemCard: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            ItemThumbnailTile(t: t, image: item.image)
-                .swipeFriendlyTap("Produktbild von \(item.name)", action: onTapImage)
-                .opacity(dimmed ? 0.55 : 1)
+            if showImages {
+                ItemThumbnailTile(t: t, image: item.image)
+                    .swipeFriendlyTap("Produktbild von \(item.name)", action: onTapImage)
+                    .opacity(dimmed ? 0.55 : 1)
+            }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(highlightedName)
@@ -74,6 +78,8 @@ struct ItemCard: View {
                 detailRow
             }
             .opacity(dimmed ? 0.55 : 1)
+            // Ohne Bild-Kachel öffnet der Name die Produktdetails.
+            .modifier(OpenDetailsTap(isActive: !showImages, label: "Produktdetails von \(item.name)", action: onTapImage))
 
             Spacer(minLength: 0)
 
@@ -206,4 +212,19 @@ struct ItemCard: View {
     }
     .padding(20)
     .background(Color.hex("#0A1416"))
+}
+
+/// Ohne Artikelbilder: Tippen auf Name/Menge öffnet die Produktdetails (sonst die Bild-Kachel).
+private struct OpenDetailsTap: ViewModifier {
+    let isActive: Bool
+    let label: String
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        if isActive {
+            content.swipeFriendlyTap(label, action: action)
+        } else {
+            content
+        }
+    }
 }

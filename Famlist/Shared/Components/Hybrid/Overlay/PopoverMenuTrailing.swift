@@ -25,4 +25,6 @@ enum PopoverMenuTrailing {
     case check
     /// Zähler/Meta-Text 13 pt; `color == nil` → sub
     case text(String, weight: CGFloat = 600, color: Color? = nil)
+    /// Kleiner Umschalter 42 × 26 (Knopf 20), an = Akzent-Verlauf
+    case toggle(Bool)
 }

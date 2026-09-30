@@ -20,6 +20,7 @@
  - Die Anzeige liest immer aus dem Formular (ItemFormViewModel), damit sie nach dem Speichern stimmt.
 
  📝 Last Change:
+ - Ohne „Artikelbilder anzeigen“: kein Bildkopf, Sheet 500/560, Titel oben links, Stift neben ✕ (30.09.2026).
  - Vollbild → Sheet (Griff, Herunterziehen schließt), Stift unten rechts am Bild.
  - Ziehen am Bild/Inhalt nach unten bewegt das ganze Sheet (SheetPullTracker, kein weißer Spalt);
    Bild beginnt ohne 1-pt-Streifen ganz oben.
@@ -39,6 +40,7 @@ struct ProductDetailSheet: View {
     @EnvironmentObject var listViewModel: ListViewModel
     @EnvironmentObject var categoryStore: CategoryStore
     @Environment(\.hybridSheetMaxHeight) private var sheetMaxHeight
+    @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
     @StateObject private var formVM: ItemFormViewModel
 
     /// Gespeicherter Stand (nil = neuer Artikel).
@@ -127,8 +129,14 @@ struct ProductDetailSheet: View {
 
     /// Beim Tippen (Tastatur offen) volle Höhe, damit über der Tastatur möglichst viel sichtbar bleibt.
     private var sheetHeight: CGFloat {
-        guard keyboardHeight > 0, sheetMaxHeight.isFinite else { return Self.designHeight }
-        return max(Self.designHeight, sheetMaxHeight)
+        guard keyboardHeight > 0, sheetMaxHeight.isFinite else { return restingHeight }
+        return max(restingHeight, sheetMaxHeight)
+    }
+
+    /// Ohne Artikelbilder kein Bildkopf: Ansehen 500, Bearbeiten/Neu 560 (ProductDetailNoImage / ProductNewNoImage).
+    private var restingHeight: CGFloat {
+        guard !showImages else { return Self.designHeight }
+        return mode == .view ? 500 : 560
     }
 
     var body: some View {
@@ -191,13 +199,16 @@ struct ProductDetailSheet: View {
             KeyboardRevealScrollView(keyboardHeight: keyboardHeight, bottomInset: revealInset) {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
-                        ProductDetailHero(k: k, image: formVM.selectedImage, mode: mode,
-                                          onPhoto: { showPhotoSource = true }, onEdit: startEditing)
+                        if showImages {
+                            ProductDetailHero(k: k, image: formVM.selectedImage, mode: mode,
+                                              onPhoto: { showPhotoSource = true }, onEdit: startEditing)
+                        }
                         Group {
                             if mode.isEditing { editContent } else { viewContent }
                         }
                         .padding(.horizontal, 20)
-                        .padding(.top, mode.isEditing ? 20 : 24)
+                        // Ohne Bildkopf beginnt der Inhalt unter Titel und ✕ (Ansehen 84, Bearbeiten 80).
+                        .padding(.top, showImages ? (mode.isEditing ? 20 : 24) : (mode.isEditing ? 80 : 84))
                         .padding(.bottom, mode.isEditing ? 56 + 34 + 20 : 34)
                     }
                 }
@@ -307,12 +318,30 @@ struct ProductDetailSheet: View {
                 .allowsHitTesting(false)
             HStack(spacing: 0) {
                 // Unsichtbare Überschrift für VoiceOver (und UI-Tests): Titel wie die früheren Sheets.
-                Text(screenTitle)
-                    .font(AppFont.dm(1, 400))
-                    .foregroundStyle(.clear)
-                    .frame(width: 1, height: 1)
-                    .accessibilityAddTraits(.isHeader)
+                if showImages {
+                    Text(screenTitle)
+                        .font(AppFont.dm(1, 400))
+                        .foregroundStyle(.clear)
+                        .frame(width: 1, height: 1)
+                        .accessibilityAddTraits(.isHeader)
+                } else {
+                    // Ohne Bildkopf sichtbarer Titel oben links (13/600, Großbuchstaben, sub).
+                    Text(screenTitle.uppercased())
+                        .font(AppFont.dm(13, 600))
+                        .tracking(0.52)
+                        .foregroundStyle(k.sub)
+                        .padding(.top, 11)
+                        .frame(maxHeight: 44, alignment: .top)
+                        .accessibilityLabel(screenTitle)
+                        .accessibilityAddTraits(.isHeader)
+                }
                 Spacer(minLength: 0)
+                if !showImages && mode == .view {
+                    // Stift „Bearbeiten“ wandert vom Bild neben das ✕ (rechts 68).
+                    GlassCircleButton(style: .neutral, appearance: k.appearance, accent: k.a, icon: Icon.pencil,
+                                      label: "Bearbeiten", action: startEditing)
+                        .padding(.trailing, 8)
+                }
                 GlassCircleButton(style: .neutral, appearance: k.appearance, accent: k.a, icon: Icon.close,
                                   label: "Schließen", action: onClose)
             }

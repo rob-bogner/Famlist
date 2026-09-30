@@ -88,6 +88,20 @@ struct PopoverMenuRow: View {
             Text(value)
                 .font(AppFont.dm(13, weight))
                 .foregroundStyle(color ?? k.sub)
+        case .toggle(let isOn):
+            ZStack(alignment: isOn ? .trailing : .leading) {
+                Capsule().fill(isOn
+                    ? LinearGradient(colors: k.isDark ? [k.a.light.color(), k.a.base.color()] : [k.a.base.color(), k.a.deep.color()],
+                                     startPoint: .top, endPoint: .bottom)
+                    : LinearGradient(colors: [k.isDark ? .rgba(255, 255, 255, 0.14) : .hex("#DCE5E6")], startPoint: .top, endPoint: .bottom))
+                Circle()
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.2), radius: 2, y: 2)
+                    .frame(width: 20, height: 20)
+                    .padding(3)
+            }
+            .frame(width: 42, height: 26)
+            .animation(.spring(response: 0.28, dampingFraction: 0.8), value: isOn)
         }
     }
 }

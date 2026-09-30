@@ -220,6 +220,7 @@
 		4D4CC58DDCBCB92B52C5485D /* ListOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6838A55518DAF7EA2E3DD807 /* ListOverlay.swift */; };
 		4D56D88276DB9FA08FBC3E5F /* ListAccountDesignCaret.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8488879B05EFB1489069103 /* ListAccountDesignCaret.swift */; };
 		4D722C198208B200E473A0F3 /* PriceDisplaySetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD4C51584ABBED1535192FD /* PriceDisplaySetting.swift */; };
+		145FA8660D43F3A20248A423 /* ItemImageSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6080C39BDCDFFF26DEF2FF04 /* ItemImageSetting.swift */; };
 		4D8DC08C077D56A176F1A093 /* ItemEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2B2C552E9BF77200935BCB /* ItemEntity.swift */; };
 		4DA25105BE5D3B5CC142CE82 /* WatchSmartStackWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CD9E8362683C8094EBA106 /* WatchSmartStackWidget.swift */; };
 		4DAB5D1FA69C88D0BF334835 /* WatchGlassButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C54BAC48609FBE5CA19F6DB /* WatchGlassButton.swift */; };
@@ -1342,6 +1343,7 @@
 		BB98A01BE6E9D37561F0553C /* WatchWidgetProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchWidgetProvider.swift; sourceTree = "<group>"; };
 		BBC477281985AF4967ACD7CE /* ListManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListManagementTests.swift; sourceTree = "<group>"; };
 		BBD4C51584ABBED1535192FD /* PriceDisplaySetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceDisplaySetting.swift; sourceTree = "<group>"; };
+		6080C39BDCDFFF26DEF2FF04 /* ItemImageSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemImageSetting.swift; sourceTree = "<group>"; };
 		BBD84C0DA0CDE6C70FA6E771 /* SupabaseWatchRemoteSource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SupabaseWatchRemoteSource.swift; sourceTree = "<group>"; };
 		BC610017EBCCE69D4A2E3399 /* ProfileSetupView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileSetupView.swift; sourceTree = "<group>"; };
 		BC7B1F766357E310A00BFDA0 /* ReceiptCropLoupe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptCropLoupe.swift; sourceTree = "<group>"; };
@@ -2230,6 +2232,7 @@
 				0AA6B603D7EEE3E33B89D7FE /* ItemFilter.swift */,
 				E603342CA2F37D92D93038BF /* ActiveListSheet.swift */,
 				BBD4C51584ABBED1535192FD /* PriceDisplaySetting.swift */,
+				6080C39BDCDFFF26DEF2FF04 /* ItemImageSetting.swift */,
 				EFE8C760AE2570F06015A823 /* CheckGestureSetting.swift */,
 				CF1BE78479C912E71BE14C67 /* QuantityPresets.swift */,
 				93337D08A4506CA3D9C1352B /* ListTextFilter.swift */,
@@ -3792,6 +3795,7 @@
 				73AE95C5FBFF72565FC22A77 /* ItemThumbnailTile.swift in Sources */,
 				0DD808248EBC635CCBE8D2B0 /* ActiveListSheet.swift in Sources */,
 				4D722C198208B200E473A0F3 /* PriceDisplaySetting.swift in Sources */,
+				145FA8660D43F3A20248A423 /* ItemImageSetting.swift in Sources */,
 				2A64299CE27E747C7DEB71A0 /* CheckGestureSetting.swift in Sources */,
 				9C7A4F23E2F22324C3284A4A /* QuantityPresets.swift in Sources */,
 				945E206D60FF1900592F9AEA /* ListTextFilter.swift in Sources */,

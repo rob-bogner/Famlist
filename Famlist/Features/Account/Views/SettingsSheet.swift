@@ -15,6 +15,7 @@
    (siehe design-handoff/PLAN.md, Risiko R5).
 
  📝 Last Change:
+ - Zeile „Artikelbilder anzeigen“ (30.09.2026).
  - 29.09.2026: Liste → „Artikel abhaken“ (Wischen · Kreis · Beides).
  - Abschnitt „Kassenzettel“: „Fotos der Bons speichern“ und „Gespeicherte Kassenzettel“ (Archiv).
  ------------------------------------------------------------------------
@@ -26,6 +27,7 @@ struct SettingsSheet: View {
     @EnvironmentObject var session: AppSessionViewModel
     @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
     @AppStorage(CheckGesture.storageKey) private var checkGestureRaw = CheckGesture.defaultValue.rawValue
     @AppStorage(ReceiptArchiveSetting.storageKey) private var saveReceipts = ReceiptArchiveSetting.defaultValue
     @EnvironmentObject var receiptArchive: ReceiptArchive
@@ -85,6 +87,10 @@ struct SettingsSheet: View {
             SettingsRow(t: t, title: "Preise anzeigen", titleColor: k.text,
                         subtitle: "Auf Artikelkarten und in der Fortschrittskarte", hasTopLine: false) {
                 ListAccountToggle(t: t, isOn: $showPrices, label: "Preise anzeigen")
+            }
+            SettingsRow(t: t, title: "Artikelbilder anzeigen", titleColor: k.text,
+                        subtitle: "In der Liste, in den Vorschlägen und in den Produktdetails", hasTopLine: true) {
+                ListAccountToggle(t: t, isOn: $showImages, label: "Artikelbilder anzeigen")
             }
             // Wischen · Kreis · Beides (nur dieses Gerät)
             CheckGestureSettingRow(t: t, raw: $checkGestureRaw)

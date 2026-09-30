@@ -16,6 +16,7 @@
  - In der App zeichnet ShoppingListView Liste und Abdunkelung (hybridHosted).
 
  📝 Last Change:
+ - Schnellschalter „Artikelbilder“ über „Einstellungen“ (30.09.2026).
  - Initial creation (Redesign „Hybrid“).
  ------------------------------------------------------------------------
  */
@@ -30,6 +31,8 @@ struct MenuOverlayScreen: View {
     var memberCount = 1
     var onClose: () -> Void = {}
     var onSelect: (ListMenuItem) -> Void = { _ in }
+    /// Schnellschalter „Artikelbilder“ (gleiche Einstellung wie in den Einstellungen).
+    @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
 
     var body: some View {
         let k = OverlayTheme(appearance, accentHex: accentHex, variant: .listMenu)
@@ -75,7 +78,14 @@ struct MenuOverlayScreen: View {
                 // Nicht gestaltet (Wunsch Robert 28.09.2026); Icon „Fotos“ aus ReceiptCapture, weil das Archiv die Bon-Fotos zeigt.
                 row(k, .receiptArchive, EKKIcon.gallery, "Gespeicherte Kassenzettel")
                 row(k, .importClipboard, OverlayIcon.clipboard, "Import aus Zwischenablage")
-                // Gruppe 3
+                // Gruppe 3: Schnellschalter (Menü bleibt offen)
+                PopoverMenuDivider(k: k)
+                PopoverMenuRow(k: k, icon: Icon.image, title: "Artikelbilder", trailing: .toggle(showImages), size: .compact,
+                               action: { showImages.toggle() })
+                    .accessibilityLabel("Artikelbilder anzeigen")
+                    .accessibilityValue(showImages ? "Ein" : "Aus")
+                    .accessibilityAddTraits(.isToggle)
+                // Gruppe 4
                 PopoverMenuDivider(k: k)
                 row(k, .settings, OverlayIcon.settings, "Einstellungen")
             }

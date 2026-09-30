@@ -13,6 +13,7 @@
  - Steht der Artikel schon auf der Liste, erhöht „+“ die Menge (ListViewModel.addItem erkennt das).
 
  📝 Last Change:
+ - Bild-Kachel nur mit „Artikelbilder anzeigen“ (30.09.2026).
  - Maße aus AddInline, „+“ als Glas-Knopf (GlassOrb, Akzent).
  ------------------------------------------------------------------------
  */
@@ -27,6 +28,7 @@ struct InlineSearchResultRow: View {
     /// Kurz nach dem Hinzufügen: Haken statt „+“.
     var justAdded = false
     var onAdd: () -> Void = {}
+    @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
 
     private var subtitle: String {
         let measure = result.entry.measure
@@ -36,12 +38,14 @@ struct InlineSearchResultRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            thumbnail
-                .frame(width: 40, height: 40)
-                .clipShape(RR(13))
-                .background(CSSBox(shape: RR(13), paint: thumbPaint, shadows: k.isDark
-                    ? [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.12))]
-                    : [.inner(0, 1, 0, 0, .white)]))
+            if showImages {
+                thumbnail
+                    .frame(width: 40, height: 40)
+                    .clipShape(RR(13))
+                    .background(CSSBox(shape: RR(13), paint: thumbPaint, shadows: k.isDark
+                        ? [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.12))]
+                        : [.inner(0, 1, 0, 0, .white)]))
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(highlightedName)
                     .font(AppFont.outfit(16, 500))
