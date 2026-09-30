@@ -38,6 +38,9 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Artikel hinzufügen – ohne Artikelbilder | AddInlineNoImages | ja | – |
 |  | Neuer Artikel (Produktdetails, leer) | ProductNew | ja | – (nur HTML) |
 |  | Foto hinzufügen – Quelle wählen | PhotoSourceDialog | ja | – (nur HTML) |
+|  | Neuer Artikel – Foto wird freigestellt (Vision, ab iOS 17) | PhotoCutoutScan | ja | `ProductDetailHero(isProcessing:)`, `ProductCutout` |
+|  | Neuer Artikel – Foto freigestellt („Freigestellt · Original“, Nachbessern-Knopf, Vorschlag aus dem Foto) | PhotoCutoutDone | ja | `ProductDetailHero`, `PhotoSuggestionBanner` |
+|  | Freistellung nachbessern (Antippen: Objekt hinzufügen/entfernen) | PhotoCutoutFix | ja | `CutoutFixView` |
 |  | Barcode-Scanner (Kamera, immer dunkel) | BarcodeScan | – | `BarcodeScanScreen` |
 |  | Barcode – Artikel wird gesucht | BarcodeLookup | – | – (nur HTML) |
 |  | Barcode – Kamera nicht verfügbar | BarcodeNoCamera | – | – (nur HTML) |

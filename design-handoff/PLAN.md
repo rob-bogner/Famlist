@@ -360,3 +360,14 @@ Einstellung `ItemImageSetting` (`list.showImages`, nur dieses Gerät, Standard a
 | ListNoImages | `ItemCard` – ohne `ItemThumbnailTile`, Karte bleibt 94; Tippen auf den Namen öffnet die Produktdetails |
 | AddInlineNoImages | `InlineSearchResultRow` – ohne 40er-Kachel |
 | ProductDetailNoImage / ProductNewNoImage | `ProductDetailSheet` – ohne `ProductDetailHero`, Sheet 500 / 560, Titel oben links, Stift neben ✕ |
+
+## Foto freistellen (freigegeben und umgesetzt 30.09.2026)
+
+| Board | Umsetzung |
+|---|---|
+| PhotoCutoutScan | `ProductDetailSheet.processPhoto` → `ProductCutout.analyze` (Vision `VNGenerateForegroundInstanceMaskRequest`, ab iOS 17, nur Gerät); Kopf `ProductDetailHero(isProcessing:)` |
+| PhotoCutoutDone | freigestellt auf dem Verlauf (264 × 256, oben 34), Umschalter „Freigestellt · Original“, Glas-Knopf „Nachbessern“ + langer Druck; `PhotoSuggestionBanner` (Vision `VNClassifyImageRequest` → `ProductPhotoSuggester`) |
+| PhotoCutoutFix | `CutoutFixView` – Antippen fügt Motive (Instanzen der Maske) hinzu/entfernt sie; Zurücksetzen / Fertig |
+
+- Speichern: freigestellte Fotos als HEIC mit Transparenz (`ProductImageCodec.cutoutData`), sonst JPEG. Liste: `ItemThumbnailTile` zeigt sie ganz (scaledToFit).
+- Später (iOS 27): feineres Nachbessern mit `GenerateIterativeSegmentationRequest` (Lasso/Rahmen) und Namensvorschlag über Foundation Models mit Bild-Eingabe.

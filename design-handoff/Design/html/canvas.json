@@ -80,7 +80,7 @@
    "radius": 44,
    "title": "Barcode – Artikel wird gesucht",
    "w": 390,
-   "x": 2820,
+   "x": 4230,
    "y": 5276
   },
   "BarcodeNoCamera.dc.html": {
@@ -89,7 +89,7 @@
    "radius": 44,
    "title": "Barcode – Kamera nicht verfügbar",
    "w": 390,
-   "x": 3290,
+   "x": 4700,
    "y": 5276
   },
   "BarcodeScan.dc.html": {
@@ -98,7 +98,7 @@
    "radius": 44,
    "title": "Barcode-Scanner (Kamera, immer dunkel)",
    "w": 390,
-   "x": 2350,
+   "x": 3760,
    "y": 5276
   },
   "CategoryIcons.dc.html": {
@@ -933,7 +933,7 @@
    "radius": 44,
    "title": "Preisverlauf",
    "w": 390,
-   "x": 7520,
+   "x": 8930,
    "y": 5276
   },
   "PriceHistoryDark.dc.html": {
@@ -942,7 +942,7 @@
    "radius": 44,
    "title": "Preisverlauf – Dark",
    "w": 390,
-   "x": 7520,
+   "x": 8930,
    "y": 6280
   },
   "ProductDetail.dc.html": {
@@ -951,7 +951,7 @@
    "radius": 44,
    "title": "Produktdetails (Tipp auf das Artikelbild)",
    "w": 390,
-   "x": 3760,
+   "x": 5170,
    "y": 5276
   },
   "ProductDetailAmount.dc.html": {
@@ -960,7 +960,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen",
    "w": 390,
-   "x": 7050,
+   "x": 8460,
    "y": 5276
   },
   "ProductDetailAmountDark.dc.html": {
@@ -969,7 +969,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen – Dark",
    "w": 390,
-   "x": 7050,
+   "x": 8460,
    "y": 6280
   },
   "ProductDetailDark.dc.html": {
@@ -978,7 +978,7 @@
    "radius": 44,
    "title": "Produktdetails (Tipp auf das Artikelbild) – Dark",
    "w": 390,
-   "x": 3760,
+   "x": 5170,
    "y": 6280
   },
   "ProductDetailEdit.dc.html": {
@@ -987,7 +987,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten (Produktdetails)",
    "w": 390,
-   "x": 4700,
+   "x": 6110,
    "y": 5276
   },
   "ProductDetailEditDark.dc.html": {
@@ -996,7 +996,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten (Produktdetails) – Dark",
    "w": 390,
-   "x": 4700,
+   "x": 6110,
    "y": 6280
   },
   "ProductDetailPhoto.dc.html": {
@@ -1005,7 +1005,7 @@
    "radius": 44,
    "title": "Produktdetails – eigenes Foto füllt den Kopf",
    "w": 390,
-   "x": 4230,
+   "x": 5640,
    "y": 5276
   },
   "ProductDetailPhotoDark.dc.html": {
@@ -1014,7 +1014,7 @@
    "radius": 44,
    "title": "Produktdetails – eigenes Foto füllt den Kopf – Dark",
    "w": 390,
-   "x": 4230,
+   "x": 5640,
    "y": 6280
   },
   "ProductImage.dc.html": {
@@ -2004,7 +2004,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Kategorie (Glas-Menü)",
    "w": 390,
-   "x": 5170,
+   "x": 6580,
    "y": 5276
   },
   "ProductDetailCategoryDark.dc.html": {
@@ -2013,7 +2013,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Kategorie (Glas-Menü) – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 6580,
    "y": 6280
   },
   "ProductDetailUnit.dc.html": {
@@ -2022,7 +2022,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert)",
    "w": 390,
-   "x": 5640,
+   "x": 7050,
    "y": 5276
   },
   "ProductDetailUnitDark.dc.html": {
@@ -2031,7 +2031,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert) – Dark",
    "w": 390,
-   "x": 5640,
+   "x": 7050,
    "y": 6280
   },
   "AddInlineNoImages.dc.html": {
@@ -2058,7 +2058,7 @@
    "radius": 44,
    "title": "Produktdetails – ohne Artikelbilder",
    "w": 390,
-   "x": 6110,
+   "x": 7520,
    "y": 5276
   },
   "ProductDetailNoImageDark.dc.html": {
@@ -2067,7 +2067,7 @@
    "radius": 44,
    "title": "Produktdetails – ohne Artikelbilder – Dark",
    "w": 390,
-   "x": 6110,
+   "x": 7520,
    "y": 6280
   },
   "ProductNewNoImage.dc.html": {
@@ -2076,7 +2076,7 @@
    "radius": 44,
    "title": "Neuer Artikel – ohne Artikelbilder",
    "w": 390,
-   "x": 6580,
+   "x": 7990,
    "y": 5276
   },
   "ProductNewNoImageDark.dc.html": {
@@ -2085,7 +2085,7 @@
    "radius": 44,
    "title": "Neuer Artikel – ohne Artikelbilder – Dark",
    "w": 390,
-   "x": 6580,
+   "x": 7990,
    "y": 6280
   },
   "SettingsImagesOff.dc.html": {
@@ -2123,6 +2123,60 @@
    "w": 390,
    "x": 1880,
    "y": 16312
+  },
+  "PhotoCutoutScan.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto wird freigestellt",
+   "w": 390,
+   "x": 2350,
+   "y": 5276
+  },
+  "PhotoCutoutScanDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto wird freigestellt – Dark",
+   "w": 390,
+   "x": 2350,
+   "y": 6280
+  },
+  "PhotoCutoutDone.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto freigestellt (Vorschlag aus dem Foto)",
+   "w": 390,
+   "x": 2820,
+   "y": 5276
+  },
+  "PhotoCutoutDoneDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto freigestellt (Vorschlag aus dem Foto) – Dark",
+   "w": 390,
+   "x": 2820,
+   "y": 6280
+  },
+  "PhotoCutoutFix.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Freistellung nachbessern",
+   "w": 390,
+   "x": 3290,
+   "y": 5276
+  },
+  "PhotoCutoutFixDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Freistellung nachbessern – Dark",
+   "w": 390,
+   "x": 3290,
+   "y": 6280
   }
  },
  "createdOnFiles": {
@@ -2166,7 +2220,7 @@
    "kind": "title1",
    "maxW": 5560,
    "page": "screens",
-   "text": "3 · Artikel hinzufügen & bearbeiten → Kategorie (Glas-Menü) → Maßeinheit (Einheiten gruppiert) — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf · ohne Artikelbilder: Vorschläge, Produktdetails, Neuer Artikel",
+   "text": "3 · Artikel hinzufügen & bearbeiten → Kategorie (Glas-Menü) → Maßeinheit (Einheiten gruppiert) — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf · ohne Artikelbilder: Vorschläge, Produktdetails, Neuer Artikel · Foto → automatisch freigestellt (Vision) → Vorschlag Name/Kategorie + Nachbessern (Antippen oder langer Druck)",
    "w": 240,
    "x": 0,
    "y": 5016
@@ -2354,7 +2408,13 @@
   "AddInlineNoResultsDark.dc.html",
   "AddInlineNoImagesDark.dc.html",
   "PhotoSourceDialog.dc.html",
+  "PhotoCutoutScan.dc.html",
+  "PhotoCutoutDone.dc.html",
+  "PhotoCutoutFix.dc.html",
   "PhotoSourceDialogDark.dc.html",
+  "PhotoCutoutScanDark.dc.html",
+  "PhotoCutoutDoneDark.dc.html",
+  "PhotoCutoutFixDark.dc.html",
   "BarcodeLookup.dc.html",
   "BarcodeNoCamera.dc.html",
   "MyListsEmpty.dc.html",
