@@ -20,6 +20,7 @@
  - Die Anzeige liest immer aus dem Formular (ItemFormViewModel), damit sie nach dem Speichern stimmt.
 
  📝 Last Change:
+ - Foto automatisch freistellen, „Freigestellt · Original“, Nachbessern, Vorschlag Name/Kategorie (30.09.2026).
  - Ohne „Artikelbilder anzeigen“: kein Bildkopf, Sheet 500/560, Titel oben links, Stift neben ✕ (30.09.2026).
  - Vollbild → Sheet (Griff, Herunterziehen schließt), Stift unten rechts am Bild.
  - Ziehen am Bild/Inhalt nach unten bewegt das ganze Sheet (SheetPullTracker, kein weißer Spalt);
@@ -68,11 +69,23 @@ struct ProductDetailSheet: View {
     @State private var attemptedSubmit = false
     @State private var priceSubtitle = "Preise & Läden"
     @State private var showPhotoSource = false
-    @State private var showPicker = false
+    /// Gewählte Quelle der Bildauswahl; nicht nil = Bildauswahl offen (.sheet(item:)).
+    @State private var pickerRequest: PhotoPickerSource?
+    // Freistellen (PhotoCutoutScan / Done / Fix)
+    /// Frisch gewähltes Foto aus der Bildauswahl (wird sofort verarbeitet und wieder nil).
+    @State private var pickedPhoto: UIImage?
+    @State private var originalPhoto: UIImage?
+    @State private var cutoutAnalysis: ProductCutout.Analysis?
+    @State private var cutoutImage: UIImage?
+    /// true = freigestellt zeigen/speichern, false = Original.
+    @State private var showsCutout = true
+    @State private var isCutting = false
+    @State private var showCutoutFix = false
+    @State private var photoSuggestion: ProductPhotoSuggestion?
+    @State private var cutoutSelection = IndexSet()
     @State private var dragOffset: CGFloat = 0
     /// Wie weit der Inhalt oben über den Anfang hinaus gezogen ist (> 0 = Überziehen am Anfang).
     @State private var pull: CGFloat = 0
-    @State private var pickerSource: UIImagePickerController.SourceType = .photoLibrary
     /// Glas-Menü der Kategorie offen.
     @State private var categoryOpen = false
     /// Gemessene Höhe des Glas-Menüs (für oben/unten).
@@ -149,12 +162,24 @@ struct ProductDetailSheet: View {
         // Aktionskarte statt Systemdialog (Design: PhotoSourceDialog)
         .actionCard(isPresented: $showPhotoSource, k: k) {
             .photoSource(k: k, hasImage: formVM.selectedImage != nil,
-                         onCamera: { pickerSource = .camera; showPicker = true },
-                         onLibrary: { pickerSource = .photoLibrary; showPicker = true },
-                         onRemove: { formVM.selectedImage = nil })
+                         onCamera: { pickerRequest = .camera },
+                         onLibrary: { pickerRequest = .library },
+                         onRemove: { resetCutout(); formVM.selectedImage = nil })
         }
-        .sheet(isPresented: $showPicker) {
-            ImagePicker(selectedImage: $formVM.selectedImage, isPresented: $showPicker, sourceType: pickerSource)
+        // .sheet(item:): Die Quelle selbst öffnet das Sheet (vorher kam beim ersten Mal die Mediathek statt der Kamera).
+        .sheet(item: $pickerRequest) { request in
+            ImagePicker(selectedImage: $pickedPhoto, isPresented: $pickerRequest.presentedFlag,
+                        sourceType: request.sourceType)
+        }
+        // Neues Foto → automatisch freistellen (Vision) und Name/Kategorie vorschlagen.
+        .onChange(of: pickedPhoto) { _, photo in
+            guard let photo else { return }
+            pickedPhoto = nil
+            processPhoto(photo)
+        }
+        // Ansehen hat kein „Speichern“: Foto über den Platzhalter gewählt → sofort speichern.
+        .onChange(of: formVM.selectedImage) { _, _ in
+            if mode == .view { savePhotoInView() }
         }
         .onChange(of: formVM.name) { _, _ in formVM.validateField(.name) }
         .onChange(of: formVM.units) { _, _ in
@@ -201,7 +226,10 @@ struct ProductDetailSheet: View {
                     VStack(spacing: 0) {
                         if showImages {
                             ProductDetailHero(k: k, image: formVM.selectedImage, mode: mode,
-                                              onPhoto: { showPhotoSource = true }, onEdit: startEditing)
+                                              onPhoto: { showPhotoSource = true }, onEdit: startEditing,
+                                              isProcessing: isCutting,
+                                              cutoutChoice: cutoutImage != nil && originalPhoto != nil ? cutoutChoiceBinding : nil,
+                                              onFix: cutoutAnalysis != nil ? { withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) { showCutoutFix = true } } : nil)
                         }
                         Group {
                             if mode.isEditing { editContent } else { viewContent }
@@ -228,6 +256,25 @@ struct ProductDetailSheet: View {
 
             topButtons
             bottomBar
+
+            // Nachbessern: eigene Ebene über dem ganzen Sheet (PhotoCutoutFix).
+            if showCutoutFix, let cutoutAnalysis {
+                ZStack {
+                    CSSBox(shape: Rectangle(), paint: k.sheet)
+                    CutoutFixView(k: k, analysis: cutoutAnalysis, initialSelection: cutoutSelection,
+                                  onCancel: { withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) { showCutoutFix = false } },
+                                  onDone: { selection, image in
+                                      cutoutSelection = selection
+                                      if let image {
+                                          cutoutImage = image
+                                          if showsCutout { formVM.selectedImage = image }
+                                      }
+                                      withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) { showCutoutFix = false }
+                                  })
+                }
+                .transition(.move(edge: .bottom))
+                .zIndex(10)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .overlayPreferenceValue(CategoryCardAnchorKey.self) { anchor in
@@ -448,6 +495,12 @@ struct ProductDetailSheet: View {
 
     private var editContent: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if let photoSuggestion {
+                PhotoSuggestionBanner(k: k, suggestion: photoSuggestion, onApply: { applySuggestion(photoSuggestion) })
+                    .padding(.bottom, 14)
+                    .padding(.top, -6)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("", text: $formVM.name, prompt: Text("Name").foregroundStyle(k.sub.opacity(0.75)))
@@ -670,6 +723,64 @@ struct ProductDetailSheet: View {
 
     // MARK: - Aktionen
 
+    // MARK: - Foto freistellen
+
+    /// Umschalter „Freigestellt · Original“: tauscht das gezeigte (und gespeicherte) Bild.
+    private var cutoutChoiceBinding: Binding<Bool> {
+        Binding(get: { showsCutout }, set: { value in
+            showsCutout = value
+            formVM.selectedImage = value ? (cutoutImage ?? originalPhoto) : originalPhoto
+        })
+    }
+
+    /// Foto zeigen, im Hintergrund freistellen (größtes, mittiges Motiv) und Name/Kategorie vorschlagen.
+    /// Ohne Treffer (oder im Simulator) bleibt das Originalfoto.
+    private func processPhoto(_ photo: UIImage) {
+        resetCutout()
+        originalPhoto = photo
+        withAnimation(.easeOut(duration: 0.2)) {
+            formVM.selectedImage = photo
+            isCutting = true
+        }
+        Task {
+            async let suggestion = ProductPhotoSuggester.suggest(for: photo)
+            let analysis = await ProductCutout.analyze(photo)
+            var image: UIImage?
+            if let analysis { image = await analysis.renderInBackground(analysis.primary, cropped: true) }
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) {
+                cutoutAnalysis = image != nil ? analysis : nil
+                cutoutSelection = analysis?.primary ?? IndexSet()
+                cutoutImage = image
+                if let image { formVM.selectedImage = image }
+                isCutting = false
+            }
+            if let found = await suggestion, mode.isEditing,
+               formVM.name.isEmpty || formVM.category.isEmpty {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) { photoSuggestion = found }
+            }
+        }
+    }
+
+    private func resetCutout() {
+        originalPhoto = nil
+        cutoutAnalysis = nil
+        cutoutImage = nil
+        cutoutSelection = IndexSet()
+        showsCutout = true
+        isCutting = false
+        photoSuggestion = nil
+    }
+
+    /// „Übernehmen“: leeren Namen füllen, Kategorie setzen, wenn es sie gibt.
+    private func applySuggestion(_ suggestion: ProductPhotoSuggestion) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        if formVM.name.trimmingCharacters(in: .whitespaces).isEmpty { formVM.name = suggestion.name }
+        if let match = listViewModel.categoryOrder.first(where: { $0.name.caseInsensitiveCompare(suggestion.category) == .orderedSame }) {
+            formVM.category = match.name
+        }
+        withAnimation(.easeOut(duration: 0.2)) { photoSuggestion = nil }
+    }
+
     private func startEditing() {
         returnsToView = true
         withAnimation(.easeOut(duration: 0.2)) { mode = .edit }
@@ -702,6 +813,19 @@ struct ProductDetailSheet: View {
             withAnimation(.easeOut(duration: 0.2)) { mode = .view }
         } else {
             onClose()
+        }
+    }
+
+    /// Ansehen: Nur das Foto hat sich geändert (Platzhalter „Foto hinzufügen“) – ohne Prüfen und Moduswechsel
+    /// speichern, über denselben Weg wie „Speichern“.
+    private func savePhotoInView() {
+        guard let item else { return }
+        let updated = currentModel
+        logVoid(params: (action: "productDetail.savePhotoInView", itemId: item.id, hasImage: updated.imageData != nil))
+        if let onSave {
+            onSave(updated)
+        } else {
+            listViewModel.updateItem(updated)
         }
     }
 }

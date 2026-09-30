@@ -26,8 +26,8 @@ struct PhotoAddTile: View {
     @Binding var image: UIImage?
 
     @State private var showSource = false
-    @State private var showPicker = false
-    @State private var source: UIImagePickerController.SourceType = .photoLibrary
+    /// Gewählte Quelle; nicht nil = Bildauswahl offen (.sheet(item:), siehe PhotoPickerSource).
+    @State private var pickerRequest: PhotoPickerSource?
 
     var body: some View {
         Button(action: { showSource = true }) {
@@ -43,12 +43,12 @@ struct PhotoAddTile: View {
         // Aktionskarte statt Systemdialog (Design: PhotoSourceDialog)
         .actionCard(isPresented: $showSource, k: k) {
             .photoSource(k: k, hasImage: image != nil,
-                         onCamera: { source = .camera; showPicker = true },
-                         onLibrary: { source = .photoLibrary; showPicker = true },
+                         onCamera: { pickerRequest = .camera },
+                         onLibrary: { pickerRequest = .library },
                          onRemove: { image = nil })
         }
-        .sheet(isPresented: $showPicker) {
-            ImagePicker(selectedImage: $image, isPresented: $showPicker, sourceType: source)
+        .sheet(item: $pickerRequest) { request in
+            ImagePicker(selectedImage: $image, isPresented: $pickerRequest.presentedFlag, sourceType: request.sourceType)
         }
     }
 

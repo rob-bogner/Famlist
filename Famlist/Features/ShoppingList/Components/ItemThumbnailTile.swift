@@ -11,6 +11,7 @@
  - Ersetzt ItemThumbnail (defaultImage-Asset). Ein vorhandenes Foto füllt die Kachel (scaledToFill).
 
  📝 Last Change:
+ - Freigestellte Fotos passen ganz in die Kachel (30.09.2026).
  - Aus ListScreen des Design-Pakets MyListUI übernommen, um echtes Foto ergänzt.
  ------------------------------------------------------------------------
  */
@@ -25,7 +26,13 @@ struct ItemThumbnailTile: View {
 
     var body: some View {
         ZStack {
-            if let image {
+            if let image, ProductCutout.isCutout(image) {
+                // Freigestelltes Foto: ganz sichtbar auf der Kachel, wie die Produktbilder.
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(5)
+            } else if let image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
