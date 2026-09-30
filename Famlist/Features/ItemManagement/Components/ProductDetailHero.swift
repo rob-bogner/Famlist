@@ -10,12 +10,13 @@
 
  🔰 Notes for Beginners:
  - Eigene Fotos füllen den ganzen Kopf (390 × 330, unten Radius 40), oben Verlauf Schwarz 28 % → 0 auf 140.
- - Ohne Foto: beim Bearbeiten/Neu die gestrichelte Kachel „Foto hinzufügen“ (200, Radius 50),
-   beim Ansehen dieselbe Kachel ohne Strichlinie mit durchgestrichener Kamera.
+ - Ohne Foto: beim Bearbeiten/Neu füllt der gestrichelte Platzhalter „Foto hinzufügen“ den ganzen Kopf,
+   beim Ansehen die Kachel 200 ohne Strichlinie mit durchgestrichener Kamera.
  - Unten rechts am Bild (16 vom Rand, 48 rund): beim Ansehen der Glas-Stift „Bearbeiten“,
    beim Bearbeiten mit Foto der Akzent-Knopf „Bild ändern“. Produktbild 300 oben 16, Kachel 200 oben 65.
 
  📝 Last Change:
+ - Platzhalter „Foto hinzufügen“ füllt den ganzen Kopf (Kamera-Glaskugel, „Kamera oder Mediathek“) (30.09.2026).
  - Im Sheet: Höhe 330, Stift „Bearbeiten“ unten rechts am Bild.
  ------------------------------------------------------------------------
  */
@@ -87,21 +88,38 @@ struct ProductDetailHero: View {
                 }
                 .accessibilityLabel("Produktbild")
         } else if mode.isEditing {
+            // Platzhalter füllt den ganzen Kopf wie ein Foto (Wunsch Robert 30.09.2026): gestrichelt, 12 Rand,
+            // oben 24 (unter dem Griff), Radius 22 oben / 30 unten; Kamera-Glaskugel 72, Titel + Untertitel.
+            let shape = UnevenRoundedRectangle(topLeadingRadius: 22, bottomLeadingRadius: 30,
+                                               bottomTrailingRadius: 30, topTrailingRadius: 22)
             Button(action: onPhoto) {
-                VStack(spacing: 8) {
-                    SVGIcon(Icon.camera, size: 34, color: k.accentText, lineWidth: 1.7)
-                    Text("Foto hinzufügen")
-                        .font(AppFont.dm(14, 600))
-                        .foregroundStyle(k.sub)
+                VStack(spacing: 10) {
+                    ZStack {
+                        GlassCircleBackground(style: .accent, appearance: k.appearance, accent: k.a, size: 72)
+                        SVGIcon(Icon.camera, size: 30, color: .white, lineWidth: 1.9)
+                    }
+                    .frame(width: 72, height: 72)
+                    VStack(spacing: 4) {
+                        Text("Foto hinzufügen")
+                            .font(AppFont.dm(16, 600))
+                            .foregroundStyle(k.text)
+                        Text("Kamera oder Mediathek")
+                            .font(AppFont.dm(13, 400))
+                            .foregroundStyle(k.sub)
+                    }
                 }
-                .frame(width: 200, height: 200)
-                .background(CSSBox(shape: RR(50), paint: .color(photoFill), border: 1.5, borderColor: k.dashed,
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(CSSBox(shape: shape, paint: .color(photoFill), border: 1.5, borderColor: k.dashed,
                                    dash: [4.5, 4.5]))
-                .contentShape(RR(50))
+                .contentShape(shape)
             }
             .buttonStyle(.plain)
-            .padding(.top, 65)
+            .padding(.top, 24)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+            .frame(height: Self.height)
             .accessibilityLabel("Foto hinzufügen")
+            .accessibilityHint("Kamera oder Mediathek")
         } else {
             SVGIcon(Icon.cameraOff, size: 56, color: k.isDark ? k.a.light.color() : .hex("#8AA0A4"), lineWidth: 1.4)
                 .frame(width: 200, height: 200)

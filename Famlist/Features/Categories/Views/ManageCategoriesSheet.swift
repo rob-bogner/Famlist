@@ -5,8 +5,8 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Sheet „Kategorien verwalten“ (Höhe 790): Hinweis zum Ladenweg, nummerierte Kategorien mit Griff,
-   „Neue Kategorie“. Umsortieren per Ziehen; Tippen öffnet „Kategorie bearbeiten“.
+ - Sheet „Kategorien verwalten“ (Höhe 790): Hinweis zum Ladenweg, „Neue Kategorie“, nummerierte Kategorien
+   mit Griff. Kopf, Hinweis, Knopf und Anzahl stehen fest, nur die Kategorien scrollen. Umsortieren per Ziehen; Tippen öffnet „Kategorie bearbeiten“.
 
  🔰 Notes for Beginners:
  - Vorlage: ManageCategoriesScreen in design-handoff/MyListUI/Screens/CategoryScreens.swift
@@ -14,9 +14,10 @@
  - Ziehen: langer Druck auf eine Zeile hebt sie an, Ablegen auf einer anderen Zeile verschiebt sie.
  - Wischen nach links zeigt „Löschen“ (wie in „Artikel verwalten“); „Sonstiges“ lässt sich nicht wischen.
    VoiceOver: Aktionen „Nach oben“ / „Nach unten“ am Griff.
- - Mehr als 4 Kategorien (Design) → der Bereich scrollt.
+ - Die Liste blendet oben (12) und unten (44) weich aus.
 
  📝 Last Change:
+ - „Neue Kategorie“ über der Liste; Kopf fest, nur die Kategorien scrollen (30.09.2026).
  - Kachel in der Kategorie-Farbe mit weißem Icon, Untertitel „Tippen: Name, Farbe, Icon“ (30.09.2026).
  - Wischen zum Löschen; Name ist kein Button mehr (Wischen wurde sonst blockiert).
  ------------------------------------------------------------------------
@@ -49,62 +50,73 @@ struct ManageCategoriesSheet: View {
                     SheetHeader(title: "Kategorien verwalten", k: k, onClose: onClose)
                         .padding(.horizontal, 20)
 
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 0) {
-                            // Hinweis: Rahmen 1 (content-box) → Einzug 13 / 15
-                            HStack(alignment: .top, spacing: 10) {
-                                SVGIcon(EKKIcon.map, size: 20, color: k.accentText, lineWidth: 1.9)
-                                    .padding(.top, 1)
-                                    .accessibilityHidden(true)
-                                Text("Sortiere die Kategorien so, wie du durch deinen Laden gehst. Die Liste zeigt die Artikel dann in dieser Reihenfolge.")
-                                    .font(AppFont.dm(13, 400))
-                                    .foregroundStyle(k.sub)
-                                    .cssLineHeight(18.85, font: hintFont)          // line-height 1.45
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .padding(.vertical, 13)
-                            .padding(.horizontal, 15)
-                            .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
-                            .padding(.top, 16)
-
-                            EKKSectionLabel(text: store.categories.count == 1 ? "1 Kategorie" : "\(store.categories.count) Kategorien", k: k)
-                                .padding(.top, 20)
-
-                            VStack(spacing: 8) {
-                                ForEach(Array(store.categories.enumerated()), id: \.element.id) { index, c in
-                                    swipeableRow(index: index, c, k: k, t: t)
-                                        .onDrag {
-                                            draggingId = c.id
-                                            return NSItemProvider(object: c.id.uuidString as NSString)
-                                        }
-                                        .onDrop(of: [UTType.text], delegate: CategoryDropDelegate(
-                                            targetId: c.id, draggingId: $draggingId,
-                                            onMove: { store.move($0, to: $1) }))
-                                }
-                            }
-                            .padding(.top, 10)
-                            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.categories)
-
-                            Button(action: onAdd) {
-                                HStack(spacing: 8) {
-                                    SVGIcon(Icon.plus, size: 18, color: k.accentText, lineWidth: 2.4)
-                                    Text("Neue Kategorie")
-                                        .font(AppFont.dm(15, 600))
-                                        .foregroundStyle(k.accentText)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(CSSBox(shape: RR(20), border: 1.5, borderColor: k.dashed, dash: [4.5, 4.5]))
-                                .contentShape(RR(20))
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.top, 12)
+                    // Fest: Hinweis, „Neue Kategorie“ und Anzahl – nur die Kategorien darunter scrollen.
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Hinweis: Rahmen 1 (content-box) → Einzug 13 / 15
+                        HStack(alignment: .top, spacing: 10) {
+                            SVGIcon(EKKIcon.map, size: 20, color: k.accentText, lineWidth: 1.9)
+                                .padding(.top, 1)
+                                .accessibilityHidden(true)
+                            Text("Sortiere die Kategorien so, wie du durch deinen Laden gehst. Die Liste zeigt die Artikel dann in dieser Reihenfolge.")
+                                .font(AppFont.dm(13, 400))
+                                .foregroundStyle(k.sub)
+                                .cssLineHeight(18.85, font: hintFont)          // line-height 1.45
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        .padding(.vertical, 13)
+                        .padding(.horizontal, 15)
+                        .background(CSSBox(shape: RR(16), paint: .color(k.field), border: 1, borderColor: k.fieldBorder))
+                        .padding(.top, 16)
+
+                        Button(action: onAdd) {
+                            HStack(spacing: 8) {
+                                SVGIcon(Icon.plus, size: 18, color: k.accentText, lineWidth: 2.4)
+                                Text("Neue Kategorie")
+                                    .font(AppFont.dm(15, 600))
+                                    .foregroundStyle(k.accentText)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(CSSBox(shape: RR(20), border: 1.5, borderColor: k.dashed, dash: [4.5, 4.5]))
+                            .contentShape(RR(20))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 12)
+
+                        EKKSectionLabel(text: store.categories.count == 1 ? "1 Kategorie" : "\(store.categories.count) Kategorien", k: k)
+                            .padding(.top, 20)
+                    }
+                    .padding(.horizontal, 20)
+
+                    ScrollView {
+                        VStack(spacing: 8) {
+                            ForEach(Array(store.categories.enumerated()), id: \.element.id) { index, c in
+                                swipeableRow(index: index, c, k: k, t: t)
+                                    .onDrag {
+                                        draggingId = c.id
+                                        return NSItemProvider(object: c.id.uuidString as NSString)
+                                    }
+                                    .onDrop(of: [UTType.text], delegate: CategoryDropDelegate(
+                                        targetId: c.id, draggingId: $draggingId,
+                                        onMove: { store.move($0, to: $1) }))
+                            }
+                        }
+                        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: store.categories)
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 34)
+                        .padding(.top, 6)                                // Platz für Schatten oben
+                        .padding(.bottom, 40)                            // 34 unten + Luft für den Ausblend-Rand
                     }
                     .scrollIndicators(.hidden)
+                    // Oben 12 / unten 44 weich ausblenden: zeigt, dass es weitergeht.
+                    .mask {
+                        VStack(spacing: 0) {
+                            LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 12)
+                            Color.black
+                            LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: 44)
+                        }
+                    }
+                    .padding(.top, 4)
                 }
                 .padding(.top, 10)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
