@@ -435,6 +435,8 @@
 		9A87C430436F4C705D662887 /* AcceptInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694E4A46A96C5FDD25EC5109 /* AcceptInviteView.swift */; };
 		9A8C672911D596F3C52A70EB /* ReceiptCheckButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F11B7C0CB79E2511A559E7 /* ReceiptCheckButton.swift */; };
 		9AD5C5ADE714B4EA457FDE94 /* ProductDetailCardValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB696BC87728F152C30447B5 /* ProductDetailCardValue.swift */; };
+		345CC74BD90FAFE610F4E3A9 /* ProductDetailCategoryPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9699C883DC7826E649018A5 /* ProductDetailCategoryPopover.swift */; };
+		BDCCB354B3F889102DA9212C /* ProductDetailUnitPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB6BCD544CE54EF44E904DB /* ProductDetailUnitPanel.swift */; };
 		9AE15DBDFFC25EB5FE815924 /* PersistenceRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0490073CD95B4DF0D705DE3 /* PersistenceRecoveryTests.swift */; };
 		9B3A24E80821B5463C6E1B76 /* GlassActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7C7FC7AED514CB3128F3513 /* GlassActionButton.swift */; };
 		9B5D2FCA92DB620E1E643207 /* PriceDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723E81D36A402740D942BA73 /* PriceDisplayTests.swift */; };
@@ -1367,6 +1369,8 @@
 		CB03D8CABA314A33570F23D9 /* OverlayDockLayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OverlayDockLayer.swift; sourceTree = "<group>"; };
 		CB30A2E6C26D7921DC259E52 /* UserLog+Sync.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "UserLog+Sync.swift"; sourceTree = "<group>"; };
 		CB696BC87728F152C30447B5 /* ProductDetailCardValue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProductDetailCardValue.swift; sourceTree = "<group>"; };
+		E9699C883DC7826E649018A5 /* ProductDetailCategoryPopover.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProductDetailCategoryPopover.swift; sourceTree = "<group>"; };
+		4BB6BCD544CE54EF44E904DB /* ProductDetailUnitPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProductDetailUnitPanel.swift; sourceTree = "<group>"; };
 		CBBD0E9A628E34501CC80230 /* ReceiptDay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptDay.swift; sourceTree = "<group>"; };
 		CBC288179AB3A0689A805357 /* ListViewModel+Duplicate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListViewModel+Duplicate.swift"; sourceTree = "<group>"; };
 		CC615716D814E66B810CAD9E /* ReceiptArchiveSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptArchiveSheet.swift; sourceTree = "<group>"; };
@@ -2707,6 +2711,8 @@
 				3107525107058B272AE8A496 /* ProductDetailPriceField.swift */,
 				8096C434B259D5C2089911D6 /* ProductDetailHero.swift */,
 				CB696BC87728F152C30447B5 /* ProductDetailCardValue.swift */,
+				E9699C883DC7826E649018A5 /* ProductDetailCategoryPopover.swift */,
+				4BB6BCD544CE54EF44E904DB /* ProductDetailUnitPanel.swift */,
 				8327C48EF8C2D590467D6E0D /* ProductDetailCard.swift */,
 				5A7F83D9D7509A500371CB9A /* ProductDetailIcon.swift */,
 			);
@@ -4023,6 +4029,8 @@
 				51EBEB8081FB0715412D25F5 /* ProductDetailPriceField.swift in Sources */,
 				ED1A2F297CBFD2CAD8F3204D /* ProductDetailHero.swift in Sources */,
 				9AD5C5ADE714B4EA457FDE94 /* ProductDetailCardValue.swift in Sources */,
+				345CC74BD90FAFE610F4E3A9 /* ProductDetailCategoryPopover.swift in Sources */,
+				BDCCB354B3F889102DA9212C /* ProductDetailUnitPanel.swift in Sources */,
 				CFEF2901A36C796CF531C50B /* ProductDetailCard.swift in Sources */,
 				101F0D29CE829A66C736A4EC /* ProductDetailIcon.swift in Sources */,
 				5AEB224981AE1C83A78D9319 /* FocusedFieldFrame.swift in Sources */,

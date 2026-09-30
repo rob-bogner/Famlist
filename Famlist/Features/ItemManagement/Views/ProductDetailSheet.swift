@@ -13,7 +13,8 @@
 
  🔰 Notes for Beginners:
  - Beim Bearbeiten werden die Texte an derselben Stelle zu Eingabefeldern (Rahmen 11 pt nach außen
-   gerückt, damit der Text stehen bleibt). Kategorie und Maßeinheit öffnen ein Menü.
+   gerückt, damit der Text stehen bleibt). Kategorie öffnet ein eigenes Glas-Menü (ProductDetailCategoryPopover),
+   Maßeinheit klappt darunter die gruppierte Auswahl auf (ProductDetailUnitPanel).
  - Menge und Preisverlauf fehlen im Artikelstamm (Artikel verwalten): `showsQuantity` / `onPriceHistory`.
  - Wurde aus „Ansehen“ bearbeitet, bleibt der Screen nach „Speichern“ offen und zeigt die neuen Werte.
  - Die Anzeige liest immer aus dem Formular (ItemFormViewModel), damit sie nach dem Speichern stimmt.
@@ -22,6 +23,11 @@
  - Vollbild → Sheet (Griff, Herunterziehen schließt), Stift unten rechts am Bild.
  - Ziehen am Bild/Inhalt nach unten bewegt das ganze Sheet (SheetPullTracker, kein weißer Spalt);
    Bild beginnt ohne 1-pt-Streifen ganz oben.
+ - Kategorie: Glas-Popover statt System-Menü, Maßeinheit: „Einheiten gruppiert“ (Prototypen PickM / PickH, Test).
+ - Öffnet ohne Fokus (Tastatur zu). Tastatur offen → Sheet wächst auf die volle Höhe (Bildschirm − 54).
+   Kategorie, Maßeinheit, Menge (− / +) und Preisverlauf nehmen den Fokus weg und schließen die Tastatur.
+   Umgekehrt klappen Kategorie-Menü und Einheiten-Auswahl zu, sobald sie den Fokus verlieren
+   (Textfeld angetippt, Menge, Preisverlauf).
  ------------------------------------------------------------------------
  */
 
@@ -31,6 +37,8 @@ import UIKit
 /// Product detail sheet: view, edit in place, or create a new item.
 struct ProductDetailSheet: View {
     @EnvironmentObject var listViewModel: ListViewModel
+    @EnvironmentObject var categoryStore: CategoryStore
+    @Environment(\.hybridSheetMaxHeight) private var sheetMaxHeight
     @StateObject private var formVM: ItemFormViewModel
 
     /// Gespeicherter Stand (nil = neuer Artikel).
@@ -63,6 +71,12 @@ struct ProductDetailSheet: View {
     /// Wie weit der Inhalt oben über den Anfang hinaus gezogen ist (> 0 = Überziehen am Anfang).
     @State private var pull: CGFloat = 0
     @State private var pickerSource: UIImagePickerController.SourceType = .photoLibrary
+    /// Glas-Menü der Kategorie offen.
+    @State private var categoryOpen = false
+    /// Gemessene Höhe des Glas-Menüs (für oben/unten).
+    @State private var categoryPopoverHeight: CGFloat = 420
+    /// Gruppierte Maßeinheit-Auswahl aufgeklappt.
+    @State private var unitOpen = false
     @FocusState private var nameFocused: Bool
     @FocusState private var brandFocused: Bool
     @FocusState private var descriptionFocused: Bool
@@ -111,10 +125,17 @@ struct ProductDetailSheet: View {
 
     static let designHeight: CGFloat = 790
 
+    /// Beim Tippen (Tastatur offen) volle Höhe, damit über der Tastatur möglichst viel sichtbar bleibt.
+    private var sheetHeight: CGFloat {
+        guard keyboardHeight > 0, sheetMaxHeight.isFinite else { return Self.designHeight }
+        return max(Self.designHeight, sheetMaxHeight)
+    }
+
     var body: some View {
-        SheetSurface(k: k, height: Self.designHeight) {
+        SheetSurface(k: k, height: sheetHeight) {
             sheetContent
         }
+        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: sheetHeight)
         .offset(y: dragOffset + pull)                 // Überziehen am Anfang zieht das ganze Sheet mit
         .accessibilityAction(.escape, onClose)
         // Aktionskarte statt Systemdialog (Design: PhotoSourceDialog)
@@ -128,11 +149,37 @@ struct ProductDetailSheet: View {
             ImagePicker(selectedImage: $formVM.selectedImage, isPresented: $showPicker, sourceType: pickerSource)
         }
         .onChange(of: formVM.name) { _, _ in formVM.validateField(.name) }
-        .onChange(of: formVM.units) { _, _ in formVM.validateField(.units) }
+        .onChange(of: formVM.units) { _, _ in
+            formVM.validateField(.units)
+            if !quantityEditing {                              // − / + am Stepper
+                dismissTextFocus()
+                collapsePickers()
+            }
+        }
+        // Textfeld bekommt den Fokus (Tastatur geht auf) → Auswahl einklappen.
+        // Das Kategorie-Menü bleibt offen, wenn dessen eigenes Suchfeld tippt.
+        .onChange(of: keyboardHeight) { _, height in
+            if height > 0 && !categoryOpen && unitOpen { collapsePickers() }
+        }
+        .onChange(of: quantityEditing) { _, editing in
+            if editing { collapsePickers() }
+        }
         .onChange(of: formVM.price) { _, _ in formVM.validateField(.price) }
+        .onChange(of: nameFocused) { _, f in if f { collapsePickers() } }
+        .onChange(of: brandFocused) { _, f in if f { collapsePickers() } }
+        .onChange(of: descriptionFocused) { _, f in if f { collapsePickers() } }
+        .onChange(of: mode) { _, _ in
+            categoryOpen = false
+            unitOpen = false
+        }
         .onAppear {
             formVM.validateAll()
-            if mode == .new && formVM.name.isEmpty { nameFocused = true }
+            // Ohne Fokus öffnen; auch eine noch offene Tastatur (z. B. aus „Suchen“) schließen.
+            dismissTextFocus()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(350))
+                dismissTextFocus()
+            }
         }
         .task {
             if let lastPriceText, let text = await lastPriceText() { priceSubtitle = text }
@@ -172,7 +219,75 @@ struct ProductDetailSheet: View {
             bottomBar
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .overlayPreferenceValue(CategoryCardAnchorKey.self) { anchor in
+            categoryPopoverLayer(anchor)
+        }
     }
+
+    // MARK: - Kategorie-Menü (Glas-Popover)
+
+    /// Leichte Abdunklung (Tippen schließt) und das Glas-Menü unter der Karte – passt es dort nicht, darüber.
+    @ViewBuilder
+    private func categoryPopoverLayer(_ anchor: Anchor<CGRect>?) -> some View {
+        GeometryReader { proxy in
+            if categoryOpen, let anchor {
+                let card = proxy[anchor]
+                let below = card.maxY + 8
+                let limit = proxy.size.height - max(keyboardHeight, 24)
+                let fitsBelow = below + categoryPopoverHeight <= limit
+                let y = fitsBelow ? below : max(12, card.minY - 8 - categoryPopoverHeight)
+                ZStack(alignment: .topLeading) {
+                    Color.black.opacity(k.isDark ? 0.22 : 0.06)
+                        .contentShape(Rectangle())
+                        .onTapGesture { setCategoryOpen(false) }
+                        .accessibilityHidden(true)
+                    ProductDetailCategoryPopover(
+                        k: k, categories: listViewModel.categoryOrder, selection: formVM.category,
+                        onSelect: { name in
+                            formVM.category = name
+                            setCategoryOpen(false)
+                        },
+                        onCreate: { name in
+                            let icon = CategoryIconCatalog.suggestedKey(for: name) ?? "tag"
+                            if categoryStore.add(name: name, icon: icon) { formVM.category = name }
+                            setCategoryOpen(false)
+                        })
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { categoryPopoverHeight = $0 }
+                        .offset(x: min(card.minX, proxy.size.width - ProductDetailCategoryPopover.width - 16), y: y)
+                        .transition(.scale(scale: 0.92, anchor: fitsBelow ? .topLeading : .bottomLeading).combined(with: .opacity))
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
+                .transition(.opacity)
+            }
+        }
+    }
+
+    /// Fokus aus allen Textfeldern nehmen und die Tastatur schließen.
+    private func dismissTextFocus() {
+        nameFocused = false
+        brandFocused = false
+        descriptionFocused = false
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+    /// Kategorie-Menü und Einheiten-Auswahl schließen.
+    private func collapsePickers() {
+        guard categoryOpen || unitOpen else { return }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) {
+            categoryOpen = false
+            unitOpen = false
+        }
+    }
+
+    private func setCategoryOpen(_ open: Bool) {
+        if open { dismissTextFocus() }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) {
+            categoryOpen = open
+            if open { unitOpen = false }
+        }
+    }
+
+    private static let chevronUp: [SVGElement] = [.path("M6 15l6-6 6 6")]
 
     // MARK: - Rahmen
 
@@ -389,6 +504,13 @@ struct ProductDetailSheet: View {
                 categoryCard
                 unitCard
             }
+            if mode.isEditing && unitOpen {
+                ProductDetailUnitPanel(k: k, measure: $formVM.measure, onDone: {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { unitOpen = false }
+                })
+                .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.96, anchor: .top)),
+                                        removal: .opacity))
+            }
             if showsQuantity || hasPriceHistory {
                 HStack(alignment: .top, spacing: 10) {
                     if showsQuantity { quantityCard } else { Color.clear.frame(maxWidth: .infinity, maxHeight: 1) }
@@ -405,22 +527,17 @@ struct ProductDetailSheet: View {
         let selected = listViewModel.categoryOrder.first { $0.name == formVM.category }
         let icon = selected?.svgIcon ?? ProductDetailIcon.category
         if mode.isEditing {
-            Menu {
-                Button("Keine Kategorie") { formVM.category = "" }
-                Divider()
-                ForEach(listViewModel.categoryOrder) { category in
-                    Button(category.name) { formVM.category = category.name }
-                }
-            } label: {
-                ProductDetailCard(k: k, icon: icon, label: "Kategorie", style: .field) {
+            Button { setCategoryOpen(!categoryOpen) } label: {
+                ProductDetailCard(k: k, icon: icon, label: "Kategorie", style: categoryOpen ? .focused : .field) {
                     ProductDetailCardValue(text: formVM.category.isEmpty ? "Wählen" : formVM.category,
                                            color: formVM.category.isEmpty ? k.sub : k.text,
-                                           trailing: Icon.chevronDown, trailingColor: k.sub)
+                                           trailing: categoryOpen ? Self.chevronUp : Icon.chevronDown, trailingColor: k.sub)
                 }
             }
-            .menuStyle(.button)
             .buttonStyle(.plain)
+            .anchorPreference(key: CategoryCardAnchorKey.self, value: .bounds) { $0 }
             .accessibilityLabel("Kategorie: \(formVM.category.isEmpty ? "keine" : formVM.category)")
+            .accessibilityHint("Öffnet die Kategorieauswahl")
         } else {
             ProductDetailCard(k: k, icon: icon, label: "Kategorie") {
                 ProductDetailCardValue(text: formVM.category.isEmpty ? "Keine" : formVM.category,
@@ -433,20 +550,20 @@ struct ProductDetailSheet: View {
     @ViewBuilder
     private var unitCard: some View {
         if mode.isEditing {
-            Menu {
-                Button("Keine Einheit") { formVM.measure = "" }
-                Divider()
-                ForEach(Measure.allCases, id: \.self) { unit in
-                    Button(unit.localizedName) { formVM.measure = unit.rawValue }
+            Button {
+                dismissTextFocus()
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                    unitOpen.toggle()
+                    categoryOpen = false
                 }
             } label: {
-                ProductDetailCard(k: k, icon: ProductDetailIcon.unit, label: "Maßeinheit", style: .field) {
+                ProductDetailCard(k: k, icon: ProductDetailIcon.unit, label: "Maßeinheit", style: unitOpen ? .focused : .field) {
                     ProductDetailCardValue(text: unitName ?? "Keine", color: unitName == nil ? k.sub : k.text,
-                                           trailing: Icon.chevronDown, trailingColor: k.sub)
+                                           trailing: unitOpen ? Self.chevronUp : Icon.chevronDown, trailingColor: k.sub)
                 }
             }
-            .menuStyle(.button)
             .buttonStyle(.plain)
+            .accessibilityHint(unitOpen ? "Schließt die Auswahl" : "Öffnet die Einheitenauswahl")
             .accessibilityLabel("Maßeinheit: \(unitName ?? "keine")")
         } else {
             ProductDetailCard(k: k, icon: ProductDetailIcon.unit, label: "Maßeinheit") {
@@ -472,7 +589,7 @@ struct ProductDetailSheet: View {
     }
 
     private var priceHistoryCard: some View {
-        Button(action: { onPriceHistory?(currentModel) }) {
+        Button(action: { dismissTextFocus(); collapsePickers(); onPriceHistory?(currentModel) }) {
             ProductDetailCard(k: k, icon: ProductDetailIcon.trend, label: "Preisverlauf",
                               style: mode.isEditing ? .field : .info) {
                 ProductDetailCardValue(text: priceSubtitle, color: k.accentText,
@@ -566,6 +683,7 @@ struct ProductDetailSheet: View {
                        startInEdit: false, k: SheetTheme(.light), keyboardHeight: 0, onClose: {},
                        onPriceHistory: { _ in })
         .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+        .environmentObject(CategoryStore(repository: nil))
 }
 
 #Preview("Bearbeiten Dark") {
@@ -574,11 +692,13 @@ struct ProductDetailSheet: View {
                        startInEdit: true, k: SheetTheme(.dark), keyboardHeight: 0, onClose: {},
                        onPriceHistory: { _ in })
         .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+        .environmentObject(CategoryStore(repository: nil))
 }
 
 #Preview("Neu") {
     ProductDetailSheet(newItemName: "", k: SheetTheme(.light), keyboardHeight: 0, onClose: {})
         .environmentObject(PreviewMocks.makeListViewModelWithSamples())
+        .environmentObject(CategoryStore(repository: nil))
 }
 
 // MARK: - Herunterziehen über den Inhalt
