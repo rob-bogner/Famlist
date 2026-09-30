@@ -22,6 +22,7 @@
 
  📝 Last Change:
  - Zähler use_count/last_used_at und noteUse für „Oft gekauft“ (Migration 022, 26.09.2026).
+ - imageUrl: Bildadresse aus dem globalen Katalog (Migration 035, 30.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -54,6 +55,9 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
     var useCount: Int? = nil
     /// Zeitpunkt der letzten Hinzufügung (Migration 022).
     var lastUsedAt: Date? = nil
+    /// Bildadresse aus dem globalen Katalog (OpenFoodFacts, Migration 035). Die App lädt das Bild davon nach,
+    /// wenn der Eintrag kein eigenes Foto hat. Wird nur gesendet, wenn gesetzt (Speichern ohne Adresse löscht nicht).
+    var imageUrl: String? = nil
 
     // MARK: - CodingKeys (maps camelCase Swift properties to snake_case DB columns)
 
@@ -71,6 +75,7 @@ struct ItemCatalogEntry: Codable, Identifiable, Equatable {
         case imagePath = "image_path"
         case useCount = "use_count"
         case lastUsedAt = "last_used_at"
+        case imageUrl = "image_url"
     }
 
     // MARK: - Factory

@@ -137,6 +137,9 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Optional global OpenFoodFacts catalog repository; injected after init via configure(globalCatalogRepository:).
     /// When set, ItemSearchView will show global OFF products alongside personal catalog results.
     internal var globalCatalogRepository: (any GlobalProductCatalogRepository)?
+
+    /// Lädt ein Produktbild aus dem globalen Katalog (Adresse → Base64-JPEG); in Tests ersetzbar.
+    internal var remoteImageLoader: @Sendable (String) async -> String? = { await RemoteProductImage.base64JPEG(from: $0) }
     
     /// Local SwiftData store for offline persistence.
     internal let itemStore: SwiftDataItemStore

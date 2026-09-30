@@ -43,7 +43,7 @@ final class SupabaseItemCatalogRepository: ItemCatalogRepository {
 
     /// Security: nur die Spalten, die die UI braucht.
     /// image_data nur noch für den Umzug alter Fotos nach Storage (Migration 016).
-    private static let columns = "id,owner_public_id,name,brand,category,product_description,measure,price,image_data,image_path,barcode,use_count,last_used_at"
+    private static let columns = "id,owner_public_id,name,brand,category,product_description,measure,price,image_data,image_path,barcode,use_count,last_used_at,image_url"
     /// Höchstzahl Namen je Aufruf von catalog_note_use (Grenze der RPC).
     static let noteUseChunkSize = 200
     /// Seitengröße für fetchAll (PostgREST liefert sonst höchstens `max_rows` Zeilen – ohne Hinweis).
@@ -215,6 +215,7 @@ private struct CatalogInsert: Encodable {
         case productDescription = "product_description"
         case imagePath = "image_path"
         case imageData = "image_data"
+        case imageUrl = "image_url"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -228,6 +229,7 @@ private struct CatalogInsert: Encodable {
         try c.encode(entry.measure, forKey: .measure)
         try c.encode(entry.price, forKey: .price)
         try c.encodeIfPresent(entry.barcode, forKey: .barcode)
+        try c.encodeIfPresent(entry.imageUrl, forKey: .imageUrl)   // fehlt → Server behält die Adresse (Migration 035)
         try c.encode(entry.imagePath, forKey: .imagePath)
         try c.encodeNil(forKey: .imageData)                        // altes Base64 beim Upsert leeren
     }

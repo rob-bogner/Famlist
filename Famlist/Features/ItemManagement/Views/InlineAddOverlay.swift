@@ -237,7 +237,7 @@ struct InlineAddOverlay: View {
             return
         }
         let item = result.entry.toItemModel(listId: listViewModel.listId.uuidString, ownerPublicId: ownerPublicId)
-        listViewModel.addItem(item)
+        listViewModel.addItem(item, remoteImageURL: result.entry.imageUrl) // Katalog-Bild nachladen (ohne eigenes Foto)
         justAdded.insert(result.id)
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 1_200_000_000)

@@ -9,6 +9,7 @@
 
  📝 Last Change:
  - Hinzufügen zählt im Artikelstamm für „Oft gekauft“ (Migration 022, 26.09.2026).
+ - addItem(remoteImageURL:): Bildadresse in den Artikelstamm, Bild nachladen (Migration 035, 30.09.2026).
  ------------------------------------------------------------------------
  */
 
@@ -19,7 +20,10 @@ extension ListViewModel {
     
     /// Adds a new item after normalizing fields (e.g., measure, listId).
     /// - Parameter barcode: EAN/UPC aus dem Barcode-Scanner; wird im Artikelstamm gemerkt.
-    func addItem(_ item: ItemModel, barcode: String? = nil) {
+    /// - Parameter remoteImageURL: Bildadresse aus dem globalen Katalog; wird im Artikelstamm gemerkt und das Bild
+    ///   nachgeladen, wenn der Artikel keins hat (ListViewModel+RemoteImage).
+    func addItem(_ item: ItemModel, barcode: String? = nil, remoteImageURL: String? = nil) {
+        defer { loadRemoteImageIfNeeded(for: item, from: remoteImageURL) }
         var normalized = item
         normalized.measure = canonicalizeMeasure(item.measure)
         normalized.listId = normalized.listId ?? listId.uuidString
@@ -45,7 +49,7 @@ extension ListViewModel {
             measure: normalized.measure
         )
 
-        saveToCatalog(normalized, barcode: barcode, countUse: true)
+        saveToCatalog(normalized, barcode: barcode, imageUrl: remoteImageURL, countUse: true)
 
         // Gerade weggewischt und noch im Rückgängig-Zeitraum? Dann erst die Löschung festschreiben und
         // danach neu anlegen – beides in dieser Reihenfolge, damit das Anlegen die neuere HLC bekommt.
@@ -84,10 +88,11 @@ extension ListViewModel {
     /// Artikelstamm im Hintergrund ergänzen (blockiert die Liste nicht).
     /// - Parameter countUse: true beim Hinzufügen zu einer Liste → Zähler „Oft gekauft“ (Migration 022).
     ///   Der Zähl-Auftrag folgt dem Speichern in derselben Aufgabe, damit der Eintrag schon existiert.
-    private func saveToCatalog(_ item: ItemModel, barcode: String?, countUse: Bool = false) {
+    private func saveToCatalog(_ item: ItemModel, barcode: String?, imageUrl: String? = nil, countUse: Bool = false) {
         guard let catalogRepo = catalogRepository else { return }
         var catalogEntry = ItemCatalogEntry.from(item: item, ownerPublicId: "")
         catalogEntry.barcode = barcode
+        catalogEntry.imageUrl = imageUrl.flatMap { RemoteProductImage.allowedURL($0)?.absoluteString }
         let usedAt = Date()
         Task {
             do {

@@ -43,6 +43,7 @@ enum CatalogOperation: Codable, Equatable {
                 merged.id = result[i].id                      // Server behält die bestehende Zeile
                 merged.ownerPublicId = result[i].ownerPublicId
                 merged.barcode = entry.barcode ?? result[i].barcode
+                merged.imageUrl = entry.imageUrl ?? result[i].imageUrl  // wie der Server (Migration 035)
                 merged.useCount = result[i].useCount     // Upsert ändert den Zähler nicht
                 merged.lastUsedAt = result[i].lastUsedAt
                 result[i] = merged
@@ -53,6 +54,7 @@ enum CatalogOperation: Codable, Equatable {
             if let i = result.firstIndex(where: { $0.id == entry.id }) {
                 var updated = entry
                 updated.useCount = result[i].useCount     // Ändern schickt den Zähler nicht mit
+                updated.imageUrl = updated.imageUrl ?? result[i].imageUrl  // und die Bildadresse auch nicht
                 updated.lastUsedAt = result[i].lastUsedAt
                 result[i] = updated
             }

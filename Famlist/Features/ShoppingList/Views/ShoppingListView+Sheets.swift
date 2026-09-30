@@ -214,7 +214,7 @@ extension ShoppingListView {
         var item = product.entry.toItemModel(listId: listViewModel.listId.uuidString,
                                              ownerPublicId: listViewModel.defaultList?.ownerId.uuidString)
         item.units = Double(quantity)
-        listViewModel.addItem(item, barcode: product.barcode)
+        listViewModel.addItem(item, barcode: product.barcode, remoteImageURL: product.entry.imageUrl)
     }
 
     /// Artikel verwalten → Bearbeiten: Artikelstamm speichern und gleichnamige Artikel der Liste anpassen.

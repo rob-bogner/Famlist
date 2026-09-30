@@ -71,7 +71,8 @@ struct GlobalProductEntry: Codable, Identifiable, Equatable {
             productDescription: nil,
             measure: measure ?? "",
             price: 0.0,
-            imageData: nil
+            imageData: nil,
+            imageUrl: imageUrl           // Artikelstamm merkt sich die Bildadresse (Migration 035)
         )
     }
 }
