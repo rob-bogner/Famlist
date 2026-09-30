@@ -43,6 +43,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Produktdetails (Tipp auf das Artikelbild) | ProductDetail | ja | – (nur HTML) |
 |  | Produktdetails – eigenes Foto füllt den Kopf | ProductDetailPhoto | ja | – (nur HTML) |
 |  | Artikel bearbeiten (Produktdetails) | ProductDetailEdit | ja | – (nur HTML) |
+|  | Artikel bearbeiten – Kategorie (Glas-Menü) | ProductDetailCategory | ja | `ProductDetailCategoryPopover` |
+|  | Artikel bearbeiten – Maßeinheit (Einheiten gruppiert) | ProductDetailUnit | ja | `ProductDetailUnitPanel` |
 |  | Artikel bearbeiten – Menge eintippen | ProductDetailAmount | ja | – (nur HTML) |
 |  | Preisverlauf | PriceHistory | ja | `PriceHistoryScreen` |
 | 4 · Aktionsleiste (Dock) | Sortieren | SortMenu | ja | `SortMenuScreen` |
@@ -64,7 +66,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Aus Zwischenablage importieren | ClipboardImport | ja | – (nur HTML) |
 |  | Artikel verwalten | ManageItems | ja | `ManageItemsScreen` |
 |  | Kategorien verwalten | ManageCategories | ja | `ManageCategoriesScreen` |
-|  | Kategorie bearbeiten | EditCategory | ja | `EditCategoryScreen` |
+|  | Kategorie bearbeiten (Name, Farbe, Icon) | EditCategory | ja | `EditCategoryScreen` |
 | 6 · Einkauf abschließen | Einkauf erledigt | ShoppingDone | ja | `ShoppingDoneScreen` |
 |  | Einkauf erledigt – ohne Kassenzettel | ShoppingDoneScan | ja | – (nur HTML) |
 |  | Kassenzettel fotografieren (Kamera, immer dunkel) | ReceiptCapture | – | `ReceiptCaptureScreen` |
@@ -136,6 +138,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
    - Senden/Return fügt den besten Treffer hinzu. Kein Treffer → „„…“ als neuen Artikel anlegen“ → Neuer Artikel (Name vorbefüllt), siehe AddInlineNoResults.
    - **Produktdetails** (ProductDetail, seit 28.09.2026) ist EIN Screen für neu, ansehen und bearbeiten: Sheet (790 hoch, oben Radius 34, Griff, Herunterziehen schließt) über der abgedunkelten Liste, oben großes Produktbild (330, unten Radius 40), ✕ oben rechts (14 / 16), Glas-Stift „Bearbeiten“ unten rechts am Bild (nur Ansehen; beim Bearbeiten sitzt dort der Kamera-Knopf „Bild ändern“). Darunter Name + Marke links, aktueller Preis rechts, Karten Kategorie · Maßeinheit · Menge in der Liste · Preisverlauf, dann Beschreibung.
    - Tipp auf das Artikelbild in der Liste → Ansehen; Stift → dieselben Stellen werden Eingabefelder (ProductDetailEdit), „Speichern“ → zurück zu Ansehen. Wischaktion „Bearbeiten“ öffnet direkt das Bearbeiten. Neuer Artikel = ProductNew (leere Felder, gestrichelte Kachel „Foto hinzufügen“, „Zur Liste hinzufügen“).
+   - Öffnet ohne Fokus; Tastatur offen → Sheet volle Höhe. Kategorie öffnet das Glas-Menü (ProductDetailCategory: Suche, 6 Zeilen, „Ohne Kategorie“, „Neue Kategorie“), Maßeinheit klappt darunter die Einheiten auf (ProductDetailUnit: Zählen · Gewicht · Volumen · Länge). Beide klappen zu, sobald ein anderes Feld den Fokus bekommt.
    - Bild im Kopf: Bilder aus der Produktbibliothek (freigestellt, z. B. Obst) stehen mittig mit 300 × 300; ein eigenes Foto füllt den ganzen Kopf (390 × 330, unten Radius 40) mit leichtem Schatten oben für Griff und ✕ (ProductDetailPhoto).
    - Kategorie und Maßeinheit sind beim Bearbeiten Auswahlmenüs, die Menge ein kompakter Stepper in der Karte (Eintippen: ProductDetailAmount mit Schnellwahl über dem Ziffernblock).
    - Die Suchleiste oben **filtert nur die Artikel der aktuellen Liste** (SearchInline; Name und Marke, ohne Groß-/Kleinschreibung und Akzente). Findet der Filter nichts, bietet er „… hinzufügen“ an. Während Filter oder Eingabe offen sind, ist das Dock ausgeblendet.
@@ -151,7 +154,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
    - Nach links wischen zeigt runde Glas-Aktionsknöpfe (SwipeActions, 56 pt).
    - Zustände einer Karte: „Nicht verfügbar“ (ItemUnavailable), „Sync fehlgeschlagen“ mit Rückfrage (ItemSyncFailed, ItemSyncFailedDialog).
    - Fortschritt im Hero: „x von y Artikeln“ und Prozent. Beim Scrollen klappt der Kopf kompakt zusammen (ListCompact).
-   - Tabs Alle / Offen / Erledigt filtern; leere Tabs zeigen eigene Hinweise (FilterOpenEmpty, FilterDoneEmpty).
+   - Tabs Alle / Offen / Erledigt filtern; „Offen“ und „Erledigt“ zeigen die Anzahl als kleine Plakette (gewählt: Akzent-Tönung). Leere Tabs zeigen eigene Hinweise (FilterOpenEmpty, FilterDoneEmpty).
+   - Die Kachel vor dem Kategorienamen hat die Farbe der Kategorie (Kategorie bearbeiten → Farbe, 36 Farben: 9 Farbtöne × hell · kräftig · dunkel · gedeckt).
    - Sektionskopf „Alle abhaken ›“ gilt pro Kategorie.
 5. **Dock (untere Leiste)**
    - Es ist immer genau ein Button gewählt. Er ist eine Pille mit Highlight und Beschriftung; die anderen Buttons sind nur 44-pt-Icons.

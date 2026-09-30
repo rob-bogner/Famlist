@@ -90,7 +90,7 @@ input::placeholder{color:inherit;opacity:1}
 <!-- tabs -->
 <div role="tablist" style="display: flex; gap: 26px; border-bottom: 1px solid {{t.line}}; padding: 0 4px">
 <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="3">
-<button role="tab" aria-selected="{{tb.sel}}" style="position: relative; border: 0; background: transparent; padding: 10px 0 12px 0; font-size: 15px; font-weight: {{tb.weight}}; color: {{tb.color}}; cursor: pointer">{{tb.label}}<sc-if value="{{tb.on}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: {{accent}}; box-shadow: 0 0 12px {{accentGlow}}"></span></sc-if></button>
+<button role="tab" aria-selected="{{tb.sel}}" style="position: relative; border: 0; background: transparent; padding: 10px 0 12px 0; font-size: 15px; font-weight: {{tb.weight}}; color: {{tb.color}}; cursor: pointer; display: flex; align-items: center; gap: 6px">{{tb.label}}<sc-if value="{{tb.hasCount}}" hint-placeholder-val="{{ false }}"><span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 6px; border-radius: 10px; background: {{tb.badgeBg}}; color: {{tb.badgeText}}; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">{{tb.count}}</span></sc-if><sc-if value="{{tb.on}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: {{accent}}; box-shadow: 0 0 12px {{accentGlow}}"></span></sc-if></button>
 </sc-for>
 </div>
 
@@ -98,7 +98,7 @@ input::placeholder{color:inherit;opacity:1}
 <!-- Produktbilder (fruit.*): Asset füllt die bestehende 64er-Kachel (Radius 18) ganz, der Innenabstand steckt im Asset -->
 <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -2px">
 <div style="display: flex; align-items: center; gap: 10px">
-<div style="width: 30px; height: 30px; border-radius: 10px; background: {{chipGrad}}; box-shadow: {{chipShadow}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14zM5 19l8-8"></path></svg></div>
+<div style="width: 30px; height: 30px; border-radius: 10px; background: {{catObst.bg}}; box-shadow: {{catObst.shadow}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14zM5 19l8-8"></path></svg></div>
 <h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 600; color: {{t.text}}">Obst &amp; Gemüse</h2>
 <span style="font-size: 14px; font-weight: 600; color: {{t.sub}}">5</span>
 </div>
@@ -130,7 +130,7 @@ input::placeholder{color:inherit;opacity:1}
 <sc-if value="{{unchecked}}" hint-placeholder-val="{{ true }}">
 <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -2px">
 <div style="display: flex; align-items: center; gap: 10px">
-<div style="width: 30px; height: 30px; border-radius: 10px; background: {{chipGrad}}; box-shadow: {{chipShadow}}; display: flex; align-items: center; justify-content: center">
+<div style="width: 30px; height: 30px; border-radius: 10px; background: {{catSonst.bg}}; box-shadow: {{catSonst.shadow}}; display: flex; align-items: center; justify-content: center">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="8" cy="8" r="1.4"></circle></svg>
 </div>
 <h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 600; color: {{t.text}}">Sonstiges</h2>
@@ -328,17 +328,27 @@ class Component extends DCLogic {
       empty: state === 'empty', hasItems: state !== 'empty' && !filterEmpty && state !== 'fruit', filterEmpty,
       fruit: state === 'fruit',
       fruits: [
-        { name: 'Bananen', qty: '6 Stück', price: '1,49 €', img: '/_blob/ee69b7c1fecda2d6553e3661b2e82ff0' },
-        { name: 'Äpfel', qty: '1 kg', price: '2,49 €', img: '/_blob/26aaa558bbe91fa9089e79727ce86e72' },
-        { name: 'Orangen', qty: '4 Stück', price: '2,99 €', img: '/_blob/f7fa851c8bcdb26e339f481144dbd34d' },
-        { name: 'Erdbeeren', qty: '500 g', price: '3,49 €', img: '/_blob/a9c56126129793a59b87514384b39686' },
-        { name: 'Ananas', qty: '1 Stück', price: '2,29 €', img: '/_blob/a5a49f115427c5904ae8823264634837' }
+        { name: 'Bananen', qty: '6 Stück', price: '1,49 €', img: 'assets/fruit/fruit.banana.svg' },
+        { name: 'Äpfel', qty: '1 kg', price: '2,49 €', img: 'assets/fruit/fruit.apple.svg' },
+        { name: 'Orangen', qty: '4 Stück', price: '2,99 €', img: 'assets/fruit/fruit.orange.svg' },
+        { name: 'Erdbeeren', qty: '500 g', price: '3,49 €', img: 'assets/fruit/fruit.strawberry.svg' },
+        { name: 'Ananas', qty: '1 Stück', price: '2,29 €', img: 'assets/fruit/fruit.pineapple.svg' }
       ],
       fe: state === 'openEmpty' ? { title: 'Alles erledigt', message: 'Auf dieser Liste sind keine offenen Artikel mehr.' }
                                 : { title: 'Noch nichts abgehakt', message: 'Abgehakte Artikel erscheinen hier.' },
+      // Kategorie-Farbe (Kategorie bearbeiten → Farbe)
+      catObst: { bg: 'linear-gradient(150deg, rgb(88,211,129), #29C75D 55%, rgb(32,155,73))', shadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 14px -5px rgba(41,199,93,0.55)' },
+      catSonst: { bg: 'linear-gradient(150deg, rgb(129,166,165), #5E8D8B 55%, rgb(73,110,108))', shadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 14px -5px rgba(94,141,139,0.55)' },
       tabs: ['Alle', 'Offen', 'Erledigt'].map((label) => {
         const on = label === tabSel;
-        return { label, on, sel: on ? 'true' : 'false', weight: on ? '600' : '500', color: on ? (dark ? light : deep) : t.sub };
+        // Anzahl hinter „Offen“ / „Erledigt“ (Wunsch 30.09.2026)
+        const total = state === 'empty' ? 0 : (state === 'fruit' ? 5 : (compact ? 5 : 1));
+        const done = checked ? 1 : 0;
+        const count = label === 'Offen' ? total - done : (label === 'Erledigt' ? done : null);
+        return { label, on, sel: on ? 'true' : 'false', weight: on ? '600' : '500', color: on ? (dark ? light : deep) : t.sub,
+                 hasCount: count !== null, count: String(count ?? ''),
+                 badgeBg: on ? rgba(accent, dark ? 0.2 : 0.12) : (dark ? 'rgba(255,255,255,0.08)' : '#EEF3F3'),
+                 badgeText: on ? (dark ? light : deep) : t.sub };
       }),
       unavailable: state === 'unavailable', syncFailed: state === 'syncFailed',
       na: dark ? { bg: 'rgba(240,138,44,0.18)', text: '#FFC08A' } : { bg: 'rgba(240,138,44,0.12)', text: '#BD5F0E' },

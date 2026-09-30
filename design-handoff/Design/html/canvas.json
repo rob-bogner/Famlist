@@ -283,7 +283,7 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Kategorie bearbeiten",
+   "title": "Kategorie bearbeiten (Name, Farbe, Icon)",
    "w": 390,
    "x": 7050,
    "y": 10292
@@ -292,7 +292,7 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Kategorie bearbeiten – Dark",
+   "title": "Kategorie bearbeiten (Name, Farbe, Icon) – Dark",
    "w": 390,
    "x": 7050,
    "y": 11296
@@ -933,7 +933,7 @@
    "radius": 44,
    "title": "Preisverlauf",
    "w": 390,
-   "x": 5170,
+   "x": 6110,
    "y": 5276
   },
   "PriceHistoryDark.dc.html": {
@@ -942,7 +942,7 @@
    "radius": 44,
    "title": "Preisverlauf – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 6110,
    "y": 6280
   },
   "ProductDetail.dc.html": {
@@ -960,7 +960,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen",
    "w": 390,
-   "x": 4700,
+   "x": 5640,
    "y": 5276
   },
   "ProductDetailAmountDark.dc.html": {
@@ -969,7 +969,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen – Dark",
    "w": 390,
-   "x": 4700,
+   "x": 5640,
    "y": 6280
   },
   "ProductDetailDark.dc.html": {
@@ -1997,6 +1997,42 @@
    "w": 390,
    "x": 5640,
    "y": 3664
+  },
+  "ProductDetailCategory.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Kategorie (Glas-Menü)",
+   "w": 390,
+   "x": 4700,
+   "y": 5276
+  },
+  "ProductDetailCategoryDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Kategorie (Glas-Menü) – Dark",
+   "w": 390,
+   "x": 4700,
+   "y": 6280
+  },
+  "ProductDetailUnit.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert)",
+   "w": 390,
+   "x": 5170,
+   "y": 5276
+  },
+  "ProductDetailUnitDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert) – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 6280
   }
  },
  "createdOnFiles": {
@@ -2031,7 +2067,7 @@
    "kind": "title1",
    "maxW": 6500,
    "page": "screens",
-   "text": "2 · Einkaufsliste — Liste → kompakt → leer → filtern → Tabs → abhaken → zurück → abgehakt löschen → Aktionen → nicht verfügbar → rückgängig → Sync-Fehler",
+   "text": "2 · Einkaufsliste — Liste → kompakt → leer → filtern → Tabs → abhaken → zurück → abgehakt löschen → Aktionen → nicht verfügbar → rückgängig → Sync-Fehler · Tabs „Offen“ / „Erledigt“ mit Anzahl, Kategorie-Kachel in der Kategorie-Farbe",
    "w": 240,
    "x": 0,
    "y": 2508
@@ -2040,7 +2076,7 @@
    "kind": "title1",
    "maxW": 5560,
    "page": "screens",
-   "text": "3 · Artikel hinzufügen & bearbeiten — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf",
+   "text": "3 · Artikel hinzufügen & bearbeiten → Kategorie (Glas-Menü) → Maßeinheit (Einheiten gruppiert) — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf",
    "w": 240,
    "x": 0,
    "y": 5016
@@ -2058,7 +2094,7 @@
    "kind": "title1",
    "maxW": 7440,
    "page": "screens",
-   "text": "5 · Menü & Listen — Menü → Meine Listen (leer) → wischen: links Löschen / Umbenennen / Duplizieren / Mitglieder, rechts Favorit → gelöscht + Rückgängig → neu / umbenennen / Optionen → löschen → Teilen → Import → Artikel & Kategorien",
+   "text": "5 · Menü & Listen — Menü → Meine Listen (leer) → wischen: links Löschen / Umbenennen / Duplizieren / Mitglieder, rechts Favorit → gelöscht + Rückgängig → neu / umbenennen / Optionen → löschen → Teilen → Import → Artikel & Kategorien · Kategorie bearbeiten: Farbe (36) + Icon",
    "w": 240,
    "x": 0,
    "y": 10032
@@ -2274,7 +2310,11 @@
   "ProductDetail.dc.html",
   "ProductDetailDark.dc.html",
   "ProductDetailEdit.dc.html",
+  "ProductDetailCategory.dc.html",
+  "ProductDetailUnit.dc.html",
   "ProductDetailEditDark.dc.html",
+  "ProductDetailCategoryDark.dc.html",
+  "ProductDetailUnitDark.dc.html",
   "ProductNew.dc.html",
   "ProductNewDark.dc.html",
   "ProductDetailAmount.dc.html",

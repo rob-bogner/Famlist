@@ -321,3 +321,23 @@ Zum Ausprobieren in der App, noch nicht in der User Journey des Canvas (erst nac
 |---|---|
 | PickM · Glas-Popover (Kategorie) | `ProductDetailCategoryPopover` – im `ProductDetailSheet` über `CategoryCardAnchorKey` unter (oder über) der Karte; Suche, „Ohne Kategorie“, „„Name“ anlegen“ (`CategoryStore.add`) |
 | PickH · Einheiten gruppiert (Maßeinheit) | `ProductDetailUnitPanel` + `MeasureGroup` – klappt unter Kategorie · Maßeinheit auf; Reiter Zählen · Gewicht · Volumen · **Länge** (cm, m; im Canvas noch nachziehen) |
+
+## Kategorie-Farben & Tabs mit Anzahl (freigegeben und umgesetzt 30.09.2026)
+
+- Kategorie bearbeiten (EditCategory): Abschnitt „Farbe“ zwischen Name und Icon, 36 Farben im Raster 9 × 4 (Kreis 30, gewählt = Ring 2/4 + weißer Haken). Große Kachel und Kachel in „Kategorien verwalten“, im Kategorie-Menü und vor dem Kategorienamen in der Liste in dieser Farbe (Verlauf 150°: +22 % hell → Farbe → −22 % dunkel, weißes Icon).
+- Palette (Zeilen hell · kräftig · dunkel · gedeckt; Spalten Rot, Orange, Gelb, Grün, Türkis, Blau, Indigo, Violett, Pink):
+  hell #E14751 #E17F47 #E1B347 #47E17A #47E1DC #4799E1 #475BE1 #8F47E1 #E1479E ·
+  kräftig #C72933 #C76329 #C79729 #29C75D #29C7C2 #297DC7 #293EC7 #7329C7 #C72982 ·
+  dunkel #8F242B #8F4B24 #8F6F24 #248F47 #248F8B #245D8F #24328F #56248F #8F2460 ·
+  gedeckt #8D5E61 #8D6F5E #8D7F5E #5E8D6D #5E8D8B #5E778D #5E648D #745E8D #8D5E78
+- Einkaufsliste (Hybrid): Tabs „Offen“ und „Erledigt“ mit Anzahl-Plakette (20 hoch, Radius 10, 12/600; gewählt Akzent 12 %/20 %, sonst #EEF3F3 bzw. Weiß 8 %).
+
+| Board | Umsetzung |
+|---|---|
+| EditCategory (Farbe) | `EditCategorySheet` (`colorGrid`, Höhe 760) · Palette/Kachel `CategoryColor` · `CategoryDefinition.color` · Supabase `categories.color` (Migration 033) |
+| ManageCategories | `ManageCategoriesSheet.categoryRow` (Kachel in Farbe, weißes Icon) |
+| Hybrid (Kategorie-Kachel) | `ListSectionHeader` |
+| ProductDetailCategory | `ProductDetailCategoryPopover` (weiche Kachel in Farbe) |
+| Hybrid (Tabs) | `ListFilterTabs(openCount:doneCount:)` ← `CollapsingListHeader` |
+
+Watch: zeigt Kategorien nur als Text, dort ändert sich nichts (liest `color` aber mit – Migration 033 vorher ausführen).
