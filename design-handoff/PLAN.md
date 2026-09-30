@@ -348,3 +348,15 @@ Watch: zeigt Kategorien nur als Text, dort ändert sich nichts (liest `color` ab
 |---|---|
 | ManageCategories („Neue Kategorie“ oben, Kopf fest) | `ManageCategoriesSheet`: Hinweis, Knopf und Anzahl fest; nur die Kategorien im `ScrollView` (Ausblenden oben 12 / unten 44) |
 | ProductNew (Platzhalter füllt den Kopf) | `ProductDetailHero` (Bearbeiten/Neu ohne Foto): gestrichelt, 12 Rand, oben 24, Radius 22/30, Glas-Kamera 72 |
+
+## Artikelbilder optional (freigegeben und umgesetzt 30.09.2026)
+
+Einstellung `ItemImageSetting` (`list.showImages`, nur dieses Gerät, Standard an).
+
+| Board | Umsetzung |
+|---|---|
+| Settings / SettingsImagesOff | `SettingsSheet` – Zeile „Artikelbilder anzeigen“ |
+| MenuOverlay (Schnellschalter) | `MenuOverlayScreen` – `PopoverMenuRow(trailing: .toggle(_:))`, Menü bleibt offen |
+| ListNoImages | `ItemCard` – ohne `ItemThumbnailTile`, Karte bleibt 94; Tippen auf den Namen öffnet die Produktdetails |
+| AddInlineNoImages | `InlineSearchResultRow` – ohne 40er-Kachel |
+| ProductDetailNoImage / ProductNewNoImage | `ProductDetailSheet` – ohne `ProductDetailHero`, Sheet 500 / 560, Titel oben links, Stift neben ✕ |

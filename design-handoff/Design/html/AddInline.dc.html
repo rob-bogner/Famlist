@@ -33,9 +33,9 @@ button,input{font-family:inherit}
 <span style="padding: 6px 10px 4px 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{k.sub}}">Weitere Produkte</span>
 <sc-for list="{{more}}" as="it" hint-placeholder-count="2">
 <div role="option" style="height: 56px; box-sizing: border-box; padding: 0 6px 0 8px; border-radius: 16px; display: flex; align-items: center; gap: 12px">
-<div style="width: 40px; height: 40px; border-radius: 13px; background: {{k.thumb}}; box-shadow: {{k.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="width: 40px; height: 40px; border-radius: 13px; background: {{k.thumb}}; box-shadow: {{k.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
 <sc-if value="{{it.img}}" hint-placeholder-val="{{ false }}"><img src="{{it.img}}" alt="" width="40" height="40" style="display: block; width: 40px; height: 40px"></sc-if><sc-if value="{{it.noImg}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{k.thumbIcon}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2 11h10.5l2-8H7"></path><circle cx="9.5" cy="19" r="1.2"></circle><circle cx="16.5" cy="19" r="1.2"></circle></svg></sc-if>
-</div>
+</div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
 <span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 500; color: {{k.text}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.pre}}<b style="font-weight: 700; color: {{k.accentText}}">{{it.hit}}</b>{{it.post}}</span>
 <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: {{k.sub}}; white-space: nowrap">{{it.meta}}<sc-if value="{{it.inList}}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; background: {{k.hl}}; color: {{k.accentText}}; font-weight: 600">{{it.badge}}</span></sc-if></span>
@@ -46,9 +46,9 @@ button,input{font-family:inherit}
 <span style="padding: 8px 10px 4px 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{k.sub}}">Deine Artikel</span>
 <sc-for list="{{own}}" as="it" hint-placeholder-count="2">
 <div role="option" style="height: 56px; box-sizing: border-box; padding: 0 6px 0 8px; border-radius: 16px; display: flex; align-items: center; gap: 12px">
-<div style="width: 40px; height: 40px; border-radius: 13px; background: {{k.thumb}}; box-shadow: {{k.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="width: 40px; height: 40px; border-radius: 13px; background: {{k.thumb}}; box-shadow: {{k.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
 <sc-if value="{{it.img}}" hint-placeholder-val="{{ false }}"><img src="{{it.img}}" alt="" width="40" height="40" style="display: block; width: 40px; height: 40px"></sc-if><sc-if value="{{it.noImg}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{k.thumbIcon}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2 11h10.5l2-8H7"></path><circle cx="9.5" cy="19" r="1.2"></circle><circle cx="16.5" cy="19" r="1.2"></circle></svg></sc-if>
-</div>
+</div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
 <span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 500; color: {{k.text}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.pre}}<b style="font-weight: 700; color: {{k.accentText}}">{{it.hit}}</b>{{it.post}}</span>
 <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: {{k.sub}}; white-space: nowrap">{{it.meta}}<sc-if value="{{it.inList}}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 7px; border-radius: 999px; background: {{k.hl}}; color: {{k.accentText}}; font-weight: 600">{{it.badge}}</span></sc-if></span>
@@ -81,7 +81,7 @@ button,input{font-family:inherit}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"results":{"editor":"enum","default":"some","options":["some","none","fruit"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"results":{"editor":"enum","default":"some","options":["some","none","fruit"]},"images":{"editor":"enum","default":"on","options":["on","off"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -154,7 +154,8 @@ class Component extends DCLogic {
     ]);
     const withImg = (a) => a.map((i) => Object.assign({ noImg: !i.img }, i));
     const q = none ? 'Quinoa-Mehl' : (mode === 'fruit' ? 'an' : 'Mil');
-    return { k, gp, gn, cta, theme, accent, own: withImg(mode === 'fruit' ? fruitOwn : own), more: withImg(mode === 'fruit' ? fruitMore : more),
+    const images = (this.props.images ?? 'on') === 'on';
+    return { images, k, gp, gn, cta, theme, accent, own: withImg(mode === 'fruit' ? fruitOwn : own), more: withImg(mode === 'fruit' ? fruitMore : more),
       hasResults: !none, noResults: none, q };
   }
 }

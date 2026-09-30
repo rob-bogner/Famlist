@@ -107,7 +107,7 @@ input::placeholder{color:inherit;opacity:1}
 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: -6px">
 <sc-for list="{{fruits}}" as="f" hint-placeholder-count="5">
 <div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px">
-<div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; overflow: hidden; flex-shrink: 0"><img src="{{f.img}}" alt="" width="64" height="64" style="display: block; width: 64px; height: 64px"></div>
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; overflow: hidden; flex-shrink: 0"><img src="{{f.img}}" alt="" width="64" height="64" style="display: block; width: 64px; height: 64px"></div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">{{f.name}}</span><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap">{{f.qty}}</span></div>
 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{f.price}}</span></div>
 </div>
@@ -176,9 +176,9 @@ input::placeholder{color:inherit;opacity:1}
 </div>
 </sc-if>
 <div style="position: absolute; left: {{cardLeft}}; top: 0; width: 350px; height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; overflow: hidden">
-<div style="position: relative; width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{itemOpacity}}">
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="position: relative; width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{itemOpacity}}">
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg>
-</div>
+</div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0; align-items: flex-start; opacity: {{itemOpacity}}">
 <span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}; text-decoration: {{strike}}">Butter</span>
 <div style="display: flex; align-items: center; gap: 8px; max-width: 100%; overflow: hidden"><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap; flex-shrink: 0">1 Packung</span><sc-if value="{{unavailable}}" hint-placeholder-val="{{ false }}"><span style="padding: 4px 11px; border-radius: 999px; background: {{na.bg}}; color: {{na.text}}; font-size: 13px; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(240,138,44,0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">Nicht verfügbar</span></sc-if></div>
@@ -203,7 +203,7 @@ input::placeholder{color:inherit;opacity:1}
 <sc-if value="{{compact}}" hint-placeholder-val="{{ false }}">
 <sc-for list="{{more}}" as="m" hint-placeholder-count="4">
 <div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; margin-top: -6px">
-<div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div>
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">{{m.name}}</span><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}">{{m.qty}}</span></div>
 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{m.price}}</span></sc-if></div>
 </div>
@@ -235,7 +235,7 @@ input::placeholder{color:inherit;opacity:1}
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"check":{"editor":"enum","default":"both","options":["both","swipe","circle"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"check":{"editor":"enum","default":"both","options":["both","swipe","circle"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"images":{"editor":"enum","default":"on","options":["on","off"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -310,6 +310,7 @@ class Component extends DCLogic {
       gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E'
     };
     return {
+      images: (this.props.images ?? 'on') === 'on',
       gn,
       full: !compact, compact,
       more: [{ name: 'Milch', qty: '2 Liter', price: '2,38 €' }, { name: 'Eier', qty: '10 Stück', price: '3,29 €' },

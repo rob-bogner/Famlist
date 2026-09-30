@@ -35,14 +35,14 @@ button{font-family:inherit}
 <button style="height: 48px; box-sizing: border-box; padding: 0 12px; border: 0; border-radius: 16px; background: {{it.rowBg}}; display: flex; align-items: center; gap: 12px; cursor: pointer; color: {{it.color}}; text-align: left">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{it.iconColor}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{it.icon}}"></path></svg>
 <span style="flex-grow: 1; font-size: 15px; font-weight: 500">{{it.label}}</span>
-<span style="font-size: 13px; font-weight: 500; color: {{k.sub}}">{{it.meta}}</span>
+<span style="font-size: 13px; font-weight: 500; color: {{k.sub}}">{{it.meta}}</span><sc-if value="{{it.sw}}" hint-placeholder-val="{{ false }}"><span role="switch" aria-checked="{{it.swOn}}" style="position: relative; width: 42px; height: 26px; border-radius: 13px; background: {{it.swBg}}; flex-shrink: 0"><span style="position: absolute; top: 3px; left: {{it.swKnob}}; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2)"></span></span></sc-if>
 </button>
 </sc-for>
 </sc-for>
 </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"images":{"editor":"enum","default":"on","options":["on","off"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -62,13 +62,16 @@ class Component extends DCLogic {
       menu: 'rgba(255,255,255,0.95)', menuBorder: 'rgba(15,37,40,0.08)', menuShadow: '0 24px 48px -16px rgba(12,40,44,0.35)',
       btn: '#FFFFFF', btnRing: rgba(accent, 0.55), accentText: deep, danger: '#C8363B', hi: rgba(accent, 0.08)
     };
+    const imgOn = (this.props.images ?? 'on') === 'on';
+    k.toggleOn = 'linear-gradient(180deg, ' + (dark ? light : accent) + ', ' + (dark ? accent : deep) + ')';
+    k.toggleOff = dark ? 'rgba(255,255,255,0.14)' : '#DCE5E6';
     const row = (label, icon, meta, opts) => {
       const o = opts || {};
       return {
         label, icon, meta: meta || '',
         color: o.danger ? k.danger : k.text,
         iconColor: o.danger ? k.danger : k.accentText,
-        rowBg: o.highlight ? k.hi : 'transparent'
+        rowBg: o.highlight ? k.hi : 'transparent', sw: false
       };
     };
     const groups = [
@@ -78,6 +81,9 @@ class Component extends DCLogic {
       { items: [
         row('Artikel verwalten', 'M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9'),
         row('Kategorien verwalten', 'M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM8 7.2v1.6')
+      ] },
+      { items: [
+        Object.assign(row('Artikelbilder', 'M4 5h16v14H4zM4 15.5l4.5-4.5 4.5 4.5 3-3 4 4M15.5 9h.01'), { sw: true, swOn: String(imgOn), swBg: imgOn ? k.toggleOn : k.toggleOff, swKnob: imgOn ? '19px' : '3px' })
       ] },
       { items: [
         row('Einstellungen', 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1')

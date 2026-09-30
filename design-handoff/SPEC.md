@@ -35,6 +35,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Sync fehlgeschlagen – erneut versuchen? | ItemSyncFailedDialog | ja | – (nur HTML) |
 | 3 · Artikel hinzufügen & bearbeiten | Artikel hinzufügen (Plus → Eingabe unten) | AddInline | ja | – (nur HTML) |
 |  | Artikel hinzufügen – keine Treffer | AddInlineNoResults | ja | – (nur HTML) |
+|  | Artikel hinzufügen – ohne Artikelbilder | AddInlineNoImages | ja | – |
 |  | Neuer Artikel (Produktdetails, leer) | ProductNew | ja | – (nur HTML) |
 |  | Foto hinzufügen – Quelle wählen | PhotoSourceDialog | ja | – (nur HTML) |
 |  | Barcode-Scanner (Kamera, immer dunkel) | BarcodeScan | – | `BarcodeScanScreen` |
@@ -45,6 +46,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Artikel bearbeiten (Produktdetails) | ProductDetailEdit | ja | – (nur HTML) |
 |  | Artikel bearbeiten – Kategorie (Glas-Menü) | ProductDetailCategory | ja | `ProductDetailCategoryPopover` |
 |  | Artikel bearbeiten – Maßeinheit (Einheiten gruppiert) | ProductDetailUnit | ja | `ProductDetailUnitPanel` |
+|  | Produktdetails – ohne Artikelbilder (Sheet 500, Stift neben ✕) | ProductDetailNoImage | ja | – |
+|  | Neuer Artikel – ohne Artikelbilder (Sheet 560) | ProductNewNoImage | ja | – |
 |  | Artikel bearbeiten – Menge eintippen | ProductDetailAmount | ja | – (nur HTML) |
 |  | Preisverlauf | PriceHistory | ja | `PriceHistoryScreen` |
 | 4 · Aktionsleiste (Dock) | Sortieren | SortMenu | ja | `SortMenuScreen` |
@@ -79,6 +82,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 | 7 · Einstellungen & Konto | Einstellungen | Settings | ja | `SettingsScreen` |
 |  | Einstellungen – Artikel abhaken: nur Wischen | SettingsCheckMode | ja | – (nur HTML) |
 |  | Liste – nur Wischen (ohne Kreis) | ListSwipeOnly | ja | – (nur HTML) |
+|  | Einstellungen – Artikelbilder aus | SettingsImagesOff | ja | – |
+|  | Liste – ohne Artikelbilder | ListNoImages | ja | – |
 |  | Abmelden – ungesendete Änderungen | SignOutDialog | ja | – (nur HTML) |
 |  | Profil bearbeiten | EditProfile | ja | `EditProfileScreen` |
 |  | Kassenzettel-Archiv | ReceiptArchive | ja | – (nur HTML) |

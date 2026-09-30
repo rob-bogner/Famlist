@@ -62,7 +62,7 @@
    "radius": 44,
    "title": "Gelöschtes Mitglied entfernen",
    "w": 390,
-   "x": 7990,
+   "x": 8930,
    "y": 15308
   },
   "ArchivedMemberRemoveDark.dc.html": {
@@ -71,7 +71,7 @@
    "radius": 44,
    "title": "Gelöschtes Mitglied entfernen – Dark",
    "w": 390,
-   "x": 7990,
+   "x": 8930,
    "y": 16312
   },
   "BarcodeLookup.dc.html": {
@@ -80,7 +80,7 @@
    "radius": 44,
    "title": "Barcode – Artikel wird gesucht",
    "w": 390,
-   "x": 2350,
+   "x": 2820,
    "y": 5276
   },
   "BarcodeNoCamera.dc.html": {
@@ -89,7 +89,7 @@
    "radius": 44,
    "title": "Barcode – Kamera nicht verfügbar",
    "w": 390,
-   "x": 2820,
+   "x": 3290,
    "y": 5276
   },
   "BarcodeScan.dc.html": {
@@ -98,7 +98,7 @@
    "radius": 44,
    "title": "Barcode-Scanner (Kamera, immer dunkel)",
    "w": 390,
-   "x": 1880,
+   "x": 2350,
    "y": 5276
   },
   "CategoryIcons.dc.html": {
@@ -215,7 +215,7 @@
    "radius": 44,
    "title": "Konto löschen",
    "w": 390,
-   "x": 4700,
+   "x": 5640,
    "y": 15308
   },
   "DeleteAccountDark.dc.html": {
@@ -224,7 +224,7 @@
    "radius": 44,
    "title": "Konto löschen – Dark",
    "w": 390,
-   "x": 4700,
+   "x": 5640,
    "y": 16312
   },
   "DeleteChoice.dc.html": {
@@ -339,7 +339,7 @@
    "radius": 44,
    "title": "Profil bearbeiten",
    "w": 390,
-   "x": 1880,
+   "x": 2820,
    "y": 15308
   },
   "EditProfileDark.dc.html": {
@@ -348,7 +348,7 @@
    "radius": 44,
    "title": "Profil bearbeiten – Dark",
    "w": 390,
-   "x": 1880,
+   "x": 2820,
    "y": 16312
   },
   "EmptyList.dc.html": {
@@ -762,7 +762,7 @@
    "radius": 44,
    "title": "Hinweis für Listenbesitzer",
    "w": 390,
-   "x": 7050,
+   "x": 7990,
    "y": 15308
   },
   "MemberDeletedToastDark.dc.html": {
@@ -771,7 +771,7 @@
    "radius": 44,
    "title": "Hinweis für Listenbesitzer – Dark",
    "w": 390,
-   "x": 7050,
+   "x": 7990,
    "y": 16312
   },
   "MenuOverlay.dc.html": {
@@ -915,7 +915,7 @@
    "radius": 44,
    "title": "Foto hinzufügen – Quelle wählen",
    "w": 390,
-   "x": 1410,
+   "x": 1880,
    "y": 5276
   },
   "PhotoSourceDialogDark.dc.html": {
@@ -924,7 +924,7 @@
    "radius": 44,
    "title": "Foto hinzufügen – Quelle wählen – Dark",
    "w": 390,
-   "x": 1410,
+   "x": 1880,
    "y": 6280
   },
   "PriceHistory.dc.html": {
@@ -933,7 +933,7 @@
    "radius": 44,
    "title": "Preisverlauf",
    "w": 390,
-   "x": 6110,
+   "x": 7520,
    "y": 5276
   },
   "PriceHistoryDark.dc.html": {
@@ -942,7 +942,7 @@
    "radius": 44,
    "title": "Preisverlauf – Dark",
    "w": 390,
-   "x": 6110,
+   "x": 7520,
    "y": 6280
   },
   "ProductDetail.dc.html": {
@@ -951,7 +951,7 @@
    "radius": 44,
    "title": "Produktdetails (Tipp auf das Artikelbild)",
    "w": 390,
-   "x": 3290,
+   "x": 3760,
    "y": 5276
   },
   "ProductDetailAmount.dc.html": {
@@ -960,7 +960,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen",
    "w": 390,
-   "x": 5640,
+   "x": 7050,
    "y": 5276
   },
   "ProductDetailAmountDark.dc.html": {
@@ -969,7 +969,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen – Dark",
    "w": 390,
-   "x": 5640,
+   "x": 7050,
    "y": 6280
   },
   "ProductDetailDark.dc.html": {
@@ -978,7 +978,7 @@
    "radius": 44,
    "title": "Produktdetails (Tipp auf das Artikelbild) – Dark",
    "w": 390,
-   "x": 3290,
+   "x": 3760,
    "y": 6280
   },
   "ProductDetailEdit.dc.html": {
@@ -987,7 +987,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten (Produktdetails)",
    "w": 390,
-   "x": 4230,
+   "x": 4700,
    "y": 5276
   },
   "ProductDetailEditDark.dc.html": {
@@ -996,7 +996,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten (Produktdetails) – Dark",
    "w": 390,
-   "x": 4230,
+   "x": 4700,
    "y": 6280
   },
   "ProductDetailPhoto.dc.html": {
@@ -1005,7 +1005,7 @@
    "radius": 44,
    "title": "Produktdetails – eigenes Foto füllt den Kopf",
    "w": 390,
-   "x": 3760,
+   "x": 4230,
    "y": 5276
   },
   "ProductDetailPhotoDark.dc.html": {
@@ -1014,7 +1014,7 @@
    "radius": 44,
    "title": "Produktdetails – eigenes Foto füllt den Kopf – Dark",
    "w": 390,
-   "x": 3760,
+   "x": 4230,
    "y": 6280
   },
   "ProductImage.dc.html": {
@@ -1041,7 +1041,7 @@
    "radius": 44,
    "title": "Neuer Artikel (Produktdetails)",
    "w": 390,
-   "x": 940,
+   "x": 1410,
    "y": 5276
   },
   "ProductNewDark.dc.html": {
@@ -1050,7 +1050,7 @@
    "radius": 44,
    "title": "Neuer Artikel (Produktdetails) – Dark",
    "w": 390,
-   "x": 940,
+   "x": 1410,
    "y": 6280
   },
   "ProfileSetup.dc.html": {
@@ -1077,7 +1077,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv",
    "w": 390,
-   "x": 2350,
+   "x": 3290,
    "y": 15308
   },
   "ReceiptArchiveDark.dc.html": {
@@ -1086,7 +1086,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – Dark",
    "w": 390,
-   "x": 2350,
+   "x": 3290,
    "y": 16312
   },
   "ReceiptArchiveEmpty.dc.html": {
@@ -1095,7 +1095,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer",
    "w": 390,
-   "x": 2820,
+   "x": 3760,
    "y": 15308
   },
   "ReceiptArchiveEmptyDark.dc.html": {
@@ -1104,7 +1104,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer – Dark",
    "w": 390,
-   "x": 2820,
+   "x": 3760,
    "y": 16312
   },
   "ReceiptArchiveInsights.dc.html": {
@@ -1158,7 +1158,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung",
    "w": 390,
-   "x": 4230,
+   "x": 5170,
    "y": 15308
   },
   "ReceiptDeleteDialogDark.dc.html": {
@@ -1167,7 +1167,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung – Dark",
    "w": 390,
-   "x": 4230,
+   "x": 5170,
    "y": 16312
   },
   "ReceiptDetail.dc.html": {
@@ -1176,7 +1176,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail",
    "w": 390,
-   "x": 3290,
+   "x": 4230,
    "y": 15308
   },
   "ReceiptDetailDark.dc.html": {
@@ -1185,7 +1185,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail – Dark",
    "w": 390,
-   "x": 3290,
+   "x": 4230,
    "y": 16312
   },
   "ReceiptDetailMeta.dc.html": {
@@ -1212,7 +1212,7 @@
    "radius": 44,
    "title": "Kassenzettel – Vollbild (immer dunkel)",
    "w": 390,
-   "x": 3760,
+   "x": 4700,
    "y": 15308
   },
   "ReceiptItemNutrition.dc.html": {
@@ -1329,7 +1329,7 @@
    "radius": 44,
    "title": "Konto wiederherstellen (nach Anmeldung)",
    "w": 390,
-   "x": 5170,
+   "x": 6110,
    "y": 15308
   },
   "RestoreAccountDark.dc.html": {
@@ -1338,7 +1338,7 @@
    "radius": 44,
    "title": "Konto wiederherstellen (nach Anmeldung) – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 6110,
    "y": 16312
   },
   "RestoreAccountLoading.dc.html": {
@@ -1347,7 +1347,7 @@
    "radius": 44,
    "title": "Wiederherstellen – lädt",
    "w": 390,
-   "x": 5640,
+   "x": 6580,
    "y": 15308
   },
   "RestoreAccountLoadingDark.dc.html": {
@@ -1356,7 +1356,7 @@
    "radius": 44,
    "title": "Wiederherstellen – lädt – Dark",
    "w": 390,
-   "x": 5640,
+   "x": 6580,
    "y": 16312
   },
   "RestoreAccountOffline.dc.html": {
@@ -1365,7 +1365,7 @@
    "radius": 44,
    "title": "Wiederherstellen – offline",
    "w": 390,
-   "x": 6110,
+   "x": 7050,
    "y": 15308
   },
   "RestoreAccountOfflineDark.dc.html": {
@@ -1374,7 +1374,7 @@
    "radius": 44,
    "title": "Wiederherstellen – offline – Dark",
    "w": 390,
-   "x": 6110,
+   "x": 7050,
    "y": 16312
   },
   "RestorePurgeDialog.dc.html": {
@@ -1383,7 +1383,7 @@
    "radius": 44,
    "title": "Jetzt endgültig löschen",
    "w": 390,
-   "x": 6580,
+   "x": 7520,
    "y": 15308
   },
   "RestorePurgeDialogDark.dc.html": {
@@ -1392,7 +1392,7 @@
    "radius": 44,
    "title": "Jetzt endgültig löschen – Dark",
    "w": 390,
-   "x": 6580,
+   "x": 7520,
    "y": 16312
   },
   "SearchInline.dc.html": {
@@ -1464,7 +1464,7 @@
    "radius": 44,
    "title": "Mitglieder – Konto gelöscht",
    "w": 390,
-   "x": 7520,
+   "x": 8460,
    "y": 15308
   },
   "ShareMembersArchivedDark.dc.html": {
@@ -1473,7 +1473,7 @@
    "radius": 44,
    "title": "Mitglieder – Konto gelöscht – Dark",
    "w": 390,
-   "x": 7520,
+   "x": 8460,
    "y": 16312
   },
   "ShareMembersDark.dc.html": {
@@ -1563,7 +1563,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen",
    "w": 390,
-   "x": 1410,
+   "x": 2350,
    "y": 15308
   },
   "SignOutDialogDark.dc.html": {
@@ -1572,7 +1572,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen – Dark",
    "w": 390,
-   "x": 1410,
+   "x": 2350,
    "y": 16312
   },
   "SlideToDelete.dc.html": {
@@ -2004,7 +2004,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Kategorie (Glas-Menü)",
    "w": 390,
-   "x": 4700,
+   "x": 5170,
    "y": 5276
   },
   "ProductDetailCategoryDark.dc.html": {
@@ -2013,7 +2013,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Kategorie (Glas-Menü) – Dark",
    "w": 390,
-   "x": 4700,
+   "x": 5170,
    "y": 6280
   },
   "ProductDetailUnit.dc.html": {
@@ -2022,7 +2022,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert)",
    "w": 390,
-   "x": 5170,
+   "x": 5640,
    "y": 5276
   },
   "ProductDetailUnitDark.dc.html": {
@@ -2031,8 +2031,98 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert) – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 5640,
    "y": 6280
+  },
+  "AddInlineNoImages.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen – ohne Artikelbilder",
+   "w": 390,
+   "x": 940,
+   "y": 5276
+  },
+  "AddInlineNoImagesDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 6280
+  },
+  "ProductDetailNoImage.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – ohne Artikelbilder",
+   "w": 390,
+   "x": 6110,
+   "y": 5276
+  },
+  "ProductDetailNoImageDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 6110,
+   "y": 6280
+  },
+  "ProductNewNoImage.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – ohne Artikelbilder",
+   "w": 390,
+   "x": 6580,
+   "y": 5276
+  },
+  "ProductNewNoImageDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 6580,
+   "y": 6280
+  },
+  "SettingsImagesOff.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikelbilder aus",
+   "w": 390,
+   "x": 1410,
+   "y": 15308
+  },
+  "SettingsImagesOffDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikelbilder aus – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 16312
+  },
+  "ListNoImages.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – ohne Artikelbilder",
+   "w": 390,
+   "x": 1880,
+   "y": 15308
+  },
+  "ListNoImagesDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 16312
   }
  },
  "createdOnFiles": {
@@ -2076,7 +2166,7 @@
    "kind": "title1",
    "maxW": 5560,
    "page": "screens",
-   "text": "3 · Artikel hinzufügen & bearbeiten → Kategorie (Glas-Menü) → Maßeinheit (Einheiten gruppiert) — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf",
+   "text": "3 · Artikel hinzufügen & bearbeiten → Kategorie (Glas-Menü) → Maßeinheit (Einheiten gruppiert) — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf · ohne Artikelbilder: Vorschläge, Produktdetails, Neuer Artikel",
    "w": 240,
    "x": 0,
    "y": 5016
@@ -2094,7 +2184,7 @@
    "kind": "title1",
    "maxW": 7440,
    "page": "screens",
-   "text": "5 · Menü & Listen — Menü → Meine Listen (leer) → wischen: links Löschen / Umbenennen / Duplizieren / Mitglieder, rechts Favorit → gelöscht + Rückgängig → neu / umbenennen / Optionen → löschen → Teilen → Import → Artikel & Kategorien · Kategorie bearbeiten: Farbe (36) + Icon",
+   "text": "5 · Menü & Listen — Menü → Meine Listen (leer) → wischen: links Löschen / Umbenennen / Duplizieren / Mitglieder, rechts Favorit → gelöscht + Rückgängig → neu / umbenennen / Optionen → löschen → Teilen → Import → Artikel & Kategorien · Kategorie bearbeiten: Farbe (36) + Icon · Menü: Schalter „Artikelbilder“",
    "w": 240,
    "x": 0,
    "y": 10032
@@ -2112,7 +2202,7 @@
    "kind": "title1",
    "maxW": 8000,
    "page": "screens",
-   "text": "7 · Einstellungen & Konto — Einstellungen → Artikel abhaken (Wischen / Kreis / Beides) → abmelden → Profil → Archiv (leer) → Detail → Vollbild → Bon löschen → Konto löschen (60 Tage) → wieder anmelden: Konto wiederherstellen → lädt → offline → endgültig löschen · Listenbesitzer: Hinweis → Mitglieder (Konto gelöscht) → entfernen",
+   "text": "7 · Einstellungen & Konto — Einstellungen → Artikel abhaken (Wischen / Kreis / Beides) → abmelden → Profil → Archiv (leer) → Detail → Vollbild → Bon löschen → Konto löschen (60 Tage) → wieder anmelden: Konto wiederherstellen → lädt → offline → endgültig löschen · Listenbesitzer: Hinweis → Mitglieder (Konto gelöscht) → entfernen · Artikelbilder an/aus (Einstellung + Schalter im Menü) → Liste ohne Bilder",
    "w": 240,
    "x": 0,
    "y": 15048
@@ -2260,7 +2350,9 @@
   "FilterDoneEmpty.dc.html",
   "FilterDoneEmptyDark.dc.html",
   "AddInlineNoResults.dc.html",
+  "AddInlineNoImages.dc.html",
   "AddInlineNoResultsDark.dc.html",
+  "AddInlineNoImagesDark.dc.html",
   "PhotoSourceDialog.dc.html",
   "PhotoSourceDialogDark.dc.html",
   "BarcodeLookup.dc.html",
@@ -2312,9 +2404,13 @@
   "ProductDetailEdit.dc.html",
   "ProductDetailCategory.dc.html",
   "ProductDetailUnit.dc.html",
+  "ProductDetailNoImage.dc.html",
+  "ProductNewNoImage.dc.html",
   "ProductDetailEditDark.dc.html",
   "ProductDetailCategoryDark.dc.html",
   "ProductDetailUnitDark.dc.html",
+  "ProductDetailNoImageDark.dc.html",
+  "ProductNewNoImageDark.dc.html",
   "ProductNew.dc.html",
   "ProductNewDark.dc.html",
   "ProductDetailAmount.dc.html",
@@ -2345,7 +2441,11 @@
   "SettingsCheckMode.dc.html",
   "SettingsCheckModeDark.dc.html",
   "ListSwipeOnly.dc.html",
+  "SettingsImagesOff.dc.html",
+  "ListNoImages.dc.html",
   "ListSwipeOnlyDark.dc.html",
+  "SettingsImagesOffDark.dc.html",
+  "ListNoImagesDark.dc.html",
   "PickA.dc.html",
   "PickADark.dc.html",
   "PickB.dc.html",
