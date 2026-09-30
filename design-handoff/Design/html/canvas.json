@@ -56,6 +56,24 @@
    "x": 470,
    "y": 6280
   },
+  "ArchivedMemberRemove.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Gelöschtes Mitglied entfernen",
+   "w": 390,
+   "x": 7990,
+   "y": 15308
+  },
+  "ArchivedMemberRemoveDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Gelöschtes Mitglied entfernen – Dark",
+   "w": 390,
+   "x": 7990,
+   "y": 16312
+  },
   "BarcodeLookup.dc.html": {
    "h": 844,
    "page": "screens",
@@ -495,6 +513,60 @@
    "x": 0,
    "y": 3772
   },
+  "InsightNutrition.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Auswertung – Ernährung (Entwurf, später)",
+   "w": 390,
+   "x": 5090,
+   "y": 0
+  },
+  "InsightNutritionDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Auswertung – Ernährung – Dark (Entwurf, später)",
+   "w": 390,
+   "x": 5090,
+   "y": 1004
+  },
+  "InsightSpend.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Ausgaben",
+   "w": 390,
+   "x": 940,
+   "y": 260
+  },
+  "InsightSpendDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Ausgaben – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 1264
+  },
+  "InsightUsage.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Verbrauch",
+   "w": 390,
+   "x": 1410,
+   "y": 260
+  },
+  "InsightUsageDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Auswertung – Verbrauch – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 1264
+  },
   "ItemSyncFailed.dc.html": {
    "h": 844,
    "page": "screens",
@@ -621,6 +693,24 @@
    "x": 3760,
    "y": 11296
   },
+  "ListSwipeOnly.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – nur Wischen (ohne Kreis)",
+   "w": 390,
+   "x": 940,
+   "y": 15308
+  },
+  "ListSwipeOnlyDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – nur Wischen (ohne Kreis) – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 16312
+  },
   "Main.dc.html": {
    "h": 844,
    "page": "archiv",
@@ -665,6 +755,24 @@
    "w": 390,
    "x": 6110,
    "y": 11296
+  },
+  "MemberDeletedToast.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Hinweis für Listenbesitzer",
+   "w": 390,
+   "x": 7050,
+   "y": 15308
+  },
+  "MemberDeletedToastDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Hinweis für Listenbesitzer – Dark",
+   "w": 390,
+   "x": 7050,
+   "y": 16312
   },
   "MenuOverlay.dc.html": {
    "h": 844,
@@ -718,6 +826,69 @@
    "title": "Meine Listen – noch keine Liste – Dark",
    "w": 390,
    "x": 940,
+   "y": 11296
+  },
+  "MyListsSwipe.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Meine Listen – Wisch-Aktionen (Baustein, per Modus)",
+   "w": 390,
+   "x": 5560,
+   "y": 0
+  },
+  "MyListsSwipeLeft.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach links wischen (Löschen, Umbenennen, Duplizieren, Mitglieder)",
+   "w": 390,
+   "x": 1410,
+   "y": 10292
+  },
+  "MyListsSwipeLeftDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach links wischen (Löschen, Umbenennen, Duplizieren, Mitglieder) – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 11296
+  },
+  "MyListsSwipeRight.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach rechts wischen (Favorit)",
+   "w": 390,
+   "x": 1880,
+   "y": 10292
+  },
+  "MyListsSwipeRightDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – nach rechts wischen (Favorit) – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 11296
+  },
+  "MyListsUndo.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – Liste gelöscht, Rückgängig",
+   "w": 390,
+   "x": 2350,
+   "y": 10292
+  },
+  "MyListsUndoDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Meine Listen – Liste gelöscht, Rückgängig – Dark",
+   "w": 390,
+   "x": 2350,
    "y": 11296
   },
   "NewItem.dc.html": {
@@ -774,6 +945,78 @@
    "x": 5170,
    "y": 6280
   },
+  "ProductDetail.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails (Tipp auf das Artikelbild)",
+   "w": 390,
+   "x": 3290,
+   "y": 5276
+  },
+  "ProductDetailAmount.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Menge eintippen",
+   "w": 390,
+   "x": 4700,
+   "y": 5276
+  },
+  "ProductDetailAmountDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Menge eintippen – Dark",
+   "w": 390,
+   "x": 4700,
+   "y": 6280
+  },
+  "ProductDetailDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails (Tipp auf das Artikelbild) – Dark",
+   "w": 390,
+   "x": 3290,
+   "y": 6280
+  },
+  "ProductDetailEdit.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten (Produktdetails)",
+   "w": 390,
+   "x": 4230,
+   "y": 5276
+  },
+  "ProductDetailEditDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten (Produktdetails) – Dark",
+   "w": 390,
+   "x": 4230,
+   "y": 6280
+  },
+  "ProductDetailPhoto.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – eigenes Foto füllt den Kopf",
+   "w": 390,
+   "x": 3760,
+   "y": 5276
+  },
+  "ProductDetailPhotoDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – eigenes Foto füllt den Kopf – Dark",
+   "w": 390,
+   "x": 3760,
+   "y": 6280
+  },
   "ProductImage.dc.html": {
    "h": 844,
    "page": "archiv",
@@ -791,6 +1034,24 @@
    "w": 390,
    "x": 3760,
    "y": 1004
+  },
+  "ProductNew.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel (Produktdetails)",
+   "w": 390,
+   "x": 940,
+   "y": 5276
+  },
+  "ProductNewDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel (Produktdetails) – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 6280
   },
   "ProfileSetup.dc.html": {
    "h": 844,
@@ -845,6 +1106,24 @@
    "w": 390,
    "x": 2820,
    "y": 16312
+  },
+  "ReceiptArchiveInsights.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv – Einstieg Auswertung",
+   "w": 390,
+   "x": 0,
+   "y": 260
+  },
+  "ReceiptArchiveInsightsDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel-Archiv – Einstieg Auswertung – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 1264
   },
   "ReceiptAssignDialog.dc.html": {
    "h": 844,
@@ -909,6 +1188,24 @@
    "x": 3290,
    "y": 16312
   },
+  "ReceiptDetailMeta.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel – Detail mit Metadaten",
+   "w": 390,
+   "x": 470,
+   "y": 260
+  },
+  "ReceiptDetailMetaDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "Kassenzettel – Detail mit Metadaten – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 1264
+  },
   "ReceiptFullscreen.dc.html": {
    "h": 844,
    "page": "screens",
@@ -917,6 +1214,24 @@
    "w": 390,
    "x": 3760,
    "y": 15308
+  },
+  "ReceiptItemNutrition.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Kassenzettel – Artikel mit Nährwerten (Entwurf, später)",
+   "w": 390,
+   "x": 4620,
+   "y": 0
+  },
+  "ReceiptItemNutritionDark.dc.html": {
+   "h": 844,
+   "page": "archiv",
+   "radius": 44,
+   "title": "Kassenzettel – Artikel mit Nährwerten – Dark (Entwurf, später)",
+   "w": 390,
+   "x": 4620,
+   "y": 1004
   },
   "ReceiptPriceAlert.dc.html": {
    "h": 844,
@@ -1008,6 +1323,78 @@
    "x": 2820,
    "y": 13804
   },
+  "RestoreAccount.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Konto wiederherstellen (nach Anmeldung)",
+   "w": 390,
+   "x": 5170,
+   "y": 15308
+  },
+  "RestoreAccountDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Konto wiederherstellen (nach Anmeldung) – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 16312
+  },
+  "RestoreAccountLoading.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Wiederherstellen – lädt",
+   "w": 390,
+   "x": 5640,
+   "y": 15308
+  },
+  "RestoreAccountLoadingDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Wiederherstellen – lädt – Dark",
+   "w": 390,
+   "x": 5640,
+   "y": 16312
+  },
+  "RestoreAccountOffline.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Wiederherstellen – offline",
+   "w": 390,
+   "x": 6110,
+   "y": 15308
+  },
+  "RestoreAccountOfflineDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Wiederherstellen – offline – Dark",
+   "w": 390,
+   "x": 6110,
+   "y": 16312
+  },
+  "RestorePurgeDialog.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Jetzt endgültig löschen",
+   "w": 390,
+   "x": 6580,
+   "y": 15308
+  },
+  "RestorePurgeDialogDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Jetzt endgültig löschen – Dark",
+   "w": 390,
+   "x": 6580,
+   "y": 16312
+  },
   "SearchInline.dc.html": {
    "h": 844,
    "page": "screens",
@@ -1035,6 +1422,24 @@
    "x": 0,
    "y": 15308
   },
+  "SettingsCheckMode.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikel abhaken: nur Wischen",
+   "w": 390,
+   "x": 470,
+   "y": 15308
+  },
+  "SettingsCheckModeDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikel abhaken: nur Wischen – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 16312
+  },
   "SettingsDark.dc.html": {
    "h": 844,
    "page": "screens",
@@ -1052,6 +1457,24 @@
    "w": 390,
    "x": 5170,
    "y": 10292
+  },
+  "ShareMembersArchived.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Mitglieder – Konto gelöscht",
+   "w": 390,
+   "x": 7520,
+   "y": 15308
+  },
+  "ShareMembersArchivedDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Mitglieder – Konto gelöscht – Dark",
+   "w": 390,
+   "x": 7520,
+   "y": 16312
   },
   "ShareMembersDark.dc.html": {
    "h": 844,
@@ -1151,6 +1574,24 @@
    "w": 390,
    "x": 1410,
    "y": 16312
+  },
+  "SlideToDelete.dc.html": {
+   "h": 560,
+   "page": "bausteine",
+   "radius": 28,
+   "title": "Schieben zum Löschen – Zustände",
+   "w": 390,
+   "x": 5070,
+   "y": 260
+  },
+  "SlideToDeleteDark.dc.html": {
+   "h": 560,
+   "page": "bausteine",
+   "radius": 28,
+   "title": "Schieben zum Löschen – Zustände – Dark",
+   "w": 390,
+   "x": 5070,
+   "y": 900
   },
   "SortMenu.dc.html": {
    "h": 844,
@@ -1323,446 +1764,239 @@
    "x": 0,
    "y": 0
   },
-  "RestoreAccount.dc.html": {
-   "x": 5170,
-   "y": 15308,
-   "w": 390,
-   "h": 844,
-   "title": "Konto wiederherstellen (nach Anmeldung)",
-   "page": "screens",
-   "radius": 44
-  },
-  "RestoreAccountDark.dc.html": {
-   "x": 5170,
-   "y": 16312,
-   "w": 390,
-   "h": 844,
-   "title": "Konto wiederherstellen (nach Anmeldung) – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "RestoreAccountLoading.dc.html": {
-   "x": 5640,
-   "y": 15308,
-   "w": 390,
-   "h": 844,
-   "title": "Wiederherstellen – lädt",
-   "page": "screens",
-   "radius": 44
-  },
-  "RestoreAccountLoadingDark.dc.html": {
-   "x": 5640,
-   "y": 16312,
-   "w": 390,
-   "h": 844,
-   "title": "Wiederherstellen – lädt – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "RestoreAccountOffline.dc.html": {
-   "x": 6110,
-   "y": 15308,
-   "w": 390,
-   "h": 844,
-   "title": "Wiederherstellen – offline",
-   "page": "screens",
-   "radius": 44
-  },
-  "RestoreAccountOfflineDark.dc.html": {
-   "x": 6110,
-   "y": 16312,
-   "w": 390,
-   "h": 844,
-   "title": "Wiederherstellen – offline – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "RestorePurgeDialog.dc.html": {
-   "x": 6580,
-   "y": 15308,
-   "w": 390,
-   "h": 844,
-   "title": "Jetzt endgültig löschen",
-   "page": "screens",
-   "radius": 44
-  },
-  "RestorePurgeDialogDark.dc.html": {
-   "x": 6580,
-   "y": 16312,
-   "w": 390,
-   "h": 844,
-   "title": "Jetzt endgültig löschen – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "MemberDeletedToast.dc.html": {
-   "x": 7050,
-   "y": 15308,
-   "w": 390,
-   "h": 844,
-   "title": "Hinweis für Listenbesitzer",
-   "page": "screens",
-   "radius": 44
-  },
-  "MemberDeletedToastDark.dc.html": {
-   "x": 7050,
-   "y": 16312,
-   "w": 390,
-   "h": 844,
-   "title": "Hinweis für Listenbesitzer – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "ShareMembersArchived.dc.html": {
-   "x": 7520,
-   "y": 15308,
-   "w": 390,
-   "h": 844,
-   "title": "Mitglieder – Konto gelöscht",
-   "page": "screens",
-   "radius": 44
-  },
-  "ShareMembersArchivedDark.dc.html": {
-   "x": 7520,
-   "y": 16312,
-   "w": 390,
-   "h": 844,
-   "title": "Mitglieder – Konto gelöscht – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "ArchivedMemberRemove.dc.html": {
-   "x": 7990,
-   "y": 15308,
-   "w": 390,
-   "h": 844,
-   "title": "Gelöschtes Mitglied entfernen",
-   "page": "screens",
-   "radius": 44
-  },
-  "ArchivedMemberRemoveDark.dc.html": {
-   "x": 7990,
-   "y": 16312,
-   "w": 390,
-   "h": 844,
-   "title": "Gelöschtes Mitglied entfernen – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductDetail.dc.html": {
-   "x": 3290,
-   "y": 5276,
-   "w": 390,
-   "h": 844,
-   "title": "Produktdetails (Tipp auf das Artikelbild)",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductDetailDark.dc.html": {
-   "x": 3290,
-   "y": 6280,
-   "w": 390,
-   "h": 844,
-   "title": "Produktdetails (Tipp auf das Artikelbild) – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductDetailEdit.dc.html": {
-   "x": 4230,
-   "y": 5276,
-   "w": 390,
-   "h": 844,
-   "title": "Artikel bearbeiten (Produktdetails)",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductDetailEditDark.dc.html": {
-   "x": 4230,
-   "y": 6280,
-   "w": 390,
-   "h": 844,
-   "title": "Artikel bearbeiten (Produktdetails) – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductNew.dc.html": {
-   "x": 940,
-   "y": 5276,
-   "w": 390,
-   "h": 844,
-   "title": "Neuer Artikel (Produktdetails)",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductNewDark.dc.html": {
-   "x": 940,
-   "y": 6280,
-   "w": 390,
-   "h": 844,
-   "title": "Neuer Artikel (Produktdetails) – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductDetailAmount.dc.html": {
-   "x": 4700,
-   "y": 5276,
-   "w": 390,
-   "h": 844,
-   "title": "Artikel bearbeiten – Menge eintippen",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductDetailAmountDark.dc.html": {
-   "x": 4700,
-   "y": 6280,
-   "w": 390,
-   "h": 844,
-   "title": "Artikel bearbeiten – Menge eintippen – Dark",
-   "page": "screens",
-   "radius": 44
-  },
-  "ProductDetailPhoto.dc.html": {
-   "y": 5276,
-   "w": 390,
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Produktdetails – eigenes Foto füllt den Kopf",
-   "x": 3760
-  },
-  "ProductDetailPhotoDark.dc.html": {
-   "y": 6280,
-   "w": 390,
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Produktdetails – eigenes Foto füllt den Kopf – Dark",
-   "x": 3760
-  },
-  "ReceiptArchiveInsights.dc.html": {
+  "PickA.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Kassenzettel-Archiv – Einstieg Auswertung",
+   "title": "A · Chip-Leisten",
    "w": 390,
    "x": 0,
-   "y": 260
+   "y": 2660
   },
-  "ReceiptArchiveInsightsDark.dc.html": {
+  "PickADark.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Kassenzettel-Archiv – Einstieg Auswertung – Dark",
+   "title": "A · Chip-Leisten – Dark",
    "w": 390,
    "x": 0,
-   "y": 1264
+   "y": 3664
   },
-  "ReceiptDetailMeta.dc.html": {
+  "PickB.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Kassenzettel – Detail mit Metadaten",
+   "title": "B · Kategorie-Raster",
    "w": 390,
    "x": 470,
-   "y": 260
+   "y": 2660
   },
-  "ReceiptDetailMetaDark.dc.html": {
+  "PickBDark.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Kassenzettel – Detail mit Metadaten – Dark",
+   "title": "B · Kategorie-Raster – Dark",
    "w": 390,
    "x": 470,
-   "y": 1264
+   "y": 3664
   },
-  "ReceiptItemNutrition.dc.html": {
-   "h": 844,
-   "page": "archiv",
-   "radius": 44,
-   "title": "Kassenzettel – Artikel mit Nährwerten (Entwurf, später)",
-   "w": 390,
-   "x": 4620,
-   "y": 0
-  },
-  "ReceiptItemNutritionDark.dc.html": {
-   "h": 844,
-   "page": "archiv",
-   "radius": 44,
-   "title": "Kassenzettel – Artikel mit Nährwerten – Dark (Entwurf, später)",
-   "w": 390,
-   "x": 4620,
-   "y": 1004
-  },
-  "InsightSpend.dc.html": {
+  "PickC.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Auswertung – Ausgaben",
+   "title": "C · Smarter Vorschlag",
    "w": 390,
    "x": 940,
-   "y": 260
+   "y": 2660
   },
-  "InsightSpendDark.dc.html": {
+  "PickCDark.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Auswertung – Ausgaben – Dark",
+   "title": "C · Smarter Vorschlag – Dark",
    "w": 390,
    "x": 940,
-   "y": 1264
+   "y": 3664
   },
-  "InsightNutrition.dc.html": {
-   "h": 844,
-   "page": "archiv",
-   "radius": 44,
-   "title": "Auswertung – Ernährung (Entwurf, später)",
-   "w": 390,
-   "x": 5090,
-   "y": 0
-  },
-  "InsightNutritionDark.dc.html": {
-   "h": 844,
-   "page": "archiv",
-   "radius": 44,
-   "title": "Auswertung – Ernährung – Dark (Entwurf, später)",
-   "w": 390,
-   "x": 5090,
-   "y": 1004
-  },
-  "InsightUsage.dc.html": {
+  "PickD.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Auswertung – Verbrauch",
+   "title": "D · Suchen & Anlegen",
    "w": 390,
    "x": 1410,
-   "y": 260
+   "y": 2660
   },
-  "InsightUsageDark.dc.html": {
+  "PickDDark.dc.html": {
    "h": 844,
    "page": "prototypes",
    "radius": 44,
-   "title": "Auswertung – Verbrauch – Dark",
+   "title": "D · Suchen & Anlegen – Dark",
    "w": 390,
    "x": 1410,
-   "y": 1264
+   "y": 3664
   },
-  "SlideToDelete.dc.html": {
-   "h": 560,
-   "page": "bausteine",
-   "radius": 28,
-   "title": "Schieben zum Löschen – Zustände",
-   "w": 390,
-   "x": 5070,
-   "y": 260
-  },
-  "SlideToDeleteDark.dc.html": {
-   "h": 560,
-   "page": "bausteine",
-   "radius": 28,
-   "title": "Schieben zum Löschen – Zustände – Dark",
-   "w": 390,
-   "x": 5070,
-   "y": 900
-  },
-  "MyListsSwipeLeft.dc.html": {
+  "PickE.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Meine Listen – nach links wischen (Löschen, Umbenennen, Duplizieren, Mitglieder)",
-   "w": 390,
-   "x": 1410,
-   "y": 10292
-  },
-  "MyListsSwipeLeftDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Meine Listen – nach links wischen (Löschen, Umbenennen, Duplizieren, Mitglieder) – Dark",
-   "w": 390,
-   "x": 1410,
-   "y": 11296
-  },
-  "MyListsSwipeRight.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Meine Listen – nach rechts wischen (Favorit)",
+   "title": "E · Segment + Mehr",
    "w": 390,
    "x": 1880,
-   "y": 10292
+   "y": 2660
   },
-  "MyListsSwipeRightDark.dc.html": {
+  "PickEDark.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Meine Listen – nach rechts wischen (Favorit) – Dark",
+   "title": "E · Segment + Mehr – Dark",
    "w": 390,
    "x": 1880,
-   "y": 11296
+   "y": 3664
   },
-  "MyListsUndo.dc.html": {
+  "PickF.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Meine Listen – Liste gelöscht, Rückgängig",
+   "title": "F · Menge & Einheit kombiniert",
    "w": 390,
    "x": 2350,
-   "y": 10292
+   "y": 2660
   },
-  "MyListsUndoDark.dc.html": {
+  "PickFDark.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Meine Listen – Liste gelöscht, Rückgängig – Dark",
+   "title": "F · Menge & Einheit kombiniert – Dark",
    "w": 390,
    "x": 2350,
-   "y": 11296
+   "y": 3664
   },
-  "MyListsSwipe.dc.html": {
+  "PickG.dc.html": {
    "h": 844,
-   "page": "archiv",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Meine Listen – Wisch-Aktionen (Baustein, per Modus)",
+   "title": "G · Doppel-Rad",
    "w": 390,
-   "x": 5560,
-   "y": 0
+   "x": 2820,
+   "y": 2660
   },
-  "SettingsCheckMode.dc.html": {
+  "PickGDark.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Einstellungen – Artikel abhaken: nur Wischen",
+   "title": "G · Doppel-Rad – Dark",
    "w": 390,
-   "x": 470,
-   "y": 15308
+   "x": 2820,
+   "y": 3664
   },
-  "SettingsCheckModeDark.dc.html": {
+  "PickH.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Einstellungen – Artikel abhaken: nur Wischen – Dark",
+   "title": "H · Einheiten gruppiert",
    "w": 390,
-   "x": 470,
-   "y": 16312
+   "x": 3290,
+   "y": 2660
   },
-  "ListSwipeOnly.dc.html": {
+  "PickHDark.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Liste – nur Wischen (ohne Kreis)",
+   "title": "H · Einheiten gruppiert – Dark",
    "w": 390,
-   "x": 940,
-   "y": 15308
+   "x": 3290,
+   "y": 3664
   },
-  "ListSwipeOnlyDark.dc.html": {
+  "PickI.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "prototypes",
    "radius": 44,
-   "title": "Liste – nur Wischen (ohne Kreis) – Dark",
+   "title": "I · Radial-Menü",
    "w": 390,
-   "x": 940,
-   "y": 16312
+   "x": 3760,
+   "y": 2660
+  },
+  "PickIDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "I · Radial-Menü – Dark",
+   "w": 390,
+   "x": 3760,
+   "y": 3664
+  },
+  "PickJ.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "J · Schnelleingabe",
+   "w": 390,
+   "x": 4230,
+   "y": 2660
+  },
+  "PickJDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "J · Schnelleingabe – Dark",
+   "w": 390,
+   "x": 4230,
+   "y": 3664
+  },
+  "PickK.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "K · Karussell",
+   "w": 390,
+   "x": 4700,
+   "y": 2660
+  },
+  "PickKDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "K · Karussell – Dark",
+   "w": 390,
+   "x": 4700,
+   "y": 3664
+  },
+  "PickL.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "L · Inline aufklappen",
+   "w": 390,
+   "x": 5170,
+   "y": 2660
+  },
+  "PickLDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "L · Inline aufklappen – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 3664
+  },
+  "PickM.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "M · Glas-Popover",
+   "w": 390,
+   "x": 5640,
+   "y": 2660
+  },
+  "PickMDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "M · Glas-Popover – Dark",
+   "w": 390,
+   "x": 5640,
+   "y": 3664
   }
  },
  "createdOnFiles": {
@@ -1840,7 +2074,7 @@
   },
   "journey7": {
    "kind": "title1",
-   "maxW": 8380,
+   "maxW": 8000,
    "page": "screens",
    "text": "7 · Einstellungen & Konto — Einstellungen → Artikel abhaken (Wischen / Kreis / Beides) → abmelden → Profil → Archiv (leer) → Detail → Vollbild → Bon löschen → Konto löschen (60 Tage) → wieder anmelden: Konto wiederherstellen → lädt → offline → endgültig löschen · Listenbesitzer: Hinweis → Mitglieder (Konto gelöscht) → entfernen",
    "w": 240,
@@ -1864,6 +2098,15 @@
    "w": 240,
    "x": 0,
    "y": 0
+  },
+  "proto2": {
+   "kind": "title1",
+   "maxW": 6000,
+   "page": "prototypes",
+   "w": 240,
+   "x": 0,
+   "y": 2400,
+   "text": "Kategorie & Maßeinheit – Alternativen zum Dropdown (Entwurf 30.09.2026): A Chip-Leisten · B Raster · C Vorschlag · D Suche · E Segment · F Menge+Einheit · G Rad · H Gruppen · I Radial · J Schnelleingabe · K Karussell · L Aufklappen · M Popover"
   }
  },
  "order": [
@@ -2062,7 +2305,33 @@
   "SettingsCheckMode.dc.html",
   "SettingsCheckModeDark.dc.html",
   "ListSwipeOnly.dc.html",
-  "ListSwipeOnlyDark.dc.html"
+  "ListSwipeOnlyDark.dc.html",
+  "PickA.dc.html",
+  "PickADark.dc.html",
+  "PickB.dc.html",
+  "PickBDark.dc.html",
+  "PickC.dc.html",
+  "PickCDark.dc.html",
+  "PickD.dc.html",
+  "PickDDark.dc.html",
+  "PickE.dc.html",
+  "PickEDark.dc.html",
+  "PickF.dc.html",
+  "PickFDark.dc.html",
+  "PickG.dc.html",
+  "PickGDark.dc.html",
+  "PickH.dc.html",
+  "PickHDark.dc.html",
+  "PickI.dc.html",
+  "PickIDark.dc.html",
+  "PickJ.dc.html",
+  "PickJDark.dc.html",
+  "PickK.dc.html",
+  "PickKDark.dc.html",
+  "PickL.dc.html",
+  "PickLDark.dc.html",
+  "PickM.dc.html",
+  "PickMDark.dc.html"
  ],
  "pages": [
   {

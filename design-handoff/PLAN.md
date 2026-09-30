@@ -312,3 +312,12 @@ Migration 030 (`receipts.store_address`, `started_at`, `ended_at`) ist live ange
 | InsightUsage | `ReceiptInsightsSheet` → `UsageInsightsView` (Berechnung `ConsumptionStatistics`) |
 
 Nicht gebaut (Auftrag): Nährwerte je Artikel (ReceiptItemNutrition) und Auswertung „Ernährung“ (InsightNutrition).
+
+## Kategorie & Maßeinheit – Test (30.09.2026)
+
+Zum Ausprobieren in der App, noch nicht in der User Journey des Canvas (erst nach Freigabe übernehmen).
+
+| Prototyp | Umsetzung |
+|---|---|
+| PickM · Glas-Popover (Kategorie) | `ProductDetailCategoryPopover` – im `ProductDetailSheet` über `CategoryCardAnchorKey` unter (oder über) der Karte; Suche, „Ohne Kategorie“, „„Name“ anlegen“ (`CategoryStore.add`) |
+| PickH · Einheiten gruppiert (Maßeinheit) | `ProductDetailUnitPanel` + `MeasureGroup` – klappt unter Kategorie · Maßeinheit auf; Reiter Zählen · Gewicht · Volumen · **Länge** (cm, m; im Canvas noch nachziehen) |

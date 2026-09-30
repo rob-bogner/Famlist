@@ -112,6 +112,19 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Kassenzettel – Detail mit Metadaten | ReceiptDetailMeta | ja | `ReceiptDetailSheet` |
 |  | Auswertung – Ausgaben | InsightSpend | ja | `ReceiptInsightsSheet`, `SpendInsightsView` |
 |  | Auswertung – Verbrauch | InsightUsage | ja | `ReceiptInsightsSheet`, `UsageInsightsView` |
+| Kategorie & Maßeinheit – Alternativen (Entwurf 30.09.2026, nicht umsetzen) | A · Chip-Leisten | PickA | ja | – |
+|  | B · Kategorie-Raster im Sheet | PickB | ja | – |
+|  | C · Smarter Vorschlag | PickC | ja | – |
+|  | D · Suchen & Anlegen | PickD | ja | – |
+|  | E · Segment + Mehr | PickE | ja | – |
+|  | F · Menge & Einheit kombiniert | PickF | ja | – |
+|  | G · Doppel-Rad | PickG | ja | – |
+|  | H · Einheiten gruppiert | PickH | ja | – |
+|  | I · Radial-Menü | PickI | ja | – |
+|  | J · Schnelleingabe | PickJ | ja | – |
+|  | K · Kategorie-Karussell | PickK | ja | – |
+|  | L · Inline aufklappen | PickL | ja | – |
+|  | M · Glas-Popover | PickM | ja | – |
 
 
 `Design/png/StructureMap.png` zeigt die Zielstruktur mit allen Workflows. Frühere Varianten liegen im Canvas auf der Seite „Archiv“ (Main, HybridCompact, HybridCompactTop, SplashBrand, seit 28.09.2026 auch NewItem, EditItem, EditItemAmount, ProductImage) und gelten nicht mehr.
