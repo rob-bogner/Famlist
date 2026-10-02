@@ -83,3 +83,6 @@ IMPLEMENTATION_PLAN.md
 add_new_files.py
 
 # End of .gitignore
+
+# Ausgabe des täglichen Code-Reviews (.claude/code-review/run_checks.sh)
+.code-review-out/
