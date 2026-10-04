@@ -100,11 +100,23 @@ final class AuthService {
 
     /// ID des angemeldeten Nutzers aus der gespeicherten Sitzung (ohne Netz).
     var currentUserId: UUID? { client.auth.currentUser?.id }
+
+    /// true, solange die `.signedOut`-Meldung eines Abmeldens aus der App noch aussteht.
+    private(set) var expectsSignedOutEvent = false
+
+    /// Gehört eine `.signedOut`-Meldung zu einem Abmelden aus der App? Verbraucht die Markierung.
+    func consumeExpectedSignOut() -> Bool {
+        defer { expectsSignedOutEvent = false }
+        return expectsSignedOutEvent
+    }
     
     /// Signs the user out from Supabase and clears local state.
     /// - Throws: Error if sign-out fails.
     /// Abmelden auf allen Geräten; ohne Netz wenigstens lokal (die Sitzung wird auf jeden Fall entfernt).
     func signOut() async throws {
+        // Das SDK meldet bei vorhandener Sitzung genau einmal `.signedOut` (sofort, vor der Netzwerk-Anfrage).
+        // Diese Meldung gehört zu diesem Abmelden und ist kein Zeichen einer abgelaufenen Anmeldung.
+        expectsSignedOutEvent = client.auth.currentUser != nil
         do {
             try await client.auth.signOut(scope: .global)
         } catch {

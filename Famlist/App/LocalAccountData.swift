@@ -12,6 +12,7 @@
  - Geräte-Einstellungen (Erscheinungsbild, Preise anzeigen, HLC-Geräte-ID) bleiben erhalten.
 
  📝 Last Change:
+ - Merker für das Konto einer abgelaufenen Anmeldung (04.10.2026).
  - Initial creation (Audit 25.09.2026, Abmelden räumt auf).
  ------------------------------------------------------------------------
  */
@@ -28,6 +29,18 @@ enum LocalAccountData {
         "fam24_pagination_cursor_",
         "categoryDefinitions."
     ]
+
+    /// Konto, dessen Anmeldung abgelaufen ist, während seine Daten auf dem Gerät blieben.
+    /// Meldet sich danach ein anderes Konto an, werden diese Daten zuerst gelöscht.
+    static let expiredSessionUserIdKey = "famlist.expiredSessionUserId"
+
+    static func expiredSessionUserId(defaults: UserDefaults = .standard) -> UUID? {
+        defaults.string(forKey: expiredSessionUserIdKey).flatMap(UUID.init(uuidString:))
+    }
+
+    static func setExpiredSessionUserId(_ id: UUID?, defaults: UserDefaults = .standard) {
+        defaults.set(id?.uuidString, forKey: expiredSessionUserIdKey)
+    }
 
     static func removeListPreferences(defaults: UserDefaults = .standard) {
         defaults.dictionaryRepresentation().keys

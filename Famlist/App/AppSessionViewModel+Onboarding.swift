@@ -112,7 +112,7 @@ extension AppSessionViewModel {
             listId = try await lists.acceptInvite(token: invite.token)
             UserLog.Data.listJoined()
         } catch {
-            errorMessage = (InviteError.from(error) ?? .acceptFailed).errorDescription
+            errorMessage = InviteError.acceptMessage(for: error)
             return
         }
         if let all = try? await lists.fetchAllLists(for: me.id) {

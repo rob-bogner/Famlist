@@ -45,6 +45,11 @@ extension UserLog {
             log("👋 Benutzer abgemeldet")
         }
 
+        /// Anmeldung auf dem Server ungültig (Konto gelöscht oder überall abgemeldet)
+        static func sessionExpired() {
+            log("⏳ Anmeldung abgelaufen – bitte erneut anmelden")
+        }
+
         static func restoringSession() {
             log("🔄 Sitzung wird wiederhergestellt...")
         }

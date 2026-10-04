@@ -87,7 +87,9 @@ final class AppSessionViewModel: ObservableObject {
     @Published var unsentChangesBeforeSignOut: Int? = nil
     private var toastClearTask: Task<Void, Never>? = nil
     private var restoreTask: Task<Void, Never>? = nil
-    
+    /// Beobachtet die Anmelde-Ereignisse des SDK (AppSessionViewModel+SessionExpiry).
+    internal var authStateTask: Task<Void, Never>? = nil
+
     /// Cold-start phases for user-visible toasts/logs
     enum Phase: String {
         case sessionRestore
@@ -147,6 +149,7 @@ final class AppSessionViewModel: ObservableObject {
         }
 
         restoreTask = Task { await self.restoreSession() }
+        startObservingAuthState()
     }
     
     // MARK: - Toast Management

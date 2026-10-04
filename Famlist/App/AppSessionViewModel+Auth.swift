@@ -111,7 +111,9 @@ extension AppSessionViewModel {
         }
         
         UserLog.Auth.restoringSession()
-        
+        // Vor dem Erneuern lesen: Lehnt der Server die Anmeldung ab, löscht das SDK sie (dann ist die ID weg).
+        let storedUserId = authService.currentUserId
+
         do {
             try await authService.restoreSession()
             UserLog.Auth.sessionRestored()
@@ -123,6 +125,8 @@ extension AppSessionViewModel {
                 result: "no-session"
             )
             isAuthenticated = false
+            // Es gab eine gespeicherte Anmeldung, und das SDK hat sie gelöscht: auf dem Server ungültig.
+            if let storedUserId, authService.currentUserId == nil { markSessionExpired(userId: storedUserId) }
         }
     }
     
@@ -132,6 +136,7 @@ extension AppSessionViewModel {
     /// Konto-Archiv: Ohne lokale Kopie (erste Anmeldung auf dem Gerät) wird vorher geprüft, ob das Konto
     /// gelöscht ist; mit Kopie startet die App sofort und prüft im Hintergrund (sonst hinge ein Start ohne Netz).
     func handleAuthCompletion() async {
+        discardDataOfExpiredSession()
         let hasLocalProfile = authService?.currentUserId.flatMap { ProfileCache.load(userId: $0) } != nil
         if !hasLocalProfile, await enterArchiveIfNeeded() { return }
         do {
