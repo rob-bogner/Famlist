@@ -52,6 +52,18 @@ final class SupabaseGlobalProductCatalogRepository: GlobalProductCatalogReposito
         return try await client.rpcRows("search_global_products", params: Params(p_query: query))
     }
 
+    /// „Per Foto hinzufügen“: Datenbankfunktion `match_global_products` (Migration 036); fehlt sie noch,
+    /// mehrere normale Suchen.
+    func match(words: [String]) async throws -> [GlobalProductEntry] {
+        let clean = words.map { $0.lowercased() }.filter { (3...30).contains($0.count) }
+        guard !clean.isEmpty else { return [] }
+        struct Params: Encodable, Sendable { let p_words: [String] }
+        if let rows: [GlobalProductEntry] = try? await client.rpcRows("match_global_products", params: Params(p_words: Array(clean.prefix(8)))) {
+            return rows
+        }
+        return try await matchUsingSearch(words: clean)
+    }
+
     /// Kürzere Eingaben liefern im globalen Katalog zu viele Treffer; der Server sucht erst ab 3 Zeichen.
     static let minimumQueryLength = 3
 

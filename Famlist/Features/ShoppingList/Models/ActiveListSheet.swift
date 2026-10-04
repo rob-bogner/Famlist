@@ -25,6 +25,8 @@ enum ActiveListSheet: Equatable, Identifiable {
     case newItem(initialName: String, barcode: String? = nil)
     /// Barcode-Scanner (Vollbild, Kamera).
     case barcode
+    /// Per Foto hinzufügen: Kamera → Erkennung → vorausgefüllter neuer Artikel (Canvas PhotoAdd).
+    case photoAdd
     /// Artikel verwalten (Artikelstamm).
     case manageItems
     /// Artikel des Artikelstamms bearbeiten (aus „Artikel verwalten“).
@@ -75,6 +77,7 @@ enum ActiveListSheet: Equatable, Identifiable {
         case .search: return "search"
         case .newItem: return "newItem"
         case .barcode: return "barcode"
+        case .photoAdd: return "photoAdd"
         case .manageItems: return "manageItems"
         case .editCatalog(let entry): return "editCatalog-\(entry.id)"
         case .edit(let item): return "edit-\(item.id)"

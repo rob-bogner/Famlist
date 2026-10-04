@@ -110,6 +110,9 @@ extension ShoppingListView {
         case .newItem(let name, let barcode):
             ProductDetailSheet(newItemName: name, barcode: barcode, k: k, keyboardHeight: keyboard.height,
                                onClose: closeSheet)
+        case .photoAdd:
+            ProductDetailSheet(newItemName: "", startsWithPhoto: true, k: k, keyboardHeight: keyboard.height,
+                               onClose: closeSheet)
         case .barcode:
             BarcodeScanSheet(viewModel: BarcodeScanViewModel(catalog: listViewModel.catalogRepository,
                                                              global: listViewModel.globalCatalogRepository),

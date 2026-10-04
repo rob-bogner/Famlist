@@ -16,6 +16,7 @@
    beim Bearbeiten mit Foto der Akzent-Knopf „Bild ändern“. Produktbild 300 oben 16, Kachel 200 oben 65.
 
  📝 Last Change:
+ - Erkannte Stellen als Rahmen, eigener Text der Pille („Artikel wird erkannt …“) (30.09.2026).
  - Freigestellte Fotos auf dem Verlauf, „Artikel wird freigestellt …“, Umschalter „Freigestellt · Original“, Nachbessern (30.09.2026).
  - Platzhalter „Foto hinzufügen“ auch beim Ansehen statt der durchgestrichenen Kamera (Wunsch Robert 30.09.2026).
  - Platzhalter „Foto hinzufügen“ füllt den ganzen Kopf (Kamera-Glaskugel, „Kamera oder Mediathek“) (30.09.2026).
@@ -35,6 +36,10 @@ struct ProductDetailHero: View {
     var onEdit: () -> Void = {}
     /// Freistellen läuft: Foto abgedunkelt, unten „Artikel wird freigestellt …“ (PhotoCutoutScan).
     var isProcessing = false
+    /// Text der Pille während der Verarbeitung („Artikel wird erkannt …“ bei „Per Foto hinzufügen“).
+    var processingLabel = "Artikel wird freigestellt …"
+    /// Erkannte Stellen (Marke, Name, Sorte, Menge) als Akzent-Rahmen über dem Foto (PhotoAddScan).
+    var highlights: [PhotoHighlight] = []
     /// Direkt nach der Aufnahme: Umschalter „Freigestellt · Original“ (true = freigestellt). nil = kein Umschalter.
     var cutoutChoice: Binding<Bool>? = nil
     /// „Nachbessern“ (Glas-Knopf neben dem Umschalter, langer Druck auf das freigestellte Bild).
@@ -165,10 +170,11 @@ struct ProductDetailHero: View {
     /// Abdunkelung + Glas-Pille „Artikel wird freigestellt …“ mit drehendem Ring.
     private var processingOverlay: some View {
         ZStack(alignment: .bottom) {
-            Color.black.opacity(0.45)
+            Color.black.opacity(highlights.isEmpty ? 0.45 : 0.3)
+            if let image, !highlights.isEmpty { highlightLayer(image) }
             HStack(spacing: 10) {
                 CutoutSpinner()
-                Text("Artikel wird freigestellt …")
+                Text(processingLabel)
                     .font(AppFont.dm(14, 600))
                     .foregroundStyle(.white)
             }
@@ -180,6 +186,34 @@ struct ProductDetailHero: View {
         .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 40, bottomTrailingRadius: 40))
         .allowsHitTesting(false)
         .accessibilityElement(children: .combine)
+    }
+
+    /// Rahmen 2 Akzent (Fläche 16 %), Radius 6, darüber Etikett 10/700 weiß auf Akzent. Das Foto füllt den Kopf
+    /// (scaledToFill) – die Rahmen werden genauso skaliert und mittig verschoben.
+    private func highlightLayer(_ image: UIImage) -> some View {
+        GeometryReader { geo in
+            let iw = image.size.width, ih = image.size.height
+            let scale = max(geo.size.width / max(iw, 1), geo.size.height / max(ih, 1))
+            let dx = (geo.size.width - iw * scale) / 2, dy = (geo.size.height - ih * scale) / 2
+            ForEach(highlights) { h in
+                let rect = CGRect(x: dx + h.box.minX * iw * scale - 3, y: dy + h.box.minY * ih * scale - 3,
+                                  width: h.box.width * iw * scale + 6, height: h.box.height * ih * scale + 6)
+                RR(6)
+                    .fill(k.a.base.color(0.16))
+                    .overlay(RR(6).stroke(k.accent, lineWidth: 2))
+                    .frame(width: rect.width, height: rect.height)
+                    .position(x: rect.midX, y: rect.midY)
+                Text(h.label)
+                    .font(AppFont.dm(10, 700))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(RR(8).fill(k.accent))
+                    .fixedSize()
+                    .position(x: rect.minX + 24, y: rect.minY - 9)
+            }
+        }
+        .transition(.opacity)
     }
 
     /// „Freigestellt · Original“: Glas-Hülle 40 (Innenabstand 3), Knöpfe 34, aktiv hell mit Schatten.

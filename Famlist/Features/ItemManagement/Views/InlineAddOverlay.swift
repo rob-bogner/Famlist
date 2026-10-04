@@ -37,11 +37,12 @@ struct InlineAddOverlay: View {
     var onClose: () -> Void = {}
     var onCreateNew: (String) -> Void = { _ in }
     var onScan: () -> Void = {}
+    var onPhoto: () -> Void = {}
 
     init(catalogRepository: any ItemCatalogRepository, globalCatalogRepository: (any GlobalProductCatalogRepository)?,
          appearance: Appearance, keyboardHeight: CGFloat, initialQuery: String = "",
          onClose: @escaping () -> Void = {}, onCreateNew: @escaping (String) -> Void = { _ in },
-         onScan: @escaping () -> Void = {}) {
+         onScan: @escaping () -> Void = {}, onPhoto: @escaping () -> Void = {}) {
         _searchVM = StateObject(wrappedValue: ItemSearchViewModel(catalogRepository: catalogRepository,
                                                                   globalCatalogRepository: globalCatalogRepository))
         self.appearance = appearance
@@ -50,6 +51,7 @@ struct InlineAddOverlay: View {
         self.onClose = onClose
         self.onCreateNew = onCreateNew
         self.onScan = onScan
+        self.onPhoto = onPhoto
     }
 
     private var query: String { searchVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -112,6 +114,11 @@ struct InlineAddOverlay: View {
                 .autocorrectionDisabled()
                 .onSubmit(addBestMatch)
                 .accessibilityLabel("Artikel hinzufügen")
+            GlassCircleButton(style: .neutral, appearance: appearance, accent: k.a, icon: Icon.camera,
+                              label: "Per Foto hinzufügen", size: 40, iconColor: k.accentText, lineWidth: 2) {
+                close()
+                onPhoto()
+            }
             GlassCircleButton(style: .neutral, appearance: appearance, accent: k.a, icon: Icon.scan,
                               label: "Barcode scannen", size: 40, iconColor: k.accentText, lineWidth: 2) {
                 close()

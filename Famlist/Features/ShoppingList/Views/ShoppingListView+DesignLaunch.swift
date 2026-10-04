@@ -55,6 +55,7 @@ extension ShoppingListView {
         case "productImage": return listViewModel.items.first.map { .productImage($0) }
         case "lists": return .lists
         case "barcode": return .barcode
+        case "photoAdd": return .photoAdd
         case "importClipboard":
             UIPasteboard.general.string = "Milch 2 l\nEier 10 Stk\nBrot\nÄpfel 1 kg\nButter"
             return .importClipboard

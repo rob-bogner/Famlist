@@ -17,6 +17,8 @@
    (transparente Ecken), damit Kopf und Kachel sie auf dem neutralen Verlauf zeigen statt randlos.
 
  📝 Last Change:
+ - Durchsichtiger Rand um den Zuschnitt, Erkennung über echte Eckpixel: eckige Motive (Milchkarton) galten
+   sonst als Foto und wurden randlos gezoomt (Meldung Robert 30.09.2026).
  - Initial creation (Wunsch Robert 30.09.2026: Foto automatisch ausschneiden).
  ------------------------------------------------------------------------
  */
@@ -67,7 +69,8 @@ enum ProductCutout {
                                                                     croppedToInstancesExtent: cropped) else { return nil }
             let ci = CIImage(cvPixelBuffer: buffer)
             guard let cg = ProductCutout.context.createCGImage(ci, from: ci.extent) else { return nil }
-            return UIImage(cgImage: cg, scale: 1, orientation: .up)
+            let image = UIImage(cgImage: cg, scale: 1, orientation: .up)
+            return cropped ? ProductCutout.withMargin(image) : image
         }
 
         /// Wie `render`, aber im Hintergrund (Nachbessern: jedes Antippen erzeugt ein neues Bild).
@@ -98,25 +101,34 @@ enum ProductCutout {
         }.value
     }
 
-    /// true, wenn das Bild einen transparenten Hintergrund hat (freigestellt).
+    /// true, wenn das Bild einen transparenten Hintergrund hat (freigestellt): mindestens drei der vier
+    /// Eckpixel sind durchsichtig. Geprüft werden die echten Eckpixel, nicht eine Verkleinerung – sonst
+    /// färbt ein eckiges Motiv (Milchkarton) die Ecken ein und das Bild gilt als Foto.
     static func isCutout(_ image: UIImage) -> Bool {
-        guard let cg = image.cgImage else { return false }
+        guard let cg = image.cgImage, cg.width > 0, cg.height > 0 else { return false }
         switch cg.alphaInfo {
         case .none, .noneSkipFirst, .noneSkipLast: return false
         default: break
         }
-        let side = 12
-        var pixels = [UInt8](repeating: 0, count: side * side * 4)
-        let drawn = pixels.withUnsafeMutableBytes { raw -> Bool in
-            guard let ctx = CGContext(data: raw.baseAddress, width: side, height: side, bitsPerComponent: 8,
-                                      bytesPerRow: side * 4, space: CGColorSpaceCreateDeviceRGB(),
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
-            ctx.draw(cg, in: CGRect(x: 0, y: 0, width: side, height: side))
-            return true
+        let corners = [(0, 0), (cg.width - 1, 0), (0, cg.height - 1), (cg.width - 1, cg.height - 1)]
+        return corners.filter { (alpha(of: cg, x: $0.0, y: $0.1) ?? 255) < 16 }.count >= 3
+    }
+
+    /// Anteil der längsten Kante, der als durchsichtiger Rand um das zugeschnittene Motiv kommt.
+    static let marginFraction: CGFloat = 0.03
+
+    /// Legt einen durchsichtigen Rand um das zugeschnittene Motiv. Füllt ein eckiges Motiv (Karton, Packung)
+    /// seinen Zuschnitt bis in die Ecken, wäre es ohne Rand nicht als freigestellt zu erkennen.
+    static func withMargin(_ image: UIImage) -> UIImage {
+        let width = image.size.width * image.scale, height = image.size.height * image.scale
+        let margin = max(2, (max(width, height) * marginFraction).rounded())
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        format.opaque = false
+        let size = CGSize(width: width + 2 * margin, height: height + 2 * margin)
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(x: margin, y: margin, width: width, height: height))
         }
-        guard drawn else { return false }
-        let corners = [0, side - 1, side * (side - 1), side * side - 1]
-        return corners.filter { pixels[$0 * 4 + 3] < 16 }.count >= 3
     }
 
     // MARK: - Intern
@@ -135,6 +147,20 @@ enum ProductCutout {
         return UIGraphicsImageRenderer(size: target, format: format).image { _ in
             image.draw(in: CGRect(origin: .zero, size: target))
         }
+    }
+
+    /// Deckkraft eines einzelnen Pixels (0 = durchsichtig, 255 = deckend).
+    private static func alpha(of cg: CGImage, x: Int, y: Int) -> UInt8? {
+        guard let pixel = cg.cropping(to: CGRect(x: x, y: y, width: 1, height: 1)) else { return nil }
+        var rgba = [UInt8](repeating: 0, count: 4)
+        let drawn = rgba.withUnsafeMutableBytes { raw -> Bool in
+            guard let ctx = CGContext(data: raw.baseAddress, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            ctx.draw(pixel, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            return true
+        }
+        return drawn ? rgba[3] : nil
     }
 
     private static func readLabels(_ buffer: CVPixelBuffer) -> ([UInt8], Int, Int) {

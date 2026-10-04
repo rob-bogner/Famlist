@@ -89,10 +89,36 @@ protocol GlobalProductCatalogRepository {
 
     /// Produkt zu einem EAN/UPC-Code (Barcode-Scanner); nil, wenn der Code unbekannt ist.
     func product(code: String) async throws -> GlobalProductEntry?
+
+    /// „Per Foto hinzufügen“: bis zu 30 Kandidaten zu den Wörtern der Packungsaufschrift
+    /// (mindestens zwei Wörter im Namen oder in der Marke). Die App bewertet sie danach selbst (ProductPhotoMatcher).
+    func match(words: [String]) async throws -> [GlobalProductEntry]
 }
 
 extension GlobalProductCatalogRepository {
     func product(code: String) async throws -> GlobalProductEntry? { nil }
+
+    func match(words: [String]) async throws -> [GlobalProductEntry] {
+        try await matchUsingSearch(words: words)
+    }
+
+    /// Rückfall ohne match_global_products: mehrere Suchen (Wortpaare und einzelne Wörter), Treffer vereinigt.
+    func matchUsingSearch(words: [String]) async throws -> [GlobalProductEntry] {
+        let top = Array(words.prefix(4))
+        var queries: [String] = []
+        for i in top.indices {
+            for j in top.indices where j > i { queries.append(top[i] + " " + top[j]) }
+        }
+        queries += top
+        var seen = Set<String>()
+        var result: [GlobalProductEntry] = []
+        for query in queries {
+            guard let hits = try? await search(query: query) else { continue }
+            for hit in hits where seen.insert(hit.id).inserted { result.append(hit) }
+            if result.count >= 30 { break }
+        }
+        return result
+    }
 }
 
 // MARK: - Preview / In-Memory Implementation

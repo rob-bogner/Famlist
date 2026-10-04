@@ -16,6 +16,7 @@
    „Hinzufügen · Entfernen“ entscheidet, was passiert. Mindestens ein Motiv bleibt gewählt.
 
  📝 Last Change:
+ - Ab iOS 27 pixelgenau (IterativeCutoutRefiner), sonst ganze Objekte (InstanceCutoutRefiner) (30.09.2026).
  - Initial creation (Wunsch Robert 30.09.2026).
  ------------------------------------------------------------------------
  */
@@ -30,7 +31,7 @@ struct CutoutFixView: View {
     let onCancel: () -> Void
     let onDone: (IndexSet, UIImage?) -> Void
 
-    @State private var selection = IndexSet()
+    @State private var refiner: (any CutoutRefiner)?
     @State private var preview: UIImage?
     @State private var adding = true
     @State private var tapMarker: CGPoint?
@@ -99,8 +100,15 @@ struct CutoutFixView: View {
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .task {
-            selection = initialSelection
-            preview = await analysis.renderInBackground(initialSelection, cropped: false)
+            // Ab iOS 27 pixelgenau (Vision iterative Segmentierung), sonst ganze Objekte.
+            let chosen: any CutoutRefiner
+            if #available(iOS 27.0, *) {
+                chosen = IterativeCutoutRefiner(analysis: analysis)
+            } else {
+                chosen = InstanceCutoutRefiner(analysis: analysis, selection: initialSelection)
+            }
+            refiner = chosen
+            preview = await chosen.start()
         }
     }
 
@@ -182,42 +190,36 @@ struct CutoutFixView: View {
     // MARK: - Aktionen
 
     private func tap(at location: CGPoint, in size: CGSize) {
+        guard let refiner, !isFinishing else { return }
         let point = CGPoint(x: location.x / size.width, y: location.y / size.height)
-        guard let id = analysis.instance(at: point) else {
-            UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            return
-        }
-        var next = selection
-        if adding { next.insert(id) } else { next.remove(id) }
-        guard !next.isEmpty, next != selection else {
-            UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            return
-        }
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        selection = next
+        let include = adding
         withAnimation(.easeOut(duration: 0.15)) { tapMarker = location }
         Task {
-            let image = await analysis.renderInBackground(next, cropped: false)
-            withAnimation(.easeInOut(duration: 0.2)) { preview = image }
-            try? await Task.sleep(for: .milliseconds(450))
+            if let image = await refiner.tap(point, include: include) {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                withAnimation(.easeInOut(duration: 0.2)) { preview = image }
+            } else {
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            }
+            try? await Task.sleep(for: .milliseconds(350))
             withAnimation(.easeOut(duration: 0.25)) { tapMarker = nil }
         }
     }
 
     private func reset() {
-        selection = analysis.primary
+        guard let refiner else { return }
         Task {
-            let image = await analysis.renderInBackground(analysis.primary, cropped: false)
+            let image = await refiner.reset()
             withAnimation(.easeInOut(duration: 0.2)) { preview = image }
         }
     }
 
     private func finish() {
+        guard let refiner else { return }
         isFinishing = true
-        let chosen = selection
         Task {
-            let image = await analysis.renderInBackground(chosen, cropped: true)
-            onDone(chosen, image)
+            let (selection, image) = await refiner.finish()
+            onDone(selection ?? initialSelection, image)
         }
     }
 }

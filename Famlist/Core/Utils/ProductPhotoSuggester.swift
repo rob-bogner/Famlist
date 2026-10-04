@@ -15,6 +15,7 @@
  - Später (ab iOS 27) kann hier das Sprachmodell mit Bild-Eingabe freiere Namen liefern.
 
  📝 Last Change:
+ - Ab iOS 27 zuerst ProductPhotoModelSuggester (Foundation Models mit Bild) (30.09.2026).
  - Initial creation (Wunsch Robert 30.09.2026).
  ------------------------------------------------------------------------
  */
@@ -30,6 +31,15 @@ struct ProductPhotoSuggestion: Equatable, Sendable {
 
 enum ProductPhotoSuggester {
     private static let minimumConfidence: Float = 0.25
+
+    /// Vorschlag: ab iOS 27 zuerst das Sprachmodell (freie Namen, Kategorien des Nutzers), sonst/ohne Treffer
+    /// die Vision-Klassifizierung mit der festen Liste.
+    static func suggest(for image: UIImage, categories: [String]) async -> ProductPhotoSuggestion? {
+        if #available(iOS 27.0, *), let model = await ProductPhotoModelSuggester.suggest(for: image, categories: categories) {
+            return model
+        }
+        return await suggest(for: image)
+    }
 
     static func suggest(for image: UIImage) async -> ProductPhotoSuggestion? {
         await Task.detached(priority: .utility) { () -> ProductPhotoSuggestion? in

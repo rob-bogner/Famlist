@@ -20,6 +20,8 @@
  - Die Anzeige liest immer aus dem Formular (ItemFormViewModel), damit sie nach dem Speichern stimmt.
 
  📝 Last Change:
+ - „Per Foto hinzufügen“ belastbarer: eigene Kamera mit Barcode nebenbei, strenger Katalog-Abgleich (ProductPhotoMatcher, Bildvergleich), „Welches Produkt ist es?“ bei Unsicherheit (01.10.2026).
+ - „Per Foto hinzufügen“: Kamera sofort, Erkennung (Barcode, Aufschrift, Katalog, Beschreibung), Hinweis mit Rückgängig, Quellenzeile (30.09.2026).
  - Foto automatisch freistellen, „Freigestellt · Original“, Nachbessern, Vorschlag Name/Kategorie (30.09.2026).
  - Ohne „Artikelbilder anzeigen“: kein Bildkopf, Sheet 500/560, Titel oben links, Stift neben ✕ (30.09.2026).
  - Vollbild → Sheet (Griff, Herunterziehen schließt), Stift unten rechts am Bild.
@@ -83,6 +85,24 @@ struct ProductDetailSheet: View {
     @State private var showCutoutFix = false
     @State private var photoSuggestion: ProductPhotoSuggestion?
     @State private var cutoutSelection = IndexSet()
+    // Per Foto hinzufügen (PhotoAddScan / PhotoAddResult)
+    /// Über den Kamera-Knopf der Suchleiste geöffnet: Kamera sofort, danach Erkennung.
+    @State private var photoAddFlow = false
+    @State private var photoAddCameraOpened = false
+    @State private var isRecognizing = false
+    @State private var recognitionSteps: [PhotoRecognitionStep] = []
+    @State private var photoHighlights: [PhotoHighlight] = []
+    @State private var recognizedSnapshot: RecognizedSnapshot?
+    @State private var recognizedDetail = ""
+    @State private var recognizedDescription: String?
+    @State private var descriptionSource: String?
+    /// Aus dem Foto gelesener Barcode; wird beim Speichern wie ein gescannter Barcode übernommen.
+    @State private var recognizedBarcode: String?
+    /// „Welches Produkt ist es?“ – nicht leer, solange der Nutzer wählen soll (PhotoAddChoose).
+    @State private var matchCandidates: [ProductMatchCandidate] = []
+    /// Eigene Kamera mit Barcode nebenbei (PhotoAddCapture); ohne DataScanner die System-Kamera.
+    @State private var showsPhotoCapture = false
+    @State private var liveBarcode: String?
     @State private var dragOffset: CGFloat = 0
     /// Wie weit der Inhalt oben über den Anfang hinaus gezogen ist (> 0 = Überziehen am Anfang).
     @State private var pull: CGFloat = 0
@@ -117,10 +137,11 @@ struct ProductDetailSheet: View {
     }
 
     /// Neuer Artikel (Plus → „… als neuen Artikel anlegen“ oder unbekannter Barcode).
-    init(newItemName: String, barcode: String? = nil, k: SheetTheme, keyboardHeight: CGFloat,
+    init(newItemName: String, barcode: String? = nil, startsWithPhoto: Bool = false, k: SheetTheme, keyboardHeight: CGFloat,
          onClose: @escaping () -> Void) {
         _formVM = StateObject(wrappedValue: ItemFormViewModel(initialName: newItemName))
         _mode = State(initialValue: .new)
+        _photoAddFlow = State(initialValue: startsWithPhoto)
         self.item = nil
         self.k = k
         self.keyboardHeight = keyboardHeight
@@ -171,11 +192,40 @@ struct ProductDetailSheet: View {
             ImagePicker(selectedImage: $pickedPhoto, isPresented: $pickerRequest.presentedFlag,
                         sourceType: request.sourceType)
         }
+        // Per Foto hinzufügen: eigene Kamera, Barcode wird nebenbei erkannt (PhotoAddCapture).
+        .fullScreenCover(isPresented: $showsPhotoCapture) {
+            ProductPhotoCaptureView(appearance: k.appearance,
+                                    onCapture: { photo, code in
+                                        liveBarcode = code
+                                        showsPhotoCapture = false
+                                        pickedPhoto = photo
+                                    },
+                                    onLibrary: {
+                                        showsPhotoCapture = false
+                                        Task { @MainActor in
+                                            try? await Task.sleep(for: .milliseconds(450))
+                                            pickerRequest = .library
+                                        }
+                                    },
+                                    onClose: {
+                                        showsPhotoCapture = false
+                                        onClose()
+                                    })
+        }
         // Neues Foto → automatisch freistellen (Vision) und Name/Kategorie vorschlagen.
         .onChange(of: pickedPhoto) { _, photo in
             guard let photo else { return }
             pickedPhoto = nil
+            if photoAddFlow && recognizedSnapshot == nil && !isRecognizing { startRecognition(photo, liveBarcode: liveBarcode) }
             processPhoto(photo)
+        }
+        // Per Foto hinzufügen: Kamera abgebrochen, ohne Foto → Sheet wieder zu.
+        .onChange(of: pickerRequest) { _, request in
+            guard photoAddFlow, request == nil else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(350))
+                if formVM.selectedImage == nil && !isRecognizing && recognizedSnapshot == nil { onClose() }
+            }
         }
         // Ansehen hat kein „Speichern“: Foto über den Platzhalter gewählt → sofort speichern.
         .onChange(of: formVM.selectedImage) { _, _ in
@@ -207,6 +257,14 @@ struct ProductDetailSheet: View {
         }
         .onAppear {
             formVM.validateAll()
+            if photoAddFlow && !photoAddCameraOpened {
+                photoAddCameraOpened = true
+                if ProductPhotoCaptureView.isAvailable {
+                    showsPhotoCapture = true
+                } else {
+                    pickerRequest = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .library
+                }
+            }
             // Ohne Fokus öffnen; auch eine noch offene Tastatur (z. B. aus „Suchen“) schließen.
             dismissTextFocus()
             Task { @MainActor in
@@ -227,12 +285,15 @@ struct ProductDetailSheet: View {
                         if showImages {
                             ProductDetailHero(k: k, image: formVM.selectedImage, mode: mode,
                                               onPhoto: { showPhotoSource = true }, onEdit: startEditing,
-                                              isProcessing: isCutting,
+                                              isProcessing: isCutting || isRecognizing,
+                                              processingLabel: isRecognizing ? "Artikel wird erkannt …" : "Artikel wird freigestellt …",
+                                              highlights: isRecognizing ? photoHighlights : [],
                                               cutoutChoice: cutoutImage != nil && originalPhoto != nil ? cutoutChoiceBinding : nil,
                                               onFix: cutoutAnalysis != nil ? { withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) { showCutoutFix = true } } : nil)
                         }
                         Group {
-                            if mode.isEditing { editContent } else { viewContent }
+                            if isRecognizing { PhotoRecognitionStepsView(k: k, steps: recognitionSteps) }
+                            else if mode.isEditing { editContent } else { viewContent }
                         }
                         .padding(.horizontal, 20)
                         // Ohne Bildkopf beginnt der Inhalt unter Titel und ✕ (Ansehen 84, Bearbeiten 80).
@@ -411,7 +472,7 @@ struct ProductDetailSheet: View {
     /// „Speichern“ bzw. „Zur Liste hinzufügen“; beim Eintippen der Menge die Schnellwahl-Leiste.
     @ViewBuilder
     private var bottomBar: some View {
-        if mode.isEditing {
+        if mode.isEditing && !isRecognizing {
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 if quantityEditing && keyboardHeight > 0 {
@@ -495,6 +556,17 @@ struct ProductDetailSheet: View {
 
     private var editContent: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if !matchCandidates.isEmpty {
+                PhotoMatchPicker(k: k, candidates: matchCandidates, onPick: pickCandidate, onNone: pickNone)
+                    .padding(.bottom, 14)
+                    .padding(.top, -6)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            } else if recognizedSnapshot != nil {
+                PhotoRecognizedBanner(k: k, detail: recognizedDetail, onUndo: undoRecognition)
+                    .padding(.bottom, 14)
+                    .padding(.top, -6)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
             if let photoSuggestion {
                 PhotoSuggestionBanner(k: k, suggestion: photoSuggestion, onApply: { applySuggestion(photoSuggestion) })
                     .padding(.bottom, 14)
@@ -567,6 +639,10 @@ struct ProductDetailSheet: View {
                 .padding(.top, 6)
                 .revealsWhenFocused(descriptionFocused)
                 .accessibilityLabel("Beschreibung")
+            if let descriptionSource, formVM.productDescription == recognizedDescription {
+                DescriptionSourceLine(k: k, text: descriptionSource)
+                    .padding(.top, 8)
+            }
         }
     }
 
@@ -743,7 +819,7 @@ struct ProductDetailSheet: View {
             isCutting = true
         }
         Task {
-            async let suggestion = ProductPhotoSuggester.suggest(for: photo)
+            async let suggestion = ProductPhotoSuggester.suggest(for: photo, categories: listViewModel.categoryOrder.map(\.name))
             let analysis = await ProductCutout.analyze(photo)
             var image: UIImage?
             if let analysis { image = await analysis.renderInBackground(analysis.primary, cropped: true) }
@@ -751,13 +827,246 @@ struct ProductDetailSheet: View {
                 cutoutAnalysis = image != nil ? analysis : nil
                 cutoutSelection = analysis?.primary ?? IndexSet()
                 cutoutImage = image
-                if let image { formVM.selectedImage = image }
+                // Während der Erkennung bleibt das Foto mit den Rahmen stehen; danach kommt das freigestellte Bild.
+                if let image, !isRecognizing { formVM.selectedImage = image }
                 isCutting = false
             }
-            if let found = await suggestion, mode.isEditing,
+            if let found = await suggestion, mode.isEditing, !photoAddFlow,
                formVM.name.isEmpty || formVM.category.isEmpty {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) { photoSuggestion = found }
             }
+        }
+    }
+
+    // MARK: - Per Foto hinzufügen
+
+    struct RecognizedSnapshot: Equatable {
+        let name, brand, units, measure, category, description: String
+    }
+
+    /// Barcode → Aufschrift → Katalog → Beschreibung; Schritte laufen sichtbar mit (PhotoAddScan).
+    /// Grundsatz: Was auf der Packung steht, zählt. Der Katalog ergänzt nur, wenn er sicher passt (Barcode oder
+    /// klarer Abgleich, ProductPhotoMatcher); sonst „Welches Produkt ist es?“ (PhotoAddChoose) oder nur Gelesenes.
+    private func startRecognition(_ photo: UIImage, liveBarcode: String?) {
+        recognitionSteps = [
+            .init(id: 0, title: "Barcode", detail: "Wird gesucht …", status: PhotoRecognitionStep.Status.busy),
+            .init(id: 1, title: "Aufschrift lesen", detail: "Name, Marke, Menge", status: PhotoRecognitionStep.Status.busy),
+            .init(id: 2, title: "Im Katalog abgleichen", detail: "Wörter und Foto in Open Food Facts", status: .todo),
+            .init(id: 3, title: "Beschreibung laden", detail: "Zutaten und Kurzbeschreibung", status: .todo),
+        ]
+        withAnimation(.easeOut(duration: 0.2)) { isRecognizing = true }
+        let categories = listViewModel.categoryOrder.map(\.name)
+        Task {
+            async let categoryGuess = ProductPhotoSuggester.suggest(for: photo, categories: categories)
+            let reading = await ProductPhotoRecognizer.read(photo)
+            var fields: ProductPhotoFields?
+            if #available(iOS 27.0, *) { fields = await ProductPhotoModelReader.fields(image: photo, reading: reading) }
+            if fields == nil { fields = ProductPhotoRecognizer.fields(from: reading) }
+            let code = liveBarcode ?? reading.barcode
+            recognizedBarcode = code
+            let read = fields
+            withAnimation(.easeInOut(duration: 0.25)) {
+                setStep(0, code.map { ("Gefunden: \($0)", PhotoRecognitionStep.Status.done) } ?? ("Kein Barcode gesehen", PhotoRecognitionStep.Status.skipped))
+                setStep(1, read.map { (Self.summary($0), PhotoRecognitionStep.Status.done) } ?? ("Keine Aufschrift erkannt", PhotoRecognitionStep.Status.skipped))
+                photoHighlights = read?.highlights ?? []
+                setStep(2, ("Wörter und Foto in Open Food Facts", PhotoRecognitionStep.Status.busy))
+            }
+
+            var entry: ItemCatalogEntry?
+            var offProduct: OpenFoodFactsProduct?
+            var outcome: ProductPhotoMatchResult = .none
+            var refined = read
+            if let code {
+                // 1. Barcode: eigener Artikelstamm, globaler Katalog, sonst direkt Open Food Facts – immer sicher.
+                entry = await BarcodeScanViewModel(catalog: listViewModel.catalogRepository,
+                                                   global: listViewModel.globalCatalogRepository).lookup(code)?.entry
+                if entry == nil, let off = await OpenFoodFactsProduct.fetch(barcode: code), let name = off.name {
+                    offProduct = off
+                    entry = GlobalProductEntry(id: code, name: name, brand: off.brand, category: nil, measure: off.quantity,
+                                               imageUrl: off.imageUrl, scansN: 0).toItemCatalogEntry(ownerPublicId: "")
+                }
+            } else if let global = listViewModel.globalCatalogRepository {
+                // 2. Ohne Barcode: Kandidaten zu den Wörtern, streng bewertet, Bildvergleich, ggf. Sprachmodell.
+                let keywords = ProductPhotoMatcher.keywords(reading: reading, fields: read)
+                let products = (try? await global.match(words: ProductPhotoMatcher.queryWords(keywords))) ?? []
+                refined = ProductPhotoMatcher.refine(read, products: products, keywords: keywords)
+                var ranked = ProductPhotoMatcher.rank(products, keywords: keywords, fields: refined)
+                let top = Array(ranked.prefix(6).filter { $0.score >= 0.3 })
+                if !top.isEmpty {
+                    let visual = await ProductImageSimilarity.similarity(photo: photo, candidates: top)
+                    ranked = ProductPhotoMatcher.applyVisual(Array(ranked.prefix(6)), similarity: visual)
+                }
+                outcome = ProductPhotoMatcher.decide(ranked)
+                if case .choose(let options) = outcome, #available(iOS 27.0, *),
+                   let index = await ProductPhotoModelReader.pick(image: photo, reading: reading,
+                                                                  candidates: options.map { [$0.product.brand, $0.product.name, $0.product.measure].compactMap { $0 }.joined(separator: " · ") }) {
+                    var boosted = options
+                    boosted[index].score = min(1, boosted[index].score + 0.15)
+                    outcome = ProductPhotoMatcher.decide(boosted)
+                }
+                if case .certain(let best) = outcome {
+                    entry = best.product.toItemCatalogEntry(ownerPublicId: "")
+                    recognizedBarcode = best.product.id
+                }
+            }
+            let choices: [ProductMatchCandidate] = { if case .choose(let c) = outcome { return c } else { return [] } }()
+            withAnimation(.easeInOut(duration: 0.25)) {
+                if let entry {
+                    setStep(2, ("Gefunden: \(entry.name)", PhotoRecognitionStep.Status.done))
+                } else if !choices.isEmpty {
+                    setStep(2, ("\(choices.count) mögliche Treffer – bitte wählen", PhotoRecognitionStep.Status.done))
+                } else {
+                    setStep(2, ("Kein sicherer Treffer – Gelesenes wird übernommen", PhotoRecognitionStep.Status.skipped))
+                }
+                setStep(3, ("Zutaten und Kurzbeschreibung", PhotoRecognitionStep.Status.busy))
+            }
+
+            // Beschreibung nur zu einem sicheren Treffer; bei „bitte wählen“ erst nach der Wahl.
+            var description: String?
+            var source: String?
+            if entry != nil, let barcode = recognizedBarcode {
+                var offText = offProduct?.description
+                if offText == nil { offText = await OpenFoodFactsProduct.fetch(barcode: barcode)?.description }
+                if let text = offText {
+                    description = text
+                    source = "Quelle: Open Food Facts (ODbL)"
+                }
+            }
+            if description == nil, choices.isEmpty, #available(iOS 27.0, *),
+               let name = entry?.name ?? refined?.name,
+               let text = await ProductPhotoModelReader.description(name: name, brand: entry?.brand ?? refined?.brand) {
+                description = text
+                source = "Automatisch erstellt"
+            }
+            withAnimation(.easeInOut(duration: 0.25)) {
+                if !choices.isEmpty {
+                    setStep(3, ("Nach der Auswahl", PhotoRecognitionStep.Status.skipped))
+                } else {
+                    setStep(3, description != nil ? (source ?? "", PhotoRecognitionStep.Status.done) : ("Keine Beschreibung gefunden", PhotoRecognitionStep.Status.skipped))
+                }
+            }
+            try? await Task.sleep(for: .milliseconds(450))
+            applyRecognition(fields: refined, entry: entry, description: description, source: source,
+                             category: await categoryGuess?.category, choices: choices)
+        }
+    }
+
+    private static func summary(_ f: ProductPhotoFields) -> String {
+        [f.brand, f.name, f.variant, f.units.map { QuantityFormat.format($0) + " " + (f.measure ?? "") }]
+            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    private typealias StepUpdate = (detail: String, status: PhotoRecognitionStep.Status)
+
+    private func setStep(_ index: Int, _ value: StepUpdate) {
+        guard recognitionSteps.indices.contains(index) else { return }
+        recognitionSteps[index].detail = value.0
+        recognitionSteps[index].status = value.1
+    }
+
+    private func applyRecognition(fields: ProductPhotoFields?, entry: ItemCatalogEntry?, description: String?,
+                                  source: String?, category: String?, choices: [ProductMatchCandidate]) {
+        let snapshot = RecognizedSnapshot(name: formVM.name, brand: formVM.brand, units: formVM.units, measure: formVM.measure,
+                                          category: formVM.category, description: formVM.productDescription)
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) {
+            if let entry {
+                applyCatalog(name: entry.name, brand: entry.brand, measure: entry.measure, category: entry.category, fields: fields)
+            } else if let fields {
+                formVM.name = [fields.name, fields.variant].compactMap { $0 }.joined(separator: " ")
+                if let brand = fields.brand { formVM.brand = brand }
+                if let units = fields.units, let measure = fields.measure {
+                    formVM.units = QuantityFormat.format(units)
+                    formVM.measure = measure
+                }
+            }
+            if entry?.category == nil || !applyCategory(entry?.category), let category { _ = applyCategory(category) }
+            if let description { formVM.productDescription = description }
+            recognizedDescription = description
+            descriptionSource = source
+            matchCandidates = choices
+            recognizedDetail = entry != nil ? "Gefunden in Open Food Facts" : "Vom iPhone gelesen"
+            recognizedSnapshot = snapshot
+            photoHighlights = []
+            isRecognizing = false
+            if showsCutout, let cutoutImage { formVM.selectedImage = cutoutImage }
+        }
+        UINotificationFeedbackGenerator().notificationOccurred(choices.isEmpty ? .success : .warning)
+    }
+
+    /// Name, Marke, Menge aus dem Katalog; Menge vom Foto hat Vorrang.
+    private func applyCatalog(name: String, brand: String?, measure: String?, category: String?, fields: ProductPhotoFields?) {
+        formVM.name = name
+        if let brand, !brand.isEmpty { formVM.brand = brand }
+        let quantity = fields?.units.flatMap { u in fields?.measure.map { (u, $0) } }
+            ?? measure.flatMap(ProductPhotoRecognizer.parseQuantity)
+        if let quantity, !quantity.1.isEmpty {
+            formVM.units = QuantityFormat.format(quantity.0)
+            formVM.measure = quantity.1
+        }
+    }
+
+    /// Kategorie übernehmen, wenn es sie beim Nutzer gibt (Groß-/Kleinschreibung egal).
+    @discardableResult
+    private func applyCategory(_ name: String?) -> Bool {
+        guard let name,
+              let match = listViewModel.categoryOrder.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else { return false }
+        formVM.category = match.name
+        return true
+    }
+
+    /// „Welches Produkt ist es?“ → gewählter Treffer; Beschreibung wird jetzt geladen.
+    private func pickCandidate(_ candidate: ProductMatchCandidate) {
+        let p = candidate.product
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) {
+            applyCatalog(name: p.name, brand: p.brand, measure: p.measure, category: p.category, fields: nil)
+            applyCategory(p.category)
+            matchCandidates = []
+            recognizedDetail = "Gefunden in Open Food Facts"
+            recognizedBarcode = p.id
+        }
+        UISelectionFeedbackGenerator().selectionChanged()
+        Task {
+            guard let text = await OpenFoodFactsDescription.fetch(barcode: p.id) else { return }
+            withAnimation(.easeOut(duration: 0.2)) {
+                formVM.productDescription = text
+                recognizedDescription = text
+                descriptionSource = "Quelle: Open Food Facts (ODbL)"
+            }
+        }
+    }
+
+    /// „Keiner davon“: Gelesenes bleibt; ab iOS 27 eine automatisch erstellte Beschreibung.
+    private func pickNone() {
+        withAnimation(.easeOut(duration: 0.2)) {
+            matchCandidates = []
+            recognizedBarcode = nil
+        }
+        Task {
+            guard #available(iOS 27.0, *), formVM.productDescription.isEmpty,
+                  let text = await ProductPhotoModelReader.description(name: formVM.name, brand: formVM.brand.isEmpty ? nil : formVM.brand) else { return }
+            withAnimation(.easeOut(duration: 0.2)) {
+                formVM.productDescription = text
+                recognizedDescription = text
+                descriptionSource = "Automatisch erstellt"
+            }
+        }
+    }
+
+    /// „Rückgängig“: erkannte Angaben verwerfen (Foto bleibt).
+    private func undoRecognition() {
+        guard let snapshot = recognizedSnapshot else { return }
+        withAnimation(.easeOut(duration: 0.2)) {
+            formVM.name = snapshot.name
+            formVM.brand = snapshot.brand
+            formVM.units = snapshot.units
+            formVM.measure = snapshot.measure
+            formVM.category = snapshot.category
+            formVM.productDescription = snapshot.description
+            recognizedSnapshot = nil
+            descriptionSource = nil
+            recognizedDescription = nil
+            matchCandidates = []
+            recognizedBarcode = nil
         }
     }
 
@@ -792,7 +1101,7 @@ struct ProductDetailSheet: View {
         formVM.validateAll()
         guard formVM.isValid else { return }
         guard let item else {
-            listViewModel.addItem(formVM.toItemModel(), barcode: barcode)
+            listViewModel.addItem(formVM.toItemModel(), barcode: barcode ?? recognizedBarcode)
             onClose()
             return
         }

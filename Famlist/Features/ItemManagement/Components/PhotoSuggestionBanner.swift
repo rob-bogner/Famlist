@@ -33,7 +33,7 @@ struct PhotoSuggestionBanner: View {
                     .font(AppFont.dm(14, 600))
                     .foregroundStyle(k.text)
                     .lineLimit(1)
-                Text("\(suggestion.category) · aus dem Foto")
+                Text(suggestion.category.isEmpty ? "aus dem Foto" : "\(suggestion.category) · aus dem Foto")
                     .font(AppFont.dm(12, 400))
                     .foregroundStyle(k.sub)
                     .lineLimit(1)

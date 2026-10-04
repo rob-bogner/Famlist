@@ -103,7 +103,8 @@ struct ShoppingListView: View {
                                      initialQuery: addPrefill,
                                      onClose: closeAdd,
                                      onCreateNew: { activeSheet = .newItem(initialName: $0) },
-                                     onScan: openScanner)
+                                     onScan: openScanner,
+                                     onPhoto: openPhotoAdd)
                         .transition(.opacity)
                 }
                 sheetLayer(k: k, maxHeight: screenHeight - 54, insets: insets)   // Design: 54 pt Luft über dem höchsten Sheet
@@ -251,6 +252,12 @@ struct ShoppingListView: View {
     }
 
     /// Scan-Knopf im Suchfeld → Barcode-Scanner (SPEC §3.2).
+    /// Per Foto hinzufügen (Kamera-Knopf in der Suchleiste).
+    func openPhotoAdd() {
+        openRow = nil
+        activeSheet = .photoAdd
+    }
+
     func openScanner() {
         openRow = nil
         activeSheet = .barcode
