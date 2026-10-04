@@ -371,3 +371,40 @@ Einstellung `ItemImageSetting` (`list.showImages`, nur dieses Gerät, Standard a
 
 - Speichern: freigestellte Fotos als HEIC mit Transparenz (`ProductImageCodec.cutoutData`), sonst JPEG. Liste: `ItemThumbnailTile` zeigt sie ganz (scaledToFit).
 - Später (iOS 27): feineres Nachbessern mit `GenerateIterativeSegmentationRequest` (Lasso/Rahmen) und Namensvorschlag über Foundation Models mit Bild-Eingabe.
+
+### Nachtrag iOS 27 (30.09.2026)
+- Nachbessern ab iOS 27 pixelgenau: `IterativeCutoutRefiner` (Vision `GenerateIterativeSegmentationRequest`, Seed = Schwerpunkt der Auto-Freistellung, Antippen = `addIncludedPoint` / `addExcludedPoint`); darunter `InstanceCutoutRefiner` (ganze Objekte). Gemeinsam: `CutoutRefiner`.
+- Vorschlag ab iOS 27: `ProductPhotoModelSuggester` (Foundation Models, `Prompt { … Attachment(cgImage) }`, `@Generable Guess`), Kategorien des Nutzers; Rückfall Vision-Liste.
+- `FoundationModels` schwach gelinkt (`OTHER_LDFLAGS -weak_framework FoundationModels`), App startet weiter ab iOS 17.
+
+### Per Foto hinzufügen (30.09.2026)
+
+| Board | Umsetzung |
+|---|---|
+| AddInline (Kamera-Knopf) | `InlineAddOverlay(onPhoto:)` – Glas-Knopf „Per Foto hinzufügen“ links neben „Barcode scannen“ → `ShoppingListView.openPhotoAdd()` → `ActiveListSheet.photoAdd` |
+| PhotoAddScan | `ProductDetailSheet(startsWithPhoto: true)` öffnet sofort die Kamera (ohne Kamera: Mediathek; Abbruch ohne Foto schließt das Sheet). `startRecognition`: `ProductPhotoRecognizer.read` (Vision Barcode + Texterkennung) → Felder aus `ProductPhotoModelReader` (iOS 27, Foundation Models mit Bild) oder Heuristik `ProductPhotoRecognizer.fields`. Kopf mit Rahmen (`ProductDetailHero(highlights:)`), Schritte `PhotoRecognitionStepsView` |
+| PhotoAddResult | Katalog: Barcode → `BarcodeScanViewModel.lookup`, sonst `GlobalProductCatalogRepository.search("Marke Name")` + `bestMatch`. Übernimmt Name, Marke, Menge/Einheit, Kategorie (Katalog, sonst `ProductPhotoSuggester`). Hinweis `PhotoRecognizedBanner` mit „Rückgängig“ (stellt die Felder wieder her, Foto bleibt). Erkannter Barcode wird beim Speichern mitgegeben |
+| PhotoAddDescription | `OpenFoodFactsDescription.fetch` (API v2, Kurzbeschreibung + Zutaten, max. 400 Zeichen) → `DescriptionSourceLine` „Quelle: Open Food Facts (ODbL)“; ohne Treffer ab iOS 27 `ProductPhotoModelReader.description` → „Automatisch erstellt“. Quellenzeile verschwindet, sobald der Text geändert wird |
+
+- Launch fürs Design: `photoAdd`.
+- iOS-27-API-Namen (Foundation Models) beim ersten Build mit Xcode 27 prüfen.
+
+### Per Foto hinzufügen – belastbarer (01.10.2026)
+Anlass: Foto „REWE Bio Süßrahm Butter“ wurde zu „Rewe Bio Erdnussbutter Creamy“ (erster Treffer, der „butter“ enthielt).
+Grundsatz: Was auf der Packung steht, zählt. Der Katalog ergänzt nur, wenn er sicher passt; sonst fragt die App.
+
+| Board | Umsetzung |
+|---|---|
+| PhotoAddCapture / PhotoAddCaptureBarcode | `ProductPhotoCaptureView` (VisionKit `DataScannerViewController`, `capturePhoto()`): Live-Bild, Barcode wird nebenbei erkannt (Ecken + Hinweis grün). Glas-Knöpfe Schließen/Licht/Mediathek, Auslöser 78. Ohne DataScanner: System-Kamera |
+| PhotoAddScan | Schritt 3 heißt „Im Katalog abgleichen“ (Wörter und Foto) |
+| PhotoAddChoose | `PhotoMatchPicker` (in `PhotoRecognitionViews`): bis zu 3 Treffer mit Katalogbild + „Keiner davon – nur Gelesenes behalten“. Beschreibung erst nach der Wahl |
+
+Abgleich (`ProductPhotoMatcher`):
+- Barcode (live oder im Foto) → eigener Artikelstamm, globaler Katalog, sonst Open Food Facts direkt (`OpenFoodFactsProduct`) → immer sicher.
+- Ohne Barcode: Kandidaten über `match_global_products` (Migration 036, bis 30, nach Wort-Treffern; Rückfall: mehrere `search_global_products`).
+- Text: nur ganze Wörter; zusammengesetzte Wörter zählen, wenn alle Teile auf der Packung stehen („Süßrahm“ + „Butter“); Wörter, die nicht auf der Packung stehen, geben Abzug („Erdnuss“, „Creamy“); fremde Marke ×0,6; Menge gleich +0,05 / verschieden −0,1.
+- Bild: Vision-Merkmale Foto vs. Katalogbild (25 %).
+- Ab iOS 27: Sprachmodell wählt unter den Kandidaten (+0,15, nur Zusatzsignal).
+- Entscheidung: ≥ 0,8 und klar vorn (oder nur Dubletten desselben Produkts) → sicher; ≥ 0,45 → „Welches Produkt ist es?“; sonst nur Gelesenes (Marke aus dem Katalog, falls sie auf der Packung steht).
+- Tests: `ProductPhotoMatcherTests` (Butter ≠ Erdnussbutter, Süßrahmbutter sicher, fremde Marke nicht angeboten).
+- **Migration 036 einspielen** (sonst Rückfall auf die normale Suche).

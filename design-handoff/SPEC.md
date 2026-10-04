@@ -33,9 +33,14 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Gelöscht – Rückgängig | UndoToast | ja | `UndoToastScreen` |
 |  | Sync fehlgeschlagen | ItemSyncFailed | ja | – (nur HTML) |
 |  | Sync fehlgeschlagen – erneut versuchen? | ItemSyncFailedDialog | ja | – (nur HTML) |
-| 3 · Artikel hinzufügen & bearbeiten | Artikel hinzufügen (Plus → Eingabe unten) | AddInline | ja | – (nur HTML) |
+| 3 · Artikel hinzufügen & bearbeiten | Artikel hinzufügen (Plus → Eingabe unten; Suchleiste mit Foto- und Barcode-Knopf) | AddInline | ja | – (nur HTML) |
 |  | Artikel hinzufügen – keine Treffer | AddInlineNoResults | ja | – (nur HTML) |
 |  | Artikel hinzufügen – ohne Artikelbilder | AddInlineNoImages | ja | – |
+|  | Per Foto hinzufügen – Kamera, Barcode nebenbei | PhotoAddCapture, PhotoAddCaptureBarcode | ja | `ProductPhotoCaptureView` |
+|  | Per Foto hinzufügen – Erkennung (Kamera-Knopf in der Suchleiste: Barcode → Aufschrift → Katalog → Beschreibung) | PhotoAddScan | ja | `ProductDetailSheet(startsWithPhoto:)`, `ProductPhotoRecognizer`, `PhotoRecognitionStepsView` |
+|  | Per Foto hinzufügen – vorausgefüllt, freigestellt, „Aus dem Foto erkannt · Open Food Facts“ | PhotoAddResult | ja | `PhotoRecognizedBanner`, `InlineAddOverlay(onPhoto:)` |
+|  | Per Foto hinzufügen – nicht sicher: „Welches Produkt ist es?“ | PhotoAddChoose | ja | `PhotoMatchPicker`, `ProductPhotoMatcher` |
+|  | Per Foto hinzufügen – Beschreibung mit Quelle (Open Food Facts, ODbL) | PhotoAddDescription | ja | `OpenFoodFactsDescription`, `DescriptionSourceLine` |
 |  | Neuer Artikel (Produktdetails, leer) | ProductNew | ja | – (nur HTML) |
 |  | Foto hinzufügen – Quelle wählen | PhotoSourceDialog | ja | – (nur HTML) |
 |  | Neuer Artikel – Foto wird freigestellt (Vision, ab iOS 17) | PhotoCutoutScan | ja | `ProductDetailHero(isProcessing:)`, `ProductCutout` |

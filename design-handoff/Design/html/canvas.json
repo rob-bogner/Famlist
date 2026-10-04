@@ -38,6 +38,24 @@
    "x": 0,
    "y": 6280
   },
+  "AddInlineNoImages.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen – ohne Artikelbilder",
+   "w": 390,
+   "x": 940,
+   "y": 5276
+  },
+  "AddInlineNoImagesDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel hinzufügen – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 6280
+  },
   "AddInlineNoResults.dc.html": {
    "h": 844,
    "page": "screens",
@@ -80,7 +98,7 @@
    "radius": 44,
    "title": "Barcode – Artikel wird gesucht",
    "w": 390,
-   "x": 4230,
+   "x": 7050,
    "y": 5276
   },
   "BarcodeNoCamera.dc.html": {
@@ -89,7 +107,7 @@
    "radius": 44,
    "title": "Barcode – Kamera nicht verfügbar",
    "w": 390,
-   "x": 4700,
+   "x": 7520,
    "y": 5276
   },
   "BarcodeScan.dc.html": {
@@ -98,7 +116,7 @@
    "radius": 44,
    "title": "Barcode-Scanner (Kamera, immer dunkel)",
    "w": 390,
-   "x": 3760,
+   "x": 6580,
    "y": 5276
   },
   "CategoryIcons.dc.html": {
@@ -675,6 +693,24 @@
    "x": 3290,
    "y": 11296
   },
+  "ListNoImages.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – ohne Artikelbilder",
+   "w": 390,
+   "x": 1880,
+   "y": 15308
+  },
+  "ListNoImagesDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Liste – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 16312
+  },
   "ListOptions.dc.html": {
    "h": 844,
    "page": "screens",
@@ -909,13 +945,73 @@
    "x": 2350,
    "y": 1004
   },
+  "PhotoCutout.dc.html": {
+   "h": 844,
+   "w": 390,
+   "x": 9400,
+   "y": 0
+  },
+  "PhotoCutoutDone.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto freigestellt (Vorschlag aus dem Foto)",
+   "w": 390,
+   "x": 5640,
+   "y": 5276
+  },
+  "PhotoCutoutDoneDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto freigestellt (Vorschlag aus dem Foto) – Dark",
+   "w": 390,
+   "x": 5640,
+   "y": 6280
+  },
+  "PhotoCutoutFix.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Freistellung nachbessern",
+   "w": 390,
+   "x": 6110,
+   "y": 5276
+  },
+  "PhotoCutoutFixDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Freistellung nachbessern – Dark",
+   "w": 390,
+   "x": 6110,
+   "y": 6280
+  },
+  "PhotoCutoutScan.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto wird freigestellt",
+   "w": 390,
+   "x": 5170,
+   "y": 5276
+  },
+  "PhotoCutoutScanDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – Foto wird freigestellt – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 6280
+  },
   "PhotoSourceDialog.dc.html": {
    "h": 844,
    "page": "screens",
    "radius": 44,
    "title": "Foto hinzufügen – Quelle wählen",
    "w": 390,
-   "x": 1880,
+   "x": 4700,
    "y": 5276
   },
   "PhotoSourceDialogDark.dc.html": {
@@ -924,8 +1020,248 @@
    "radius": 44,
    "title": "Foto hinzufügen – Quelle wählen – Dark",
    "w": 390,
-   "x": 1880,
+   "x": 4700,
    "y": 6280
+  },
+  "PickA.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "A · Chip-Leisten",
+   "w": 390,
+   "x": 0,
+   "y": 2660
+  },
+  "PickADark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "A · Chip-Leisten – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 3664
+  },
+  "PickB.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "B · Kategorie-Raster",
+   "w": 390,
+   "x": 470,
+   "y": 2660
+  },
+  "PickBDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "B · Kategorie-Raster – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 3664
+  },
+  "PickC.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "C · Smarter Vorschlag",
+   "w": 390,
+   "x": 940,
+   "y": 2660
+  },
+  "PickCDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "C · Smarter Vorschlag – Dark",
+   "w": 390,
+   "x": 940,
+   "y": 3664
+  },
+  "PickD.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "D · Suchen & Anlegen",
+   "w": 390,
+   "x": 1410,
+   "y": 2660
+  },
+  "PickDDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "D · Suchen & Anlegen – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 3664
+  },
+  "PickE.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "E · Segment + Mehr",
+   "w": 390,
+   "x": 1880,
+   "y": 2660
+  },
+  "PickEDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "E · Segment + Mehr – Dark",
+   "w": 390,
+   "x": 1880,
+   "y": 3664
+  },
+  "PickF.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "F · Menge & Einheit kombiniert",
+   "w": 390,
+   "x": 2350,
+   "y": 2660
+  },
+  "PickFDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "F · Menge & Einheit kombiniert – Dark",
+   "w": 390,
+   "x": 2350,
+   "y": 3664
+  },
+  "PickG.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "G · Doppel-Rad",
+   "w": 390,
+   "x": 2820,
+   "y": 2660
+  },
+  "PickGDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "G · Doppel-Rad – Dark",
+   "w": 390,
+   "x": 2820,
+   "y": 3664
+  },
+  "PickH.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "H · Einheiten gruppiert",
+   "w": 390,
+   "x": 3290,
+   "y": 2660
+  },
+  "PickHDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "H · Einheiten gruppiert – Dark",
+   "w": 390,
+   "x": 3290,
+   "y": 3664
+  },
+  "PickI.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "I · Radial-Menü",
+   "w": 390,
+   "x": 3760,
+   "y": 2660
+  },
+  "PickIDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "I · Radial-Menü – Dark",
+   "w": 390,
+   "x": 3760,
+   "y": 3664
+  },
+  "PickJ.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "J · Schnelleingabe",
+   "w": 390,
+   "x": 4230,
+   "y": 2660
+  },
+  "PickJDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "J · Schnelleingabe – Dark",
+   "w": 390,
+   "x": 4230,
+   "y": 3664
+  },
+  "PickK.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "K · Karussell",
+   "w": 390,
+   "x": 4700,
+   "y": 2660
+  },
+  "PickKDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "K · Karussell – Dark",
+   "w": 390,
+   "x": 4700,
+   "y": 3664
+  },
+  "PickL.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "L · Inline aufklappen",
+   "w": 390,
+   "x": 5170,
+   "y": 2660
+  },
+  "PickLDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "L · Inline aufklappen – Dark",
+   "w": 390,
+   "x": 5170,
+   "y": 3664
+  },
+  "PickM.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "M · Glas-Popover",
+   "w": 390,
+   "x": 5640,
+   "y": 2660
+  },
+  "PickMDark.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "M · Glas-Popover – Dark",
+   "w": 390,
+   "x": 5640,
+   "y": 3664
+  },
+  "PickerLab.dc.html": {
+   "h": 844,
+   "w": 390,
+   "x": 9870,
+   "y": 0
   },
   "PriceHistory.dc.html": {
    "h": 844,
@@ -933,7 +1269,7 @@
    "radius": 44,
    "title": "Preisverlauf",
    "w": 390,
-   "x": 8930,
+   "x": 11750,
    "y": 5276
   },
   "PriceHistoryDark.dc.html": {
@@ -942,7 +1278,7 @@
    "radius": 44,
    "title": "Preisverlauf – Dark",
    "w": 390,
-   "x": 8930,
+   "x": 11750,
    "y": 6280
   },
   "ProductDetail.dc.html": {
@@ -951,7 +1287,7 @@
    "radius": 44,
    "title": "Produktdetails (Tipp auf das Artikelbild)",
    "w": 390,
-   "x": 5170,
+   "x": 7990,
    "y": 5276
   },
   "ProductDetailAmount.dc.html": {
@@ -960,7 +1296,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen",
    "w": 390,
-   "x": 8460,
+   "x": 11280,
    "y": 5276
   },
   "ProductDetailAmountDark.dc.html": {
@@ -969,7 +1305,25 @@
    "radius": 44,
    "title": "Artikel bearbeiten – Menge eintippen – Dark",
    "w": 390,
-   "x": 8460,
+   "x": 11280,
+   "y": 6280
+  },
+  "ProductDetailCategory.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Kategorie (Glas-Menü)",
+   "w": 390,
+   "x": 9400,
+   "y": 5276
+  },
+  "ProductDetailCategoryDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Kategorie (Glas-Menü) – Dark",
+   "w": 390,
+   "x": 9400,
    "y": 6280
   },
   "ProductDetailDark.dc.html": {
@@ -978,7 +1332,7 @@
    "radius": 44,
    "title": "Produktdetails (Tipp auf das Artikelbild) – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 7990,
    "y": 6280
   },
   "ProductDetailEdit.dc.html": {
@@ -987,7 +1341,7 @@
    "radius": 44,
    "title": "Artikel bearbeiten (Produktdetails)",
    "w": 390,
-   "x": 6110,
+   "x": 8930,
    "y": 5276
   },
   "ProductDetailEditDark.dc.html": {
@@ -996,7 +1350,25 @@
    "radius": 44,
    "title": "Artikel bearbeiten (Produktdetails) – Dark",
    "w": 390,
-   "x": 6110,
+   "x": 8930,
+   "y": 6280
+  },
+  "ProductDetailNoImage.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – ohne Artikelbilder",
+   "w": 390,
+   "x": 10340,
+   "y": 5276
+  },
+  "ProductDetailNoImageDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Produktdetails – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 10340,
    "y": 6280
   },
   "ProductDetailPhoto.dc.html": {
@@ -1005,7 +1377,7 @@
    "radius": 44,
    "title": "Produktdetails – eigenes Foto füllt den Kopf",
    "w": 390,
-   "x": 5640,
+   "x": 8460,
    "y": 5276
   },
   "ProductDetailPhotoDark.dc.html": {
@@ -1014,7 +1386,25 @@
    "radius": 44,
    "title": "Produktdetails – eigenes Foto füllt den Kopf – Dark",
    "w": 390,
-   "x": 5640,
+   "x": 8460,
+   "y": 6280
+  },
+  "ProductDetailUnit.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert)",
+   "w": 390,
+   "x": 9870,
+   "y": 5276
+  },
+  "ProductDetailUnitDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert) – Dark",
+   "w": 390,
+   "x": 9870,
    "y": 6280
   },
   "ProductImage.dc.html": {
@@ -1041,7 +1431,7 @@
    "radius": 44,
    "title": "Neuer Artikel (Produktdetails)",
    "w": 390,
-   "x": 1410,
+   "x": 4230,
    "y": 5276
   },
   "ProductNewDark.dc.html": {
@@ -1050,7 +1440,25 @@
    "radius": 44,
    "title": "Neuer Artikel (Produktdetails) – Dark",
    "w": 390,
-   "x": 1410,
+   "x": 4230,
+   "y": 6280
+  },
+  "ProductNewNoImage.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – ohne Artikelbilder",
+   "w": 390,
+   "x": 10810,
+   "y": 5276
+  },
+  "ProductNewNoImageDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Neuer Artikel – ohne Artikelbilder – Dark",
+   "w": 390,
+   "x": 10810,
    "y": 6280
   },
   "ProfileSetup.dc.html": {
@@ -1449,6 +1857,24 @@
    "x": 0,
    "y": 16312
   },
+  "SettingsImagesOff.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikelbilder aus",
+   "w": 390,
+   "x": 1410,
+   "y": 15308
+  },
+  "SettingsImagesOffDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einstellungen – Artikelbilder aus – Dark",
+   "w": 390,
+   "x": 1410,
+   "y": 16312
+  },
   "ShareMembers.dc.html": {
    "h": 844,
    "page": "screens",
@@ -1764,419 +2190,140 @@
    "x": 0,
    "y": 0
   },
-  "PickA.dc.html": {
+  "PhotoAddScan.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "A · Chip-Leisten",
-   "w": 390,
-   "x": 0,
-   "y": 2660
-  },
-  "PickADark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "A · Chip-Leisten – Dark",
-   "w": 390,
-   "x": 0,
-   "y": 3664
-  },
-  "PickB.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "B · Kategorie-Raster",
-   "w": 390,
-   "x": 470,
-   "y": 2660
-  },
-  "PickBDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "B · Kategorie-Raster – Dark",
-   "w": 390,
-   "x": 470,
-   "y": 3664
-  },
-  "PickC.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "C · Smarter Vorschlag",
-   "w": 390,
-   "x": 940,
-   "y": 2660
-  },
-  "PickCDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "C · Smarter Vorschlag – Dark",
-   "w": 390,
-   "x": 940,
-   "y": 3664
-  },
-  "PickD.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "D · Suchen & Anlegen",
-   "w": 390,
-   "x": 1410,
-   "y": 2660
-  },
-  "PickDDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "D · Suchen & Anlegen – Dark",
-   "w": 390,
-   "x": 1410,
-   "y": 3664
-  },
-  "PickE.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "E · Segment + Mehr",
-   "w": 390,
-   "x": 1880,
-   "y": 2660
-  },
-  "PickEDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "E · Segment + Mehr – Dark",
-   "w": 390,
-   "x": 1880,
-   "y": 3664
-  },
-  "PickF.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "F · Menge & Einheit kombiniert",
+   "title": "Per Foto hinzufügen – Erkennung",
    "w": 390,
    "x": 2350,
-   "y": 2660
+   "y": 5276
   },
-  "PickFDark.dc.html": {
+  "PhotoAddScanDark.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "F · Menge & Einheit kombiniert – Dark",
+   "title": "Per Foto hinzufügen – Erkennung – Dark",
    "w": 390,
    "x": 2350,
-   "y": 3664
+   "y": 6280
   },
-  "PickG.dc.html": {
+  "PhotoAddResult.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "G · Doppel-Rad",
+   "title": "Per Foto hinzufügen – vorausgefüllt (Open Food Facts)",
    "w": 390,
    "x": 2820,
-   "y": 2660
+   "y": 5276
   },
-  "PickGDark.dc.html": {
+  "PhotoAddResultDark.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "G · Doppel-Rad – Dark",
+   "title": "Per Foto hinzufügen – vorausgefüllt (Open Food Facts) – Dark",
    "w": 390,
    "x": 2820,
-   "y": 3664
+   "y": 6280
   },
-  "PickH.dc.html": {
+  "PhotoAddDescription.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "H · Einheiten gruppiert",
-   "w": 390,
-   "x": 3290,
-   "y": 2660
-  },
-  "PickHDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "H · Einheiten gruppiert – Dark",
-   "w": 390,
-   "x": 3290,
-   "y": 3664
-  },
-  "PickI.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "I · Radial-Menü",
+   "title": "Per Foto hinzufügen – Beschreibung mit Quelle (gescrollt)",
    "w": 390,
    "x": 3760,
-   "y": 2660
+   "y": 5276
   },
-  "PickIDark.dc.html": {
+  "PhotoAddDescriptionDark.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "I · Radial-Menü – Dark",
+   "title": "Per Foto hinzufügen – Beschreibung mit Quelle (gescrollt) – Dark",
    "w": 390,
    "x": 3760,
-   "y": 3664
-  },
-  "PickJ.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "J · Schnelleingabe",
-   "w": 390,
-   "x": 4230,
-   "y": 2660
-  },
-  "PickJDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "J · Schnelleingabe – Dark",
-   "w": 390,
-   "x": 4230,
-   "y": 3664
-  },
-  "PickK.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "K · Karussell",
-   "w": 390,
-   "x": 4700,
-   "y": 2660
-  },
-  "PickKDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "K · Karussell – Dark",
-   "w": 390,
-   "x": 4700,
-   "y": 3664
-  },
-  "PickL.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "L · Inline aufklappen",
-   "w": 390,
-   "x": 5170,
-   "y": 2660
-  },
-  "PickLDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "L · Inline aufklappen – Dark",
-   "w": 390,
-   "x": 5170,
-   "y": 3664
-  },
-  "PickM.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "M · Glas-Popover",
-   "w": 390,
-   "x": 5640,
-   "y": 2660
-  },
-  "PickMDark.dc.html": {
-   "h": 844,
-   "page": "prototypes",
-   "radius": 44,
-   "title": "M · Glas-Popover – Dark",
-   "w": 390,
-   "x": 5640,
-   "y": 3664
-  },
-  "ProductDetailCategory.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Artikel bearbeiten – Kategorie (Glas-Menü)",
-   "w": 390,
-   "x": 6580,
-   "y": 5276
-  },
-  "ProductDetailCategoryDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Artikel bearbeiten – Kategorie (Glas-Menü) – Dark",
-   "w": 390,
-   "x": 6580,
    "y": 6280
   },
-  "ProductDetailUnit.dc.html": {
+  "PhotoAddCapture.dc.html": {
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert)",
-   "w": 390,
-   "x": 7050,
-   "y": 5276
-  },
-  "ProductDetailUnitDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Artikel bearbeiten – Maßeinheit (Einheiten gruppiert) – Dark",
-   "w": 390,
-   "x": 7050,
-   "y": 6280
-  },
-  "AddInlineNoImages.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Artikel hinzufügen – ohne Artikelbilder",
-   "w": 390,
-   "x": 940,
-   "y": 5276
-  },
-  "AddInlineNoImagesDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Artikel hinzufügen – ohne Artikelbilder – Dark",
-   "w": 390,
-   "x": 940,
-   "y": 6280
-  },
-  "ProductDetailNoImage.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Produktdetails – ohne Artikelbilder",
-   "w": 390,
-   "x": 7520,
-   "y": 5276
-  },
-  "ProductDetailNoImageDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Produktdetails – ohne Artikelbilder – Dark",
-   "w": 390,
-   "x": 7520,
-   "y": 6280
-  },
-  "ProductNewNoImage.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Neuer Artikel – ohne Artikelbilder",
-   "w": 390,
-   "x": 7990,
-   "y": 5276
-  },
-  "ProductNewNoImageDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Neuer Artikel – ohne Artikelbilder – Dark",
-   "w": 390,
-   "x": 7990,
-   "y": 6280
-  },
-  "SettingsImagesOff.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Einstellungen – Artikelbilder aus",
+   "title": "Per Foto hinzufügen – Kamera (Barcode nebenbei)",
    "w": 390,
    "x": 1410,
-   "y": 15308
+   "y": 5276
   },
-  "SettingsImagesOffDark.dc.html": {
+  "PhotoAddCaptureDark.dc.html": {
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Einstellungen – Artikelbilder aus – Dark",
+   "title": "Per Foto hinzufügen – Kamera (Barcode nebenbei) – Dark",
    "w": 390,
    "x": 1410,
-   "y": 16312
-  },
-  "ListNoImages.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Liste – ohne Artikelbilder",
-   "w": 390,
-   "x": 1880,
-   "y": 15308
-  },
-  "ListNoImagesDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Liste – ohne Artikelbilder – Dark",
-   "w": 390,
-   "x": 1880,
-   "y": 16312
-  },
-  "PhotoCutoutScan.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Neuer Artikel – Foto wird freigestellt",
-   "w": 390,
-   "x": 2350,
-   "y": 5276
-  },
-  "PhotoCutoutScanDark.dc.html": {
-   "h": 844,
-   "page": "screens",
-   "radius": 44,
-   "title": "Neuer Artikel – Foto wird freigestellt – Dark",
-   "w": 390,
-   "x": 2350,
    "y": 6280
   },
-  "PhotoCutoutDone.dc.html": {
+  "PhotoAddCaptureBarcode.dc.html": {
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Neuer Artikel – Foto freigestellt (Vorschlag aus dem Foto)",
+   "title": "Per Foto hinzufügen – Kamera, Barcode erkannt",
    "w": 390,
-   "x": 2820,
+   "x": 1880,
    "y": 5276
   },
-  "PhotoCutoutDoneDark.dc.html": {
+  "PhotoAddCaptureBarcodeDark.dc.html": {
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Neuer Artikel – Foto freigestellt (Vorschlag aus dem Foto) – Dark",
+   "title": "Per Foto hinzufügen – Kamera, Barcode erkannt – Dark",
    "w": 390,
-   "x": 2820,
+   "x": 1880,
    "y": 6280
   },
-  "PhotoCutoutFix.dc.html": {
+  "PhotoAddChoose.dc.html": {
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Freistellung nachbessern",
+   "title": "Per Foto hinzufügen – „Welches Produkt ist es?“",
    "w": 390,
    "x": 3290,
    "y": 5276
   },
-  "PhotoCutoutFixDark.dc.html": {
+  "PhotoAddChooseDark.dc.html": {
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Freistellung nachbessern – Dark",
+   "title": "Per Foto hinzufügen – „Welches Produkt ist es?“ – Dark",
    "w": 390,
    "x": 3290,
    "y": 6280
+  },
+  "ReviewPhotoAddCapture.dc.html": {
+   "h": 844,
+   "page": "review",
+   "radius": 44,
+   "title": "1 · Kamera",
+   "w": 390,
+   "x": 0,
+   "y": 260
+  },
+  "ReviewPhotoAddCaptureBarcode.dc.html": {
+   "h": 844,
+   "page": "review",
+   "radius": 44,
+   "title": "2 · Barcode nebenbei erkannt",
+   "w": 390,
+   "x": 470,
+   "y": 260
+  },
+  "ReviewPhotoAddChoose.dc.html": {
+   "h": 844,
+   "page": "review",
+   "radius": 44,
+   "title": "3 · Nicht sicher: „Welches Produkt ist es?“",
+   "w": 390,
+   "x": 940,
+   "y": 260
   }
  },
  "createdOnFiles": {
@@ -2185,8 +2332,8 @@
  },
  "designSystems": [],
  "launch": {
-  "page": "screens",
-  "view": "canvas"
+  "view": "canvas",
+  "page": "review"
  },
  "notes": {
   "bausteine": {
@@ -2220,7 +2367,7 @@
    "kind": "title1",
    "maxW": 5560,
    "page": "screens",
-   "text": "3 · Artikel hinzufügen & bearbeiten → Kategorie (Glas-Menü) → Maßeinheit (Einheiten gruppiert) — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf · ohne Artikelbilder: Vorschläge, Produktdetails, Neuer Artikel · Foto → automatisch freigestellt (Vision) → Vorschlag Name/Kategorie + Nachbessern (Antippen oder langer Druck)",
+   "text": "3 · Artikel hinzufügen & bearbeiten → Kategorie (Glas-Menü) → Maßeinheit (Einheiten gruppiert) — Plus → keine Treffer → neuer Artikel → Foto → Barcode (suchen, ohne Kamera) → Produktdetails (Bild bzw. eigenes Foto) → bearbeiten → Menge → Preisverlauf · ohne Artikelbilder: Vorschläge, Produktdetails, Neuer Artikel · Foto → automatisch freigestellt (Vision) → Vorschlag Name/Kategorie + Nachbessern (Antippen oder langer Druck) · Per Foto hinzufügen (Kamera-Knopf in der Suchleiste): eigene Kamera mit Barcode nebenbei → Aufschrift → strenger Katalog-Abgleich (Wörter + Foto) → sicher übernehmen oder „Welches Produkt ist es?“",
    "w": 240,
    "x": 0,
    "y": 5016
@@ -2283,10 +2430,19 @@
    "kind": "title1",
    "maxW": 6000,
    "page": "prototypes",
+   "text": "Kategorie & Maßeinheit – Alternativen zum Dropdown (Entwurf 30.09.2026): A Chip-Leisten · B Raster · C Vorschlag · D Suche · E Segment · F Menge+Einheit · G Rad · H Gruppen · I Radial · J Schnelleingabe · K Karussell · L Aufklappen · M Popover",
    "w": 240,
    "x": 0,
-   "y": 2400,
-   "text": "Kategorie & Maßeinheit – Alternativen zum Dropdown (Entwurf 30.09.2026): A Chip-Leisten · B Raster · C Vorschlag · D Suche · E Segment · F Menge+Einheit · G Rad · H Gruppen · I Radial · J Schnelleingabe · K Karussell · L Aufklappen · M Popover"
+   "y": 2400
+  },
+  "review1": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "review",
+   "text": "Neu – bereits umgesetzt, zum Ansehen: „Per Foto hinzufügen“ belastbarer (Originale in User Journey 3). Nichts wird mehr geraten: Barcode = sicher, sonst strenger Abgleich, bei Unsicherheit fragt die App.",
+   "w": 240,
+   "x": 0,
+   "y": 0
   }
  },
  "order": [
@@ -2405,8 +2561,20 @@
   "FilterDoneEmptyDark.dc.html",
   "AddInlineNoResults.dc.html",
   "AddInlineNoImages.dc.html",
+  "PhotoAddCapture.dc.html",
+  "PhotoAddCaptureBarcode.dc.html",
+  "PhotoAddScan.dc.html",
+  "PhotoAddResult.dc.html",
+  "PhotoAddChoose.dc.html",
+  "PhotoAddDescription.dc.html",
   "AddInlineNoResultsDark.dc.html",
   "AddInlineNoImagesDark.dc.html",
+  "PhotoAddCaptureDark.dc.html",
+  "PhotoAddCaptureBarcodeDark.dc.html",
+  "PhotoAddScanDark.dc.html",
+  "PhotoAddResultDark.dc.html",
+  "PhotoAddChooseDark.dc.html",
+  "PhotoAddDescriptionDark.dc.html",
   "PhotoSourceDialog.dc.html",
   "PhotoCutoutScan.dc.html",
   "PhotoCutoutDone.dc.html",
@@ -2531,9 +2699,18 @@
   "PickL.dc.html",
   "PickLDark.dc.html",
   "PickM.dc.html",
-  "PickMDark.dc.html"
+  "PickMDark.dc.html",
+  "PhotoCutout.dc.html",
+  "PickerLab.dc.html",
+  "ReviewPhotoAddCapture.dc.html",
+  "ReviewPhotoAddCaptureBarcode.dc.html",
+  "ReviewPhotoAddChoose.dc.html"
  ],
  "pages": [
+  {
+   "id": "review",
+   "name": "Zur Freigabe"
+  },
   {
    "id": "screens",
    "name": "User Journey"
