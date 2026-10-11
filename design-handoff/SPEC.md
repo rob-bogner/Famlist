@@ -148,7 +148,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 
 1. **Artikel hinzufügen**
    - Der **Plus-Button (FAB)** öffnet die Eingabe unten über der Tastatur (AddInline). Das Popup mit Vorschlägen wächst nach oben; jeder Vorschlag hat einen runden Glas-„+“.
-   - Senden/Return fügt den besten Treffer hinzu. Kein Treffer → „„…“ als neuen Artikel anlegen“ → Neuer Artikel (Name vorbefüllt), siehe AddInlineNoResults.
+   - Senden/Return fügt den besten Treffer hinzu. Nach jedem Hinzufügen (Glas-„+“ oder Senden) schließt die Eingabe (seit 11.10.2026). Kein Treffer → „„…“ als neuen Artikel anlegen“ → Neuer Artikel (Name vorbefüllt), siehe AddInlineNoResults.
    - **Produktdetails** (ProductDetail, seit 28.09.2026) ist EIN Screen für neu, ansehen und bearbeiten: Sheet (790 hoch, oben Radius 34, Griff, Herunterziehen schließt) über der abgedunkelten Liste, oben großes Produktbild (330, unten Radius 40), ✕ oben rechts (14 / 16), Glas-Stift „Bearbeiten“ unten rechts am Bild (nur Ansehen; beim Bearbeiten sitzt dort der Kamera-Knopf „Bild ändern“). Darunter Name + Marke links, aktueller Preis rechts, Karten Kategorie · Maßeinheit · Menge in der Liste · Preisverlauf, dann Beschreibung.
    - Tipp auf das Artikelbild in der Liste → Ansehen; Stift → dieselben Stellen werden Eingabefelder (ProductDetailEdit), „Speichern“ → zurück zu Ansehen. Wischaktion „Bearbeiten“ öffnet direkt das Bearbeiten. Neuer Artikel = ProductNew (leere Felder, Platzhalter „Foto hinzufügen“ füllt den ganzen Bildbereich wie ein Foto – gestrichelt, 12 pt Rand, 24 oben unter dem Griff, Kamera-Kugel 72, „Kamera oder Mediathek“; „Zur Liste hinzufügen“).
    - Öffnet ohne Fokus; Tastatur offen → Sheet volle Höhe. Kategorie öffnet das Glas-Menü (ProductDetailCategory: Suche, 6 Zeilen, „Ohne Kategorie“, „Neue Kategorie“), Maßeinheit klappt darunter die Einheiten auf (ProductDetailUnit: Zählen · Gewicht · Volumen · Länge). Beide klappen zu, sobald ein anderes Feld den Fokus bekommt.
@@ -157,7 +157,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
    - Die Suchleiste oben **filtert nur die Artikel der aktuellen Liste** (SearchInline; Name und Marke, ohne Groß-/Kleinschreibung und Akzente). Findet der Filter nichts, bietet er „… hinzufügen“ an. Während Filter oder Eingabe offen sind, ist das Dock ausgeblendet.
 2. **Per Barcode**
    - Scan-Knopf in der Eingabe unten → Barcode-Scanner.
-   - Erkannter Artikel → „Zur Liste hinzufügen“. Während der Suche „Artikel wird gesucht …“ (BarcodeLookup); ohne Kamera Hinweis „Kamera nicht verfügbar“ (BarcodeNoCamera). Unbekannter Code → Neuer Artikel (vorbefüllt).
+   - Erkannter Artikel → „Zur Liste hinzufügen“ legt ihn an und schließt den Scanner (seit 11.10.2026); „Weiter scannen“ verwirft den Treffer und scannt weiter. Während der Suche „Artikel wird gesucht …“ (BarcodeLookup); ohne Kamera Hinweis „Kamera nicht verfügbar“ (BarcodeNoCamera). Unbekannter Code → Neuer Artikel (vorbefüllt).
 3. **Menge**
    - Stepper plus direktes Eintippen der Zahl; beim Tippen ersetzt eine Schnellwahl-Leiste den Hauptknopf (EditItemAmount).
    - Schrittweite je Einheit: g/ml 50, kg/l/m 0,1 (gedrückt halten: 1), sonst 1. Kommazahlen sind erlaubt (1,5 kg). Grenzen 1 … 9999, bei 0,1-Schritten ab 0,1.

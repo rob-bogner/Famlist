@@ -75,7 +75,7 @@ final class BarcodeScanViewModel: ObservableObject {
         quantity = quantity >= 9 ? 1 : quantity + 1
     }
 
-    /// „Weiter scannen“ bzw. nach dem Hinzufügen.
+    /// „Weiter scannen“: erkannten Artikel verwerfen und die Kamera wieder freigeben.
     func resume() {
         state = .scanning
         quantity = 1

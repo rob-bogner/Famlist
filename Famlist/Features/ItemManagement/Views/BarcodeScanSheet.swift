@@ -15,6 +15,7 @@
  - Die Karte erscheint erst, wenn ein Code einen Artikel trifft. Unbekannte Codes → `onUnknown`.
 
  📝 Last Change:
+ - „Zur Liste hinzufügen“ schließt den Scanner (11.10.2026, vorher lief die Kamera weiter).
  - Initial creation (Redesign „Hybrid“, Phase 3).
  ------------------------------------------------------------------------
  */
@@ -184,9 +185,10 @@ struct BarcodeScanSheet: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Menge: \(quantityText)")
                 .accessibilityHint("Tippen erhöht die Menge")
+                // Kein vm.resume(): Die Kamera bliebe sonst beim Schließen aktiv und läse denselben Code erneut.
                 CTAButton(title: "Zur Liste hinzufügen", k: k) {
                     onAdd(product, vm.quantity)
-                    vm.resume()
+                    onClose()
                 }
             }
 

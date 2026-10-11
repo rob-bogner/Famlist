@@ -13,11 +13,12 @@
    daneben neutraler Glas-Knopf ✕ 44.
  - Pop-up 12 über dem Feld, wächst nach oben; bester Treffer direkt über dem Feld:
    oben „„…“ als neuen Artikel anlegen“, dann „Weitere Produkte“, unten „Deine Artikel“.
- - „+“ fügt hinzu (bzw. erhöht die Menge), das Feld bleibt aktiv für den nächsten Artikel.
+ - „+“ fügt hinzu (bzw. erhöht die Menge) und schließt die Eingabe.
    Tastatur-Taste übernimmt den besten Treffer (ohne Treffer: neu anlegen).
- - Schließen: ✕ oder Tipp auf die abgedunkelte Liste. Suche/Filter der Liste ist davon getrennt (ListFilterField).
+ - Schließen ohne Hinzufügen: ✕ oder Tipp auf die abgedunkelte Liste. Suche/Filter der Liste ist davon getrennt (ListFilterField).
 
  📝 Last Change:
+ - Eingabe schließt nach dem Hinzufügen (11.10.2026, vorher blieb das Feld für den nächsten Artikel aktiv).
  - Aus InlineSearchOverlay: Eingabe unten statt oben, Glas-Knöpfe, Suche oben ist jetzt Filter.
  ------------------------------------------------------------------------
  */
@@ -224,8 +225,6 @@ struct InlineAddOverlay: View {
         guard !query.isEmpty else { close(); return }
         if let best = searchVM.personalResults.first ?? searchVM.globalResults.first {
             add(best)
-            searchVM.searchText = ""
-            focused = true
         } else {
             createNew()
         }
@@ -237,7 +236,7 @@ struct InlineAddOverlay: View {
         onCreateNew(name)
     }
 
-    /// Hinzufügen (bzw. Menge +1), Feld bleibt aktiv; „+“ zeigt 1,2 s einen Haken.
+    /// Hinzufügen (bzw. Menge +1), danach schließt die Eingabe; „+“ zeigt beim Ausblenden einen Haken.
     private func add(_ result: SearchResult) {
         guard let ownerPublicId = listViewModel.defaultList?.ownerId.uuidString else {
             logVoid(params: (action: "inlineAdd.add.skipped", reason: "defaultList.ownerId is nil"))
@@ -246,10 +245,7 @@ struct InlineAddOverlay: View {
         let item = result.entry.toItemModel(listId: listViewModel.listId.uuidString, ownerPublicId: ownerPublicId)
         listViewModel.addItem(item, remoteImageURL: result.entry.imageUrl) // Katalog-Bild nachladen (ohne eigenes Foto)
         justAdded.insert(result.id)
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
-            justAdded.remove(result.id)
-        }
+        close()
     }
 
     private func close() {
