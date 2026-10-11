@@ -408,3 +408,16 @@ Abgleich (`ProductPhotoMatcher`):
 - Entscheidung: ≥ 0,8 und klar vorn (oder nur Dubletten desselben Produkts) → sicher; ≥ 0,45 → „Welches Produkt ist es?“; sonst nur Gelesenes (Marke aus dem Katalog, falls sie auf der Packung steht).
 - Tests: `ProductPhotoMatcherTests` (Butter ≠ Erdnussbutter, Süßrahmbutter sicher, fremde Marke nicht angeboten).
 - **Migration 036 einspielen** (sonst Rückfall auf die normale Suche).
+
+### Geteilte Liste: Profilbild am Mengen-Chip (11.10.2026)
+
+| Board | Umsetzung |
+|---|---|
+| ListShared / ListSharedNoImages | `ItemCard.detailRow`: `ContributorAvatar` (24, Rand in Kartenfarbe) direkt neben dem Mengen-Chip – mit und ohne Artikelbilder. Nur wenn ein ANDERES Mitglied den Artikel hinzugefügt hat; ohne Foto Initiale auf fester Farbe je Person |
+
+- Daten: `items.created_by` (Migration 037 + 039, beide live). Der Trigger setzt `auth.uid()` beim Anlegen und wenn ein Artikel zurück auf die Liste kommt (gelöscht → wieder hinzugefügt, abgehakt → wieder offen); sonst bleibt der Wert. Grund: Artikelzeilen werden wiederverwendet (ID aus Liste + Name). Nebenwirkung: „Zurücksetzen“ bzw. ein entfernter Haken zählt als Hinzufügen (Entscheidung Robert 11.10.2026). Altbestand leer → kein Profilbild. `SwiftDataItemStore.writeLocal` spiegelt die Regel lokal (entfernt den bisherigen Ersteller), weil die Antwort des Servers auf die eigene Änderung nicht übernommen wird. `ItemModel.createdBy`, `ItemEntity.createdBy`, `SupabaseItemRow.columns`, Realtime.
+- Mitglieder: `ListContributorsStore` (Mitglieder + Besitzer ohne den angemeldeten Nutzer, Profil über `profile(id:)`, Foto per signiertem Link, 72 px im Speicher). Weitergabe über die Umgebung `\.itemContributors` aus `ShoppingListView`; neu laden bei Listenwechsel und wenn ein Artikel von einer unbekannten Person auftaucht.
+- Watch: kein Profilbild (zu wenig Platz).
+- Schatten: Ring und Schatten des Profilbilds über `CSSBox` (nicht `.shadow`) – ein weicher SwiftUI-Schatten je Zeile ließ die Liste beim Scrollen stottern (Gerät, 11.10.2026).
+- Tests: `ItemCreatedByTests`; Prüfskript `migrations/tests/039_items_created_by_on_return_check.sql`.
+

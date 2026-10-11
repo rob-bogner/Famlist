@@ -92,6 +92,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Liste – nur Wischen (ohne Kreis) | ListSwipeOnly | ja | – (nur HTML) |
 |  | Einstellungen – Artikelbilder aus | SettingsImagesOff | ja | – |
 |  | Liste – ohne Artikelbilder | ListNoImages | ja | – |
+|  | Geteilte Liste – Profilbild am Mengen-Chip (Artikel anderer Mitglieder) | ListShared, ListSharedNoImages | ja | `ContributorAvatar`, `ListContributorsStore` |
 |  | Abmelden – ungesendete Änderungen | SignOutDialog | ja | – (nur HTML) |
 |  | Profil bearbeiten | EditProfile | ja | `EditProfileScreen` |
 |  | Kassenzettel-Archiv | ReceiptArchive | ja | – (nur HTML) |

@@ -107,8 +107,8 @@ input::placeholder{color:inherit;opacity:1}
 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: -6px">
 <sc-for list="{{fruits}}" as="f" hint-placeholder-count="5">
 <div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px">
-<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; overflow: hidden; flex-shrink: 0"><img src="{{f.img}}" alt="" width="64" height="64" style="display: block; width: 64px; height: 64px"></div></sc-if>
-<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">{{f.name}}</span><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap">{{f.qty}}</span></div>
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="position: relative; width: 64px; height: 64px; flex-shrink: 0"><div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; overflow: hidden; flex-shrink: 0"><img src="{{f.img}}" alt="" width="64" height="64" style="display: block; width: 64px; height: 64px"></div><sc-if value="{{f.hasBy}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="Hinzugefügt von {{f.by}}" style="position: absolute; right: -6px; bottom: -6px; width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2.5px solid {{t.byRing}}; background: {{f.byBg}}; box-shadow: 0 3px 8px -2px rgba(12,40,44,0.35); display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 12px; font-weight: 700">{{f.byInitial}}</span></sc-if></div></sc-if>
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">{{f.name}}</span><span style="display: flex; align-items: center; gap: 8px"><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap">{{f.qty}}</span><sc-if value="{{f.hasByInline}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="Hinzugefügt von {{f.by}}" style="width: 24px; height: 24px; border-radius: 50%; background: {{f.byBg}}; box-shadow: 0 0 0 2px {{t.byRing}}, 0 2px 6px -2px rgba(12,40,44,0.35); display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 11px; font-weight: 700; flex-shrink: 0">{{f.byInitial}}</span></sc-if></span></div>
 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{f.price}}</span></div>
 </div>
 </sc-for>
@@ -235,7 +235,7 @@ input::placeholder{color:inherit;opacity:1}
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"check":{"editor":"enum","default":"both","options":["both","swipe","circle"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"images":{"editor":"enum","default":"on","options":["on","off"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"check":{"editor":"enum","default":"both","options":["both","swipe","circle"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"shared":{"editor":"enum","default":"off","options":["off","on"]},"images":{"editor":"enum","default":"on","options":["on","off"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -309,8 +309,9 @@ class Component extends DCLogic {
       shadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 8px 16px -8px rgba(12,40,44,0.35)',
       gloss: 'rgba(255,255,255,0.95)', glow: 'rgba(255,255,255,0.6)', icon: '#1E3A3E'
     };
-    return {
+    const __v = {
       images: (this.props.images ?? 'on') === 'on',
+      fruits: undefined,
       gn,
       full: !compact, compact,
       more: [{ name: 'Milch', qty: '2 Liter', price: '2,38 €' }, { name: 'Eier', qty: '10 Stück', price: '3,29 €' },
@@ -328,10 +329,10 @@ class Component extends DCLogic {
       strike: checked ? 'line-through' : 'none',
       empty: state === 'empty', hasItems: state !== 'empty' && !filterEmpty && state !== 'fruit', filterEmpty,
       fruit: state === 'fruit',
-      fruits: [
+      fruitsRaw: [
         { name: 'Bananen', qty: '6 Stück', price: '1,49 €', img: 'assets/fruit/fruit.banana.svg' },
-        { name: 'Äpfel', qty: '1 kg', price: '2,49 €', img: 'assets/fruit/fruit.apple.svg' },
-        { name: 'Orangen', qty: '4 Stück', price: '2,99 €', img: 'assets/fruit/fruit.orange.svg' },
+        { name: 'Äpfel', qty: '1 kg', price: '2,49 €', img: 'assets/fruit/fruit.apple.svg', by: 'Anna', byBg: 'center / cover no-repeat url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjRkZEOUI4Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRjRBOTdBIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTEwIDY0YzItMTMgMTEtMTkgMjItMTlzMjAgNiAyMiAxOXoiIGZpbGw9IiMzRTZFOEUiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjI4IiByPSIxMiIgZmlsbD0iI0U4QjQ4RiIvPjxwYXRoIGQ9Ik0xOSAyN2MwLTEwIDctMTUgMTQtMTUgOCAwIDEzIDYgMTIgMTQtMy00LTgtNi0xMy02LTUgMC05IDMtMTMgN3oiIGZpbGw9IiM1QTNBMkEiLz48L3N2Zz4=)', byInitial: '' },
+        { name: 'Orangen', qty: '4 Stück', price: '2,99 €', img: 'assets/fruit/fruit.orange.svg', by: 'Max', byBg: 'linear-gradient(150deg, #9C8CFF, #6A55E0)', byInitial: 'M' },
         { name: 'Erdbeeren', qty: '500 g', price: '3,49 €', img: 'assets/fruit/fruit.strawberry.svg' },
         { name: 'Ananas', qty: '1 Stück', price: '2,29 €', img: 'assets/fruit/fruit.pineapple.svg' }
       ],
@@ -373,6 +374,10 @@ class Component extends DCLogic {
         ? 'inset 0 -4px 10px rgba(0,30,34,0.3), 0 12px 22px -10px ' + rgba(accent, 0.55) + ', 0 0 14px ' + rgba(accent, 0.18)
         : 'inset 0 -4px 10px rgba(0,30,34,0.3), 0 16px 28px -8px ' + rgba(accent, 0.75) + ', 0 0 36px ' + rgba(accent, 0.35)
     };
+    const __shared = (this.props.shared ?? 'off') === 'on';
+    __v.fruits = __v.fruitsRaw.map((f) => Object.assign({}, f, { hasBy: false, hasByInline: __shared && !!f.by }));
+    __v.t.byRing = (this.props.theme ?? 'light') === 'dark' ? '#16282B' : '#FFFFFF';
+    return __v;
   }
 }
 </script>
