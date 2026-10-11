@@ -80,7 +80,7 @@
    "radius": 44,
    "title": "Gelöschtes Mitglied entfernen",
    "w": 390,
-   "x": 10340,
+   "x": 11280,
    "y": 15308
   },
   "ArchivedMemberRemoveDark.dc.html": {
@@ -89,7 +89,7 @@
    "radius": 44,
    "title": "Gelöschtes Mitglied entfernen – Dark",
    "w": 390,
-   "x": 10340,
+   "x": 11280,
    "y": 16312
   },
   "BarcodeLookup.dc.html": {
@@ -233,7 +233,7 @@
    "radius": 44,
    "title": "Konto löschen",
    "w": 390,
-   "x": 7050,
+   "x": 7990,
    "y": 15308
   },
   "DeleteAccountDark.dc.html": {
@@ -242,7 +242,7 @@
    "radius": 44,
    "title": "Konto löschen – Dark",
    "w": 390,
-   "x": 7050,
+   "x": 7990,
    "y": 16312
   },
   "DeleteChoice.dc.html": {
@@ -357,7 +357,7 @@
    "radius": 44,
    "title": "Profil bearbeiten",
    "w": 390,
-   "x": 4230,
+   "x": 5170,
    "y": 15308
   },
   "EditProfileDark.dc.html": {
@@ -366,7 +366,7 @@
    "radius": 44,
    "title": "Profil bearbeiten – Dark",
    "w": 390,
-   "x": 4230,
+   "x": 5170,
    "y": 16312
   },
   "EmptyList.dc.html": {
@@ -798,7 +798,7 @@
    "radius": 44,
    "title": "Hinweis für Listenbesitzer",
    "w": 390,
-   "x": 9400,
+   "x": 10340,
    "y": 15308
   },
   "MemberDeletedToastDark.dc.html": {
@@ -807,7 +807,7 @@
    "radius": 44,
    "title": "Hinweis für Listenbesitzer – Dark",
    "w": 390,
-   "x": 9400,
+   "x": 10340,
    "y": 16312
   },
   "MenuOverlay.dc.html": {
@@ -1599,7 +1599,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv",
    "w": 390,
-   "x": 4700,
+   "x": 5640,
    "y": 15308
   },
   "ReceiptArchiveDark.dc.html": {
@@ -1608,7 +1608,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – Dark",
    "w": 390,
-   "x": 4700,
+   "x": 5640,
    "y": 16312
   },
   "ReceiptArchiveEmpty.dc.html": {
@@ -1617,7 +1617,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer",
    "w": 390,
-   "x": 5170,
+   "x": 6110,
    "y": 15308
   },
   "ReceiptArchiveEmptyDark.dc.html": {
@@ -1626,7 +1626,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 6110,
    "y": 16312
   },
   "ReceiptArchiveInsights.dc.html": {
@@ -1680,7 +1680,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung",
    "w": 390,
-   "x": 6580,
+   "x": 7520,
    "y": 15308
   },
   "ReceiptDeleteDialogDark.dc.html": {
@@ -1689,7 +1689,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung – Dark",
    "w": 390,
-   "x": 6580,
+   "x": 7520,
    "y": 16312
   },
   "ReceiptDetail.dc.html": {
@@ -1698,7 +1698,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail",
    "w": 390,
-   "x": 5640,
+   "x": 6580,
    "y": 15308
   },
   "ReceiptDetailDark.dc.html": {
@@ -1707,7 +1707,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail – Dark",
    "w": 390,
-   "x": 5640,
+   "x": 6580,
    "y": 16312
   },
   "ReceiptDetailMeta.dc.html": {
@@ -1734,7 +1734,7 @@
    "radius": 44,
    "title": "Kassenzettel – Vollbild (immer dunkel)",
    "w": 390,
-   "x": 6110,
+   "x": 7050,
    "y": 15308
   },
   "ReceiptItemNutrition.dc.html": {
@@ -1851,7 +1851,7 @@
    "radius": 44,
    "title": "Konto wiederherstellen (nach Anmeldung)",
    "w": 390,
-   "x": 7520,
+   "x": 8460,
    "y": 15308
   },
   "RestoreAccountDark.dc.html": {
@@ -1860,7 +1860,7 @@
    "radius": 44,
    "title": "Konto wiederherstellen (nach Anmeldung) – Dark",
    "w": 390,
-   "x": 7520,
+   "x": 8460,
    "y": 16312
   },
   "RestoreAccountLoading.dc.html": {
@@ -1869,7 +1869,7 @@
    "radius": 44,
    "title": "Wiederherstellen – lädt",
    "w": 390,
-   "x": 7990,
+   "x": 8930,
    "y": 15308
   },
   "RestoreAccountLoadingDark.dc.html": {
@@ -1878,7 +1878,7 @@
    "radius": 44,
    "title": "Wiederherstellen – lädt – Dark",
    "w": 390,
-   "x": 7990,
+   "x": 8930,
    "y": 16312
   },
   "RestoreAccountOffline.dc.html": {
@@ -1887,7 +1887,7 @@
    "radius": 44,
    "title": "Wiederherstellen – offline",
    "w": 390,
-   "x": 8460,
+   "x": 9400,
    "y": 15308
   },
   "RestoreAccountOfflineDark.dc.html": {
@@ -1896,7 +1896,7 @@
    "radius": 44,
    "title": "Wiederherstellen – offline – Dark",
    "w": 390,
-   "x": 8460,
+   "x": 9400,
    "y": 16312
   },
   "RestorePurgeDialog.dc.html": {
@@ -1905,7 +1905,7 @@
    "radius": 44,
    "title": "Jetzt endgültig löschen",
    "w": 390,
-   "x": 8930,
+   "x": 9870,
    "y": 15308
   },
   "RestorePurgeDialogDark.dc.html": {
@@ -1914,7 +1914,7 @@
    "radius": 44,
    "title": "Jetzt endgültig löschen – Dark",
    "w": 390,
-   "x": 8930,
+   "x": 9870,
    "y": 16312
   },
   "SearchInline.dc.html": {
@@ -2004,7 +2004,7 @@
    "radius": 44,
    "title": "Mitglieder – Konto gelöscht",
    "w": 390,
-   "x": 9870,
+   "x": 10810,
    "y": 15308
   },
   "ShareMembersArchivedDark.dc.html": {
@@ -2013,7 +2013,7 @@
    "radius": 44,
    "title": "Mitglieder – Konto gelöscht – Dark",
    "w": 390,
-   "x": 9870,
+   "x": 10810,
    "y": 16312
   },
   "ShareMembersDark.dc.html": {
@@ -2157,7 +2157,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen",
    "w": 390,
-   "x": 3760,
+   "x": 4700,
    "y": 15308
   },
   "SignOutDialogDark.dc.html": {
@@ -2166,7 +2166,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen – Dark",
    "w": 390,
-   "x": 3760,
+   "x": 4700,
    "y": 16312
   },
   "SlideToDelete.dc.html": {
@@ -2414,39 +2414,39 @@
   },
   "ListBrand.dc.html": {
    "h": 844,
-   "page": "review",
+   "page": "screens",
    "radius": 44,
-   "title": "Marke unter dem Namen",
+   "title": "Artikelkarte – Marke unter dem Namen",
    "w": 390,
-   "x": 0,
-   "y": 260
+   "x": 3760,
+   "y": 15308
   },
   "ListBrandDark.dc.html": {
    "h": 844,
-   "page": "review",
+   "page": "screens",
    "radius": 44,
-   "title": "Marke unter dem Namen – Dark",
+   "title": "Artikelkarte – Marke unter dem Namen – Dark",
    "w": 390,
-   "x": 470,
-   "y": 260
+   "x": 3760,
+   "y": 16312
   },
   "ListBrandNoImages.dc.html": {
    "h": 844,
-   "page": "review",
+   "page": "screens",
    "radius": 44,
-   "title": "ohne Artikelbilder",
+   "title": "Artikelkarte – Marke unter dem Namen, ohne Bilder",
    "w": 390,
-   "x": 940,
-   "y": 260
+   "x": 4230,
+   "y": 15308
   },
   "ListBrandNoImagesDark.dc.html": {
    "h": 844,
-   "page": "review",
+   "page": "screens",
    "radius": 44,
-   "title": "ohne Artikelbilder – Dark",
+   "title": "Artikelkarte – Marke unter dem Namen, ohne Bilder – Dark",
    "w": 390,
-   "x": 1410,
-   "y": 260
+   "x": 4230,
+   "y": 16312
   }
  },
  "createdOnFiles": {
@@ -2456,7 +2456,7 @@
  "designSystems": [],
  "launch": {
   "view": "canvas",
-  "page": "review"
+  "page": "screens"
  },
  "notes": {
   "bausteine": {
@@ -2571,7 +2571,7 @@
    "kind": "title1",
    "maxW": 1800,
    "page": "review",
-   "text": "Zur Freigabe: Marke direkt unter dem Namen (zwischen Name und Menge); Abhak-Kreis rückt mit nach oben, Preis bleibt unten auf Höhe der Menge.",
+   "text": "Zur Freigabe: gerade nichts offen. „Marke unter dem Namen“ ist umgesetzt (User Journey, Reihe der Liste).",
    "w": 240,
    "x": 0,
    "y": 0
@@ -2806,12 +2806,16 @@
   "ListShared.dc.html",
   "ListSharedNoImages.dc.html",
   "ListQuantityEdit.dc.html",
+  "ListBrand.dc.html",
+  "ListBrandNoImages.dc.html",
   "ListSwipeOnlyDark.dc.html",
   "SettingsImagesOffDark.dc.html",
   "ListNoImagesDark.dc.html",
   "ListSharedDark.dc.html",
   "ListSharedNoImagesDark.dc.html",
   "ListQuantityEditDark.dc.html",
+  "ListBrandDark.dc.html",
+  "ListBrandNoImagesDark.dc.html",
   "PickA.dc.html",
   "PickADark.dc.html",
   "PickB.dc.html",
@@ -2846,11 +2850,7 @@
   "ShopTrip.dc.html",
   "ShopTripDark.dc.html",
   "ShopPlan.dc.html",
-  "ShopPlanDark.dc.html",
-  "ListBrand.dc.html",
-  "ListBrandDark.dc.html",
-  "ListBrandNoImages.dc.html",
-  "ListBrandNoImagesDark.dc.html"
+  "ShopPlanDark.dc.html"
  ],
  "pages": [
   {

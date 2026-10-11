@@ -430,3 +430,11 @@ Abgleich (`ProductPhotoMatcher`):
 
 - Abgehakte Artikel: Chip nicht antippbar.
 
+### Artikelkarte: Marke unter dem Namen (12.10.2026)
+
+| Board | Umsetzung |
+|---|---|
+| ListBrand / ListBrandNoImages | `ItemCard`: Name · Marke (DM 13/500, sub, eine Zeile) · Mengen-Zeile (Abstand 6, ohne Marke 8). Rechte Spalte: Kreis oben auf Höhe des Namens, Preis unten auf Höhe der Menge (Abstand oben/unten 8 mit Marke, sonst 14). Ohne Bild links derselbe Abstand wie rechts (15) |
+
+- „Nicht verfügbar“ bleibt als Chip in der Mengen-Zeile; die Marke steht trotzdem darüber.
+

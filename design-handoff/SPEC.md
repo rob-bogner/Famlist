@@ -94,6 +94,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Liste – ohne Artikelbilder | ListNoImages | ja | – |
 |  | Geteilte Liste – Profilbild am Mengen-Chip (Artikel anderer Mitglieder) | ListShared, ListSharedNoImages | ja | `ContributorAvatar`, `ListContributorsStore` |
 |  | Liste – Menge direkt ändern (Chip → Pille, Foto bündig) | ListQuantityEdit | ja | `InlineQuantityPill`, `InlineQuantityEditor`, `ItemThumbnailTile(flush:)` |
+|  | Artikelkarte – Marke unter dem Namen | ListBrand, ListBrandNoImages | ja | `ItemCard` |
 |  | Abmelden – ungesendete Änderungen | SignOutDialog | ja | – (nur HTML) |
 |  | Profil bearbeiten | EditProfile | ja | `EditProfileScreen` |
 |  | Kassenzettel-Archiv | ReceiptArchive | ja | – (nur HTML) |

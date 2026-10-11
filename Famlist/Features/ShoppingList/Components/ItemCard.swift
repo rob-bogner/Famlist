@@ -20,6 +20,7 @@
    Berührung fest, dann ließe sich die Zeile nicht wischen, wenn der Daumen dort aufsetzt.
 
  📝 Last Change:
+ - Marke direkt unter dem Namen, Kreis oben auf Höhe des Namens, Preis unten (12.10.2026).
  - Variante A: Foto so hoch wie die Karte, links bündig (ItemThumbnailTile flush); Mengen-Chip antippen → Eingabe-Pille (InlineQuantityPill), 12.10.2026.
  - Geteilte Liste: Profilbild des Mitglieds, das den Artikel hinzugefügt hat, neben dem Mengen-Chip (11.10.2026).
  - Bild-Kachel nur mit „Artikelbilder anzeigen“; ohne öffnet der Name die Produktdetails (30.09.2026).
@@ -74,14 +75,24 @@ struct ItemCard: View {
                     .opacity(dimmed ? 0.55 : 1)
             }
 
-            VStack(alignment: .leading, spacing: 8) {
+            // Name · Marke (direkt darunter) · Menge (Design: ListBrand, 12.10.2026)
+            VStack(alignment: .leading, spacing: 0) {
                 Text(highlightedName)
                     .font(AppFont.outfit(19, 600))
                     .foregroundStyle(t.text)
                     .strikethrough(item.isChecked, color: t.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
+                if let brand {
+                    Text(brand)
+                        .font(AppFont.dm(13, 500))
+                        .foregroundStyle(t.sub)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .padding(.top, 1)
+                }
                 detailRow
+                    .padding(.top, brand == nil ? 8 : 6)
             }
             .opacity(dimmed ? 0.55 : 1)
             // Ohne Bild-Kachel öffnet der Name die Produktdetails.
@@ -92,9 +103,10 @@ struct ItemCard: View {
             if item.isSyncFailed { syncFailedIcon }
             trailingColumn
         }
-        // 1 border + 14 padding; mit Bild liegt das Foto links bündig in der Karte (Variante A, 12.10.2026)
+        // 1 border + 14 padding; mit Bild liegt das Foto links bündig in der Karte (Variante A, 12.10.2026).
+        // Oben/unten nur der Rand: Text-Spalte ist zentriert, die rechte Spalte setzt ihren Abstand selbst.
         .padding(.leading, showImages ? 1 : 15)
-        .padding(.vertical, showImages ? 1 : 15)
+        .padding(.vertical, 1)
         .padding(.trailing, 15)
         .frame(maxWidth: .infinity)
         .frame(height: 94)
@@ -135,7 +147,7 @@ struct ItemCard: View {
         }
     }
 
-    /// Mengen-Chip (antippen → Pille), Profilbild, „Nicht verfügbar“ bzw. Marke.
+    /// Mengen-Chip (antippen → Pille), Profilbild, „Nicht verfügbar“.
     private var detailChips: some View {
         HStack(spacing: 8) {
             quantityChip
@@ -153,14 +165,14 @@ struct ItemCard: View {
                     .background(CSSBox(shape: Pill, paint: .color(.rgba(240, 138, 44, t.isDark ? 0.18 : 0.12)),
                                        shadows: [.inner(0, 0, 0, 1, .rgba(240, 138, 44, 0.3))]))
                     .fixedSize()
-            } else if let brand = item.brand, !brand.isEmpty {
-                Text(brand)
-                    .font(AppFont.dm(13, 500))
-                    .foregroundStyle(t.sub)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
             }
         }
+    }
+
+    /// Marke (leer = keine) – steht direkt unter dem Namen.
+    private var brand: String? {
+        guard let b = item.brand?.trimmingCharacters(in: .whitespaces), !b.isEmpty else { return nil }
+        return b
     }
 
     @ViewBuilder
@@ -185,12 +197,16 @@ struct ItemCard: View {
 
     private var hasPrice: Bool { showPrices && item.price > 0 }
 
-    /// Rechte Spalte (vertikal zentriert): kleine Checkbox (32), darunter rechtsbündig der Preis.
+    /// Rechte Spalte: Kreis (32) oben auf Höhe des Namens, Preis unten auf Höhe der Menge.
+    /// Mit Marke ist der Text-Block höher → Abstand oben/unten 8 statt 14 (Design: ListBrand).
     private var trailingColumn: some View {
         VStack(alignment: .trailing, spacing: 6) {
             if CheckGesture.from(checkGestureRaw).showsCircle { checkButton }
+            Spacer(minLength: 0)
             if hasPrice { priceLabel }
         }
+        .padding(.vertical, brand == nil ? 14 : 8)
+        .frame(maxHeight: .infinity)
     }
 
     /// „2,98 €“ (Outfit 15/600, t.text); bei mehreren Stück davor „je 1,49 €“ (DM Sans 12/500, t.sub).
