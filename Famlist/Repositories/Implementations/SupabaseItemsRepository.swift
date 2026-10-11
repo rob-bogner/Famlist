@@ -137,6 +137,9 @@ final class SupabaseItemsRepository: ItemsRepository {
         syncedListIds = listIds
         listIds.subtracting(previous).forEach(ensureChannel)
         previous.subtracting(listIds).forEach(releaseChannelIfUnused)
+        // Wird bei jedem Wechsel in den Vordergrund aufgerufen (startAllListsSync): einmal prüfen, ob das SDK
+        // die bestehenden Kanäle noch führt. Kein Takt, kein Netzwerk.
+        if !listIds.isEmpty { realtimeManager.replaceUnregisteredChannels() }
         logVoid(params: (action: "keepListsInSync", count: listIds.count, channels: subscribedListIds.count))
     }
 

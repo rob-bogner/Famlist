@@ -26,31 +26,32 @@ extension SupabaseListsRepository {
         AsyncStream { [weak self] continuation in
             guard let self else { continuation.finish(); return }
 
-            let channel = client.realtime.channel("user:\(userId.uuidString.lowercased())") {
-                $0.isPrivate = true
-            }
-            let streams: [(String, AsyncStream<JSONObject>)] = [
-                "member_removed", "member_restored", "member_archived", "account_archived"
-            ].map { ($0, channel.broadcastStream(event: $0)) }
+            let realtime = client.realtime
+            let topic = "user:\(userId.uuidString.lowercased())"
+            let events = ["member_removed", "member_restored", "member_archived", "account_archived"]
 
-            let task = Task {
-                // Anmelden mit Wiederholung wie bei den Listen-Kanälen (Audit 2, Befund S12).
-                await SupabaseRealtimeManager.subscribeWithRetry(channel, listId: nil)
-                await withTaskGroup(of: Void.self) { group in
-                    for (event, stream) in streams {
-                        group.addTask {
-                            for await message in stream {
-                                if let parsed = Self.userEvent(event, message: message) { continuation.yield(parsed) }
+            let task = Task { @MainActor in
+                // Anmelden mit Wiederholung und Ersatz eines vom SDK ausgetragenen Kanals – wie bei den
+                // Listen-Kanälen (Audit 2, Befund S12; taube Kanäle 11.10.2026).
+                await SupabaseRealtimeManager.keepChannelAlive(
+                    realtime: realtime, topic: topic, listId: nil,
+                    listeners: { channel in
+                        events.map { event in
+                            let stream = channel.broadcastStream(event: event)
+                            return {
+                                for await message in stream {
+                                    if let parsed = Self.userEvent(event, message: message) { continuation.yield(parsed) }
+                                }
                             }
                         }
-                    }
-                }
+                    })
                 continuation.finish()
             }
 
             continuation.onTermination = { @Sendable _ in
                 task.cancel()
-                Task { await channel.unsubscribe() }
+                // Das Kanal-Objekt kann inzwischen ersetzt worden sein: das abmelden, das das SDK gerade führt.
+                Task { await realtime.channels["realtime:\(topic)"]?.unsubscribe() }
             }
         }
     }

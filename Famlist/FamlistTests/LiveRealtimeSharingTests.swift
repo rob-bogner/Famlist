@@ -273,10 +273,13 @@ final class LiveRealtimeSharingTests: XCTestCase {
         return newListId
     }
 
-    /// Verbindungsabbruch (Audit 2, Befund S1/S2): Nach der ersten Anmeldung UND nach jeder Wiederverbindung
-    /// meldet das Repository „nachladen“. Vorher erkannte die App die Wiederverbindung des SDK nicht.
+    /// Nachladen (Audit 2, Befund S1/S2): Nach der ersten Anmeldung meldet das Repository genau einmal
+    /// „nachladen“, und noch einmal, nachdem die App einen vom SDK aufgegebenen Kanal ersetzt hat.
+    /// Vorher stellte der Test einen Netzabbruch mit disconnect()/connect() nach. Das SDK meldet Kanäle danach
+    /// aber nicht neu an (nur nach einem automatischen Abbruch); der Test war nur grün, weil die App nach
+    /// jeder Anmeldung 5 s später ein zweites Mal nachlud (11.10.2026).
     @MainActor
-    func test_reconnect_triggersCatchUp_afterConnectionLoss() async throws {
+    func test_catchUp_onceAfterFirstSubscribe_andAgainAfterChannelReplacement() async throws {
         let list = try await makeSharedList()
         let deviceB = LiveDevice(client: member, node: "live-B")
         let calls = CallCounter()
@@ -288,15 +291,14 @@ final class LiveRealtimeSharingTests: XCTestCase {
         defer { observer.cancel() }
 
         try await waitFor("erste Anmeldung meldet Nachladen", timeout: 15) { await MainActor.run { calls.count >= 1 } }
-        let afterFirst = calls.count
+        try await Task.sleep(nanoseconds: 7_000_000_000)          // länger als die 5 s des früheren Doppel-Aufrufs
+        XCTAssertEqual(calls.count, 1, "Nach der ersten Anmeldung genau einmal nachladen")
 
-        member.realtimeV2.disconnect()                           // Netzabbruch nachstellen
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-        await member.realtimeV2.connect()
+        // Das SDK trägt den Kanal aus (wie nach einem Schließen durch den Server).
+        let channel = member.realtimeV2.channel(SupabaseRealtimeManager.topic(for: list)) { $0.isPrivate = true }
+        await member.realtimeV2.removeChannel(channel)
 
-        try await waitFor("Wiederverbindung meldet Nachladen", timeout: 30) {
-            await MainActor.run { calls.count > afterFirst }
-        }
+        try await waitFor("Ersatz-Kanal meldet Nachladen", timeout: 30) { await MainActor.run { calls.count >= 2 } }
     }
 
     @MainActor
@@ -362,6 +364,180 @@ final class LiveRealtimeSharingTests: XCTestCase {
         // 6. Warteschlangen leer, nichts fehlgeschlagen
         XCTAssertEqual(deviceA.engine.pendingOperations, 0)
         XCTAssertEqual(deviceB.engine.pendingOperations, 0)
+    }
+
+    /// Meldung Robert 11.10.2026: Fügt das Mitglied Artikel aus der Zwischenablage hinzu, sieht der Besitzer
+    /// sie erst nach einem Neustart. Reihenfolge wie im echten Fall: Der Besitzer beobachtet die Liste schon,
+    /// DANACH tritt das Mitglied bei und importiert einen Stapel (ein Speichervorgang, ein Sende-Durchlauf).
+    @MainActor
+    func test_memberBulkImport_reachesOwnerWhoObservedBeforeMemberJoined() async throws {
+        struct NewList: Encodable { let id: UUID; let owner_id: UUID; let title: String; let is_default: Bool }
+        struct ListParam: Encodable, Sendable { let p_list_id: UUID }
+        struct TokenParam: Encodable, Sendable { let p_token: String }
+        struct TokenRow: Decodable { let token: String }
+        let ownerId = try await owner.auth.session.user.id
+        let list = UUID()
+        try await owner.from("lists")
+            .insert(NewList(id: list, owner_id: ownerId, title: "Livetest Import", is_default: false)).execute()
+        listId = list
+
+        // Besitzer beobachtet, bevor es ein Mitglied gibt.
+        let deviceA = LiveDevice(client: owner, node: "live-A")
+        let streamA = deviceA.repository.observeItems(listId: list)
+        let observerA = Task { for await _ in streamA {} }
+        defer { observerA.cancel() }
+        try await Task.sleep(nanoseconds: 2_000_000_000)          // Kanal-Anmeldung abwarten
+
+        // Mitglied tritt bei und importiert drei Artikel auf einmal.
+        let tokens: [TokenRow] = try await owner.rpc("create_list_invite", params: ListParam(p_list_id: list)).execute().value
+        let _: UUID = try await member.rpc("accept_list_invite", params: TokenParam(p_token: XCTUnwrap(tokens.first?.token))).execute().value
+        let deviceB = LiveDevice(client: member, node: "live-B")
+        let names = ["Livetest Äpfel", "Livetest Birnen", "Livetest Nudeln"]
+        await deviceB.engine.applyBulkItems(names.map { .createNew(ItemModel(name: $0, units: 1, listId: list.uuidString)) })
+        await deviceB.engine.resumeSync()
+
+        try await waitFor("Import des Mitglieds auf dem Gerät des Besitzers") {
+            await MainActor.run { Set(deviceA.visible(list).map(\.name)) == Set(names) }
+        }
+        XCTAssertEqual(deviceB.engine.pendingOperations, 0)
+    }
+
+    /// Wie oben, aber mit der ganzen App-Schicht auf dem Gerät des Besitzers (SyncOrchestrator, ListViewModel)
+    /// und dem Ablauf vom 10.10.2026: Der Besitzer legt einen Artikel an und löscht ihn wieder. Danach fügt
+    /// das Mitglied denselben Namen (gleiche feste ID) und zwei neue Artikel aus der Zwischenablage hinzu.
+    /// Geprüft wird die ANZEIGE (`items` des ListViewModel), nicht nur der Speicher.
+    @MainActor
+    func test_memberBulkImport_showsInOwnersList_evenForNameTheOwnerDeleted() async throws {
+        struct NewList: Encodable { let id: UUID; let owner_id: UUID; let title: String; let is_default: Bool }
+        struct ListParam: Encodable, Sendable { let p_list_id: UUID }
+        struct TokenParam: Encodable, Sendable { let p_token: String }
+        struct TokenRow: Decodable { let token: String }
+        let ownerId = try await owner.auth.session.user.id
+        let list = UUID()
+        try await owner.from("lists")
+            .insert(NewList(id: list, owner_id: ownerId, title: "Livetest Anzeige", is_default: false)).execute()
+        listId = list
+
+        // Gerät des Besitzers, verdrahtet wie in FamlistApp.
+        let container = PersistenceController(inMemory: true).container
+        let store = SwiftDataItemStore(context: container.mainContext)
+        let orchestrator = SyncOrchestrator()
+        let facade = LiveTestClient(owner)
+        let repository = SupabaseItemsRepository(client: facade, itemStore: store, syncOrchestrator: orchestrator)
+        let engine = SyncEngine(repository: repository, itemStore: store,
+                                operationQueue: SyncOperationQueue(context: container.mainContext),
+                                hlcGenerator: HybridLogicalClockGenerator(nodeId: "live-A"),
+                                imageStorage: SupabaseImageStorage(client: facade))
+        let lvm = ListViewModel(listId: list, repository: repository, itemStore: store,
+                                listStore: SwiftDataListStore(context: container.mainContext), startImmediately: false)
+        lvm.configure(syncEngine: engine)
+        lvm.configure(syncOrchestrator: orchestrator, pageLoader: PageLoader(repository: repository))
+        lvm.startObserving()
+        defer { lvm.clearForSignOut() }
+        try await Task.sleep(nanoseconds: 2_000_000_000)          // Kanal-Anmeldung abwarten
+
+        // Mitglied tritt bei.
+        let tokens: [TokenRow] = try await owner.rpc("create_list_invite", params: ListParam(p_list_id: list)).execute().value
+        let _: UUID = try await member.rpc("accept_list_invite", params: TokenParam(p_token: XCTUnwrap(tokens.first?.token))).execute().value
+        let deviceB = LiveDevice(client: member, node: "live-B")
+
+        // Besitzer legt „Butter“ an und löscht sie wieder (Wischen mit Rückgängig, dann festgeschrieben).
+        lvm.addItem(ItemModel(name: "Livetest Butter", units: 1, listId: list.uuidString))
+        try await waitFor("Butter beim Besitzer") { await MainActor.run { lvm.items.map(\.name) == ["Livetest Butter"] } }
+        try await waitFor("Butter gesendet") { await MainActor.run { engine.pendingOperations == 0 } }
+        lvm.stageDeletion(of: try XCTUnwrap(lvm.items.first))
+        await lvm.commitPendingDeletion()?.value
+        try await waitFor("Löschung gesendet") { await MainActor.run { engine.pendingOperations == 0 && lvm.items.isEmpty } }
+
+        // Mitglied importiert drei Artikel; IDs wie beim Import aus der Zwischenablage (fest aus dem Namen).
+        let names = ["Livetest Butter", "Livetest Birnen", "Livetest Nudeln"]
+        let targets = names.map { name -> ImportTarget in
+            .createNew(ItemModel(id: UUID.deterministicItemID(listId: list, name: name).uuidString,
+                                 name: name, units: 1, listId: list.uuidString))
+        }
+        await deviceB.engine.applyBulkItems(targets)
+        await deviceB.engine.resumeSync()
+        try await waitFor("Import gesendet") { await MainActor.run { deviceB.engine.pendingOperations == 0 } }
+
+        try await waitFor("Import im Speicher des Besitzers") {
+            await MainActor.run { Set(((try? store.fetchItems(listId: list)) ?? []).map(\.name)) == Set(names) }
+        }
+        try await waitFor("Import in der ANZEIGE des Besitzers") {
+            await MainActor.run { Set(lvm.items.map(\.name)) == Set(names) }
+        }
+    }
+
+    /// Befund 11.10.2026 (Server-Protokoll vom 10.10.): Nach der Rückkehr aus dem Hintergrund kam die
+    /// Realtime-Verbindung erst nach 7 s zustande, und Änderungen des Mitglieds erschienen bis zum Neustart
+    /// nicht. Der Test schickt die App des Besitzers in den Hintergrund und holt sie zurück.
+    @MainActor
+    func test_afterBackgroundAndForeground_ownerStillReceivesMemberChanges() async throws {
+        let list = try await makeSharedList()
+        let container = PersistenceController(inMemory: true).container
+        let store = SwiftDataItemStore(context: container.mainContext)
+        let orchestrator = SyncOrchestrator()
+        let facade = LiveTestClient(owner)
+        let repository = SupabaseItemsRepository(client: facade, itemStore: store, syncOrchestrator: orchestrator)
+        let engine = SyncEngine(repository: repository, itemStore: store,
+                                operationQueue: SyncOperationQueue(context: container.mainContext),
+                                hlcGenerator: HybridLogicalClockGenerator(nodeId: "live-A"),
+                                imageStorage: SupabaseImageStorage(client: facade))
+        let lvm = ListViewModel(listId: list, repository: repository, itemStore: store,
+                                listStore: SwiftDataListStore(context: container.mainContext), startImmediately: false)
+        lvm.configure(syncEngine: engine)
+        lvm.configure(syncOrchestrator: orchestrator, pageLoader: PageLoader(repository: repository))
+        lvm.startObserving()
+        defer { lvm.clearForSignOut() }
+        let deviceB = LiveDevice(client: member, node: "live-B")
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+
+        // Vor dem Hintergrund: Live-Empfang funktioniert.
+        await deviceB.engine.createItem(ItemModel(name: "Livetest Vorher", units: 1, listId: list.uuidString))
+        try await waitFor("Artikel vor dem Hintergrund") { await MainActor.run { lvm.items.map(\.name) == ["Livetest Vorher"] } }
+
+        // Hintergrund und zurück.
+        lvm.handleAppDidEnterBackground()
+        try await Task.sleep(nanoseconds: 3_000_000_000)
+        let resumedAt = Date()
+        lvm.handleAppDidBecomeActive()
+        try await waitFor("Kanal nach der Rückkehr angemeldet", timeout: 20) {
+            await MainActor.run { repository.subscribedListIds.contains(list) }
+        }
+        try await Task.sleep(nanoseconds: 9_000_000_000)          // länger als die beobachteten 7 s
+
+        // Nach der Rückkehr: Änderung des Mitglieds muss live ankommen (ohne Neustart, ohne Nachladen).
+        await deviceB.engine.createItem(ItemModel(name: "Livetest Nachher", units: 1, listId: list.uuidString))
+        try await waitFor("Artikel nach der Rückkehr (\(Int(Date().timeIntervalSince(resumedAt))) s nach Rückkehr)") {
+            await MainActor.run { lvm.items.map(\.name).contains("Livetest Nachher") }
+        }
+    }
+
+    /// Das SDK trägt einen Kanal aus seiner Verwaltung aus, wenn der Server ihn schließt (phx_close) oder wenn
+    /// ein verzögertes removeChannel ihn trifft. Nachrichten stellt es nur eingetragenen Kanälen zu. Meldet die
+    /// App danach dasselbe Objekt wieder an, bleibt der Kanal taub. Der Test trägt den Kanal aus, wie es das SDK
+    /// tut, und prüft, ob die App sich davon erholt.
+    @MainActor
+    func test_channelRemovedBySDK_appRecoversAndStillReceives() async throws {
+        let list = try await makeSharedList()
+        let deviceA = LiveDevice(client: owner, node: "live-A")
+        let deviceB = LiveDevice(client: member, node: "live-B")
+        let stream = deviceA.repository.observeItems(listId: list)
+        let observer = Task { for await _ in stream {} }
+        defer { observer.cancel() }
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+
+        await deviceB.engine.createItem(ItemModel(name: "Livetest Vorher", units: 1, listId: list.uuidString))
+        try await waitFor("Artikel vor dem Austragen") { await MainActor.run { deviceA.visible(list).map(\.name) == ["Livetest Vorher"] } }
+
+        // Dasselbe Kanal-Objekt holen, das die App benutzt, und es austragen (abmelden + aus der Verwaltung).
+        let channel = owner.realtimeV2.channel(SupabaseRealtimeManager.topic(for: list)) { $0.isPrivate = true }
+        await owner.realtimeV2.removeChannel(channel)
+        try await Task.sleep(nanoseconds: 9_000_000_000)          // 5 s Wartezeit der App + Neuanmeldung
+
+        await deviceB.engine.createItem(ItemModel(name: "Livetest Nachher", units: 1, listId: list.uuidString))
+        try await waitFor("Artikel nach dem Austragen", timeout: 15) {
+            await MainActor.run { deviceA.visible(list).map(\.name).contains("Livetest Nachher") }
+        }
     }
 
     @MainActor
