@@ -19,6 +19,7 @@
    Beim Hochscrollen geht er erst in der letzten Übergangsstrecke vor dem Listenanfang wieder auf.
 
  📝 Last Change:
+ - Rahmen der schmalen Leiste erst am Ende des Übergangs sichtbar (11.10.2026).
  - Tabs bekommen die Anzahl offener / erledigter Artikel (30.09.2026).
  - Filter-Modus (Suchleiste filtert die Liste), Knöpfe ☰/Suche als neutrale Glas-Knöpfe.
  ------------------------------------------------------------------------
@@ -173,6 +174,8 @@ struct CollapsingListHeader: View {
     // MARK: - Fortschritt
 
     /// Eine Fläche, die von der Kartenhöhe auf 40 pt schrumpft; Inhalte blenden über (Karte → Leiste).
+    /// Die Leiste bringt ihren eigenen Rahmen erst bei p = 1 mit: Solange die Fläche höher als 40 pt ist,
+    /// läge er sonst sichtbar mitten in ihr (Gerät, 11.10.2026).
     private var heroBlock: some View {
         let big = 1 - phase(0.15, 0.6)
         let small = phase(0.5, 0.95)
@@ -184,7 +187,7 @@ struct CollapsingListHeader: View {
                     .onChange(of: g.size.height) { _, h in heroHeight = h } } }
                 .opacity(big)
                 .accessibilityHidden(big < 0.5)
-            CompactProgressBar(t: t, checked: checked, total: total, totalPrice: totalPrice)
+            CompactProgressBar(t: t, checked: checked, total: total, totalPrice: totalPrice, showsSurface: p >= 1)
                 .opacity(small)
                 .accessibilityHidden(small < 0.5)
         }

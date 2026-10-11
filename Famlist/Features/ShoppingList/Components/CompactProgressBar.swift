@@ -13,6 +13,7 @@
  - Hintergrund wie die große Karte (heroBg), Schatten kleiner: 0 12 24 -12 Akzent.
 
  📝 Last Change:
+ - `showsSurface`: Im Listenkopf erscheint der Rahmen erst, wenn der Übergang abgeschlossen ist (11.10.2026).
  - Initial creation.
  ------------------------------------------------------------------------
  */
@@ -25,6 +26,9 @@ struct CompactProgressBar: View {
     let total: Int
     /// Summe Preis × Menge; nil blendet sie aus („Preise anzeigen“ aus).
     var totalPrice: Double? = nil
+    /// Eigene Fläche (Hintergrund, Kanten, Schatten). Der einklappende Listenkopf zeigt sie erst am Ende des
+    /// Übergangs: Vorher liefert seine schrumpfende Fläche den Hintergrund, sonst stünde der 40-pt-Rahmen mitten darin.
+    var showsSurface = true
 
     private var fraction: Double { total == 0 ? 0 : Double(checked) / Double(total) }
     private var percent: Int { Int((fraction * 100).rounded()) }
@@ -60,10 +64,15 @@ struct CompactProgressBar: View {
                 .frame(height: 1)
         }
         .clipShape(RR(20))
-        .background(CSSBox(shape: RR(20), paint: t.heroBg,
-                           shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.35)),
-                                     .inner(0, -1, 0, 0, .rgba(0, 30, 34, 0.2)),
-                                     .drop(0, 12, 24, -12, t.a.base.color(t.isDark ? 0.6 : 0.65))]))
+        .background {
+            CSSBox(shape: RR(20), paint: t.heroBg,
+                   shadows: [.inner(0, 1, 0, 0, .rgba(255, 255, 255, 0.35)),
+                             .inner(0, -1, 0, 0, .rgba(0, 30, 34, 0.2)),
+                             .drop(0, 12, 24, -12, t.a.base.color(t.isDark ? 0.6 : 0.65))])
+                .opacity(showsSurface ? 1 : 0)
+                // Nur das Erscheinen blendet weich ein; beim Aufklappen ist die Fläche sofort weg.
+                .animation(showsSurface ? .easeOut(duration: 0.15) : nil, value: showsSurface)
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Fortschritt: \(checked) von \(total) Artikeln erledigt, \(percent) Prozent"
                             + (totalPrice.map { ", \(PriceDisplaySetting.euro($0)) gesamt" } ?? ""))

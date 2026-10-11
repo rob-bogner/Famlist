@@ -41,9 +41,9 @@ final class ScreenTourUITests: XCTestCase {
         continueAfterFailure = true
     }
 
-    private func launch(_ extra: [String]) -> XCUIApplication {
+    private func launch(_ extra: [String], fixture: [String] = ["-uiTestFixture", "-designFixture"]) -> XCUIApplication {
         let app = XCUIApplication()
-        var arguments = ["-uiTestFixture", "-designFixture"] + extra
+        var arguments = fixture + extra
         if let size = environment["FAMLIST_TEXTSIZE"] { arguments += ["-UIPreferredContentSizeCategoryName", size] }
         if environment["FAMLIST_DARK"] == "1" { arguments += ["-AppleInterfaceStyle", "Dark", "-appearanceChoice", "Dunkel"] } // Rohwert von ListAccountAppearanceChoice.dark
         app.launchArguments = arguments
@@ -77,5 +77,21 @@ final class ScreenTourUITests: XCTestCase {
             shoot(app, "03-sheet-\(sheet)")
             app.terminate()
         }
+    }
+
+    /// Listenkopf mitten im Übergang groß → kompakt (Fortschrittskarte schrumpft zur Leiste) und danach kompakt.
+    /// Volle Beispielliste, weil die Design-Liste mit einem Artikel nicht scrollt.
+    func test_headerTransition() {
+        let app = launch([], fixture: ["-uiTestFixture"])
+        XCTAssertTrue(app.buttons["Brot abhaken"].waitForExistence(timeout: 15))
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+        // Langsam ziehen und halten: Die Liste bleibt ohne Nachlauf mitten im Übergang stehen.
+        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -135)),
+                    withVelocity: .slow, thenHoldForDuration: 0.5)
+        shoot(app, "04-header-transition")
+        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -200)),
+                    withVelocity: .slow, thenHoldForDuration: 0.5)
+        shoot(app, "04-header-compact")
+        app.terminate()
     }
 }
