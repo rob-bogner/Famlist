@@ -80,6 +80,8 @@ struct ShoppingListView: View {
     @State var filterQuery = ""
     /// Zum Hochscrollen der Liste, bevor der Filter aufgeht (Feld liegt dann genau an der Stelle der Suchleiste).
     @State var listScrollProxy: ScrollViewProxy?
+    /// Laufender Tab-Wechsel (erst nach oben scrollen, dann den Inhalt wechseln – `switchFilter`).
+    @State var filterSwitchTask: Task<Void, Never>?
     static let listTopID = "shoppingListTop"
 
     var appearance: Appearance { Appearance(colorScheme) }
@@ -216,7 +218,7 @@ struct ShoppingListView: View {
                     checked: listViewModel.checkedItemCount,
                     total: listViewModel.totalItemCount,
                     totalPrice: showPrices ? PriceDisplaySetting.total(of: listViewModel.items) : nil,
-                    filter: $listViewModel.itemFilter,
+                    filter: filterSelection,
                     scroll: listScroll,
                     onShowLists: openLists,
                     onSearch: openFilter,
@@ -257,7 +259,7 @@ struct ShoppingListView: View {
         .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
         // Tabs bleiben antippbar, während die Liste nachläuft (liegt ÜBER der Scroll-Ansicht).
         .overlay(alignment: .top) {
-            CoastingTabsCatcher(t: t, selection: $listViewModel.itemFilter,
+            CoastingTabsCatcher(t: t, selection: filterSelection,
                                 openCount: max(listViewModel.totalItemCount - listViewModel.checkedItemCount, 0),
                                 doneCount: listViewModel.checkedItemCount,
                                 scroll: listScroll, isEnabled: !isFiltering)
@@ -286,6 +288,36 @@ struct ShoppingListView: View {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + (needsScroll ? 0.3 : 0)) {
             withAnimation(motion(.easeOut(duration: 0.2))) { isFiltering = true }
+        }
+    }
+
+    /// Die Tabs schreiben den Filter nicht direkt, sondern über `switchFilter`.
+    var filterSelection: Binding<ItemFilter> {
+        Binding(get: { listViewModel.itemFilter }, set: { switchFilter(to: $0) })
+    }
+
+    /// Tab-Wechsel in zwei Schritten: ERST die Liste nach oben, DANN den Inhalt wechseln.
+    /// Gerätefehler 12.10.2026 (iOS 27): War die Liste weit gescrollt und der neue Tab viel kürzer (z. B. „Offen“
+    /// mit 22 Artikeln → „Erledigt“ mit 1), blieb die Liste leer – der Tab zählte den Artikel, gezeichnet wurde
+    /// keiner. Die Zeilen entstehen erst im sichtbaren Bereich (LazyVStack); schrumpfte der Inhalt unter die
+    /// Scroll-Position, baute iOS die oberen Zeilen nicht neu auf. Von ganz oben aus trat der Fehler nie auf.
+    func switchFilter(to filter: ItemFilter) {
+        guard filter != listViewModel.itemFilter else { return }
+        filterSwitchTask?.cancel()
+        let apply = {
+            withAnimation(motion(.spring(response: 0.35, dampingFraction: 0.85))) { listViewModel.itemFilter = filter }
+        }
+        guard listScroll.offset > 1 else { apply(); return }
+        scrollListToTop()
+        filterSwitchTask = Task { @MainActor in
+            // Warten, bis die Liste wirklich oben steht (höchstens ~0,25 s, z. B. wenn sie gerade nachläuft).
+            var waited = 0
+            while listScroll.offset > 1, waited < 15 {
+                try? await Task.sleep(for: .milliseconds(16))
+                waited += 1
+            }
+            guard !Task.isCancelled else { return }
+            apply()
         }
     }
 
