@@ -39,12 +39,14 @@ struct SupabaseItemRow: Codable {
     let hlcNodeId: String?
     let tombstone: Bool?
     let lastModifiedBy: String?
+    /// Migration 037: wer den Artikel angelegt hat.
+    let createdBy: String?
 
     /// Spalten, die die App lädt. Ohne das alte Base64-Feld `imagedata` (bis 600 KB je Zeile; Fotos kommen
     /// über `image_path` aus Storage – Audit 2, Befund Q7).
     static let columns = "id,list_id,ownerpublicid,image_path,name,units,measure,price,isChecked,category,"
         + "is_unavailable,productdescription,brand,created_at,updated_at,hlc_timestamp,hlc_counter,hlc_node_id,"
-        + "tombstone,last_modified_by"
+        + "tombstone,last_modified_by,created_by"
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -63,6 +65,7 @@ struct SupabaseItemRow: Codable {
         case hlcNodeId = "hlc_node_id"
         case tombstone
         case lastModifiedBy = "last_modified_by"
+        case createdBy = "created_by"
     }
 
     func toItemModel() -> ItemModel {
@@ -96,7 +99,8 @@ struct SupabaseItemRow: Codable {
             hlcCounter: hlcCounter,
             hlcNodeId: hlcNodeId,
             tombstone: tombstone,
-            lastModifiedBy: lastModifiedBy
+            lastModifiedBy: lastModifiedBy,
+            createdBy: createdBy
         )
     }
 }

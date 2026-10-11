@@ -42,6 +42,8 @@ struct ShoppingListView: View {
     @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     @StateObject var keyboard = KeyboardObserver()
+    /// Geteilte Liste: Namen und Profilbilder der anderen Mitglieder (Profilbild am Mengen-Chip).
+    @StateObject var contributors = ListContributorsStore()
     @State var activeSheet: ActiveListSheet?
     @State var activeOverlay: ListOverlay?
     @State var openRow: OpenSwipeRow?
@@ -78,6 +80,20 @@ struct ShoppingListView: View {
     static let listTopID = "shoppingListTop"
 
     var appearance: Appearance { Appearance(colorScheme) }
+
+    /// Ersteller in der Liste, die weder der angemeldete Nutzer noch ein bekanntes Mitglied sind.
+    private var unknownCreators: Set<String> {
+        let me = session.currentProfile?.id.uuidString.lowercased()
+        return Set(listViewModel.items.compactMap { $0.createdBy?.lowercased() })
+            .subtracting(contributors.byId.keys)
+            .filter { $0 != me }
+    }
+
+    /// Neu laden bei Listenwechsel, Anmeldung oder unbekannter Person (sortiert für einen stabilen Schlüssel).
+    private var contributorsKey: String {
+        [listViewModel.defaultList?.id.uuidString ?? "-", session.currentProfile?.id.uuidString ?? "-"]
+            .joined(separator: "|") + "|" + unknownCreators.sorted().joined(separator: ",")
+    }
 
     var body: some View {
         let t = ListTheme(appearance)
@@ -130,6 +146,13 @@ struct ShoppingListView: View {
             if let id = session.currentProfile?.id { await categoryStore.load(profileId: id) }
         }
         .onReceive(categoryStore.$categories) { listViewModel.categoryOrder = $0 }
+        // Geteilte Liste: Mitglieder laden (Listenwechsel) bzw. neu laden, wenn eine unbekannte Person auftaucht.
+        .environment(\.itemContributors, contributors.byId)
+        .task(id: contributorsKey) {
+            await contributors.load(list: listViewModel.defaultList, me: session.currentProfile?.id,
+                                    lists: listViewModel.listsRepository, profiles: session.profiles,
+                                    force: !unknownCreators.isEmpty)
+        }
         #if DEBUG
         .onAppear { applyDesignLaunchState() }
         #endif

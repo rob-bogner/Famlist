@@ -20,6 +20,7 @@
    Berührung fest, dann ließe sich die Zeile nicht wischen, wenn der Daumen dort aufsetzt.
 
  📝 Last Change:
+ - Geteilte Liste: Profilbild des Mitglieds, das den Artikel hinzugefügt hat, neben dem Mengen-Chip (11.10.2026).
  - Bild-Kachel nur mit „Artikelbilder anzeigen“; ohne öffnet der Name die Produktdetails (30.09.2026).
  - 29.09.2026: Kreis nur, wenn die Einstellung „Artikel abhaken“ ihn zeigt (nicht bei „Wischen“).
  - Aus ListScreen des Design-Pakets MyListUI übernommen, an ItemModel angebunden.
@@ -42,6 +43,8 @@ struct ItemCard: View {
     var onRetry: (() -> Void)? = nil
 
     @State private var showRetryConfirmation = false
+    /// Geteilte Liste: Mitglieder ohne den angemeldeten Nutzer (ListContributorsStore).
+    @Environment(\.itemContributors) private var contributors
     /// Einstellungen → Liste → „Preise anzeigen“.
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
     @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
@@ -123,6 +126,10 @@ struct ItemCard: View {
                 .padding(.horizontal, 11)
                 .background(CSSBox(shape: Pill, paint: .color(t.chipBg), shadows: t.chipInset))
                 .fixedSize()
+            // Geteilte Liste: Profilbild, wenn ein anderes Mitglied den Artikel hinzugefügt hat (Design: ListShared).
+            if let by = item.createdBy, let contributor = contributors[by.lowercased()] {
+                ContributorAvatar(contributor: contributor, isDark: t.isDark)
+            }
             if item.isUnavailable {
                 Text("Nicht verfügbar")
                     .font(AppFont.dm(13, 600))

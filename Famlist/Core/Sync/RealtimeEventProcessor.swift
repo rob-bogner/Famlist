@@ -178,6 +178,7 @@ final class RealtimeEventProcessor {
         
         let listIdString = extractString("list_id")
         let ownerPublicId = extractString("ownerpublicid")
+        let createdBy = extractString("created_by")
         
         // Parse dates
         let createdAt: Date?
@@ -254,7 +255,8 @@ final class RealtimeEventProcessor {
             hlcCounter: hlcCounter,
             hlcNodeId: hlcNodeId,
             tombstone: tombstone,
-            lastModifiedBy: lastModifiedBy
+            lastModifiedBy: lastModifiedBy,
+            createdBy: createdBy
         )
         
         return (item, metadata)

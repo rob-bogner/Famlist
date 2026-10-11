@@ -103,6 +103,10 @@ struct ItemModel: Identifiable, Hashable, Codable {
     /// Identifier of last modifier (for conflict tracking)
     var lastModifiedBy: String?
 
+    /// Profil-ID dessen, der den Artikel angelegt hat (Migration 037, vom Server gesetzt; Altbestand nil).
+    /// Geteilte Liste: Profilbild am Mengen-Chip, wenn es nicht der angemeldete Nutzer ist.
+    var createdBy: String?
+
     /// Whether the last sync attempt for this item permanently failed (all retries exhausted).
     /// Not persisted in the database — derived from `ItemEntity.syncStatus` at mapping time.
     var isSyncFailed: Bool = false
@@ -141,6 +145,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         case hlcNodeId = "hlc_node_id"
         case tombstone
         case lastModifiedBy = "last_modified_by"
+        case createdBy = "created_by"
     }
     
     // MARK: - Initializer
@@ -191,6 +196,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         hlcNodeId: String? = nil,
         tombstone: Bool? = nil,
         lastModifiedBy: String? = nil,
+        createdBy: String? = nil,
         isSyncFailed: Bool = false
     ) {
         self.id = id // Assigns the unique identifier
@@ -215,6 +221,7 @@ struct ItemModel: Identifiable, Hashable, Codable {
         self.hlcNodeId = hlcNodeId
         self.tombstone = tombstone
         self.lastModifiedBy = lastModifiedBy
+        self.createdBy = createdBy
         self.isSyncFailed = isSyncFailed
     }
 
@@ -244,7 +251,8 @@ struct ItemModel: Identifiable, Hashable, Codable {
             hlcCounter: try c.decodeIfPresent(Int.self, forKey: .hlcCounter),
             hlcNodeId: try c.decodeIfPresent(String.self, forKey: .hlcNodeId),
             tombstone: try c.decodeIfPresent(Bool.self, forKey: .tombstone),
-            lastModifiedBy: try c.decodeIfPresent(String.self, forKey: .lastModifiedBy)
+            lastModifiedBy: try c.decodeIfPresent(String.self, forKey: .lastModifiedBy),
+            createdBy: try c.decodeIfPresent(String.self, forKey: .createdBy)
         )
     }
 }
@@ -258,6 +266,6 @@ extension ItemModel {
                   productDescription: productDescription, brand: brand, listId: listId, ownerPublicId: ownerPublicId,
                   createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt, hlcTimestamp: hlcTimestamp,
                   hlcCounter: hlcCounter, hlcNodeId: hlcNodeId, tombstone: tombstone, lastModifiedBy: lastModifiedBy,
-                  isSyncFailed: isSyncFailed)
+                  createdBy: createdBy, isSyncFailed: isSyncFailed)
     }
 }

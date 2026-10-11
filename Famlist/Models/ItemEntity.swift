@@ -31,6 +31,8 @@ final class ItemEntity: Identifiable, Codable {
     @Attribute(.unique) var id: UUID
     var listId: UUID
     var ownerPublicId: String?
+    /// Wer den Artikel angelegt hat (Profil-ID, Migration 037); optional → bestehende Stores migrieren automatisch.
+    var createdBy: String?
     /// Lokale Kopie des Fotos (Base64) – bleibt offline verfügbar.
     var imageData: String?
     /// Storage-Pfad des Fotos (Migration 016); optional, damit bestehende Stores automatisch migrieren.

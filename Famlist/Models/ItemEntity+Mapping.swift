@@ -54,6 +54,7 @@ extension ItemEntity {
             hlcNodeId: hlcNodeId,
             tombstone: tombstone,
             lastModifiedBy: lastModifiedBy,
+            createdBy: createdBy,
             isSyncFailed: syncStatus == .failed
         )
     }
@@ -103,6 +104,7 @@ extension ItemEntity {
     /// - Parameter includeImage: Foto (Base64 und Pfad) mit übernehmen.
     func assignContent(from model: ItemModel, includeImage: Bool = true) {
         if ownerPublicId == nil { self.ownerPublicId = model.ownerPublicId }
+        if let createdBy = model.createdBy { self.createdBy = createdBy }
         if includeImage {
             self.imageData = model.imageData
             self.imagePath = model.imagePath
@@ -166,6 +168,7 @@ extension ItemEntity {
         )
         entity.imagePath = model.imagePath
         entity.setTombstone(model.tombstone ?? false)
+        entity.createdBy = model.createdBy
         return entity
     }
 }
