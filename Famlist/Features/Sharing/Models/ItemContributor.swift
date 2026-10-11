@@ -15,6 +15,7 @@
  - Ohne Profilfoto: Initiale auf einem Farbverlauf; die Farbe hängt fest an der Profil-ID.
 
  📝 Last Change:
+ - Ring und Schatten des Profilbilds über CSSBox statt `.shadow` (Liste stotterte beim Scrollen, 11.10.2026).
  - Initial creation (Wunsch Robert 11.10.2026).
  ------------------------------------------------------------------------
  */
@@ -77,9 +78,31 @@ struct ContributorAvatar: View {
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
-        .overlay(Circle().strokeBorder(isDark ? Color.hex("#16282B") : .white, lineWidth: 2).padding(-2))
-        .shadow(color: Color.rgba(12, 40, 44, 0.3), radius: 3, y: 2)
+        // box-shadow: 0 0 0 2px byRing, 0 2px 6px -2px rgba(12,40,44,.35) (Hybrid.dc.html, shared = on).
+        // Über CSSBox (Core Animation), nicht `.shadow`: Ein weicher SwiftUI-Schatten in jeder Zeile wird beim
+        // Scrollen in jedem Frame neu gerechnet – die Liste stotterte (Gerät, 11.10.2026; wie am 26.09.2026).
+        .background(CSSBox(shape: Circle(),
+                           shadows: [.drop(0, 0, 0, 2, isDark ? .hex("#16282B") : .white),
+                                     .drop(0, 2, 6, -2, .rgba(12, 40, 44, 0.35))]))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Hinzugefügt von \(contributor.name)")
     }
+}
+
+#Preview("Profilbild am Mengen-Chip") {
+    HStack(spacing: 16) {
+        ContributorAvatar(contributor: ItemContributor(id: UUID(), name: "Anna", image: nil), isDark: false)
+        ContributorAvatar(contributor: ItemContributor(id: UUID(), name: "Max", image: nil), isDark: false)
+    }
+    .padding(24)
+    .background(Color.white)
+}
+
+#Preview("Profilbild am Mengen-Chip – Dark") {
+    HStack(spacing: 16) {
+        ContributorAvatar(contributor: ItemContributor(id: UUID(), name: "Anna", image: nil), isDark: true)
+        ContributorAvatar(contributor: ItemContributor(id: UUID(), name: "Max", image: nil), isDark: true)
+    }
+    .padding(24)
+    .background(Color.hex("#16282B"))
 }
