@@ -27,4 +27,25 @@ final class CompactHeaderTests: XCTestCase {
         XCTAssertEqual(CollapsingListHeader.collapseRange(heroHeight: 128), 52 + 18 + 88)
         XCTAssertEqual(CollapsingListHeader.collapseRange(heroHeight: 30), 70)          // nie negativ
     }
+
+    /// „Kopf ganz eingeklappt“ gilt ab der Übergangsstrecke – Grundlage für Tab-Tipps im Nachlauf (CoastingTabsCatcher).
+    @MainActor
+    func test_scrollState_headerCompact_fromCollapseRangeOn() {
+        let scroll = ListScrollState()
+        scroll.update(offset: 500)
+        XCTAssertFalse(scroll.isHeaderCompact, "ohne gemessene Übergangsstrecke nie eingeklappt")
+
+        scroll.collapseRange = CollapsingListHeader.collapseRange(heroHeight: 128)   // 52 + 18 + 88 = 158
+        scroll.update(offset: 157)
+        XCTAssertFalse(scroll.isHeaderCompact)
+        scroll.update(offset: 158)
+        XCTAssertTrue(scroll.isHeaderCompact)
+        scroll.update(offset: 20)
+        XCTAssertFalse(scroll.isHeaderCompact, "beim Zurückscrollen wieder aufgeklappt")
+    }
+
+    /// Titelzeile 44 + Abstand 18 + Leiste 40 + Abstand 18.
+    func test_compactTabsTop() {
+        XCTAssertEqual(CollapsingListHeader.compactTabsTop, 120)
+    }
 }

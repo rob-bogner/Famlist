@@ -47,7 +47,7 @@ final class ListSectionBuilderTests: XCTestCase {
 
     func test_category_groupsInStoreOrder_andCheckedAtBottom() {
         let sections = ListSectionBuilder.sections(items: sample, settings: .default, filter: .all)
-        XCTAssertEqual(names(sections), ["Obst & Gemüse", "Milchprodukte", "Backwaren", "✓"])
+        XCTAssertEqual(names(sections), ["Obst & Gemüse", "Backwaren", "Milchprodukte", "✓"])
         XCTAssertEqual(sections.last?.items.map(\.name), ["Butter"])
     }
 

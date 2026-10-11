@@ -15,6 +15,7 @@
    Nutzer das alte Standard-Icon nicht selbst geändert hat (gespeicherte Daten bleiben unverändert).
 
  📝 Last Change:
+ - Icons für die 19 neuen Standard-Kategorien zugeordnet (12.10.2026); keine neuen Icons.
  - Icon-Set von 14 auf 60 erweitert (Milch & Eier, Fleisch & Fisch, Getränke, Vorrat, Drogerie …).
  ------------------------------------------------------------------------
  */
@@ -132,18 +133,38 @@ enum CategoryIconCatalog {
     static func key(for category: ItemCategory) -> String {
         switch category {
         case .obstGemuese: return "apple"
-        case .milch: return "milk"
         case .backwaren: return "bread"
-        case .getraenke: return "bottle"
-        case .haushalt: return "spray"
-        case .tiefkuehl: return "snowflake"
         case .fleisch: return "meat"
+        case .wurst: return "sausage"
+        case .kaese: return "cheese"
+        case .milch: return "milk"
+        case .eier: return "egg"
+        case .vegetarisch: return "leaf"
+        case .fruehstueck: return "bowl"
+        case .backzutaten: return "flour"
+        case .nudelnReis: return "pasta"
+        case .konserven: return "can"
+        case .fertig: return "pizza"
+        case .saucen: return "jar"
+        case .gewuerze: return "oil"
+        case .kaffeeTee: return "cup"
+        case .suesses: return "chocolate"
+        case .snacks: return "cookie"
+        case .tiefkuehl: return "snowflake"
+        case .getraenke: return "bottle"
+        case .alkohol: return "wine"
+        case .drogerie: return "soap"
+        case .haushalt: return "spray"
+        case .baby: return "baby"
+        case .tierbedarf: return "paw"
+        case .blumen: return "flower"
         case .sonstiges: return "tag"
         }
     }
 
-    /// Alte Standard-Icons (vor dem erweiterten Set) je Standard-Kategorie.
-    private static func legacyKey(for category: ItemCategory) -> String {
+    /// Alte Standard-Icons (vor dem erweiterten Set) je Standard-Kategorie. nil für Kategorien,
+    /// die es damals noch nicht gab.
+    private static func legacyKey(for category: ItemCategory) -> String? {
         switch category {
         case .obstGemuese: return "leaf"
         case .milch: return "drop"
@@ -153,6 +174,7 @@ enum CategoryIconCatalog {
         case .tiefkuehl: return "snowflake"
         case .fleisch: return "flame"
         case .sonstiges: return "tag"
+        default: return nil
         }
     }
 

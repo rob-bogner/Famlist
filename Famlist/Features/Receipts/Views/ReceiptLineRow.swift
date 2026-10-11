@@ -69,7 +69,7 @@ struct ReceiptLineRow: View {
 
 #Preview("Artikelzeile", traits: .fixedLayout(width: 350, height: 80)) {
     ReceiptLineRow(row: ReceiptLineDisplay(id: 0, name: "Kerrygold Butter", detail: "1 × 250 g · je 2,49 €",
-                                           categoryName: "Milchprodukte", category: CategoryDefinition.defaults[1],
+                                           categoryName: "Milchprodukte", category: CategoryDefinition.standard(.milch),
                                            rank: 1, amount: "2,49 €", itemName: "Kerrygold Butter"),
                    k: SheetTheme(.light))
 }

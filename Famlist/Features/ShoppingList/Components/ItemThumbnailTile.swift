@@ -20,9 +20,20 @@ import SwiftUI
 import UIKit
 
 /// 64 pt product image tile with placeholder.
+/// `flush`: Artikelkarte, Variante A (12.10.2026) – Foto so hoch wie die Karte (92), links bündig, die linken
+/// Ecken folgen der Karte (Radius 23 innerhalb des 1-pt-Rands), rechts gerade, ohne Schatten.
 struct ItemThumbnailTile: View {
     let t: ListTheme
     let image: UIImage?
+    var flush = false
+
+    private var size: CGFloat { flush ? 92 : 64 }
+    private var shape: UnevenRoundedRectangle {
+        flush ? UnevenRoundedRectangle(topLeadingRadius: 23, bottomLeadingRadius: 23, bottomTrailingRadius: 0,
+                                       topTrailingRadius: 0, style: .continuous)
+              : UnevenRoundedRectangle(cornerRadii: .init(topLeading: 18, bottomLeading: 18, bottomTrailing: 18,
+                                                          topTrailing: 18), style: .continuous)
+    }
 
     var body: some View {
         ZStack {
@@ -31,19 +42,19 @@ struct ItemThumbnailTile: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .padding(5)
+                    .padding(flush ? 8 : 5)
             } else if let image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
             } else {
-                SVGIcon(Icon.cameraOff, size: 24, color: t.thumbIcon, lineWidth: 1.7)
+                SVGIcon(Icon.cameraOff, size: flush ? 28 : 24, color: t.thumbIcon, lineWidth: 1.7)
             }
         }
-        .frame(width: 64, height: 64)
-        .clipShape(RR(18))
-        .background(CSSBox(shape: RR(18), paint: t.thumb, shadows: t.thumbShadow))
-        .contentShape(RR(18))
+        .frame(width: size, height: size)
+        .clipShape(shape)
+        .background(CSSBox(shape: shape, paint: t.thumb, shadows: flush ? [] : t.thumbShadow))
+        .contentShape(shape)
     }
 }
 

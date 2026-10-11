@@ -23,6 +23,7 @@
    das exakt die Design-Abstände; `topShift`/`dockShift` gleichen andere Geräte aus.
 
  📝 Last Change:
+ - Tab-Wechsel scrollt die Liste ganz nach oben (12.10.2026).
  - Plus im Dock → Eingabe über der Tastatur (InlineAddOverlay), Suchleiste oben → Listenfilter.
  ------------------------------------------------------------------------
  */
@@ -44,6 +45,8 @@ struct ShoppingListView: View {
     @StateObject var keyboard = KeyboardObserver()
     /// Geteilte Liste: Namen und Profilbilder der anderen Mitglieder (Profilbild am Mengen-Chip).
     @StateObject var contributors = ListContributorsStore()
+    /// Menge direkt in der Liste ändern (Mengen-Chip → Pille, Design: ListQuantityEdit).
+    @State var quantityEditor = InlineQuantityEditor()
     @State var activeSheet: ActiveListSheet?
     @State var activeOverlay: ListOverlay?
     @State var openRow: OpenSwipeRow?
@@ -137,6 +140,7 @@ struct ShoppingListView: View {
             switch newPhase {
             case .active: listViewModel.handleAppDidBecomeActive()
             case .background:
+                quantityEditor.finish()                       // offene Mengen-Änderung speichern
                 listViewModel.commitPendingDeletion()        // Rückgängig-Zeitraum endet mit dem Verlassen der App
                 listViewModel.handleAppDidEnterBackground()
             default: break
@@ -148,6 +152,23 @@ struct ShoppingListView: View {
         .onReceive(categoryStore.$categories) { listViewModel.categoryOrder = $0 }
         // Geteilte Liste: Mitglieder laden (Listenwechsel) bzw. neu laden, wenn eine unbekannte Person auftaucht.
         .environment(\.itemContributors, contributors.byId)
+        .environment(\.inlineQuantityEditor, quantityEditor)
+        .onAppear {
+            quantityEditor.onCommit = { [listViewModel] id, units in
+                guard var item = listViewModel.items.first(where: { $0.id == id }), item.units != units else { return }
+                item.units = units
+                listViewModel.updateItem(item, updateCatalog: false)
+            }
+        }
+        // Ziffernblock offen → Karte ins obere Drittel, damit die Pille über der Tastatur bleibt.
+        .onChange(of: quantityEditor.isTyping) { _, typing in
+            guard typing, let id = quantityEditor.editingId else { return }
+            withAnimation(.easeOut(duration: 0.25)) { listScrollProxy?.scrollTo(id, anchor: UnitPoint(x: 0.5, y: 0.3)) }
+        }
+        // Mengen-Pille schließen, sobald ein Sheet/Menü aufgeht oder die Liste wechselt.
+        .onChange(of: activeSheet?.id) { _, id in if id != nil { quantityEditor.finish() } }
+        .onChange(of: activeOverlay) { _, overlay in if overlay != nil { quantityEditor.finish() } }
+        .onChange(of: listViewModel.listId) { _, _ in quantityEditor.finish() }
         .task(id: contributorsKey) {
             await contributors.load(list: listViewModel.defaultList, me: session.currentProfile?.id,
                                     lists: listViewModel.listsRepository, profiles: session.profiles,
@@ -157,6 +178,7 @@ struct ShoppingListView: View {
         .onAppear { applyDesignLaunchState() }
         #endif
         .onChange(of: listViewModel.listId) { _, _ in exitFilter() }   // Filter gilt nur für die aktuelle Liste
+        .onChange(of: listViewModel.itemFilter) { _, _ in scrollListToTop() }   // Tab-Wechsel: Liste beginnt oben
         .onChange(of: listViewModel.shoppingCompletedEvent) { _, event in
             if let event { offerShoppingDone(for: event) }
         }
@@ -225,12 +247,32 @@ struct ShoppingListView: View {
             }
         }
         .coordinateSpace(name: ListScrollOffsetKey.coordinateSpace)
-        .modifier(TrackListScrollOffset(onChange: { [listScroll] in listScroll.offset = $0 }))
+        .modifier(TrackListScrollOffset(onChange: { [listScroll] in listScroll.update(offset: $0) }))
+        .modifier(TrackListCoasting(onChange: listCoastingChanged))
         .scrollIndicators(.hidden)
+        // Offene Mengen-Pille: Liste steht still; Tippen außerhalb der Pille schließt sie.
+        .scrollDisabled(quantityEditor.editingId != nil)
+        .simultaneousGesture(SpatialTapGesture(coordinateSpace: .global).onEnded { quantityEditor.handleTap(at: $0.location) })
         .refreshable { await listViewModel.pullToRefresh() }   // FAM-40
         .modifier(CloseSwipedRowOnScroll(openRow: $openRow))
+        // Tabs bleiben antippbar, während die Liste nachläuft (liegt ÜBER der Scroll-Ansicht).
+        .overlay(alignment: .top) {
+            CoastingTabsCatcher(t: t, selection: $listViewModel.itemFilter,
+                                openCount: max(listViewModel.totalItemCount - listViewModel.checkedItemCount, 0),
+                                doneCount: listViewModel.checkedItemCount,
+                                scroll: listScroll, isEnabled: !isFiltering)
+        }
         .onAppear { listScrollProxy = proxy }
       }
+    }
+
+    /// Nachlauf beginnt / endet. Wurde im Nachlauf der Tab gewechselt, steht die Liste danach sicher oben.
+    private func listCoastingChanged(_ coasting: Bool) {
+        listScroll.isCoasting = coasting
+        if !coasting, listScroll.returnToTopWhenIdle {
+            listScroll.returnToTopWhenIdle = false
+            listScrollProxy?.scrollTo(Self.listTopID, anchor: .top)
+        }
     }
 
     // MARK: - Navigation Helpers
@@ -245,6 +287,14 @@ struct ShoppingListView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + (needsScroll ? 0.3 : 0)) {
             withAnimation(motion(.easeOut(duration: 0.2))) { isFiltering = true }
         }
+    }
+
+    /// Tab-Wechsel (Alle · Offen · Erledigt): Die Liste beginnt wieder ganz oben, dadurch zeigt der Kopf die große
+    /// Fortschrittskarte (Wunsch Robert 12.10.2026). Ohne Animation: Die Zeilen wechseln im selben Moment.
+    func scrollListToTop() {
+        openRow = nil
+        listScroll.returnToTopWhenIdle = listScroll.isCoasting
+        listScrollProxy?.scrollTo(Self.listTopID, anchor: .top)
     }
 
     /// ✕ im Filterfeld, leeres Feld ohne Fokus oder Listenwechsel.

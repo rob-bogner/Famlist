@@ -87,6 +87,9 @@ struct SwipeableItemRow: View {
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Offene Mengen-Pille: kein Wischen (± und Halten sollen nicht die Karte verschieben).
+    @Environment(\.inlineQuantityEditor) private var quantityEditor
+    private var swipeLocked: Bool { quantityEditor?.editingId != nil }
     private var snapAnimation: Animation { Self.snap(reduceMotion: reduceMotion) }
 
     var body: some View {
@@ -170,6 +173,7 @@ struct SwipeableItemRow: View {
 
     /// Karte folgt dem Finger 1:1 und ohne Animation. Eine andere offene Zeile schließt sich.
     private func dragChanged(_ translation: CGFloat) {
+        guard !swipeLocked else { return }
         let now = CACurrentMediaTime()
         if !isDragging {
             let base = physics.baseOffset(rest)
@@ -217,6 +221,7 @@ struct SwipeableItemRow: View {
 
     /// Ruhelage nach weitestem Punkt, Rückzugsdauer und Geschwindigkeit, dann Federanimation.
     private func dragEnded(_ translation: CGFloat, _ velocity: CGFloat) {
+        guard !swipeLocked || isDragging else { return }
         guard isDragging else { return }
         let now = CACurrentMediaTime()
         let drag = SwipeRevealPhysics.Drag(translation: translation, velocity: velocity,

@@ -70,41 +70,82 @@ final class CategoryStoreTests: XCTestCase {
         return store
     }
 
-    func test_emptyAccount_seedsEightDefaults_andSavesThem() async throws {
+    func test_emptyAccount_seedsAllDefaults_andSavesThem() async throws {
         let repo = InMemoryCategoryDefinitionsRepository()
         let store = await makeStore(repo)
         XCTAssertEqual(store.categories.map(\.name), ItemCategory.displayOrder.map(\.rawValue))
-        await waitUntil { repo.stored.count == 8 }
-        XCTAssertEqual(repo.stored.count, 8)
+        await waitUntil { repo.stored.count == 27 }
+        XCTAssertEqual(repo.stored.count, 27)
+    }
+
+    // MARK: - Standard-Kategorien (12.10.2026: 27 statt 8)
+
+    func test_defaults_haveUniqueNames_knownIcons_andOwnPaletteColors() {
+        let defs = CategoryDefinition.defaults
+        XCTAssertEqual(defs.count, 27)
+        XCTAssertEqual(Set(defs.map { $0.name.lowercased() }).count, defs.count, "Namen eindeutig (Groß/Klein egal)")
+        XCTAssertEqual(defs.first?.name, "Obst & Gemüse")
+        XCTAssertTrue(defs.last?.isFallback == true, "„Sonstiges“ steht am Ende")
+        for def in defs {
+            XCTAssertTrue(CategoryIconCatalog.allKeys.contains(def.icon), "\(def.name): Icon \(def.icon) fehlt im Raster")
+            XCTAssertLessThanOrEqual(def.name.count, 100, "items_category_len")
+        }
+        let colors = defs.map { CategoryColor.hex(for: $0) }
+        XCTAssertEqual(Set(colors).count, defs.count, "jede Standard-Kategorie hat eine eigene Farbe")
+        XCTAssertTrue(colors.allSatisfy { hex in CategoryColor.palette.contains { $0.hex == hex } }, "nur Farben der Palette")
+    }
+
+    func test_originalEightCategories_keepNameIconAndColor() {
+        let expected: [(String, String, String)] = [
+            ("Obst & Gemüse", "apple", "#29C75D"), ("Milchprodukte", "milk", "#4799E1"), ("Backwaren", "bread", "#8F6F24"),
+            ("Getränke", "bottle", "#29C7C2"), ("Haushalt", "spray", "#8F47E1"), ("Tiefkühl", "snowflake", "#475BE1"),
+            ("Fleisch & Fisch", "meat", "#C72933"), ("Sonstiges", "tag", "#5E8D8B"),
+        ]
+        for (name, icon, color) in expected {
+            let def = CategoryDefinition.defaults.first { $0.name == name }
+            XCTAssertEqual(def?.icon, icon, name)
+            XCTAssertEqual(def.map(CategoryColor.hex(for:)), color, name)
+        }
+    }
+
+    func test_photoSuggestion_usesFineCategory_orCoarserOneOfOlderAccounts() {
+        let all = ItemCategory.allCases.map(\.rawValue)
+        let old = ["Obst & Gemüse", "Milchprodukte", "Backwaren", "Getränke", "Haushalt", "Tiefkühl", "Fleisch & Fisch", "Sonstiges"]
+        XCTAssertEqual(ProductPhotoSuggester.categoryName(.kaese, userCategories: all), "Käse")
+        XCTAssertEqual(ProductPhotoSuggester.categoryName(.kaese, userCategories: old), "Milchprodukte")
+        XCTAssertEqual(ProductPhotoSuggester.categoryName(.wurst, userCategories: old), "Fleisch & Fisch")
+        XCTAssertEqual(ProductPhotoSuggester.categoryName(.alkohol, userCategories: old), "Getränke")
+        XCTAssertEqual(ProductPhotoSuggester.categoryName(.eier, userCategories: []), "Eier", "ohne bekannte Kategorien: fein")
+        XCTAssertEqual(ProductPhotoSuggester.categoryName(.milch, userCategories: ["milchprodukte"]), "Milchprodukte")
     }
 
     func test_add_insertsBeforeFallback_rejectsDuplicates() async {
         let store = await makeStore()
-        XCTAssertTrue(store.add(name: "Drogerie", icon: "bag"))
-        XCTAssertFalse(store.add(name: "drogerie", icon: "bag"), "Groß/Klein egal")
+        XCTAssertTrue(store.add(name: "Baumarkt", icon: "bag"))
+        XCTAssertFalse(store.add(name: "baumarkt", icon: "bag"), "Groß/Klein egal")
         XCTAssertFalse(store.add(name: "  ", icon: "bag"))
-        XCTAssertEqual(store.categories.suffix(2).map(\.name), ["Drogerie", "Sonstiges"])
+        XCTAssertEqual(store.categories.suffix(2).map(\.name), ["Baumarkt", "Sonstiges"])
         XCTAssertEqual(store.categories.map(\.position), Array(0..<store.categories.count))
     }
 
-    func test_update_returnsOldName_onlyWhenRenamed() async {
+    func test_update_returnsOldName_onlyWhenRenamed() async throws {
         let store = await makeStore()
-        let milk = store.categories[1]
+        let milk = try XCTUnwrap(store.categories.first { $0.name == "Milchprodukte" })
         XCTAssertNil(store.update(milk.id, name: milk.name, icon: "cup"), "nur Icon geändert")
         XCTAssertEqual(store.update(milk.id, name: "Molkerei", icon: "cup"), "Milchprodukte")
-        XCTAssertEqual(store.categories[1].name, "Molkerei")
+        XCTAssertEqual(store.categories[milk.position].name, "Molkerei")
     }
 
-    func test_color_isStoredAndKeptWhenNil() async {
+    func test_color_isStoredAndKeptWhenNil() async throws {
         let store = await makeStore()
-        let milk = store.categories[1]
+        let milk = try XCTUnwrap(store.categories.first { $0.name == "Milchprodukte" })
         XCTAssertEqual(CategoryColor.hex(for: milk), "#4799E1", "Standardfarbe Milchprodukte")
         _ = store.update(milk.id, name: milk.name, icon: milk.icon, color: "#C72933")
-        XCTAssertEqual(store.categories[1].color, "#C72933")
+        XCTAssertEqual(store.categories[milk.position].color, "#C72933")
         _ = store.update(milk.id, name: milk.name, icon: "cup")
-        XCTAssertEqual(store.categories[1].color, "#C72933", "ohne Farbe bleibt die gewählte")
-        XCTAssertTrue(store.add(name: "Drogerie", icon: "bag", color: "#8F47E1"))
-        XCTAssertEqual(store.categories.first { $0.name == "Drogerie" }?.color, "#8F47E1")
+        XCTAssertEqual(store.categories[milk.position].color, "#C72933", "ohne Farbe bleibt die gewählte")
+        XCTAssertTrue(store.add(name: "Baumarkt", icon: "bag", color: "#8F47E1"))
+        XCTAssertEqual(store.categories.first { $0.name == "Baumarkt" }?.color, "#8F47E1")
         XCTAssertEqual(CategoryColor.palette.count, 36)
     }
 
@@ -116,16 +157,16 @@ final class CategoryStoreTests: XCTestCase {
         XCTAssertEqual(store.categories.first(where: \.isFallback)?.name, "Sonstiges")
     }
 
-    func test_delete_returnsName() async {
+    func test_delete_returnsName() async throws {
         let store = await makeStore()
-        let bread = store.categories[2]
+        let bread = try XCTUnwrap(store.categories.first { $0.name == "Backwaren" })
         XCTAssertEqual(store.delete(bread.id), "Backwaren")
         XCTAssertFalse(store.categories.contains { $0.name == "Backwaren" })
     }
 
     func test_move_changesStoreRoute() async {
         let store = await makeStore()
-        let bread = store.categories[2], fruit = store.categories[0]
+        let bread = store.categories[1], fruit = store.categories[0]
         store.move(bread.id, to: fruit.id)
         XCTAssertEqual(store.categories.prefix(2).map(\.name), ["Backwaren", "Obst & Gemüse"])
         store.move(bread.id, by: 1)
@@ -134,10 +175,10 @@ final class CategoryStoreTests: XCTestCase {
 
     func test_cache_survivesWithoutRepository() async {
         let store = await makeStore()
-        _ = store.add(name: "Drogerie", icon: "bag")
+        _ = store.add(name: "Baumarkt", icon: "bag")
         let offline = CategoryStore(repository: nil, defaults: defaults)
         await offline.load(profileId: profileId)
-        XCTAssertTrue(offline.categories.contains { $0.name == "Drogerie" })
+        XCTAssertTrue(offline.categories.contains { $0.name == "Baumarkt" })
     }
 
     // MARK: - Resolver
@@ -181,23 +222,23 @@ final class CategoryStoreTests: XCTestCase {
         await store.load(profileId: profileId)
         await store.waitForWrites()
         repo.offline = true
-        XCTAssertTrue(store.add(name: "Drogerie", icon: "bag"))
+        XCTAssertTrue(store.add(name: "Baumarkt", icon: "bag"))
         await store.waitForWrites()
-        XCTAssertTrue(store.categories.contains { $0.name == "Drogerie" })
+        XCTAssertTrue(store.categories.contains { $0.name == "Baumarkt" })
         XCTAssertNil(store.errorMessage, "offline ist kein Fehler")
-        XCTAssertFalse(repo.inner.stored.contains { $0.name == "Drogerie" })
+        XCTAssertFalse(repo.inner.stored.contains { $0.name == "Baumarkt" })
 
         // Neustart offline: die Änderung ist noch da
         let restarted = CategoryStore(repository: repo, defaults: defaults)
         await restarted.load(profileId: profileId)
-        XCTAssertTrue(restarted.categories.contains { $0.name == "Drogerie" })
+        XCTAssertTrue(restarted.categories.contains { $0.name == "Baumarkt" })
 
         // Wieder online: beim Laden zuerst senden, dann übernehmen – nichts geht verloren
         repo.offline = false
         await restarted.load(profileId: profileId)
         await restarted.waitForWrites()
-        XCTAssertTrue(repo.inner.stored.contains { $0.name == "Drogerie" })
-        XCTAssertTrue(restarted.categories.contains { $0.name == "Drogerie" })
+        XCTAssertTrue(repo.inner.stored.contains { $0.name == "Baumarkt" })
+        XCTAssertTrue(restarted.categories.contains { $0.name == "Baumarkt" })
     }
 
     func test_offlineDelete_survivesRestart_andIsSentLater() async throws {

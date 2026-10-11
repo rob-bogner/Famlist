@@ -16,6 +16,7 @@
  - Kachel: Verlauf 150° von +22 % hell über die Farbe zu −22 % dunkel, weißes Icon, farbiger Schatten.
 
  📝 Last Change:
+ - Standardfarben für die 19 neuen Standard-Kategorien (12.10.2026).
  - Initial creation (Wunsch Robert 30.09.2026: 30–40 Farben je Kategorie, auch in der Liste).
  ------------------------------------------------------------------------
  */
@@ -45,7 +46,8 @@ enum CategoryColor {
     }
     static let columns = 9
 
-    /// Standard für bekannte Kategorien (wie im Canvas).
+    /// Standard für bekannte Kategorien. Die ersten acht wie im Canvas; die am 12.10.2026 ergänzten
+    /// haben je eine noch freie Farbe der Palette.
     private static let defaults: [String: String] = [
         ItemCategory.obstGemuese.rawValue: "#29C75D",
         ItemCategory.milch.rawValue: "#4799E1",
@@ -55,6 +57,25 @@ enum CategoryColor {
         ItemCategory.tiefkuehl.rawValue: "#475BE1",
         ItemCategory.fleisch.rawValue: "#C72933",
         ItemCategory.sonstiges.rawValue: "#5E8D8B",
+        ItemCategory.wurst.rawValue: "#8F242B",
+        ItemCategory.kaese.rawValue: "#E1B347",
+        ItemCategory.eier.rawValue: "#C79729",
+        ItemCategory.vegetarisch.rawValue: "#248F47",
+        ItemCategory.fruehstueck.rawValue: "#248F8B",
+        ItemCategory.backzutaten.rawValue: "#8F4B24",
+        ItemCategory.nudelnReis.rawValue: "#E17F47",
+        ItemCategory.konserven.rawValue: "#8D6F5E",
+        ItemCategory.fertig.rawValue: "#C76329",
+        ItemCategory.saucen.rawValue: "#E14751",
+        ItemCategory.gewuerze.rawValue: "#8D7F5E",
+        ItemCategory.kaffeeTee.rawValue: "#8D5E61",
+        ItemCategory.suesses.rawValue: "#E1479E",
+        ItemCategory.snacks.rawValue: "#8F2460",
+        ItemCategory.alkohol.rawValue: "#7329C7",
+        ItemCategory.drogerie.rawValue: "#47E1DC",
+        ItemCategory.baby.rawValue: "#8D5E78",
+        ItemCategory.tierbedarf.rawValue: "#5E648D",
+        ItemCategory.blumen.rawValue: "#47E17A",
     ]
 
     /// Farbe für eine neue Kategorie, solange der Nutzer keine wählt.

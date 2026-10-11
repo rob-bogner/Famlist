@@ -53,6 +53,9 @@ struct CollapsingListHeader: View {
     static let searchHeight: CGFloat = 52
     static let barHeight: CGFloat = 40
 
+    /// Oberkante der Tab-Reihe im ganz eingeklappten Kopf (Titelzeile · Abstand · Leiste · Abstand).
+    static let compactTabsTop: CGFloat = rowHeight + gap + barHeight + gap
+
     /// Übergangsstrecke: Suchleiste + Abstand + (Karte − Leiste).
     static func collapseRange(heroHeight: CGFloat) -> CGFloat {
         searchHeight + gap + max(heroHeight - barHeight, 0)
@@ -194,6 +197,10 @@ struct CollapsingListHeader: View {
         .frame(height: lerp(heroHeight, Self.barHeight), alignment: .top)
         .clipShape(RR(radius))
         .background(CSSBox(shape: RR(radius), paint: t.heroBg, shadows: t.heroShadow))
+        // Übergangsstrecke für `ListScrollState.isHeaderCompact` (CoastingTabsCatcher).
+        .onChange(of: heroHeight, initial: true) { _, height in
+            scroll.collapseRange = Self.collapseRange(heroHeight: height)
+        }
     }
 }
 

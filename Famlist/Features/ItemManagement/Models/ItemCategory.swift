@@ -15,6 +15,7 @@
  - Fallback-Initialisierung aus freiem String (nil → .sonstiges)
 
  📝 Last Change:
+ - Von 8 auf 27 Kategorien erweitert (Wunsch Robert 12.10.2026; Quellen: Sortimente von Edeka24, Knuspr, myTime).
  - Initial creation (FAM-63, FAM-65)
  ------------------------------------------------------------------------
 */
@@ -25,17 +26,37 @@ import Foundation
 /// Reihenfolge entspricht typischer Supermarkt-Laufreihenfolge.
 enum ItemCategory: String, CaseIterable, Identifiable, Codable {
     case obstGemuese  = "Obst & Gemüse"
-    case milch        = "Milchprodukte"
     case backwaren    = "Backwaren"
-    case getraenke    = "Getränke"
-    case haushalt     = "Haushalt"
-    case tiefkuehl    = "Tiefkühl"
     case fleisch      = "Fleisch & Fisch"
+    case wurst        = "Wurst & Aufschnitt"
+    case kaese        = "Käse"
+    case milch        = "Milchprodukte"
+    case eier         = "Eier"
+    case vegetarisch  = "Vegetarisch & Vegan"
+    case fruehstueck  = "Frühstück & Aufstriche"
+    case backzutaten  = "Backzutaten"
+    case nudelnReis   = "Nudeln & Reis"
+    case konserven    = "Konserven"
+    case fertig       = "Fertiggerichte"
+    case saucen       = "Saucen & Dips"
+    case gewuerze     = "Öl, Essig & Gewürze"
+    case kaffeeTee    = "Kaffee, Tee & Kakao"
+    case suesses      = "Süßigkeiten"
+    case snacks       = "Snacks & Knabbereien"
+    case tiefkuehl    = "Tiefkühl"
+    case getraenke    = "Getränke"
+    case alkohol      = "Bier, Wein & Spirituosen"
+    case drogerie     = "Drogerie"
+    case haushalt     = "Haushalt"
+    case baby         = "Baby & Kind"
+    case tierbedarf   = "Tierbedarf"
+    case blumen       = "Blumen & Pflanzen"
     case sonstiges    = "Sonstiges"
 
     var id: String { rawValue }
 
-    /// SF Symbol für den Section Header und den Kategorie-Chip.
+    /// SF Symbol für den Section Header und den Kategorie-Chip (nur außerhalb des Hybrid-Designs;
+    /// das Hybrid-Design nutzt `svgIcon`). Die am 12.10.2026 ergänzten Kategorien haben kein eigenes Symbol.
     var icon: String {
         switch self {
         case .obstGemuese: return "leaf.fill"
@@ -45,7 +66,19 @@ enum ItemCategory: String, CaseIterable, Identifiable, Codable {
         case .haushalt:    return "house.fill"
         case .tiefkuehl:   return "snowflake"
         case .fleisch:     return "flame.fill"
-        case .sonstiges:   return "tag.fill"
+        default:           return "tag.fill"
+        }
+    }
+
+    /// Gröbere Kategorie aus dem alten 8er-Satz, in der ein Artikel vor dem 12.10.2026 stand
+    /// (z. B. Käse → Milchprodukte). nil, wenn es keine passende gab (der Artikel stand unter „Sonstiges“).
+    var coarser: ItemCategory? {
+        switch self {
+        case .kaese, .eier:        return .milch
+        case .wurst:               return .fleisch
+        case .alkohol, .kaffeeTee: return .getraenke
+        case .drogerie:            return .haushalt
+        default:                   return nil
         }
     }
 

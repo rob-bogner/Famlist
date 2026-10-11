@@ -11,7 +11,7 @@
  - Offline zuerst: Die Liste liegt in UserDefaults (pro Profil) und ist sofort da. Änderungen werden
    als „offen“ gemerkt (übersteht Neustarts) und gesendet, sobald Netz da ist.
    Änderungen gelten sofort lokal; das Speichern in Supabase läuft im Hintergrund.
- - Beim ersten Start eines Kontos (keine Kategorien in Supabase) werden die 8 Standard-Kategorien angelegt.
+ - Beim ersten Start eines Kontos (keine Kategorien in Supabase) werden die 27 Standard-Kategorien angelegt.
  - „Sonstiges“ ist immer vorhanden und kann nicht gelöscht werden.
  - Umbenennen/Löschen liefert den alten Namen zurück; die Liste ordnet dann die Artikel neu zu.
  - Schreibaufträge an Supabase laufen strikt nacheinander (sonst könnten schnelle Änderungen vertauscht ankommen).

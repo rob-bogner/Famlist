@@ -101,7 +101,7 @@ struct ListSectionHeader: View {
 
 #Preview {
     VStack(spacing: 20) {
-        ListSectionHeader(t: ListTheme(.light), kind: .category(CategoryDefinition.defaults[7]), count: 1)
+        ListSectionHeader(t: ListTheme(.light), kind: .category(CategoryDefinition.standard(.sonstiges)), count: 1)
         ListSectionHeader(t: ListTheme(.light), kind: .checked, count: 1)
     }
     .padding(20)
@@ -109,7 +109,7 @@ struct ListSectionHeader: View {
 
 #Preview("Dark") {
     VStack(spacing: 20) {
-        ListSectionHeader(t: ListTheme(.dark), kind: .category(CategoryDefinition.defaults[7]), count: 1)
+        ListSectionHeader(t: ListTheme(.dark), kind: .category(CategoryDefinition.standard(.sonstiges)), count: 1)
         ListSectionHeader(t: ListTheme(.dark), kind: .checked, count: 1)
     }
     .padding(20)

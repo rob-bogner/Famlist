@@ -15,6 +15,8 @@
  - Später (ab iOS 27) kann hier das Sprachmodell mit Bild-Eingabe freiere Namen liefern.
 
  📝 Last Change:
+ - Feinere Kategorien (Käse, Eier, Wurst, Kaffee/Tee, Bier/Wein); fehlt eine davon in den
+   Kategorien des Nutzers, gilt die gröbere von früher (12.10.2026).
  - Ab iOS 27 zuerst ProductPhotoModelSuggester (Foundation Models mit Bild) (30.09.2026).
  - Initial creation (Wunsch Robert 30.09.2026).
  ------------------------------------------------------------------------
@@ -38,10 +40,21 @@ enum ProductPhotoSuggester {
         if #available(iOS 27.0, *), let model = await ProductPhotoModelSuggester.suggest(for: image, categories: categories) {
             return model
         }
-        return await suggest(for: image)
+        return await suggest(for: image, userCategories: categories)
     }
 
-    static func suggest(for image: UIImage) async -> ProductPhotoSuggestion? {
+    /// Kategorie für den Vorschlag: die feine, wenn der Nutzer sie hat (oder keine Kategorien bekannt sind),
+    /// sonst die gröbere von früher (Käse → Milchprodukte).
+    static func categoryName(_ category: ItemCategory, userCategories: [String]) -> String {
+        let has: (ItemCategory) -> Bool = { c in
+            userCategories.contains { $0.caseInsensitiveCompare(c.rawValue) == .orderedSame }
+        }
+        if userCategories.isEmpty || has(category) { return category.rawValue }
+        if let coarser = category.coarser, has(coarser) { return coarser.rawValue }
+        return category.rawValue
+    }
+
+    static func suggest(for image: UIImage, userCategories: [String] = []) async -> ProductPhotoSuggestion? {
         await Task.detached(priority: .utility) { () -> ProductPhotoSuggestion? in
             guard let cg = image.cgImage else { return nil }
             let request = VNClassifyImageRequest()
@@ -50,7 +63,8 @@ enum ProductPhotoSuggester {
             let hits = (request.results ?? []).filter { $0.confidence >= minimumConfidence }
             for hit in hits.sorted(by: { $0.confidence > $1.confidence }) {
                 if let match = catalog[hit.identifier.lowercased()] {
-                    return ProductPhotoSuggestion(name: match.0, category: match.1.rawValue)
+                    return ProductPhotoSuggestion(name: match.0,
+                                                  category: categoryName(match.1, userCategories: userCategories))
                 }
             }
             return nil
@@ -75,6 +89,8 @@ enum ProductPhotoSuggester {
     private static let catalog: [String: (String, ItemCategory)] = {
         let og = ItemCategory.obstGemuese, mi = ItemCategory.milch, ba = ItemCategory.backwaren
         let ge = ItemCategory.getraenke, fl = ItemCategory.fleisch, tk = ItemCategory.tiefkuehl, ha = ItemCategory.haushalt
+        let ka = ItemCategory.kaese, ei = ItemCategory.eier, wu = ItemCategory.wurst
+        let al = ItemCategory.alkohol, kt = ItemCategory.kaffeeTee
         return [
             "orange": ("Orangen", og), "citrus_fruit": ("Zitrusfrüchte", og), "lemon": ("Zitronen", og), "lime": ("Limetten", og),
             "grapefruit": ("Grapefruit", og), "apple": ("Äpfel", og), "banana": ("Bananen", og), "pear": ("Birnen", og),
@@ -89,12 +105,12 @@ enum ProductPhotoSuggester {
             "bell_pepper": ("Paprika", og), "pepper_veggie": ("Paprika", og), "zucchini": ("Zucchini", og),
             "eggplant": ("Aubergine", og), "pumpkin": ("Kürbis", og), "asparagus": ("Spargel", og), "spinach": ("Spinat", og),
             "radish": ("Radieschen", og), "celery": ("Sellerie", og), "leek": ("Lauch", og), "ginger": ("Ingwer", og),
-            "cheese": ("Käse", mi), "milk": ("Milch", mi), "yogurt": ("Joghurt", mi), "butter": ("Butter", mi), "egg": ("Eier", mi),
+            "cheese": ("Käse", ka), "milk": ("Milch", mi), "yogurt": ("Joghurt", mi), "butter": ("Butter", mi), "egg": ("Eier", ei),
             "bread": ("Brot", ba), "baguette": ("Baguette", ba), "croissant": ("Croissants", ba), "pretzel": ("Brezeln", ba),
             "bagel": ("Bagels", ba), "cake": ("Kuchen", ba), "muffin": ("Muffins", ba), "cookie": ("Kekse", ba), "donut": ("Donuts", ba),
-            "wine": ("Wein", ge), "wine_bottle": ("Wein", ge), "beer": ("Bier", ge), "coffee": ("Kaffee", ge), "tea": ("Tee", ge),
+            "wine": ("Wein", al), "wine_bottle": ("Wein", al), "beer": ("Bier", al), "coffee": ("Kaffee", kt), "tea": ("Tee", kt),
             "juice": ("Saft", ge), "water": ("Wasser", ge), "soda": ("Limonade", ge),
-            "meat": ("Fleisch", fl), "steak": ("Steak", fl), "sausage": ("Würstchen", fl), "bacon": ("Speck", fl),
+            "meat": ("Fleisch", fl), "steak": ("Steak", fl), "sausage": ("Würstchen", wu), "bacon": ("Speck", wu),
             "chicken": ("Hähnchen", fl), "fish": ("Fisch", fl), "salmon": ("Lachs", fl), "shrimp": ("Garnelen", fl),
             "ice_cream": ("Eis", tk), "pizza": ("Pizza", tk),
             "toilet_paper": ("Toilettenpapier", ha), "sponge": ("Schwämme", ha), "detergent": ("Waschmittel", ha),

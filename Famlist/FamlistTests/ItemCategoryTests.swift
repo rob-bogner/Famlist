@@ -149,7 +149,7 @@ struct CategoryProjectionsTests {
         ]
         let grouped = groupByCategory(uncheckedItems: items)
         let categories = grouped.map(\.category)
-        #expect(categories == [.obstGemuese, .milch, .backwaren])
+        #expect(categories == [.obstGemuese, .backwaren, .milch])
     }
 
     // MARK: Kategorien ohne Items werden ausgelassen

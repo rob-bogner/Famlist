@@ -20,6 +20,7 @@
    Berührung fest, dann ließe sich die Zeile nicht wischen, wenn der Daumen dort aufsetzt.
 
  📝 Last Change:
+ - Variante A: Foto so hoch wie die Karte, links bündig (ItemThumbnailTile flush); Mengen-Chip antippen → Eingabe-Pille (InlineQuantityPill), 12.10.2026.
  - Geteilte Liste: Profilbild des Mitglieds, das den Artikel hinzugefügt hat, neben dem Mengen-Chip (11.10.2026).
  - Bild-Kachel nur mit „Artikelbilder anzeigen“; ohne öffnet der Name die Produktdetails (30.09.2026).
  - 29.09.2026: Kreis nur, wenn die Einstellung „Artikel abhaken“ ihn zeigt (nicht bei „Wischen“).
@@ -45,6 +46,8 @@ struct ItemCard: View {
     @State private var showRetryConfirmation = false
     /// Geteilte Liste: Mitglieder ohne den angemeldeten Nutzer (ListContributorsStore).
     @Environment(\.itemContributors) private var contributors
+    /// Menge direkt in der Liste ändern (Mengen-Chip → Pille); nil außerhalb der Einkaufsliste.
+    @Environment(\.inlineQuantityEditor) private var quantityEditor
     /// Einstellungen → Liste → „Preise anzeigen“.
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
     @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
@@ -66,7 +69,7 @@ struct ItemCard: View {
     var body: some View {
         HStack(spacing: 16) {
             if showImages {
-                ItemThumbnailTile(t: t, image: item.image)
+                ItemThumbnailTile(t: t, image: item.image, flush: true)
                     .swipeFriendlyTap("Produktbild von \(item.name)", action: onTapImage)
                     .opacity(dimmed ? 0.55 : 1)
             }
@@ -89,7 +92,10 @@ struct ItemCard: View {
             if item.isSyncFailed { syncFailedIcon }
             trailingColumn
         }
-        .padding(15)                      // 1 border + 14 padding
+        // 1 border + 14 padding; mit Bild liegt das Foto links bündig in der Karte (Variante A, 12.10.2026)
+        .padding(.leading, showImages ? 1 : 15)
+        .padding(.vertical, showImages ? 1 : 15)
+        .padding(.trailing, 15)
         .frame(maxWidth: .infinity)
         .frame(height: 94)
         // Ganze Karte treffbar machen: CSSBox ist allowsHitTesting(false). Ohne diese Zeile landete eine
@@ -117,15 +123,23 @@ struct ItemCard: View {
             }
     }
 
+    private var isEditingQuantity: Bool { quantityEditor?.editingId == item.id }
+
+    @ViewBuilder
     private var detailRow: some View {
+        if isEditingQuantity, let quantityEditor {
+            InlineQuantityPill(t: t, item: item, editor: quantityEditor)
+                .transition(.scale(scale: 0.7, anchor: .leading).combined(with: .opacity))
+        } else {
+            detailChips
+        }
+    }
+
+    /// Mengen-Chip (antippen → Pille), Profilbild, „Nicht verfügbar“ bzw. Marke.
+    private var detailChips: some View {
         HStack(spacing: 8) {
-            Text(item.quantityText)
-                .font(AppFont.dm(13, 600))
-                .foregroundStyle(t.accentText)
-                .padding(.vertical, 4)
-                .padding(.horizontal, 11)
-                .background(CSSBox(shape: Pill, paint: .color(t.chipBg), shadows: t.chipInset))
-                .fixedSize()
+            quantityChip
+                .transition(.opacity)
             // Geteilte Liste: Profilbild, wenn ein anderes Mitglied den Artikel hinzugefügt hat (Design: ListShared).
             if let by = item.createdBy, let contributor = contributors[by.lowercased()] {
                 ContributorAvatar(contributor: contributor, isDark: t.isDark)
@@ -146,6 +160,26 @@ struct ItemCard: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var quantityChip: some View {
+        let chip = Text(item.quantityText)
+            .font(AppFont.dm(13, 600))
+            .foregroundStyle(t.accentText)
+            .padding(.vertical, 4)
+            .padding(.horizontal, 11)
+            .background(CSSBox(shape: Pill, paint: .color(t.chipBg), shadows: t.chipInset))
+            .fixedSize()
+        if let quantityEditor, !item.isChecked {
+            chip
+                .padding(.vertical, 8)                  // größere Trefferfläche ohne Layout-Versatz
+                .contentShape(Rectangle())
+                .padding(.vertical, -8)
+                .swipeFriendlyTap("Menge \(item.quantityText) ändern") { quantityEditor.begin(item.id) }
+        } else {
+            chip
         }
     }
 
