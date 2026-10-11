@@ -108,6 +108,12 @@ final class SwiftDataItemStore {
     func writeLocal(_ model: ItemModel, hlc: HybridLogicalClock, tombstone: Bool, modifiedBy: String) throws -> ItemEntity {
         let id = UUID(uuidString: model.id) ?? UUID()
         let existing = try fetchItem(id: id)
+        let wasHidden = existing == nil || existing?.tombstone == true
+        // Der Artikel kommt (zurück) auf die Liste: neu, gelöscht → wieder da oder abgehakt → offen. Der Server
+        // setzt „hinzugefügt von“ dann auf den Schreibenden (Migration 039). Seine Antwort trägt dieselbe HLC
+        // und wird lokal nicht übernommen – deshalb hier den bisherigen Ersteller entfernen
+        // (leer = eigener Artikel, kein Profilbild).
+        let addedByMe = !tombstone && (wasHidden || (existing?.isChecked == true && !model.isChecked))
         let entity: ItemEntity
         if let existing {
             entity = existing
@@ -116,7 +122,7 @@ final class SwiftDataItemStore {
             entity = ItemEntity.make(from: model)
             context.insert(entity)
         }
-        let wasHidden = existing == nil || existing?.tombstone == true
+        if addedByMe { entity.createdBy = nil }
         entity.hlcTimestamp = hlc.timestamp
         entity.hlcCounter = hlc.counter
         entity.hlcNodeId = hlc.nodeId
