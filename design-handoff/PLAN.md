@@ -421,3 +421,12 @@ Abgleich (`ProductPhotoMatcher`):
 - Schatten: Ring und Schatten des Profilbilds über `CSSBox` (nicht `.shadow`) – ein weicher SwiftUI-Schatten je Zeile ließ die Liste beim Scrollen stottern (Gerät, 11.10.2026).
 - Tests: `ItemCreatedByTests`; Prüfskript `migrations/tests/039_items_created_by_on_return_check.sql`.
 
+### Artikelkarte: Foto bündig (Variante A) und Menge direkt ändern (12.10.2026)
+
+| Board | Umsetzung |
+|---|---|
+| Liste mit Bildern (Hybrid `thumb=flush`, Standard) | `ItemThumbnailTile(flush: true)`: Foto 92 × 92, links bündig, linke Ecken Radius 23 (folgen der Karte), rechts gerade, ohne Schatten; Karte innen 1 pt statt 15 links/oben/unten |
+| ListQuantityEdit | Mengen-Chip antippen → `InlineQuantityPill` (− · Zahl · + und Einheit, Stepper aus „Artikel bearbeiten“, Zahl antippen = Ziffernblock). `InlineQuantityEditor` (Umgebung): eine Pille gleichzeitig, Tippen außerhalb schließt (SpatialTapGesture auf der Liste), Liste scrollt und wischt solange nicht, speichert 0,6 s nach der letzten Änderung bzw. beim Schließen (`updateItem`, ohne Artikelstamm). Ziffernblock → Karte ins obere Drittel gescrollt |
+
+- Abgehakte Artikel: Chip nicht antippbar.
+

@@ -93,6 +93,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Einstellungen – Artikelbilder aus | SettingsImagesOff | ja | – |
 |  | Liste – ohne Artikelbilder | ListNoImages | ja | – |
 |  | Geteilte Liste – Profilbild am Mengen-Chip (Artikel anderer Mitglieder) | ListShared, ListSharedNoImages | ja | `ContributorAvatar`, `ListContributorsStore` |
+|  | Liste – Menge direkt ändern (Chip → Pille, Foto bündig) | ListQuantityEdit | ja | `InlineQuantityPill`, `InlineQuantityEditor`, `ItemThumbnailTile(flush:)` |
 |  | Abmelden – ungesendete Änderungen | SignOutDialog | ja | – (nur HTML) |
 |  | Profil bearbeiten | EditProfile | ja | `EditProfileScreen` |
 |  | Kassenzettel-Archiv | ReceiptArchive | ja | – (nur HTML) |
@@ -168,7 +169,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
    - Nach links wischen zeigt runde Glas-Aktionsknöpfe (SwipeActions, 56 pt).
    - Zustände einer Karte: „Nicht verfügbar“ (ItemUnavailable), „Sync fehlgeschlagen“ mit Rückfrage (ItemSyncFailed, ItemSyncFailedDialog).
    - Fortschritt im Hero: „x von y Artikeln“ und Prozent. Beim Scrollen klappt der Kopf kompakt zusammen (ListCompact).
-   - Tabs Alle / Offen / Erledigt filtern; „Offen“ und „Erledigt“ zeigen die Anzahl als kleine Plakette (gewählt: Akzent-Tönung). Leere Tabs zeigen eigene Hinweise (FilterOpenEmpty, FilterDoneEmpty).
+   - Tabs Alle / Offen / Erledigt filtern; „Offen“ und „Erledigt“ zeigen die Anzahl als kleine Plakette (gewählt: Akzent-Tönung). Leere Tabs zeigen eigene Hinweise (FilterOpenEmpty, FilterDoneEmpty). Jeder Tab-Wechsel setzt die Liste ganz nach oben; der Kopf zeigt dann wieder die große Fortschrittskarte. Tabs reagieren auch, während die Liste nach einem Wisch noch nachläuft (seit 12.10.2026).
    - Die Kachel vor dem Kategorienamen hat die Farbe der Kategorie (Kategorie bearbeiten → Farbe, 36 Farben: 9 Farbtöne × hell · kräftig · dunkel · gedeckt).
    - Sektionskopf „Alle abhaken ›“ gilt pro Kategorie.
 5. **Dock (untere Leiste)**
