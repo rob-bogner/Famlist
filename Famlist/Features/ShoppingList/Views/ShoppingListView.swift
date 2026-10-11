@@ -144,6 +144,7 @@ struct ShoppingListView: View {
             case .background:
                 quantityEditor.finish()                       // offene Mengen-Änderung speichern
                 listViewModel.commitPendingDeletion()        // Rückgängig-Zeitraum endet mit dem Verlassen der App
+                listViewModel.dismissPendingCheck()
                 listViewModel.handleAppDidEnterBackground()
             default: break
             }
@@ -195,6 +196,11 @@ struct ShoppingListView: View {
             guard newId != nil else { return }
             undoRemaining = 1
             withAnimation(.linear(duration: PendingItemDeletion.undoDuration)) { undoRemaining = 0 }
+        }
+        .onChange(of: listViewModel.pendingCheck?.id) { _, newId in
+            guard newId != nil else { return }
+            undoRemaining = 1
+            withAnimation(.linear(duration: PendingItemCheck.undoDuration)) { undoRemaining = 0 }
         }
     }
 

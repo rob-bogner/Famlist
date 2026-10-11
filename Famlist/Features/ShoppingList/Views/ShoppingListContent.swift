@@ -99,7 +99,9 @@ struct ShoppingListContent: View {
             highlight: highlight,
             openRow: $openRow,
             onToggleChecked: {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { listViewModel.toggleItemChecked(item) }
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    listViewModel.toggleItemChecked(item, offersUndo: true)
+                }
             },
             onDelete: {
                 openRow = nil

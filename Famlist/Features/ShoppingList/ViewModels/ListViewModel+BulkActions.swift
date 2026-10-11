@@ -93,6 +93,7 @@ extension ListViewModel {
     /// Markiert alle Items als gecheckt oder ungecheckt, abhängig vom aktuellen Zustand.
     /// Optimiert für große Listen mit Debouncing, Batch-Updates und Chunked-Sync.
     func toggleAllItems() {
+        dismissPendingCheck()                 // „Alle abhaken“/„Zurücksetzen“ überholt den einzelnen Haken
         // Cancel any pending toggle operation
         toggleAllDebounceTask?.cancel()
         

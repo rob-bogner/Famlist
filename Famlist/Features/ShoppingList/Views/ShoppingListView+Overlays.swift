@@ -125,6 +125,17 @@ extension ShoppingListView {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .ignoresSafeArea()
                 .transition(toastTransition)
+        } else if let pending = listViewModel.pendingCheck, activeSheet == nil {
+            // Derselbe Toast wie beim Löschen, mit Haken und Artikelname (Wunsch Robert 12.10.2026).
+            UndoToast(k: k, message: pending.message, icon: Icon.check, remaining: undoRemaining,
+                      onUndo: {
+                          withAnimation(motion(.spring(response: 0.4, dampingFraction: 0.7))) { listViewModel.undoPendingCheck() }
+                      })
+                .padding(.horizontal, 20)
+                .padding(.bottom, insets.dockBottom + 80)       // wie der Lösch-Toast
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .ignoresSafeArea()
+                .transition(toastTransition)
         } else if let copied, activeSheet == nil {
             CopyDoneToast(k: k, count: copied.count, scope: copied.scope)
                 .padding(.horizontal, 20)

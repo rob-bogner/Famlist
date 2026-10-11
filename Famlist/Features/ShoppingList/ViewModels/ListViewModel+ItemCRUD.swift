@@ -241,7 +241,9 @@ extension ListViewModel {
 
     /// Toggles the checked state of an item and persists the change via updateItem.
     /// Uses optimistic update: UI changes immediately for instant feedback, then syncs to backend.
-    func toggleItemChecked(_ item: ItemModel) {
+    /// - Parameter offersUndo: true, wenn der Nutzer den Artikel in der Liste antippt oder wischt. Nach dem
+    ///   Abhaken erscheint dann der Rückgängig-Toast (ListViewModel+UndoCheck).
+    func toggleItemChecked(_ item: ItemModel, offersUndo: Bool = false) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         let wasComplete = isShoppingComplete
         defer { noteCheckChange(wasComplete: wasComplete) }
@@ -265,6 +267,12 @@ extension ListViewModel {
         pendingAnimatedItemIDs.insert(updatedItem.id)
         // Abhaken ändert den Artikelstamm nicht (vorher: alter Preis/Foto überschrieb den Stamm, Audit H7).
         updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true, updateCatalog: false)
+
+        if updatedItem.isChecked, offersUndo {
+            offerCheckUndo(for: updatedItem)
+        } else if pendingCheck?.itemId == updatedItem.id {
+            dismissPendingCheck()                 // Haken von Hand entfernt: Hinweis ist erledigt
+        }
     }
     
     /// Aktueller Stand eines Artikels: aus der Anzeige, sonst aus SwiftData.

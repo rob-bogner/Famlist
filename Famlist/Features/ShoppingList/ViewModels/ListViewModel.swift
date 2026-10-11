@@ -90,6 +90,12 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Läuft ab, sobald der Rückgängig-Toast ausgeblendet wird; schreibt dann die Löschung.
     internal var pendingDeletionTask: Task<Void, Never>?
 
+    /// Zuletzt abgehakter Artikel, dessen Haken noch per „Rückgängig“ entfernt werden kann (Toast, 5 s).
+    @Published var pendingCheck: PendingItemCheck?
+
+    /// Läuft ab, sobald der Abhak-Toast ausgeblendet wird.
+    internal var pendingCheckTask: Task<Void, Never>?
+
     /// Gelöschte bzw. verlassene Liste, die noch per „Rückgängig“ zurückkommen kann (Meine Listen, 5 s).
     @Published var pendingListRemoval: PendingListRemoval?
 
@@ -258,6 +264,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     func switchList(to newId: UUID) {
         guard newId != self.listId else { return }
         commitPendingDeletion()              // offene Rückgängig-Löschung der alten Liste festschreiben
+        dismissPendingCheck()                // der Abhak-Hinweis gehört zur alten Liste
         observeTask?.cancel()
         incrementalSyncTask?.cancel()
         toggleAllDebounceTask?.cancel()
@@ -277,6 +284,7 @@ final class ListViewModel: ObservableObject { // ObservableObject lets SwiftUI o
     /// Clears view model state in response to sign-out.
     func clearForSignOut() {
         commitPendingDeletion()
+        dismissPendingCheck()
         stopAllListsSync()                                  // vor dem Leeren von allLists
         observeTask?.cancel()
         observeTask = nil

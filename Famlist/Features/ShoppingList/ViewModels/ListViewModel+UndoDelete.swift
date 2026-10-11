@@ -42,6 +42,7 @@ extension ListViewModel {
     /// Gemeinsamer Weg für Dock- und Einzel-Löschung.
     func stageDeletion(of targetsIn: [ItemModel], scope: String) {
         commitPendingDeletion()
+        dismissPendingCheck()                 // der Lösch-Toast ersetzt den Abhak-Toast
         let targets = targetsIn
         guard !targets.isEmpty else { return }
         logVoid(params: (action: "stageDeletion", scope: scope, count: targets.count))

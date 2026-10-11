@@ -31,6 +31,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Wisch-Aktionen offen (nach links wischen) | SwipeActions | ja | `ListScreen(state: .swipe)` |
 |  | Artikel nicht verfügbar | ItemUnavailable | ja | – (nur HTML) |
 |  | Gelöscht – Rückgängig | UndoToast | ja | `UndoToastScreen` |
+|  | Abgehakt – Rückgängig (12.10.2026) | – (wie UndoToast, Haken statt Papierkorb) | ja | `UndoToast(message:icon:)` |
 |  | Sync fehlgeschlagen | ItemSyncFailed | ja | – (nur HTML) |
 |  | Sync fehlgeschlagen – erneut versuchen? | ItemSyncFailedDialog | ja | – (nur HTML) |
 | 3 · Artikel hinzufügen & bearbeiten | Artikel hinzufügen (Plus → Eingabe unten; Suchleiste mit Foto- und Barcode-Knopf) | AddInline | ja | – (nur HTML) |
@@ -167,6 +168,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
    - Hinweis: Die App kann Kommazahlen seit 26.09.2026; das Board EditItemAmount zeigt noch eine Zifferntastatur ohne Komma. Design-Nachtrag offen – bis dahin gilt das Verhalten der App.
 4. **Einkaufen**
    - Nach rechts wischen hakt ab (SwipeCheck). Ein abgehakter Artikel: nach rechts wischen löscht ihn (SwipeDelete, rot „Löschen“ mit Mülleimer), nach links „Zurück auf die Liste“ (Checked).
+   - Nach dem Abhaken eines einzelnen Artikels (Wischen oder Kreis) erscheint der Toast „„<Artikel>“ abgehakt“ mit „Rückgängig“ (5 s, Restzeit-Balken, Position und Aussehen wie UndoToast, Icon Haken). „Rückgängig“ entfernt den Haken. Ein weiterer Haken ersetzt den Toast; Löschen, „Alle abhaken“ und „Zurücksetzen“ blenden ihn aus. Kein Toast bei „Alle abhaken“ (Dock, Sektionskopf) und beim Entfernen eines Hakens (Wunsch Robert 12.10.2026).
    - Nach links wischen zeigt runde Glas-Aktionsknöpfe (SwipeActions, 56 pt).
    - Zustände einer Karte: „Nicht verfügbar“ (ItemUnavailable), „Sync fehlgeschlagen“ mit Rückfrage (ItemSyncFailed, ItemSyncFailedDialog).
    - Fortschritt im Hero: „x von y Artikeln“ und Prozent. Beim Scrollen klappt der Kopf kompakt zusammen (ListCompact).

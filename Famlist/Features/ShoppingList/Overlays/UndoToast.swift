@@ -5,7 +5,7 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Toast „n Artikel gelöscht“ mit „Rückgängig“ und Restzeit-Balken (5 s).
+ - Toast „n Artikel gelöscht“ bzw. „„Name“ abgehakt“ mit „Rückgängig“ und Restzeit-Balken (5 s).
 
  🔰 Notes for Beginners:
  - Vorlage: UndoToastScreen in design-handoff/MyListUI/Screens/OverlayScreens.swift
@@ -13,6 +13,7 @@
  - Der Balken läuft in der App animiert von 100 % auf 0 % (Design-Standbild: 62 %).
 
  📝 Last Change:
+ - Icon wählbar: derselbe Toast meldet auch „„Name“ abgehakt“ (12.10.2026).
  - Initial creation (Redesign „Hybrid“).
  ------------------------------------------------------------------------
  */
@@ -24,6 +25,8 @@ struct UndoToast: View {
     var count = 1
     /// Eigener Text (z. B. „„Drogerie“ gelöscht“); sonst „n Artikel gelöscht“.
     var message: String? = nil
+    /// Icon links: Papierkorb beim Löschen, Haken beim Abhaken.
+    var icon: [SVGElement] = Icon.trash
     /// Restzeit-Balken, Anteil der Padding-Box (0…1).
     var remaining: CGFloat = 0.62
     var onUndo: () -> Void = {}
@@ -31,7 +34,7 @@ struct UndoToast: View {
     var body: some View {
         // links/rechts 20, unten 114, Höhe 56, padding 0 8 0 16, Radius 20, overflow hidden
         GlassToast(k: k, height: 56, radius: 20, leading: 16, trailing: 8) {
-            SVGIcon(Icon.trash, size: 20, color: k.toastIcon, lineWidth: 1.9)
+            SVGIcon(icon, size: 20, color: k.toastIcon, lineWidth: 1.9)
             Text(message ?? "\(count) Artikel gelöscht")
                 .font(AppFont.dm(15, 500))
                 .foregroundStyle(k.toastText)
