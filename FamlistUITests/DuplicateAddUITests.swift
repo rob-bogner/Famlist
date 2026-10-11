@@ -34,13 +34,16 @@ final class DuplicateAddUITests: XCTestCase {
     }
 
     /// Plus im Dock → Eingabe über der Tastatur → Treffer antippen. Die Eingabe muss danach geschlossen sein.
-    private func addFromSearch(_ name: String) {
+    /// - Parameter unit: Treffer mit dieser Einheit wählen. Der Beispiel-Artikelstamm kennt „Brot“ zweimal:
+    ///   mit „Stück“ (Beispieldaten) und ohne Einheit (von der Fixture beim Füllen der Liste gespeichert).
+    private func addFromSearch(_ name: String, unit: String? = nil) {
         app.buttons["Artikel hinzufügen"].tap()
         let field = app.textFields["Artikel hinzufügen"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.typeText(name)
         // Trefferzeile heißt „Brot“ bzw. „Brot, Stück, auf der Liste“ (nicht „Brötchen“).
-        let row = NSPredicate(format: "label == %@ OR label BEGINSWITH %@", name, "\(name),")
+        let prefix = [name, unit].compactMap { $0 }.joined(separator: ", ")
+        let row = NSPredicate(format: "label == %@ OR label BEGINSWITH %@", prefix, "\(prefix),")
         let add = app.buttons.matching(row).firstMatch
         XCTAssertTrue(add.waitForExistence(timeout: 5))
         add.tap()
@@ -57,10 +60,10 @@ final class DuplicateAddUITests: XCTestCase {
 
     func test_addExistingItem_showsIncreasedQuantityImmediately() {
         XCTAssertTrue(app.buttons["Brot abhaken"].waitForExistence(timeout: 15))
-        addFromSearch("Brot")
+        addFromSearch("Brot", unit: "Stück")
         XCTAssertTrue(app.staticTexts["2 Stück"].waitForExistence(timeout: 5), "Karte zeigt die erhöhte Menge")
 
-        addFromSearch("Brot")
+        addFromSearch("Brot", unit: "Stück")
         XCTAssertTrue(app.staticTexts["3 Stück"].waitForExistence(timeout: 5), "auch beim zweiten Mal")
     }
 

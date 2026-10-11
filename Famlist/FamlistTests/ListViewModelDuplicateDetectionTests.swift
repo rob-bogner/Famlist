@@ -119,6 +119,22 @@ final class ListViewModelDuplicateDetectionTests: XCTestCase {
         XCTAssertEqual(viewModel.items.first?.id, existing.id)
     }
 
+    /// Artikel ohne Einheit steht auf der Liste; derselbe Artikel kommt mit Einheit hinzu (Artikelstamm „Stück“):
+    /// Menge +1 und die Einheit wird übernommen (Karte zeigt „2 Stück“, nicht „2“).
+    func test_addItem_duplicateWithoutMeasure_adoptsMeasureOfAddedItem() {
+        var existing = makeItem(name: "Brot", units: 1)
+        existing.measure = ""
+        viewModel.items = [existing]
+
+        var added = makeItem(name: "Brot", units: 1)
+        added.measure = "Stück"
+        viewModel.addItem(added)
+
+        XCTAssertEqual(viewModel.items.count, 1)
+        XCTAssertEqual(viewModel.items.first?.units, 2)
+        XCTAssertEqual(viewModel.items.first?.measure, Measure.piece.rawValue)
+    }
+
     func test_addItem_duplicateUnchecked_doesNotAddNewEntry() {
         // Arrange
         viewModel.items = [makeItem(name: "Butter", units: 2, isChecked: false)]
