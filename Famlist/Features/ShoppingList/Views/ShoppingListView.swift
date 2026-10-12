@@ -23,6 +23,7 @@
    das exakt die Design-Abstände; `topShift`/`dockShift` gleichen andere Geräte aus.
 
  📝 Last Change:
+ - Tab-Wechsel hält den Nachlauf der Liste an (12.10.2026).
  - Tab-Wechsel scrollt die Liste ganz nach oben (12.10.2026).
  - Plus im Dock → Eingabe über der Tastatur (InlineAddOverlay), Suchleiste oben → Listenfilter.
  ------------------------------------------------------------------------
@@ -247,6 +248,7 @@ struct ShoppingListView: View {
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 64 + 28)       // Dock 64 + Luft, damit die letzte Karte frei liegt
+            .background(alignment: .top) { StopListCoasting(scroll: listScroll).frame(width: 0, height: 0) }
             .background {
                 GeometryReader { geo in
                     Color.clear.preference(key: ListScrollOffsetKey.self,
@@ -314,6 +316,7 @@ struct ShoppingListView: View {
             withAnimation(motion(.spring(response: 0.35, dampingFraction: 0.85))) { listViewModel.itemFilter = filter }
         }
         guard listScroll.offset > 1 else { apply(); return }
+        listScroll.stopMotion?()                              // Nachlauf anhalten, sonst läuft die Liste von oben aus weiter
         scrollListToTop()
         filterSwitchTask = Task { @MainActor in
             // Warten, bis die Liste wirklich oben steht (höchstens ~0,25 s, z. B. wenn sie gerade nachläuft).

@@ -12,6 +12,7 @@
    neu berechnen (ruckelt). So liest nur CollapsingListHeader den Wert und nur der Kopf wird neu gezeichnet.
 
  📝 Last Change:
+ - `stopMotion` hält den Nachlauf beim Tab-Wechsel an (12.10.2026).
  - `isCoasting`, `isHeaderCompact` für Tab-Tipps im Nachlauf (CoastingTabsCatcher, 12.10.2026).
  - Initial creation.
  ------------------------------------------------------------------------
@@ -33,6 +34,8 @@ final class ListScrollState {
     @ObservationIgnored var collapseRange: CGFloat = .infinity
     /// Tab-Wechsel im Nachlauf: Sobald die Liste steht, noch einmal ganz nach oben (falls der Nachlauf weiterlief).
     @ObservationIgnored var returnToTopWhenIdle = false
+    /// Hält den Nachlauf der Liste sofort an; `StopListCoasting` trägt es ein, sobald die Liste auf dem Bildschirm ist.
+    @ObservationIgnored var stopMotion: (() -> Void)?
 
     /// Neuer Scroll-Weg. `isHeaderCompact` wird nur geschrieben, wenn es sich ändert (sonst würde jede
     /// Ansicht, die es liest, in jedem Frame neu berechnet).

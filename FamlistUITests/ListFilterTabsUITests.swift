@@ -116,15 +116,50 @@ final class ListFilterTabsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Äpfel abhaken"].isHittable, "erster offener Artikel ist sichtbar")
     }
 
-    /// Gerätefall 12.10.2026: Die Liste läuft nach einem kräftigen Wisch noch nach. Ein Tipp auf einen Tab
-    /// muss trotzdem sofort wechseln (vorher hielt der erste Tipp nur das Scrollen an).
-    /// Grenze dieses Tests: XCUITest wartet vor jedem Tipp, bis die App ruht – also bis die Liste steht. Den
-    /// Nachlauf selbst trifft er deshalb nicht; er sichert nur den Ablauf Wisch → Tab ab. Geprüft am Gerät.
-    func test_tappingTab_whileListStillScrolls_switchesImmediately() {
+    /// XCUITest wartet vor und nach jedem Ereignis, bis die App ruht – also bis die Liste steht. Ein Tipp im
+    /// Nachlauf ist so nicht möglich. Diese Funktion schaltet das Warten ab und liefert die Rücknahme.
+    /// Sie ersetzt zwei private Methoden von XCTest; fehlen sie in einer neuen Xcode-Version, schlägt der Test fehl.
+    private func skipWaitingForIdle() -> () -> Void {
+        guard let process = NSClassFromString("XCUIApplicationProcess") else {
+            XCTFail("XCUIApplicationProcess fehlt")
+            return {}
+        }
+        var originals: [(Method, IMP)] = []
+        for name in ["shouldSkipPreEventQuiescence", "shouldSkipPostEventQuiescence"] {
+            guard let method = class_getInstanceMethod(process, NSSelectorFromString(name)) else {
+                XCTFail("\(name) fehlt")
+                continue
+            }
+            let skip: @convention(block) (AnyObject) -> Bool = { _ in true }
+            originals.append((method, method_setImplementation(method, imp_implementationWithBlock(skip))))
+        }
+        return { originals.forEach { method_setImplementation($0.0, $0.1) } }
+    }
+
+    /// Bildschirmpunkt eines Elements als feste Koordinate (zwischen Wisch und Tipp darf keine Elementsuche liegen).
+    private func fixedCenter(of element: XCUIElement) -> XCUICoordinate {
+        let spot = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).screenPoint
+        return app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: spot.x, dy: spot.y))
+    }
+
+    /// Gerätefall 12.10.2026: Die Liste läuft nach einem kräftigen Wisch noch nach. Der ERSTE Tipp auf einen Tab
+    /// muss wechseln (vorher hielt er nur das Scrollen an) und die Liste muss danach oben stehen.
+    func test_tappingTab_whileListCoasts_switchesWithFirstTap() {
         checkAllButFruit()
+        // Kopf einklappen, ohne Nachlauf: kurzer, langsamer Zug mit Halten am Ende.
+        let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+        let to = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35))
+        from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.3)
         let done = app.buttons["Erledigt"].firstMatch
+        XCTAssertLessThan(done.frame.minY, 260, "Kopf ist eingeklappt")
+        let doneTab = fixedCenter(of: done)
+
+        let restoreWaiting = skipWaitingForIdle()
         app.swipeUp(velocity: .fast)                    // kräftiger Wisch: Die Liste läuft danach noch nach
-        done.tap()
-        XCTAssertTrue(done.wait(for: \.isSelected, toEqual: true, timeout: 2), "Tab „Erledigt“ ist gewählt")
+        doneTab.tap()
+        restoreWaiting()
+
+        XCTAssertTrue(done.wait(for: \.isSelected, toEqual: true, timeout: 3), "erster Tipp wählt „Erledigt“")
+        XCTAssertTrue(isBelowExpandedHeader(app.staticTexts["Abgehakte Artikel, 13"]), "„Erledigt“ beginnt oben")
     }
 }
