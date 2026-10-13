@@ -93,7 +93,7 @@ extension ListViewModel {
     /// Markiert alle Items als gecheckt oder ungecheckt, abhängig vom aktuellen Zustand.
     /// Optimiert für große Listen mit Debouncing, Batch-Updates und Chunked-Sync.
     func toggleAllItems() {
-        dismissPendingCheck()                 // „Alle abhaken“/„Zurücksetzen“ überholt den einzelnen Haken
+        dismissPendingCheck()                 // „Alle abhaken“/„Zurücksetzen“ überholt den bisherigen Hinweis
         // Cancel any pending toggle operation
         toggleAllDebounceTask?.cancel()
         
@@ -139,6 +139,7 @@ extension ListViewModel {
         // Vorher: direkter Server-Aufruf ohne HLC und ohne Warteschlange → offline verloren, und die
         // Artikel blieben für immer „wartet auf Sync“ (übernahmen keine Änderungen der Familie mehr).
         let changed = items.filter { itemIDsToUpdate.contains($0.id) }
+        if targetState { offerCheckUndo(for: changed) }      // „Alle abhaken“: Rückgängig-Toast; „Zurücksetzen“: keiner
         await syncEngine?.applyLocalChanges(changed)
 
         logVoid(params: (action: "toggleAllItems.completed", itemCount: changed.count))

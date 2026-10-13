@@ -14,6 +14,7 @@
  - Aufbau wie ListViewModelUndoDeleteTests: SwiftData im Speicher, echte SyncEngine ohne Netz.
 
  📝 Last Change:
+ - „Alle abhaken“ im Dock und im Abschnittskopf (12.10.2026).
  - Initial creation (Wunsch Robert 12.10.2026).
  ------------------------------------------------------------------------
  */
@@ -42,9 +43,11 @@ final class ListViewModelUndoCheckTests: XCTestCase {
                             hlcGenerator: HybridLogicalClockGenerator(nodeId: "test"), isOnline: { false })
         sut.configure(syncEngine: engine)
         let clock = HybridLogicalClockGenerator(nodeId: "test")
-        for (name, checked) in [("Milch", false), ("Brot", false), ("Käse", true)] {
+        // Kategorien: Milch und Käse „Milchprodukte“, Brot „Backwaren“ (für „Alle abhaken“ im Abschnittskopf).
+        for (name, checked, category) in [("Milch", false, "Milchprodukte"), ("Brot", false, "Backwaren"),
+                                          ("Käse", true, "Milchprodukte")] {
             try store.writeLocal(ItemModel(id: UUID().uuidString, name: name, isChecked: checked,
-                                           listId: listId.uuidString),
+                                           category: category, listId: listId.uuidString),
                                  hlc: clock.tick(), tombstone: false, modifiedBy: "test")
         }
         try store.save()
@@ -75,7 +78,7 @@ final class ListViewModelUndoCheckTests: XCTestCase {
     func test_checkFromList_offersUndo_withItemName() throws {
         sut.toggleItemChecked(try item("Milch"), offersUndo: true)
         XCTAssertTrue(try item("Milch").isChecked)
-        XCTAssertEqual(sut.pendingCheck?.itemId, try item("Milch").id)
+        XCTAssertEqual(sut.pendingCheck?.itemIds, [try item("Milch").id])
         XCTAssertEqual(sut.pendingCheck?.message, "„Milch“ abgehakt")
         XCTAssertEqual(sut.pendingCheck?.listId, listId)
     }
@@ -153,5 +156,73 @@ final class ListViewModelUndoCheckTests: XCTestCase {
         sut.undoPendingCheck()
         XCTAssertFalse(try item("Milch").isChecked, "kein erneutes Abhaken")
         XCTAssertNil(sut.pendingCheck)
+    }
+
+    // MARK: - „Alle abhaken“ (Dock und Abschnittskopf)
+
+    func test_checkAllInCategory_offersUndo_andUndoKeepsEarlierChecks() async throws {
+        try store.writeLocal(ItemModel(id: UUID().uuidString, name: "Joghurt", category: "Milchprodukte",
+                                       listId: listId.uuidString),
+                             hlc: HybridLogicalClockGenerator(nodeId: "test2").tick(), tombstone: false, modifiedBy: "test")
+        try store.save()
+        sut.refreshItemsFromStore()
+
+        sut.checkAllItems(in: "Milchprodukte")
+        XCTAssertEqual(sut.pendingCheck?.message, "2 Artikel abgehakt", "Käse war schon abgehakt und zählt nicht mit")
+        XCTAssertTrue(try item("Milch").isChecked)
+        XCTAssertTrue(try item("Joghurt").isChecked)
+        try await waitUntil { try self.storedChecked("Joghurt") == true }
+
+        sut.undoPendingCheck()
+        XCTAssertNil(sut.pendingCheck)
+        XCTAssertFalse(try item("Milch").isChecked)
+        XCTAssertFalse(try item("Joghurt").isChecked)
+        XCTAssertTrue(try item("Käse").isChecked, "der frühere Haken bleibt")
+        XCTAssertFalse(try item("Brot").isChecked)
+        try await waitUntil { try self.storedChecked("Milch") == false && self.storedChecked("Joghurt") == false }
+        XCTAssertEqual(try storedChecked("Milch"), false)
+        XCTAssertEqual(try storedChecked("Joghurt"), false)
+        XCTAssertEqual(try storedChecked("Käse"), true)
+    }
+
+    func test_checkAllInCategory_withOneOpenItem_namesTheItem() throws {
+        sut.checkAllItems(in: "Backwaren")
+        XCTAssertEqual(sut.pendingCheck?.message, "„Brot“ abgehakt")
+    }
+
+    func test_dockCheckAll_offersUndo_andUndoRestoresPreviousState() async throws {
+        sut.toggleAllItems()
+        await waitUntil { self.sut.pendingCheck != nil }
+        XCTAssertEqual(sut.pendingCheck?.message, "2 Artikel abgehakt", "Milch und Brot; Käse war schon abgehakt")
+        XCTAssertTrue(sut.items.allSatisfy(\.isChecked))
+        try await waitUntil { try self.storedChecked("Brot") == true }
+
+        sut.undoPendingCheck()
+        XCTAssertFalse(try item("Milch").isChecked)
+        XCTAssertFalse(try item("Brot").isChecked)
+        XCTAssertTrue(try item("Käse").isChecked, "nicht „Zurücksetzen“: der frühere Haken bleibt")
+        try await waitUntil { try self.storedChecked("Milch") == false && self.storedChecked("Brot") == false }
+        XCTAssertEqual(try storedChecked("Brot"), false)
+        XCTAssertEqual(try storedChecked("Käse"), true)
+    }
+
+    func test_dockReset_showsNoHint() async throws {
+        sut.toggleAllItems()
+        await waitUntil { self.sut.pendingCheck != nil }
+        sut.toggleAllItems()                                    // alles abgehakt → „Zurücksetzen“
+        await waitUntil { self.sut.items.allSatisfy { !$0.isChecked } }
+        XCTAssertTrue(sut.items.allSatisfy { !$0.isChecked })
+        XCTAssertNil(sut.pendingCheck, "„Zurücksetzen“ bietet kein Rückgängig an")
+    }
+
+    func test_bulkUndo_skipsItemsUncheckedInBetween() async throws {
+        sut.toggleAllItems()
+        await waitUntil { self.sut.pendingCheck != nil }
+        sut.toggleItemChecked(try item("Milch"), offersUndo: true)      // von Hand wieder offen
+        XCTAssertNotNil(sut.pendingCheck, "der Hinweis für die übrigen Artikel bleibt")
+        sut.undoPendingCheck()
+        XCTAssertFalse(try item("Milch").isChecked)
+        XCTAssertFalse(try item("Brot").isChecked)
+        XCTAssertTrue(try item("Käse").isChecked)
     }
 }

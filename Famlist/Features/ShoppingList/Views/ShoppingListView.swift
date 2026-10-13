@@ -73,7 +73,7 @@ struct ShoppingListView: View {
     @State var errorToast: String?
     /// Scroll-Weg der Liste; nur CollapsingListHeader liest ihn (sonst würde die ganze Liste je Frame neu berechnet).
     @State var listScroll = ListScrollState()
-    @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
+    @AppStorage(PriceDisplaySetting.storageKey) var showPrices = PriceDisplaySetting.defaultValue
     /// Hinzufügen über das Plus im Dock: Eingabe über der Tastatur (InlineAddOverlay, Canvas AddInline).
     @State var isAddOpen = false
     /// Vorbelegung der Eingabe (Brücke aus dem Filter: „„milch“ zur Liste hinzufügen“).

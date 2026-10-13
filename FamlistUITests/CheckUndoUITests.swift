@@ -5,8 +5,9 @@
 
  ------------------------------------------------------------------------
  📄 File Overview:
- - Abhaken mit Rückgängig: Nach dem Abhaken eines Artikels erscheint der Toast „„Name“ abgehakt“ mit
-   „Rückgängig“; ein Tipp darauf entfernt den Haken wieder.
+ - Abhaken mit Rückgängig: Nach dem Abhaken erscheint der Toast „„Name“ abgehakt“ bzw. „n Artikel abgehakt“
+   mit „Rückgängig“; ein Tipp darauf entfernt die Haken wieder. Gilt für einen Artikel und für „Alle abhaken“
+   (Abschnittskopf und Dock). „Einkauf erledigt“ erscheint erst, wenn der Toast weg ist.
 
  🔰 Notes for Beginners:
  - Fixture: 16 offene Artikel (`-uiTestFixture`, Daten im Speicher, kein Server).
@@ -14,6 +15,7 @@
    baut nur sichtbare Zeilen auf). Deshalb prüfen die Tests: Der Knopf „<Artikel> abhaken“ ist weg bzw. wieder da.
 
  📝 Last Change:
+ - „Alle abhaken“ im Abschnittskopf und im Dock (12.10.2026).
  - Initial creation (Wunsch Robert 12.10.2026).
  ------------------------------------------------------------------------
  */
@@ -69,5 +71,37 @@ final class CheckUndoUITests: XCTestCase {
         app.buttons["Rückgängig"].tap()
         XCTAssertTrue(app.buttons["Bananen abhaken"].waitForExistence(timeout: 5), "Bananen sind wieder offen")
         XCTAssertFalse(app.buttons["Äpfel abhaken"].exists, "Äpfel bleiben abgehakt")
+    }
+
+    // MARK: - „Alle abhaken“ (Abschnittskopf und Dock)
+
+    func test_checkAllInCategory_showsUndoToast_andUndoReopensItems() {
+        app.buttons["Alle Obst & Gemüse abhaken"].tap()
+        XCTAssertTrue(app.staticTexts["3 Artikel abgehakt"].waitForExistence(timeout: 3), "Toast nennt die Anzahl")
+        XCTAssertTrue(app.buttons["Äpfel abhaken"].waitForNonExistence(timeout: 5), "Obst & Gemüse ist abgehakt")
+
+        app.buttons["Rückgängig"].tap()
+        XCTAssertTrue(app.buttons["Äpfel abhaken"].waitForExistence(timeout: 5), "Äpfel sind wieder offen")
+        XCTAssertTrue(app.buttons["Bananen abhaken"].exists)
+        XCTAssertTrue(app.buttons["Tomaten abhaken"].exists)
+    }
+
+    func test_dockCheckAll_showsUndoToast_beforeShoppingDone_andUndoReopensList() {
+        app.buttons["Alle Artikel abhaken"].tap()
+        XCTAssertTrue(app.staticTexts["16 Artikel abgehakt"].waitForExistence(timeout: 3), "Toast nennt die Anzahl")
+        Thread.sleep(forTimeInterval: 2)                 // früher öffnete „Einkauf erledigt“ nach 0,7 s
+        XCTAssertFalse(app.staticTexts["Einkauf erledigt"].exists, "das Angebot wartet auf den Toast")
+
+        app.buttons["Rückgängig"].tap()
+        XCTAssertTrue(app.buttons["Äpfel abhaken"].waitForExistence(timeout: 5), "die Liste ist wieder offen")
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertFalse(app.staticTexts["Einkauf erledigt"].exists, "nach „Rückgängig“ kein Angebot")
+    }
+
+    func test_dockCheckAll_withoutUndo_offersShoppingDoneAfterToast() {
+        app.buttons["Alle Artikel abhaken"].tap()
+        XCTAssertTrue(app.buttons["Rückgängig"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Einkauf erledigt"].waitForExistence(timeout: 10), "Angebot kommt nach dem Toast")
+        XCTAssertFalse(app.buttons["Rückgängig"].exists, "der Toast ist weg")
     }
 }

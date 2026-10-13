@@ -14,6 +14,7 @@
  - Die UI wird optimistisch sofort aktualisiert (wie bei toggleItemChecked).
 
  📝 Last Change:
+ - Kategorie abhaken bietet „Rückgängig“ an (12.10.2026).
  - Kategorie abhaken: gebündelt über die SyncEngine, meldet „Einkauf erledigt“; kein Stamm-Update (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
@@ -56,6 +57,7 @@ extension ListViewModel {
         noteCheckChange(wasComplete: wasComplete)       // „Einkauf erledigt“ auch über den Kategorie-Kopf
 
         let changed = items.filter { targetIDs.contains($0.id) }
+        offerCheckUndo(for: changed)                    // Rückgängig-Toast wie beim einzelnen Haken
         guard let syncEngine else { return }
         Task { await syncEngine.applyLocalChanges(changed) }
     }

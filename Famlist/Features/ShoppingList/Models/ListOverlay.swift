@@ -25,6 +25,8 @@ enum ListOverlay: Equatable {
     case sort
     case copy
     case delete
+    /// „Einkauf erledigt“ (Popup über „Zurücksetzen“). `savedPrices` nil = noch kein Kassenzettel.
+    case shoppingDone(savedPrices: Int?, total: Double?)
 
     /// true = Dock liegt über der Abdunkelung (Dock-Menüs).
     var keepsDockOnTop: Bool { self != .menu }
@@ -36,6 +38,7 @@ enum ListOverlay: Equatable {
         case .sort: return .sort
         case .copy: return .copy
         case .delete: return .delete
+        case .shoppingDone: return .none
         }
     }
 }

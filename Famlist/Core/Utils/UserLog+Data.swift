@@ -208,6 +208,11 @@ extension UserLog {
             log("⬜️ Alle \(count) Artikel zurückgesetzt")
         }
 
+        /// „Alle abhaken“ per „Rückgängig“ zurückgenommen
+        static func checkUndone(count: Int) {
+            log("↩️ \(count) Artikel wieder offen")
+        }
+
         static func checkedItemsRemoved(count: Int) {
             log("🗑️ \(count) erledigte Artikel entfernt")
         }

@@ -41,6 +41,8 @@ final class ListFilterTabsUITests: XCTestCase {
         for _ in 0..<10 {
             let next = app.buttons.matching(headers).firstMatch
             guard next.waitForExistence(timeout: 2) else { break }
+            // Der Rückgängig-Toast („n Artikel abgehakt“, 5 s) liegt über dem Dock und kann den nächsten Kopf verdecken.
+            if !next.isHittable { _ = app.buttons["Rückgängig"].waitForNonExistence(timeout: 8) }
             next.tap()
         }
         XCTAssertTrue(app.staticTexts["Abgehakte Artikel, 13"].waitForExistence(timeout: 5), "13 abgehakt, 3 offen")

@@ -22,6 +22,7 @@
  - Initial creation (Wunsch Robert 13.10.2026).
  - Aufrollen statt Hereinschieben, Pillen bündig nach Design (5 pt Rand, 2 pt Abstand), 0,4 s (Wunsch Robert 14.10.2026).
  - Pillen sehen aus wie die gewählte Dock-Pille „Alle abhaken“ (Wunsch Robert 14.10.2026).
+ - Rolle und Pillen-Hintergrund als geteilte Bausteine (Mengen-Ausrollen im Barcode-Scanner, 14.10.2026).
  ------------------------------------------------------------------------
  */
 
@@ -112,20 +113,9 @@ struct DockMorphLayer: View, Animatable {
         .background(Color.rgba(6, 14, 16, 0.97))
     }
 
-    /// Die Rolle an der Vorderkante: ein Zylinder über die ganze Höhe, mit Schlagschatten auf die ausgerollte Fläche.
+    /// Die Rolle an der Vorderkante (geteilt mit dem Mengen-Ausrollen im Barcode-Scanner).
     private func roll(_ p: CGFloat, height: CGFloat) -> some View {
-        Rectangle()
-            .fill(LinearGradient(stops: [stop(.rgba(0, 0, 0, 0.45), 0),
-                                         stop(t.a.base.color(), 0.3),
-                                         stop(.rgba(255, 255, 255, 0.85), 0.5),
-                                         stop(t.a.base.color(), 0.72),
-                                         stop(.rgba(0, 0, 0, 0.5), 1)],
-                                 startPoint: .leading, endPoint: .trailing))
-            .frame(width: DockMorphRoll.thickness(p), height: height)
-            .shadow(color: .rgba(0, 0, 0, 0.45), radius: 5, x: 4, y: 0)
-            .opacity(DockMorphRoll.opacity(p))
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
+        DockMorphRollEdge(accent: t.a, progress: p, height: height)
     }
 
     /// Pille wie die gewählte Dock-Pille „Alle abhaken“ (DockActionButton + hiAccent in DockItemModel):
@@ -145,17 +135,54 @@ struct DockMorphLayer: View, Animatable {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(CSSBox(shape: Pill,
-                               paint: .linear(180, [stop(t.a.base.color(on ? 0.75 : 0.55), 0),
-                                                    stop(t.a.base.color(on ? 0.35 : 0.22), 1)]),
-                               border: 1, borderColor: .rgba(255, 255, 255, 0.22),
-                               shadows: [.inner(0, -1, 0, 0, .rgba(0, 0, 0, 0.2)),
-                                         .drop(0, 0, 16, 0, t.a.base.color(on ? 0.45 : 0.3))]))
+            .background(DockMorphPillBackground(accent: t.a, on: on))
             .contentShape(Pill)
         }
         .buttonStyle(.plain)
         .animation(.spring(response: 0.25, dampingFraction: 0.7), value: on)
         .accessibilityLabel(option.accessibilityTitle)
+    }
+}
+
+// MARK: - Geteilte Bausteine (Dock · Mengen-Ausrollen im Barcode-Scanner)
+
+/// Die Rolle an der Vorderkante: ein Zylinder über die ganze Höhe, mit Schlagschatten auf die ausgerollte Fläche.
+/// `shadowX` zeigt zur ausgerollten Fläche: +4 im Dock (Fläche rechts der Kante), −4 beim Ausrollen nach rechts.
+struct DockMorphRollEdge: View {
+    let accent: AccentScale
+    let progress: CGFloat
+    let height: CGFloat
+    var shadowX: CGFloat = 4
+
+    var body: some View {
+        Rectangle()
+            .fill(LinearGradient(stops: [stop(.rgba(0, 0, 0, 0.45), 0),
+                                         stop(accent.base.color(), 0.3),
+                                         stop(.rgba(255, 255, 255, 0.85), 0.5),
+                                         stop(accent.base.color(), 0.72),
+                                         stop(.rgba(0, 0, 0, 0.5), 1)],
+                                 startPoint: .leading, endPoint: .trailing))
+            .frame(width: DockMorphRoll.thickness(progress), height: height)
+            .shadow(color: .rgba(0, 0, 0, 0.45), radius: 5, x: shadowX, y: 0)
+            .opacity(DockMorphRoll.opacity(progress))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+}
+
+/// Pillen-Hintergrund wie die gewählte Dock-Pille „Alle abhaken“: Verlauf Akzent .55 → .22, Rahmen weiß .22,
+/// inset 0 -1 0 schwarz .2, Schein 0 0 16 Akzent .3. Finger darüber (`on`): Verlauf .75 → .35, Schein .45.
+struct DockMorphPillBackground: View {
+    let accent: AccentScale
+    let on: Bool
+
+    var body: some View {
+        CSSBox(shape: Pill,
+               paint: .linear(180, [stop(accent.base.color(on ? 0.75 : 0.55), 0),
+                                    stop(accent.base.color(on ? 0.35 : 0.22), 1)]),
+               border: 1, borderColor: .rgba(255, 255, 255, 0.22),
+               shadows: [.inner(0, -1, 0, 0, .rgba(0, 0, 0, 0.2)),
+                         .drop(0, 0, 16, 0, accent.base.color(on ? 0.45 : 0.3))])
     }
 }
 

@@ -47,7 +47,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Neuer Artikel – Foto wird freigestellt (Vision, ab iOS 17) | PhotoCutoutScan | ja | `ProductDetailHero(isProcessing:)`, `ProductCutout` |
 |  | Neuer Artikel – Foto freigestellt („Freigestellt · Original“, Nachbessern-Knopf, Vorschlag aus dem Foto) | PhotoCutoutDone | ja | `ProductDetailHero`, `PhotoSuggestionBanner` |
 |  | Freistellung nachbessern (Antippen: Objekt hinzufügen/entfernen) | PhotoCutoutFix | ja | `CutoutFixView` |
-|  | Barcode-Scanner (Kamera, immer dunkel) | BarcodeScan | – | `BarcodeScanScreen` |
+|  | Barcode-Scanner (Kamera, immer dunkel) – „Artikel erkannt“ mit Artikelbild, Marke, Details; Mengen-Kreis gedrückt halten rollt 2× … 6× aus | BarcodeScan, BarcodeScanQtyRoll, BarcodeScanQtyOpen, BarcodeScanNoImage | ja (QtyOpenDark) | `BarcodeScanSheet`, `ScanQuantityControl` |
 |  | Barcode – Artikel wird gesucht | BarcodeLookup | – | – (nur HTML) |
 |  | Barcode – Kamera nicht verfügbar | BarcodeNoCamera | – | – (nur HTML) |
 |  | Produktdetails (Tipp auf das Artikelbild) | ProductDetail | ja | – (nur HTML) |
@@ -79,8 +79,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Artikel verwalten | ManageItems | ja | `ManageItemsScreen` |
 |  | Kategorien verwalten („Neue Kategorie“ oben; Kopf fest, nur die Liste scrollt) | ManageCategories | ja | `ManageCategoriesScreen` |
 |  | Kategorie bearbeiten (Name, Farbe, Icon) | EditCategory | ja | `EditCategoryScreen` |
-| 6 · Einkauf abschließen | Einkauf erledigt | ShoppingDone | ja | `ShoppingDoneScreen` |
-|  | Einkauf erledigt – ohne Kassenzettel | ShoppingDoneScan | ja | – (nur HTML) |
+| 6 · Einkauf abschließen | Einkauf erledigt – Popup nach dem Kassenzettel | ShoppingDonePopoverSaved | ja | `ShoppingDoneMenuScreen` |
+|  | Einkauf erledigt – Popup, noch kein Kassenzettel | ShoppingDonePopover | ja | `ShoppingDoneMenuScreen` |
 |  | Kassenzettel fotografieren (Kamera, immer dunkel) | ReceiptCapture | – | `ReceiptCaptureScreen` |
 |  | Kassenzettel wird gelesen | ReceiptReading | ja | – (nur HTML) |
 |  | Kassenzettel prüfen | ReceiptReview | ja | `ReceiptReviewScreen` |
@@ -163,13 +163,15 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 2. **Per Barcode**
    - Scan-Knopf in der Eingabe unten → Barcode-Scanner.
    - Erkannter Artikel → „Zur Liste hinzufügen“ legt ihn an und schließt den Scanner (seit 11.10.2026); „Weiter scannen“ verwirft den Treffer und scannt weiter. Während der Suche „Artikel wird gesucht …“ (BarcodeLookup); ohne Kamera Hinweis „Kamera nicht verfügbar“ (BarcodeNoCamera). Unbekannter Code → Neuer Artikel (vorbefüllt).
+   - Karte „Artikel erkannt“ (seit 14.10.2026): Artikelbild 84 (eigenes Foto, sonst Katalog-Bild auf Weiß, sonst Wagen-Symbol) · Name · Marke · Chips (Menge/Einheit, Kategorie, letzter Preis) · Beschreibung (max. 3 Zeilen).
+   - Menge: Kreis antippen zählt weiter (1× … 9×). Gedrückt halten rollt rechts 2× … 6× über „Zur Liste hinzufügen“ aus – gleicher Stil und gleiche Animation wie Plus halten im Dock, nur nach rechts (0,4 s, Rolle an der Vorderkante, rastet ein). Auf eine Zahl ziehen und loslassen oder eingerastet antippen wählt; danach rollt es zurück. Kreis (×) oder daneben tippen schließt.
 3. **Menge**
    - Stepper plus direktes Eintippen der Zahl; beim Tippen ersetzt eine Schnellwahl-Leiste den Hauptknopf (EditItemAmount).
    - Schrittweite je Einheit: g/ml 50, kg/l/m 0,1 (gedrückt halten: 1), sonst 1. Kommazahlen sind erlaubt (1,5 kg). Grenzen 1 … 9999, bei 0,1-Schritten ab 0,1.
    - Hinweis: Die App kann Kommazahlen seit 26.09.2026; das Board EditItemAmount zeigt noch eine Zifferntastatur ohne Komma. Design-Nachtrag offen – bis dahin gilt das Verhalten der App.
 4. **Einkaufen**
    - Nach rechts wischen hakt ab (SwipeCheck). Ein abgehakter Artikel: nach rechts wischen löscht ihn (SwipeDelete, rot „Löschen“ mit Mülleimer), nach links „Zurück auf die Liste“ (Checked).
-   - Nach dem Abhaken eines einzelnen Artikels (Wischen oder Kreis) erscheint der Toast „„<Artikel>“ abgehakt“ mit „Rückgängig“ (5 s, Restzeit-Balken, Position und Aussehen wie UndoToast, Icon Haken). „Rückgängig“ entfernt den Haken. Ein weiterer Haken ersetzt den Toast; Löschen, „Alle abhaken“ und „Zurücksetzen“ blenden ihn aus. Kein Toast bei „Alle abhaken“ (Dock, Sektionskopf) und beim Entfernen eines Hakens (Wunsch Robert 12.10.2026).
+   - Nach dem Abhaken erscheint der Toast „„<Artikel>“ abgehakt“ mit „Rückgängig“ (5 s, Restzeit-Balken, Position und Aussehen wie UndoToast, Icon Haken). Das gilt für einen einzelnen Artikel (Wischen oder Kreis) und für „Alle abhaken“ im Dock und im Sektionskopf; bei mehreren Artikeln heißt der Text „n Artikel abgehakt“. „Rückgängig“ entfernt genau die Haken dieser Aktion, frühere Haken bleiben. Ein weiterer Haken ersetzt den Toast; Löschen und „Zurücksetzen“ blenden ihn aus. Kein Toast bei „Zurücksetzen“ und beim Entfernen eines Hakens. „Einkauf erledigt“ (ShoppingDone) erscheint erst, wenn der Toast weg ist; nach „Rückgängig“ gar nicht (Wunsch Robert 12.10.2026).
    - Nach links wischen zeigt runde Glas-Aktionsknöpfe (SwipeActions, 56 pt).
    - Zustände einer Karte: „Nicht verfügbar“ (ItemUnavailable), „Sync fehlgeschlagen“ mit Rückfrage (ItemSyncFailed, ItemSyncFailedDialog).
    - Fortschritt im Hero: „x von y Artikeln“ und Prozent. Beim Scrollen klappt der Kopf kompakt zusammen (ListCompact).
@@ -220,7 +222,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
     - Tippen → Kategorie bearbeiten: Name, Icon (60 Icons, CategoryIcons), löschen.
     - „Sonstiges“ ist die Standardkategorie und kann nicht gelöscht werden. Artikel einer gelöschten Kategorie wandern nach „Sonstiges“.
 13. **Kassenzettel und Preise**
-    - Sind alle Artikel abgehakt: Einkauf erledigt (ShoppingDone), ohne Kassenzettel zuerst „Kassenzettel scannen?“ (ShoppingDoneScan).
+    - Sind alle Artikel abgehakt: Popup „Einkauf erledigt“ über „Zurücksetzen“ (ShoppingDonePopover: Kassenzettel scannen · Abgehakte löschen · Liste behalten); nach dem Kassenzettel ShoppingDonePopoverSaved (Abgehakte löschen & fertig · Liste behalten). Die Vollbilder ShoppingDone/ShoppingDoneScan sind archiviert (13.10.2026).
     - Kassenzettel fotografieren; lange Bons in mehreren Teilen, ein Zähler zeigt die Anzahl der Aufnahmen. Danach „Kassenzettel wird gelesen“ (ReceiptReading).
     - Kassenzettel prüfen: erkannte Positionen mit Preisen, automatische Zuordnung („Zugeordnet“, „Zuordnung prüfen“, „Neuer Artikel?“), Laden und Datum, Summe. Tippen auf eine Position → Zuordnen (ReceiptAssignDialog); Laden ändern (ReceiptStoreAlert); Artikel der Liste, die nicht auf dem Bon stehen (ReceiptReviewMissing).
     - „Preise speichern“ legt Preispunkte an. Weicht ein Bon-Preis vom gespeicherten Artikelpreis ab, fragt die App nach (ReceiptPriceAlert).

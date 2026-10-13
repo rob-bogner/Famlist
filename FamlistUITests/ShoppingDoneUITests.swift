@@ -35,7 +35,8 @@ final class ShoppingDoneUITests: XCTestCase {
         XCTAssertTrue(check.waitForExistence(timeout: 15))
         check.tap()
 
-        XCTAssertTrue(app.staticTexts["Einkauf erledigt"].waitForExistence(timeout: 5))
+        // Zuerst 5 s der Toast „„Butter“ abgehakt“ mit „Rückgängig“, danach das Angebot (12.10.2026).
+        XCTAssertTrue(app.staticTexts["Einkauf erledigt"].waitForExistence(timeout: 12))
         XCTAssertTrue(app.buttons["Kassenzettel scannen"].exists)
 
         app.buttons["Liste behalten"].tap()

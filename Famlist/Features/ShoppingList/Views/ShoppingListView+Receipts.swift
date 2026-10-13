@@ -39,7 +39,11 @@ extension ShoppingListView {
                                    },
                                    onSaved: {
                                        listViewModel.resetShoppingStart()      // der Bon hat den Beginn übernommen
-                                       activeSheet = .shoppingDone
+                                       // „Einkauf erledigt“ als Popup über dem Dock (Design: ShoppingDonePopoverSaved)
+                                       let saved = savedPriceCount
+                                       let total = receiptFlow.map { NSDecimalNumber(decimal: $0.total).doubleValue }
+                                       closeReceiptFlow()
+                                       activeOverlay = .shoppingDone(savedPrices: saved, total: total)
                                    },
                                    onUpdateItemPrices: { changes in
                                        Task { await listViewModel.applyReceiptPrices(changes) }
@@ -180,9 +184,14 @@ extension ShoppingListView {
     func offerShoppingDone(for event: UUID) {
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 700_000_000)            // Abhak-Animation sichtbar lassen
+            // Solange „Rückgängig“ für den letzten Haken angeboten wird (höchstens 5 s), wartet das Angebot.
+            // Sonst würde es den Toast sofort verdecken. Nach „Rückgängig“ ist die Liste nicht mehr erledigt.
+            while listViewModel.pendingCheck != nil, !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
             guard listViewModel.shoppingCompletedEvent == event, listViewModel.isShoppingComplete,
                   activeSheet == nil, activeOverlay == nil else { return }
-            activeSheet = .shoppingDoneOffer
+            activeOverlay = .shoppingDone(savedPrices: nil, total: nil)   // Popup (Design: ShoppingDonePopover)
         }
     }
 
@@ -222,10 +231,11 @@ extension ShoppingListView {
         return 0
     }
 
-    private func finishShopping() {
+    func finishShopping() {
         listViewModel.stageDeletion(.checked)
         listViewModel.resetShoppingStart()
         closeReceiptFlow()
+        activeOverlay = nil
     }
 
     func closeReceiptFlow() {

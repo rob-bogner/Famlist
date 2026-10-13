@@ -121,6 +121,20 @@ extension ShoppingListView {
                                onDismiss: closeOverlay)
                 .offset(y: insets.dockShift)
                 .transition(overlayTransition(anchor: .bottomLeading))
+        case .shoppingDone(let savedPrices, let total):
+            ShoppingDoneMenuScreen(appearance: appearance,
+                                   listName: listViewModel.defaultList?.title ?? String(localized: "shoppingList.title"),
+                                   checkedCount: listViewModel.checkedItemCount,
+                                   total: total ?? (showPrices ? PriceDisplaySetting.total(of: listViewModel.items) : nil),
+                                   savedPrices: savedPrices,
+                                   onScan: {
+                                       closeOverlay()
+                                       openReceiptCapture()
+                                   },
+                                   onFinish: finishShopping,
+                                   onKeep: closeOverlay)
+                .offset(y: insets.dockShift)
+                .transition(overlayTransition(anchor: .bottomLeading))
         case nil:
             EmptyView()
         }

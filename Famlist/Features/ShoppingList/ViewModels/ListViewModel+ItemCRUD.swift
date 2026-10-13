@@ -269,8 +269,8 @@ extension ListViewModel {
         updateItem(updatedItem, trackPendingAnimation: true, suppressUserLog: true, updateCatalog: false)
 
         if updatedItem.isChecked, offersUndo {
-            offerCheckUndo(for: updatedItem)
-        } else if pendingCheck?.itemId == updatedItem.id {
+            offerCheckUndo(for: [updatedItem])
+        } else if pendingCheck?.itemIds == [updatedItem.id] {
             dismissPendingCheck()                 // Haken von Hand entfernt: Hinweis ist erledigt
         }
     }

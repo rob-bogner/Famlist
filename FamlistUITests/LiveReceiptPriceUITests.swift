@@ -108,7 +108,7 @@ final class LiveReceiptPriceUITests: XCTestCase {
 
         checkAllOnList()
         let scan = app.buttons["Kassenzettel scannen"]
-        XCTAssertTrue(scan.waitForExistence(timeout: 8), "„Einkauf erledigt“ bietet den Scan an")
+        XCTAssertTrue(scan.waitForExistence(timeout: 14), "„Einkauf erledigt“ bietet den Scan an (nach dem Rückgängig-Toast, 5 s)")
         scan.tap()
         steps.pickReceiptPhoto()
         let save = app.buttons["Preise speichern"]

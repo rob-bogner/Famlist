@@ -75,6 +75,11 @@ final class BarcodeScanViewModel: ObservableObject {
         quantity = quantity >= 9 ? 1 : quantity + 1
     }
 
+    /// Menge direkt setzen (Ausrollen am Mengen-Kreis, VoiceOver-Wischen), 1 … 9.
+    func setQuantity(_ n: Int) {
+        quantity = min(9, max(1, n))
+    }
+
     /// „Weiter scannen“: erkannten Artikel verwerfen und die Kamera wieder freigeben.
     func resume() {
         state = .scanning

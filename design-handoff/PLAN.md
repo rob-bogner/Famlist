@@ -438,6 +438,16 @@ Abgleich (`ProductPhotoMatcher`):
 
 - „Nicht verfügbar“ bleibt als Chip in der Mengen-Zeile; die Marke steht trotzdem darüber.
 
+### „Einkauf erledigt“ als Dock-Popup (13.10.2026)
+
+| Board | Umsetzung |
+|---|---|
+| ShoppingDonePopover | `ListOverlay.shoppingDone(savedPrices: nil, …)` → `ShoppingDoneMenuScreen`: Popup über „Zurücksetzen“ (Zeiger), Kopf grüner Haken · „Einkauf erledigt“ · Liste · alles abgehakt · Summe; Zeilen „Kassenzettel scannen“ (hervorgehoben), „Abgehakte löschen“ (rot), „Liste behalten“. Kommt nach dem letzten Haken (`offerShoppingDone`) |
+| ShoppingDonePopoverSaved | Nach „Kassenzettel prüfen → Speichern“: `savedPrices` gesetzt → „Abgehakte löschen & fertig“ (hervorgehoben, rot) · „Liste behalten“ |
+
+- Abdunkelung antippen = „Liste behalten“. Löschen über das Löschen mit Rückgängig-Toast (`finishShopping`).
+- Die Vollbilder `ShoppingDoneView` (`.shoppingDone`, `.shoppingDoneOffer`) werden im Ablauf nicht mehr geöffnet (nur noch Design-Launch); können entfernt werden.
+
 ### Plus gedrückt halten → Dock wird „Barcode | Foto“ (13.10.2026)
 
 | Board | Umsetzung |
@@ -452,4 +462,17 @@ Abgleich (`ProductPhotoMatcher`):
 - Abweichung vom Prototyp: `FabHold.dc.html` zeigt noch das Hereinschieben, die Zeiten 0,1 s / 0,7 s und die alten Pillen (Text 15, Verlauf .45 → .16). Die Aufroll-Animation ist abgenommen (Robert 14.10.2026); der Prototyp ist noch nicht nachgezogen.
 - Wählen: auf eine Pille ziehen und loslassen, oder eingerastet antippen. Plus erneut tippen oder daneben tippen (Abdunkelung in ShoppingListView) schließt.
 - Barcode → `openScanner`, Foto → `openPhotoAdd`. VoiceOver: Aktionen „Barcode scannen“ / „Per Foto erkennen“ am Plus.
+
+### Barcode-Scanner: Menge halten und Artikelbild (14.10.2026)
+
+| Board | Umsetzung |
+|---|---|
+| BarcodeScan (interaktiv), BarcodeScanQtyRoll, BarcodeScanQtyOpen, BarcodeScanQtyOpenDark | `ScanQuantityControl` (neu, `Features/ItemManagement/Components/ScanQuantityRoll.swift`) in `BarcodeScanSheet.resultCard`: Kreis 56 + „Zur Liste hinzufügen“. `ScanQuantityRollMask` / `ScanQuantityRollLayer` = gespiegelte `DockItemsRollMask` / `DockMorphLayer` (Vorderkante läuft nach rechts, Rolle mit Schatten −4). Fläche rgba(6,14,16,.97), Pillen ab Rand 3, Abstand 2, `DockMorphPillBackground`. |
+| BarcodeScan, BarcodeScanNoImage | `productHeader` / `productImage`: Bild 84 (Radius 20; `imageData`, sonst `imageUrl` per AsyncImage auf Weiß, sonst Wagen-Symbol), Name, Marke (13/500), Chips aus `ScannedProduct.detailChips()`, Beschreibung (13, 3 Zeilen). |
+
+- Geste und Zeiten 1:1 aus `DockView.holdFAB`: `onPress`, Tippen < 0,1 s = weiterzählen, sofort ausrollen (0,4 s, timingCurve 0.2/0/0.2/1), Haptik bei 0,1 s, Einrasten bei 0,4 s, Hinziehen ab 0,2 s (44 pt Spielraum), Zurückrollen mit Feder 0,36/0,86.
+- Abweichung vom Dock (bewusst): Nach der Wahl rollt die Fläche zurück und der Kreis zeigt die neue Menge (im Dock bleibt das Menü stehen).
+- Rolle und Pillen-Hintergrund jetzt geteilte Bausteine in `DockMorphMenu.swift` (`DockMorphRollEdge`, `DockMorphPillBackground`); Dock sieht unverändert aus.
+- `BarcodeScanViewModel.setQuantity(_:)` (1 … 9); VoiceOver: Wischen hoch/runter ändert die Menge.
+- Tests: `ScanQuantityRollTests`.
 

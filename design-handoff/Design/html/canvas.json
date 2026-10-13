@@ -80,7 +80,7 @@
    "radius": 44,
    "title": "Gelöschtes Mitglied entfernen",
    "w": 390,
-   "x": 11280,
+   "x": 11750,
    "y": 15308
   },
   "ArchivedMemberRemoveDark.dc.html": {
@@ -89,7 +89,7 @@
    "radius": 44,
    "title": "Gelöschtes Mitglied entfernen – Dark",
    "w": 390,
-   "x": 11280,
+   "x": 11750,
    "y": 16312
   },
   "BarcodeLookup.dc.html": {
@@ -114,10 +114,11 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Barcode-Scanner (Kamera, immer dunkel)",
+   "title": "Barcode-Scanner (Kamera, immer dunkel) – Menge halten: 2× … 6×",
    "w": 390,
    "x": 6580,
-   "y": 5276
+   "y": 5276,
+   "is_interactive": true
   },
   "CategoryIcons.dc.html": {
    "h": 1640,
@@ -233,7 +234,7 @@
    "radius": 44,
    "title": "Konto löschen",
    "w": 390,
-   "x": 7990,
+   "x": 8460,
    "y": 15308
   },
   "DeleteAccountDark.dc.html": {
@@ -242,7 +243,7 @@
    "radius": 44,
    "title": "Konto löschen – Dark",
    "w": 390,
-   "x": 7990,
+   "x": 8460,
    "y": 16312
   },
   "DeleteChoice.dc.html": {
@@ -357,7 +358,7 @@
    "radius": 44,
    "title": "Profil bearbeiten",
    "w": 390,
-   "x": 5170,
+   "x": 5640,
    "y": 15308
   },
   "EditProfileDark.dc.html": {
@@ -366,7 +367,7 @@
    "radius": 44,
    "title": "Profil bearbeiten – Dark",
    "w": 390,
-   "x": 5170,
+   "x": 5640,
    "y": 16312
   },
   "EmptyList.dc.html": {
@@ -798,7 +799,7 @@
    "radius": 44,
    "title": "Hinweis für Listenbesitzer",
    "w": 390,
-   "x": 10340,
+   "x": 10810,
    "y": 15308
   },
   "MemberDeletedToastDark.dc.html": {
@@ -807,7 +808,7 @@
    "radius": 44,
    "title": "Hinweis für Listenbesitzer – Dark",
    "w": 390,
-   "x": 10340,
+   "x": 10810,
    "y": 16312
   },
   "MenuOverlay.dc.html": {
@@ -1599,7 +1600,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv",
    "w": 390,
-   "x": 5640,
+   "x": 6110,
    "y": 15308
   },
   "ReceiptArchiveDark.dc.html": {
@@ -1608,7 +1609,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – Dark",
    "w": 390,
-   "x": 5640,
+   "x": 6110,
    "y": 16312
   },
   "ReceiptArchiveEmpty.dc.html": {
@@ -1617,7 +1618,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer",
    "w": 390,
-   "x": 6110,
+   "x": 6580,
    "y": 15308
   },
   "ReceiptArchiveEmptyDark.dc.html": {
@@ -1626,7 +1627,7 @@
    "radius": 44,
    "title": "Kassenzettel-Archiv – leer – Dark",
    "w": 390,
-   "x": 6110,
+   "x": 6580,
    "y": 16312
   },
   "ReceiptArchiveInsights.dc.html": {
@@ -1680,7 +1681,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung",
    "w": 390,
-   "x": 7520,
+   "x": 7990,
    "y": 15308
   },
   "ReceiptDeleteDialogDark.dc.html": {
@@ -1689,7 +1690,7 @@
    "radius": 44,
    "title": "Kassenzettel löschen – Bestätigung – Dark",
    "w": 390,
-   "x": 7520,
+   "x": 7990,
    "y": 16312
   },
   "ReceiptDetail.dc.html": {
@@ -1698,7 +1699,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail",
    "w": 390,
-   "x": 6580,
+   "x": 7050,
    "y": 15308
   },
   "ReceiptDetailDark.dc.html": {
@@ -1707,7 +1708,7 @@
    "radius": 44,
    "title": "Kassenzettel – Detail – Dark",
    "w": 390,
-   "x": 6580,
+   "x": 7050,
    "y": 16312
   },
   "ReceiptDetailMeta.dc.html": {
@@ -1734,7 +1735,7 @@
    "radius": 44,
    "title": "Kassenzettel – Vollbild (immer dunkel)",
    "w": 390,
-   "x": 7050,
+   "x": 7520,
    "y": 15308
   },
   "ReceiptItemNutrition.dc.html": {
@@ -1851,7 +1852,7 @@
    "radius": 44,
    "title": "Konto wiederherstellen (nach Anmeldung)",
    "w": 390,
-   "x": 8460,
+   "x": 8930,
    "y": 15308
   },
   "RestoreAccountDark.dc.html": {
@@ -1860,7 +1861,7 @@
    "radius": 44,
    "title": "Konto wiederherstellen (nach Anmeldung) – Dark",
    "w": 390,
-   "x": 8460,
+   "x": 8930,
    "y": 16312
   },
   "RestoreAccountLoading.dc.html": {
@@ -1869,7 +1870,7 @@
    "radius": 44,
    "title": "Wiederherstellen – lädt",
    "w": 390,
-   "x": 8930,
+   "x": 9400,
    "y": 15308
   },
   "RestoreAccountLoadingDark.dc.html": {
@@ -1878,7 +1879,7 @@
    "radius": 44,
    "title": "Wiederherstellen – lädt – Dark",
    "w": 390,
-   "x": 8930,
+   "x": 9400,
    "y": 16312
   },
   "RestoreAccountOffline.dc.html": {
@@ -1887,7 +1888,7 @@
    "radius": 44,
    "title": "Wiederherstellen – offline",
    "w": 390,
-   "x": 9400,
+   "x": 9870,
    "y": 15308
   },
   "RestoreAccountOfflineDark.dc.html": {
@@ -1896,7 +1897,7 @@
    "radius": 44,
    "title": "Wiederherstellen – offline – Dark",
    "w": 390,
-   "x": 9400,
+   "x": 9870,
    "y": 16312
   },
   "RestorePurgeDialog.dc.html": {
@@ -1905,7 +1906,7 @@
    "radius": 44,
    "title": "Jetzt endgültig löschen",
    "w": 390,
-   "x": 9870,
+   "x": 10340,
    "y": 15308
   },
   "RestorePurgeDialogDark.dc.html": {
@@ -1914,7 +1915,7 @@
    "radius": 44,
    "title": "Jetzt endgültig löschen – Dark",
    "w": 390,
-   "x": 9870,
+   "x": 10340,
    "y": 16312
   },
   "SearchInline.dc.html": {
@@ -2004,7 +2005,7 @@
    "radius": 44,
    "title": "Mitglieder – Konto gelöscht",
    "w": 390,
-   "x": 10810,
+   "x": 11280,
    "y": 15308
   },
   "ShareMembersArchivedDark.dc.html": {
@@ -2013,7 +2014,7 @@
    "radius": 44,
    "title": "Mitglieder – Konto gelöscht – Dark",
    "w": 390,
-   "x": 10810,
+   "x": 11280,
    "y": 16312
   },
   "ShareMembersDark.dc.html": {
@@ -2081,39 +2082,39 @@
   },
   "ShoppingDone.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "archiv",
    "radius": 44,
-   "title": "Einkauf erledigt",
+   "title": "Einkauf erledigt (ersetzt durch Popup)",
    "w": 390,
-   "x": 0,
-   "y": 12800
+   "x": 6150,
+   "y": 0
   },
   "ShoppingDoneDark.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "archiv",
    "radius": 44,
-   "title": "Einkauf erledigt – Dark",
+   "title": "Einkauf erledigt – Dark (ersetzt durch Popup)",
    "w": 390,
-   "x": 0,
-   "y": 13804
+   "x": 6150,
+   "y": 1004
   },
   "ShoppingDoneScan.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "archiv",
    "radius": 44,
-   "title": "Einkauf erledigt – ohne Kassenzettel",
+   "title": "Einkauf erledigt – ohne Kassenzettel (ersetzt durch Popup)",
    "w": 390,
-   "x": 470,
-   "y": 12800
+   "x": 6620,
+   "y": 0
   },
   "ShoppingDoneScanDark.dc.html": {
    "h": 844,
-   "page": "screens",
+   "page": "archiv",
    "radius": 44,
-   "title": "Einkauf erledigt – ohne Kassenzettel – Dark",
+   "title": "Einkauf erledigt – ohne Kassenzettel – Dark (ersetzt durch Popup)",
    "w": 390,
-   "x": 470,
-   "y": 13804
+   "x": 6620,
+   "y": 1004
   },
   "SignIn.dc.html": {
    "h": 844,
@@ -2157,7 +2158,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen",
    "w": 390,
-   "x": 4700,
+   "x": 5170,
    "y": 15308
   },
   "SignOutDialogDark.dc.html": {
@@ -2166,7 +2167,7 @@
    "radius": 44,
    "title": "Abmelden – ungesendete Änderungen – Dark",
    "w": 390,
-   "x": 4700,
+   "x": 5170,
    "y": 16312
   },
   "SlideToDelete.dc.html": {
@@ -2447,6 +2448,228 @@
    "w": 390,
    "x": 4230,
    "y": 16312
+  },
+  "ShoppingDonePopover.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt – Popup (noch kein Kassenzettel)",
+   "w": 390,
+   "x": 470,
+   "y": 12800
+  },
+  "ShoppingDonePopoverDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt – Popup (noch kein Kassenzettel) – Dark",
+   "w": 390,
+   "x": 470,
+   "y": 13804
+  },
+  "ShoppingDonePopoverSaved.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt – Popup nach dem Kassenzettel",
+   "w": 390,
+   "x": 0,
+   "y": 12800
+  },
+  "ShoppingDonePopoverSavedDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Einkauf erledigt – Popup nach dem Kassenzettel – Dark",
+   "w": 390,
+   "x": 0,
+   "y": 13804
+  },
+  "FabHoldStack.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "A · Stapel",
+   "w": 390,
+   "x": 0,
+   "y": 7300,
+   "is_interactive": true
+  },
+  "FabHoldArc.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "B · Halbkreis mit Abstand",
+   "w": 390,
+   "x": 470,
+   "y": 7300,
+   "is_interactive": true
+  },
+  "FabHoldRing.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "C · Ring lädt, dann Sprung",
+   "w": 390,
+   "x": 940,
+   "y": 7300,
+   "is_interactive": true
+  },
+  "FabHoldCapsule.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "D · Flüssige Kapsel",
+   "w": 390,
+   "x": 1410,
+   "y": 7300,
+   "is_interactive": true
+  },
+  "FabHoldFan.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "E · Karten-Fächer",
+   "w": 390,
+   "x": 1880,
+   "y": 7300,
+   "is_interactive": true
+  },
+  "FabHoldGoo.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "F · Tropfen lösen sich",
+   "w": 390,
+   "x": 2350,
+   "y": 7300,
+   "is_interactive": true
+  },
+  "FabHoldDock.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "G · Dock wird Menü – gewählt, in der App umgesetzt (13.10.2026)",
+   "w": 390,
+   "x": 0,
+   "y": 8304,
+   "is_interactive": true
+  },
+  "FabHoldSpot.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "H · Spotlight-Kontextmenü",
+   "w": 390,
+   "x": 470,
+   "y": 8304,
+   "is_interactive": true
+  },
+  "FabHoldOrbit.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "I · Umlaufbahn",
+   "w": 390,
+   "x": 940,
+   "y": 8304,
+   "is_interactive": true
+  },
+  "FabHoldSplit.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "J · Das Plus zerfällt",
+   "w": 390,
+   "x": 1410,
+   "y": 8304,
+   "is_interactive": true
+  },
+  "FabHoldSlide.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "K · Halten und ziehen",
+   "w": 390,
+   "x": 1880,
+   "y": 8304,
+   "is_interactive": true
+  },
+  "FabHoldAura.dc.html": {
+   "h": 844,
+   "page": "prototypes",
+   "radius": 44,
+   "title": "L · Aura mit Blasen",
+   "w": 390,
+   "x": 2350,
+   "y": 8304,
+   "is_interactive": true
+  },
+  "FabHold.dc.html": {
+   "h": 844,
+   "page": "bausteine",
+   "radius": 44,
+   "title": "FabHold – Plus gedrückt halten (Baustein)",
+   "w": 390,
+   "x": 0,
+   "y": 2100,
+   "is_interactive": true
+  },
+  "ListAddHold.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Plus gedrückt halten – Dock wird „Barcode | Foto“",
+   "w": 390,
+   "x": 4700,
+   "y": 15308,
+   "is_interactive": true
+  },
+  "ListAddHoldDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Plus gedrückt halten – Dock wird „Barcode | Foto“ – Dark",
+   "w": 390,
+   "x": 4700,
+   "y": 16312,
+   "is_interactive": true
+  },
+  "BarcodeScanQtyRoll.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Barcode – Menge halten: rollt nach rechts aus",
+   "w": 390,
+   "x": 6580,
+   "y": 6280
+  },
+  "BarcodeScanQtyOpen.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Barcode – Mengen eingerastet, Finger auf 3×",
+   "w": 390,
+   "x": 7050,
+   "y": 6280
+  },
+  "BarcodeScanQtyOpenDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Barcode – Mengen eingerastet – Dark",
+   "w": 390,
+   "x": 7520,
+   "y": 6280
+  },
+  "BarcodeScanNoImage.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Barcode – erkannt ohne Artikelbild",
+   "w": 390,
+   "x": 6580,
+   "y": 7284
   }
  },
  "createdOnFiles": {
@@ -2571,10 +2794,19 @@
    "kind": "title1",
    "maxW": 1800,
    "page": "review",
-   "text": "Zur Freigabe: gerade nichts offen. „Marke unter dem Namen“ ist umgesetzt (User Journey, Reihe der Liste).",
+   "text": "Zur Freigabe: gerade nichts offen. „Einkauf erledigt“ ist jetzt ein Popup über dem Dock (User Journey); die alten Vollbilder liegen im Archiv.",
    "w": 240,
    "x": 0,
    "y": 0
+  },
+  "proto4": {
+   "kind": "title1",
+   "maxW": 2740,
+   "page": "prototypes",
+   "text": "Plus gedrückt halten → Barcode scannen · Per Foto erkennen (Entwurf 13.10.2026). In jedem Board ▶ Play: Plus gedrückt halten – ab 0,1 s baut es sich auf, bei 0,7 s rastet es ein. Vorher loslassen = zurück; danach bleibt es stehen. Finger auf eine Option ziehen und loslassen wählt sie direkt. Kurz tippen = wie bisher Artikel hinzufügen. „▶ Demo“ spielt den Ablauf ab.",
+   "w": 240,
+   "x": 0,
+   "y": 7200
   }
  },
  "order": [
@@ -2630,6 +2862,10 @@
   "EditCategory.dc.html",
   "EditCategoryDark.dc.html",
   "BarcodeScan.dc.html",
+  "BarcodeScanNoImage.dc.html",
+  "BarcodeScanQtyOpenDark.dc.html",
+  "BarcodeScanQtyOpen.dc.html",
+  "BarcodeScanQtyRoll.dc.html",
   "ReceiptCapture.dc.html",
   "ReceiptReview.dc.html",
   "ReceiptReviewDark.dc.html",
@@ -2808,6 +3044,7 @@
   "ListQuantityEdit.dc.html",
   "ListBrand.dc.html",
   "ListBrandNoImages.dc.html",
+  "ListAddHold.dc.html",
   "ListSwipeOnlyDark.dc.html",
   "SettingsImagesOffDark.dc.html",
   "ListNoImagesDark.dc.html",
@@ -2816,6 +3053,7 @@
   "ListQuantityEditDark.dc.html",
   "ListBrandDark.dc.html",
   "ListBrandNoImagesDark.dc.html",
+  "ListAddHoldDark.dc.html",
   "PickA.dc.html",
   "PickADark.dc.html",
   "PickB.dc.html",
@@ -2850,7 +3088,24 @@
   "ShopTrip.dc.html",
   "ShopTripDark.dc.html",
   "ShopPlan.dc.html",
-  "ShopPlanDark.dc.html"
+  "ShopPlanDark.dc.html",
+  "ShoppingDonePopover.dc.html",
+  "ShoppingDonePopoverDark.dc.html",
+  "ShoppingDonePopoverSaved.dc.html",
+  "ShoppingDonePopoverSavedDark.dc.html",
+  "FabHoldStack.dc.html",
+  "FabHoldArc.dc.html",
+  "FabHoldRing.dc.html",
+  "FabHoldCapsule.dc.html",
+  "FabHoldFan.dc.html",
+  "FabHoldGoo.dc.html",
+  "FabHoldDock.dc.html",
+  "FabHoldSpot.dc.html",
+  "FabHoldOrbit.dc.html",
+  "FabHoldSplit.dc.html",
+  "FabHoldSlide.dc.html",
+  "FabHoldAura.dc.html",
+  "FabHold.dc.html"
  ],
  "pages": [
   {
