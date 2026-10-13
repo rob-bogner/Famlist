@@ -438,3 +438,18 @@ Abgleich (`ProductPhotoMatcher`):
 
 - „Nicht verfügbar“ bleibt als Chip in der Mengen-Zeile; die Marke steht trotzdem darüber.
 
+### Plus gedrückt halten → Dock wird „Barcode | Foto“ (13.10.2026)
+
+| Board | Umsetzung |
+|---|---|
+| ListAddHold (Prototyp G, FabHoldDock) | `DockView(onScan:onPhoto:morphOpen:)` + `DockMorphMenu` (`DockMorphLayer`, `DockItemsRollMask`, beide `Animatable` über einen Fortschrittswert). Plus: `DockFAB(isButton: false, rotation:, glow:)` mit eigener DragGesture |
+
+- Ablauf (Stand 14.10.2026, Wunsch Robert): Tippen < 0,1 s = Artikel hinzufügen. Beim Drücken rollt die Fläche „Barcode | Foto“ sofort vom Plus nach links über die Dock-Knöpfe (0,4 s, Rolle an der Vorderkante, Plus dreht zu ×, Schein). Bei 0,4 s einrasten (Haptik). Vorher loslassen → rollt zurück.
+- Pillen: Lage nach FabHold.dc.html (Variante „dock“): ab Rahmen 5, Abstand 2, Höhe 54. Aussehen wie die gewählte Dock-Pille „Alle abhaken“ (Icon 18, Text 13/600, Verlauf Akzent .55 → .22, Rahmen weiß .22, Schein Akzent .3; Wunsch Robert 14.10.2026).
+- Beschriftung: „Barcode“ und „Foto erkennen“ (statt „Foto“; passt mit Icon bis 375 pt Bildschirmbreite in die Pille).
+- Nach der Auswahl bleibt das Dock als „Barcode | Foto erkennen“ stehen, auch wenn Scanner oder Foto-Erkennung wieder zu sind. So lässt sich gleich der nächste Artikel scannen. Schließen: × oder daneben tippen (Wunsch Robert 14.10.2026).
+- Berührung am Plus: `onPress` (`PressGesture`, `PressGestureRecognizer`) statt `DragGesture(minimumDistance: 0)`. Die SwiftUI-Geste meldet das Aufsetzen seit iOS 27 verzögert, besonders im unteren Fünftel des Bildschirms (Apple Developer Forums, Thread 846105).
+- Abweichung vom Prototyp: `FabHold.dc.html` zeigt noch das Hereinschieben, die Zeiten 0,1 s / 0,7 s und die alten Pillen (Text 15, Verlauf .45 → .16). Die Aufroll-Animation ist abgenommen (Robert 14.10.2026); der Prototyp ist noch nicht nachgezogen.
+- Wählen: auf eine Pille ziehen und loslassen, oder eingerastet antippen. Plus erneut tippen oder daneben tippen (Abdunkelung in ShoppingListView) schließt.
+- Barcode → `openScanner`, Foto → `openPhotoAdd`. VoiceOver: Aktionen „Barcode scannen“ / „Per Foto erkennen“ am Plus.
+

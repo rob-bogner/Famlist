@@ -48,6 +48,8 @@ struct ShoppingListView: View {
     @StateObject var contributors = ListContributorsStore()
     /// Menge direkt in der Liste ändern (Mengen-Chip → Pille, Design: ListQuantityEdit).
     @State var quantityEditor = InlineQuantityEditor()
+    /// Plus gedrückt gehalten und eingerastet: Dock zeigt „Barcode | Foto“ (Prototyp G).
+    @State var dockMorphOpen = false
     @State var activeSheet: ActiveListSheet?
     @State var activeOverlay: ListOverlay?
     @State var openRow: OpenSwipeRow?

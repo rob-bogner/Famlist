@@ -19,10 +19,25 @@ import SwiftUI
 struct DockFAB: View {
     let t: ListTheme
     let action: () -> Void
+    /// Plus gedrückt halten (DockMorphMenu): Drehung des Plus (45° = ×) und zusätzlicher Schein 0…1.
+    var rotation: Double = 0
+    var glow: CGFloat = 0
+    /// false: nur die Fläche (DockView legt eine eigene Geste darüber).
+    var isButton = true
 
     var body: some View {
-        Button(action: action) {
+        if isButton {
+            Button(action: action) { face }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Artikel hinzufügen")
+        } else {
+            face
+        }
+    }
+
+    private var face: some View {
             SVGIcon(Icon.plus, size: 26, color: .white, lineWidth: 2.6)
+                .rotationEffect(.degrees(rotation))
                 .shadow(color: .rgba(0, 40, 45, 0.35), radius: 1.5, x: 0, y: 2)   // drop-shadow(0 2px 3px)
                 .frame(width: 64, height: 64)
                 .background {
@@ -46,10 +61,8 @@ struct DockFAB: View {
                 }
                 .clipShape(Circle())                                          // overflow: hidden
                 .background(CSSBox(shape: Circle(), paint: t.fabBg, shadows: t.fabShadow))
+                .shadow(color: t.a.base.color(0.55 * Double(glow)), radius: 22 * glow)
                 .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Artikel hinzufügen")
     }
 }
 

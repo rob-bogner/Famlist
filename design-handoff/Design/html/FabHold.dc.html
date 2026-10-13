@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Plus gedrückt halten</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+button{font-family:inherit}
+</style>
+</helmet>
+<div data-fab-root="1" style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif; color: {{k.text}}; user-select: none; -webkit-user-select: none; touch-action: none">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; pointer-events: none">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" state="fruit" hint-size="390px,844px"></dc-import>
+</div>
+<!-- Abdunkelung (Tippen schließt) -->
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; {{scrimStyle}}" onClick="{{tapScrim}}"></div>
+
+<!-- B Halbkreis: Glasband -->
+<sc-if value="{{isArc}}" hint-placeholder-val="{{ false }}">
+<svg width="390" height="844" viewBox="0 0 390 844" style="position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible"><path d="{{arcPath}}" fill="none" stroke="{{k.band}}" stroke-width="66" stroke-linecap="round" stroke-dasharray="{{arcLen}}" stroke-dashoffset="{{arcOffset}}" style="filter: drop-shadow(0 10px 18px rgba(8,30,33,0.22))"></path><path d="{{arcPath}}" fill="none" stroke="{{k.bandEdge}}" stroke-width="1" stroke-dasharray="{{arcLen}}" stroke-dashoffset="{{arcOffset}}" transform="translate(0,-37)" opacity="0"></path></svg>
+</sc-if>
+<!-- C Fortschrittsring -->
+<sc-if value="{{isRing}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 292px; top: 732px; width: 92px; height: 92px; border-radius: 50%; {{ringStyle}}"></div>
+</sc-if>
+<!-- D Kapsel -->
+<sc-if value="{{isCapsule}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 306px; width: 64px; border-radius: 32px; {{capsuleStyle}}"><span style="position: absolute; left: 10px; right: 10px; top: 4px; height: 24px; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0)); pointer-events: none"></span></div>
+</sc-if>
+<!-- F Tropfen (Goo) -->
+<sc-if value="{{isGoo}}" hint-placeholder-val="{{ false }}">
+<svg width="390" height="844" viewBox="0 0 390 844" style="position: absolute; left: 0; top: 0; pointer-events: none"><defs><filter id="fabgoo"><feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"></feGaussianBlur><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"></feColorMatrix></filter><linearGradient id="googrd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{{light}}"></stop><stop offset="1" stop-color="{{deep}}"></stop></linearGradient></defs><g filter="url(#fabgoo)" fill="url(#googrd)"><circle cx="338" cy="778" r="32"></circle><circle cx="{{goo1x}}" cy="{{goo1y}}" r="{{goo1r}}"></circle><circle cx="{{goo2x}}" cy="{{goo2y}}" r="{{goo2r}}"></circle></g></svg>
+</sc-if>
+<!-- G Dock-Morph -->
+<sc-if value="{{isDock}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 20px; top: 746px; width: 276px; height: 64px; box-sizing: border-box; border-radius: 32px; background: rgba(6,14,16,0.97); border: 1px solid rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 36px -12px rgba(12,30,33,0.5); {{dockStyle}}"></div>
+</sc-if>
+<!-- H Spotlight-Karte -->
+<sc-if value="{{isSpot}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 130px; top: 552px; width: 240px; height: 176px; box-sizing: border-box; border-radius: 26px; background: {{k.menu}}; border: 1px solid {{k.menuBorder}}; box-shadow: {{k.menuShadow}}; transform-origin: 228px 186px; {{spotStyle}}"><span style="position: absolute; left: 18px; top: 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: {{k.sub}}">Hinzufügen per …</span></div>
+</sc-if>
+<!-- I Umlaufbahn -->
+<sc-if value="{{isOrbit}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 228px; top: 668px; width: 220px; height: 220px; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed {{k.orbit}}; {{orbitStyle}}"></div>
+<sc-for list="{{trail}}" as="d" hint-placeholder-count="0"><span style="position: absolute; width: 8px; height: 8px; border-radius: 50%; background: {{accent}}; {{d.style}}"></span></sc-for>
+</sc-if>
+<!-- K Gummiband zum Finger -->
+<sc-if value="{{isSlide}}" hint-placeholder-val="{{ false }}">
+<svg width="390" height="844" viewBox="0 0 390 844" style="position: absolute; left: 0; top: 0; pointer-events: none"><line x1="338" y1="778" x2="{{fingerX}}" y2="{{fingerY}}" stroke="{{accent}}" stroke-width="{{bandW}}" stroke-linecap="round" opacity="{{bandO}}"></line><circle cx="{{fingerX}}" cy="{{fingerY}}" r="{{fingerR}}" fill="{{accent}}" opacity="{{bandO}}"></circle></svg>
+<span style="position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0,0,0,0.4); {{slideHintStyle}}">Finger auf eine Option ziehen und loslassen</span>
+</sc-if>
+<!-- L Aura -->
+<sc-if value="{{isAura}}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{waves}}" as="w" hint-placeholder-count="0"><span style="position: absolute; left: 338px; top: 778px; border-radius: 50%; border: 2px solid {{accent}}; {{w.style}}"></span></sc-for>
+</sc-if>
+
+<!-- Optionen: Barcode scannen · Per Foto erkennen -->
+<sc-for list="{{opts}}" as="o" hint-placeholder-count="2">
+<span style="position: absolute; white-space: nowrap; pointer-events: none; {{o.labelStyle}}">{{o.label}}</span>
+<div data-opt="{{o.id}}" role="button" aria-label="{{o.label}}" style="position: absolute; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; {{o.wrap}}" onClick="{{o.pick}}"><svg width="{{o.iconSize}}" height="{{o.iconSize}}" viewBox="0 0 24 24" fill="none" stroke="{{o.iconColor}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; pointer-events: none"><path d="{{o.icon}}"></path></svg><sc-if value="{{o.inline}}" hint-placeholder-val="{{ false }}"><span style="pointer-events: none; display: flex; flex-direction: column; gap: 1px; text-align: left"><span style="font-size: 15px; font-weight: 600; white-space: nowrap; color: {{o.textColor}}">{{o.label}}</span><sc-if value="{{o.hasSub}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; white-space: nowrap; color: {{o.subColor}}">{{o.sub}}</span></sc-if></span></sc-if></div>
+</sc-for>
+
+<!-- Plus-Knopf (gedrückt halten) -->
+<div role="button" aria-label="Neuer Artikel – gedrückt halten für mehr" style="position: absolute; left: 306px; top: 746px; width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: none; background: radial-gradient(circle at 32% 22%, {{light}} 0%, {{accent}} 45%, {{deep}} 100%); {{fabStyle}}" onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}"><span style="position: absolute; left: 11px; right: 11px; top: 4px; height: 24px; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0)); pointer-events: none"></span><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" style="position: relative; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,40,45,0.35)); {{plusStyle}}"><path d="M12 5v14M5 12h14"></path></svg></div>
+
+<!-- Prototyp-Steuerung: Titel, Zeitleiste, Demo -->
+<div style="position: absolute; left: 14px; right: 14px; top: 52px; box-sizing: border-box; padding: 10px 12px 12px 14px; border-radius: 20px; background: {{k.chrome}}; border: 1px solid {{k.chromeBorder}}; box-shadow: 0 12px 28px -14px rgba(8,30,33,0.45); backdrop-filter: blur(18px); display: flex; flex-direction: column; gap: 8px; z-index: 5">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="min-width: 26px; height: 26px; padding: 0 7px; box-sizing: border-box; border-radius: 13px; background: {{accent}}; color: #FFFFFF; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">{{letter}}</span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column"><span style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{title}}</span><span style="font-size: 11.5px; color: {{k.sub}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{subtitle}}</span></span>
+<button style="height: 32px; padding: 0 12px; border-radius: 16px; border: 0; background: {{k.demoBg}}; color: {{k.accentText}}; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0" onClick="{{demo}}">▶ Demo</button>
+</div>
+<div style="position: relative; height: 6px; border-radius: 3px; background: {{k.track}}">
+<span style="position: absolute; left: 0; top: 0; height: 6px; border-radius: 3px; background: {{accent}}; {{barStyle}}"></span>
+<span style="position: absolute; left: 12.5%; top: -3px; width: 2px; height: 12px; border-radius: 1px; background: {{k.mark}}"></span>
+<span style="position: absolute; left: 87.5%; top: -3px; width: 2px; height: 12px; border-radius: 1px; background: {{k.mark}}"></span>
+</div>
+<div style="position: relative; height: 12px; font-size: 10.5px; color: {{k.sub}}">
+<span style="position: absolute; left: 0">0 s</span><span style="position: absolute; left: 12.5%; transform: translateX(-50%)">0,1 s Start</span><span style="position: absolute; left: 87.5%; transform: translateX(-50%)">0,7 s rastet ein</span>
+</div>
+</div>
+<!-- Rückmeldung -->
+<div style="position: absolute; left: 0; right: 0; top: 168px; display: flex; justify-content: center; pointer-events: none; z-index: 6; {{toastStyle}}"><span style="padding: 10px 16px; border-radius: 20px; background: rgba(15,27,29,0.94); color: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 16px 32px -14px rgba(12,30,33,0.5)">{{toast}}</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","default":"stack","options":["stack","arc","ring","capsule","fan","goo","dock","spot","orbit","split","slide","aura"]},"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"preview":{"editor":"range","default":1,"min":0,"max":1,"step":0.05},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { p: null, q: 0, phase: 'idle', hover: null, toast: '', toastT: 0, fx: 338, fy: 778, now: 0 };
+    this.raf = 0;
+    this.loop = this.loop.bind(this);
+  }
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); if (this.demoTimers) this.demoTimers.forEach(clearTimeout); }
+  start() { if (!this.raf) { this.last = performance.now(); this.raf = requestAnimationFrame(this.loop); } }
+  loop(t) {
+    const dt = Math.min(48, t - (this.last || t)); this.last = t;
+    const s = this.state; let { p, q, phase } = s; if (p === null) p = 0;
+    if (phase === 'holding') {
+      const el = t - this.t0;
+      p = Math.max(0, Math.min(1, (el - 100) / 600));
+      if (p >= 1) { phase = 'locked'; if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} } }
+    } else if (phase === 'locked') {
+      p = 1; q = Math.min(1, q + dt / 380);
+    } else if (phase === 'closing') {
+      p = Math.max(0, p - dt / 240); q = Math.max(0, q - dt / 200);
+      if (p <= 0 && q <= 0) phase = 'idle';
+    }
+    const toastT = Math.max(0, s.toastT - dt);
+    this.setState({ p, q, phase, now: t, toastT });
+    const keep = phase !== 'idle' || toastT > 0 || (this.props.variant === 'aura' && phase === 'locked');
+    if (keep) this.raf = requestAnimationFrame(this.loop); else this.raf = 0;
+  }
+  local(e) {
+    const root = e.currentTarget.closest('[data-fab-root]');
+    const r = root.getBoundingClientRect(); const sc = r.width / 390 || 1;
+    return { x: (e.clientX - r.left) / sc, y: (e.clientY - r.top) / sc };
+  }
+  hit(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const o = el && el.closest ? el.closest('[data-opt]') : null;
+    return o ? o.getAttribute('data-opt') : null;
+  }
+  say(text) { this.setState({ toast: text, toastT: 1600 }); this.start(); }
+  choose(id) {
+    this.say(id === 'scan' ? 'Barcode-Scanner öffnet …' : 'Kamera für die Artikelerkennung öffnet …');
+    this.setState({ phase: 'closing', hover: null });
+    this.start();
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const variant = this.props.variant ?? 'stack';
+    const hex = (h) => { const s = h.replace('#', ''); const f = s.length === 3 ? s.split('').map((c) => c + c).join('') : s; return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16)); };
+    const mix = (h, target, amt) => { const a = hex(h); return 'rgb(' + a.map((v) => Math.round(v + (target - v) * amt)).join(',') + ')'; };
+    const rgba = (h, al) => 'rgba(' + hex(h).join(',') + ',' + al + ')';
+    const light = mix(accent, 255, 0.32);
+    const deep = mix(accent, 0, dark ? 0.5 : 0.4);
+    const k = dark ? {
+      text: '#EAF5F6', sub: '#93ADB1', chrome: 'rgba(16,30,33,0.9)', chromeBorder: 'rgba(255,255,255,0.1)', track: 'rgba(255,255,255,0.1)', mark: 'rgba(255,255,255,0.5)',
+      demoBg: rgba(accent, 0.18), accentText: light, band: 'rgba(30,48,52,0.82)', bandEdge: 'rgba(255,255,255,0.2)', orbit: rgba(accent, 0.45),
+      menu: 'rgba(20,34,37,0.97)', menuBorder: 'rgba(255,255,255,0.1)', menuShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 48px -16px rgba(0,0,0,0.8)',
+      glass: 'radial-gradient(circle at 32% 22%, #41575B 0%, #1F3033 50%, #111C1E 100%)', glassShadow: 'inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 20px -8px rgba(0,0,0,0.8)',
+      icon: light, pill: 'rgba(20,34,37,0.95)', pillText: '#EAF5F6', card: 'rgba(24,40,44,0.97)', scrim: '0,0,0'
+    } : {
+      text: '#0F2528', sub: '#5F7579', chrome: 'rgba(255,255,255,0.92)', chromeBorder: 'rgba(15,37,40,0.08)', track: '#E6EDEE', mark: '#9FB3B6',
+      demoBg: rgba(accent, 0.1), accentText: deep, band: 'rgba(255,255,255,0.86)', bandEdge: 'rgba(15,37,40,0.08)', orbit: rgba(accent, 0.45),
+      menu: 'rgba(255,255,255,0.97)', menuBorder: 'rgba(15,37,40,0.08)', menuShadow: '0 24px 48px -16px rgba(12,40,44,0.35)',
+      glass: 'radial-gradient(circle at 32% 22%, #FFFFFF 0%, #EEF4F5 50%, #D3DFE1 100%)', glassShadow: 'inset 0 -3px 6px rgba(12,40,44,0.12), 0 1px 2px rgba(12,40,44,0.08), 0 12px 22px -8px rgba(12,40,44,0.45)',
+      icon: deep, pill: 'rgba(255,255,255,0.97)', pillText: '#0F2528', card: 'rgba(255,255,255,0.98)', scrim: '8,24,27'
+    };
+    const accentGlass = 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)';
+    const accentShadow = 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 10px 20px -8px ' + rgba(accent, 0.75);
+
+    const st = this.state;
+    const interacted = st.p !== null;
+    const p = interacted ? st.p : (this.props.preview ?? 1);
+    const q = interacted ? st.q : (p >= 1 ? 1 : 0);
+    const phase = st.phase;
+    const now = st.now || 0;
+    const clamp = (v) => Math.max(0, Math.min(1, v));
+    const out3 = (t) => 1 - Math.pow(1 - clamp(t), 3);
+    const back = (t) => { t = clamp(t); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+    const a = clamp(p / 0.8), b = clamp((p - 0.2) / 0.8);
+    const C = { x: 338, y: 778 };
+    const SCAN = 'M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M8 9v6M11 9v6M14 9v6M17 9v6';
+    const PHOTO = 'M4 8.5A1.5 1.5 0 0 1 5.5 7h2.3l1.4-2h5.6l1.4 2h2.3A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM12 9.6a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4z';
+    const defs = [
+      { id: 'scan', label: 'Barcode scannen', sub: 'Sicherer Treffer', icon: SCAN },
+      { id: 'photo', label: 'Per Foto erkennen', sub: 'Name, Marke, Menge', icon: PHOTO }
+    ];
+    const hov = (id) => st.hover === id;
+    // Standard-Knopf (Glas, rund) an Mittelpunkt (x, y)
+    const circle = (x, y, size, s, o, extra) => 'left: ' + (x - size / 2).toFixed(1) + 'px; top: ' + (y - size / 2).toFixed(1) + 'px; width: ' + size + 'px; height: ' + size + 'px; border-radius: 50%; opacity: ' + o.toFixed(3) + '; transform: scale(' + s.toFixed(3) + ')' + (extra || '') + ';';
+    const pillLabel = (rightX, y, o, dx) => 'left: auto; right: ' + (390 - rightX).toFixed(1) + 'px; top: ' + (y - 15).toFixed(1) + 'px; height: 30px; padding: 0 12px; border-radius: 15px; display: flex; align-items: center; font-size: 14px; font-weight: 600; background: ' + k.pill + '; color: ' + k.pillText + '; box-shadow: 0 10px 22px -10px rgba(8,30,33,0.45); opacity: ' + o.toFixed(3) + '; transform: translateX(' + (dx || 0).toFixed(1) + 'px);';
+    const hidden = 'opacity: 0; left: 0; top: 0;';
+    const optBase = (d, i) => {
+      const on = hov(d.id);
+      return { id: d.id, label: d.label, sub: d.sub, icon: d.icon, iconSize: 24, inline: false, hasSub: false,
+        iconColor: on ? '#FFFFFF' : k.icon, textColor: k.text, subColor: k.sub,
+        bg: on ? accentGlass : k.glass, shadow: on ? accentShadow : k.glassShadow,
+        pick: () => this.choose(d.id) };
+    };
+    const look = (o) => '; background: ' + o.bg + '; box-shadow: ' + o.shadow;
+    let opts = defs.map(optBase);
+    let scrimO = p * 0.32, scrimExtra = '';
+    let fabRot = 0, fabScale = 1, fabO = 1, plusO = 1;
+    const vals = { isArc: false, isRing: false, isCapsule: false, isGoo: false, isDock: false, isSpot: false, isOrbit: false, isSlide: false, isAura: false,
+      trail: [], waves: [] };
+    let letter = 'A', title = '', subtitle = '';
+    // Drücken: Knopf gibt leicht nach
+    const pressing = phase === 'holding';
+    fabScale = pressing ? 0.94 - 0.04 * p : 1;
+
+    if (variant === 'stack') {
+      letter = 'A'; title = 'Stapel'; subtitle = 'Zwei Knöpfe steigen über dem Plus auf, mit Beschriftung';
+      const ts = [a, b];
+      opts = opts.map((o, i) => {
+        const t = ts[i], y = C.y - (90 + 74 * i) * back(t);
+        const s = (0.45 + 0.55 * out3(t)) * (hov(o.id) ? 1.1 : 1);
+        o.wrap = circle(C.x, y, 56, s, clamp(t * 2.2)) + look(o);
+        o.labelStyle = pillLabel(C.x - 38, y, clamp((t - 0.45) * 2.2), (1 - out3(clamp((t - 0.45) * 2))) * 16);
+        return o;
+      });
+      fabRot = 45 * out3(p);
+    } else if (variant === 'arc') {
+      letter = 'B'; title = 'Halbkreis mit Abstand'; subtitle = 'Glasband baut sich im Bogen um das Plus auf';
+      vals.isArc = true;
+      const R = 118, a0 = 92, a1 = 188, len = Math.PI * R * (a1 - a0) / 180;
+      const pt = (deg) => ({ x: C.x + R * Math.cos(deg * Math.PI / 180), y: C.y - R * Math.sin(deg * Math.PI / 180) });
+      const s0 = pt(a0), s1 = pt(a1);
+      vals.arcPath = 'M ' + s0.x.toFixed(1) + ' ' + s0.y.toFixed(1) + ' A ' + R + ' ' + R + ' 0 0 0 ' + s1.x.toFixed(1) + ' ' + s1.y.toFixed(1);
+      vals.arcLen = len.toFixed(1); const reveal = out3(clamp(p / 0.85));
+      vals.arcOffset = (len * (1 - reveal)).toFixed(1);
+      const angs = [116, 164];
+      opts = opts.map((o, i) => {
+        const frac = (angs[i] - a0) / (a1 - a0);
+        const t = clamp((reveal - frac + 0.25) / 0.35);
+        const q2 = pt(angs[i]);
+        o.wrap = circle(q2.x, q2.y, 54, (0.3 + 0.7 * back(t)) * (hov(o.id) ? 1.1 : 1), clamp(t * 2)) + look(o);
+        const lp = { x: C.x + (R + 92) * Math.cos(angs[i] * Math.PI / 180), y: C.y - (R + 70) * Math.sin(angs[i] * Math.PI / 180) };
+        o.labelStyle = 'left: ' + (lp.x - 68).toFixed(1) + 'px; top: ' + (lp.y - 14).toFixed(1) + 'px; width: 136px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #FFFFFF; background: ' + accent + '; box-shadow: 0 8px 18px -8px ' + rgba(accent, 0.8) + '; opacity: ' + clamp((t - 0.5) * 2).toFixed(3) + ';';
+        return o;
+      });
+      scrimO = p * 0.42; fabRot = 45 * out3(p);
+    } else if (variant === 'ring') {
+      letter = 'C'; title = 'Ring lädt, dann springen sie heraus'; subtitle = 'Fortschrittsring zeigt die Haltezeit, beim Einrasten Sprung';
+      vals.isRing = true;
+      const deg = (p * 360).toFixed(1);
+      vals.ringStyle = 'background: conic-gradient(' + accent + ' 0deg, ' + light + ' ' + deg + 'deg, ' + rgba(accent, 0.12) + ' ' + deg + 'deg); -webkit-mask: radial-gradient(circle, transparent 37px, #000 38px); mask: radial-gradient(circle, transparent 37px, #000 38px); opacity: ' + (p > 0 && q < 1 ? 1 - q : 0).toFixed(3) + '; transform: scale(' + (1 + q * 0.25).toFixed(3) + ');';
+      const targets = [{ x: C.x - 96, y: C.y - 70 }, { x: C.x - 6, y: C.y - 116 }];
+      opts = opts.map((o, i) => {
+        const t = clamp((q - i * 0.15) / 0.85);
+        const pre = p < 1 ? clamp(p) * 0.25 : 0;
+        const x = C.x + (targets[i].x - C.x) * back(t), y = C.y + (targets[i].y - C.y) * back(t);
+        o.wrap = circle(x, y, 56, Math.max(pre, back(t)) * (hov(o.id) ? 1.1 : 1), Math.max(pre * 1.4, clamp(t * 3))) + look(o);
+        o.labelStyle = i === 0 ? pillLabel(x - 36, y, clamp((t - 0.5) * 2)) : pillLabel(x - 36, y, clamp((t - 0.5) * 2));
+        return o;
+      });
+      scrimO = (0.15 * p + 0.2 * q);
+    } else if (variant === 'capsule') {
+      letter = 'D'; title = 'Flüssige Kapsel'; subtitle = 'Das Plus wächst nach oben zur Glaskapsel mit beiden Aktionen';
+      vals.isCapsule = true;
+      const h = 64 + 136 * back(a);
+      vals.capsuleStyle = 'top: ' + (810 - h).toFixed(1) + 'px; height: ' + h.toFixed(1) + 'px; background: linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 55%, ' + deep + ' 100%); box-shadow: inset 0 -4px 10px rgba(0,30,34,0.3), 0 16px 28px -8px ' + rgba(accent, 0.75) + '; opacity: ' + (p > 0.01 ? 1 : 0) + ';';
+      const ys = [C.y - 136, C.y - 72];
+      opts = opts.map((o, i) => {
+        const t = clamp((a - 0.35 - (1 - i) * 0.15) / 0.5);
+        const on = hov(o.id);
+        o.iconColor = '#FFFFFF';
+        o.wrap = circle(C.x, ys[i], 52, (0.6 + 0.4 * out3(t)) * (on ? 1.08 : 1), clamp(t * 1.6)) + '; background: ' + (on ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.12)') + '; box-shadow: inset 0 1px 0 rgba(255,255,255,0.35)';
+        o.labelStyle = pillLabel(C.x - 44, ys[i], clamp((t - 0.4) * 2), (1 - out3(clamp((t - 0.4) * 2))) * 22);
+        return o;
+      });
+      fabRot = 45 * out3(p); scrimO = p * 0.3;
+    } else if (variant === 'fan') {
+      letter = 'E'; title = 'Karten-Fächer'; subtitle = 'Zwei Karten fächern sich vom Plus aus auf';
+      const thetas = [16, 58], Rs = [172, 184];
+      opts = opts.map((o, i) => {
+        const t = [a, b][i]; const e = back(t);
+        const th = thetas[i] * Math.min(1, 0.35 + 0.65 * e) * Math.PI / 180;
+        const R = Rs[i], x = Math.min(C.x - R * e * Math.sin(th), 282), y = C.y - R * e * Math.cos(th);
+        const on = hov(o.id);
+        o.inline = true; o.hasSub = true; o.iconSize = 22;
+        o.wrap = 'left: ' + (x - 100).toFixed(1) + 'px; top: ' + (y - 32).toFixed(1) + 'px; width: 200px; height: 64px; box-sizing: border-box; padding: 0 14px; justify-content: flex-start; border-radius: 20px; background: ' + (on ? accentGlass : k.card) + '; box-shadow: 0 18px 30px -14px rgba(8,30,33,0.55), inset 0 0 0 1px ' + k.menuBorder + '; transform: rotate(' + (-thetas[i] * 0.14 * e).toFixed(2) + 'deg) scale(' + ((0.5 + 0.5 * out3(t)) * (on ? 1.04 : 1)).toFixed(3) + '); opacity: ' + clamp(t * 2).toFixed(3) + ';';
+        o.textColor = on ? '#FFFFFF' : k.text; o.subColor = on ? 'rgba(255,255,255,0.8)' : k.sub;
+        o.labelStyle = hidden;
+        return o;
+      });
+      fabRot = 45 * out3(p); scrimO = p * 0.35;
+    } else if (variant === 'goo') {
+      letter = 'F'; title = 'Tropfen lösen sich'; subtitle = 'Zwei Tropfen ziehen sich wie Flüssigkeit aus dem Plus';
+      vals.isGoo = true;
+      const ts = [a, b], ds = [92, 166];
+      opts = opts.map((o, i) => {
+        const e = back(ts[i]);
+        const y = C.y - ds[i] * e, r = 14 + 14 * out3(ts[i]);
+        vals['goo' + (i + 1) + 'x'] = C.x; vals['goo' + (i + 1) + 'y'] = y.toFixed(1); vals['goo' + (i + 1) + 'r'] = r.toFixed(1);
+        const sep = clamp((C.y - y - 58) / 26);
+        o.iconColor = '#FFFFFF';
+        o.wrap = circle(C.x, y, 56, hov(o.id) ? 1.1 : 1, sep) + '; background: ' + (hov(o.id) ? 'rgba(255,255,255,0.25)' : 'transparent');
+        o.labelStyle = pillLabel(C.x - 40, y, clamp((sep - 0.5) * 2));
+        return o;
+      });
+      fabRot = 45 * out3(p); scrimO = p * 0.3;
+    } else if (variant === 'dock') {
+      letter = 'G'; title = 'Dock wird zum Auswahlmenü'; subtitle = 'Die Leiste daneben verwandelt sich in die zwei Aktionen';
+      vals.isDock = true;
+      vals.dockStyle = 'opacity: ' + clamp(p * 2.5).toFixed(3) + '; transform: scaleX(' + (0.85 + 0.15 * out3(p)).toFixed(3) + '); transform-origin: 100% 50%;';
+      opts = opts.map((o, i) => {
+        const t = [b, a][i];
+        const on = hov(o.id);
+        o.inline = true; o.iconSize = 20; o.iconColor = '#FFFFFF'; o.textColor = '#FFFFFF';
+        const x0 = 25 + i * 134;
+        o.wrap = 'left: ' + x0 + 'px; top: 751px; width: 132px; height: 54px; box-sizing: border-box; padding: 0 12px; border-radius: 27px; justify-content: center; gap: 8px; background: ' + (on ? 'linear-gradient(180deg, ' + rgba(accent, 0.75) + ', ' + rgba(accent, 0.35) + ')' : 'linear-gradient(180deg, ' + rgba(accent, 0.45) + ', ' + rgba(accent, 0.16) + ')') + '; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2), 0 0 16px ' + rgba(accent, on ? 0.45 : 0.2) + '; opacity: ' + clamp(t * 2).toFixed(3) + '; transform: translateX(' + ((1 - out3(t)) * 60).toFixed(1) + 'px);';
+        o.labelStyle = hidden;
+        o.label = i === 0 ? 'Barcode' : 'Foto';
+        return o;
+      });
+      fabRot = 45 * out3(p); scrimO = p * 0.18;
+    } else if (variant === 'spot') {
+      letter = 'H'; title = 'Spotlight-Kontextmenü'; subtitle = 'Alles um das Plus wird unscharf, ein Menü wächst aus der Ecke';
+      vals.isSpot = true;
+      const e = back(a);
+      vals.spotStyle = 'opacity: ' + clamp(a * 2).toFixed(3) + '; transform: scale(' + (0.2 + 0.8 * e).toFixed(3) + ');';
+      opts = opts.map((o, i) => {
+        const t = clamp((a - 0.35 - i * 0.12) / 0.5);
+        const on = hov(o.id);
+        o.inline = true; o.hasSub = true; o.iconSize = 22;
+        o.iconColor = on ? '#FFFFFF' : k.icon; o.textColor = on ? '#FFFFFF' : k.text; o.subColor = on ? 'rgba(255,255,255,0.8)' : k.sub;
+        o.wrap = 'left: 136px; top: ' + (584 + i * 66) + 'px; width: 228px; height: 60px; box-sizing: border-box; padding: 0 12px; justify-content: flex-start; border-radius: 18px; background: ' + (on ? accentGlass : 'transparent') + '; opacity: ' + clamp(t * 2).toFixed(3) + '; transform: translateY(' + ((1 - out3(t)) * 10).toFixed(1) + 'px);';
+        o.labelStyle = hidden;
+        return o;
+      });
+      scrimO = 0;
+      scrimExtra = 'background: radial-gradient(circle at 338px 778px, rgba(' + k.scrim + ',' + (0.05 * p).toFixed(3) + ') 0px, rgba(' + k.scrim + ',' + (0.55 * p).toFixed(3) + ') ' + (60 + 560 * out3(p)).toFixed(0) + 'px); backdrop-filter: blur(' + (7 * p).toFixed(1) + 'px); -webkit-backdrop-filter: blur(' + (7 * p).toFixed(1) + 'px);';
+      fabRot = 45 * out3(p);
+    } else if (variant === 'orbit') {
+      letter = 'I'; title = 'Umlaufbahn'; subtitle = 'Die Knöpfe kreisen von hinten auf ihre Plätze';
+      vals.isOrbit = true;
+      vals.orbitStyle = 'opacity: ' + (0.9 * clamp(p * 2)).toFixed(3) + '; transform: rotate(' + (-60 * p).toFixed(1) + 'deg) scale(' + (0.7 + 0.3 * out3(p)).toFixed(3) + ');';
+      const R = 110, finals = [104, 160], start = -40;
+      const pos = (deg) => ({ x: C.x + R * Math.cos(deg * Math.PI / 180), y: C.y - R * Math.sin(deg * Math.PI / 180) });
+      const trail = [];
+      opts = opts.map((o, i) => {
+        const t = [a, b][i]; const e = out3(t);
+        const deg = start + (finals[i] - start) * e;
+        const pt = pos(deg);
+        for (let j = 1; j <= 4; j++) {
+          const dj = pos(deg - j * 9 * (1 - e * 0.85));
+          trail.push({ style: 'left: ' + (dj.x - 4).toFixed(1) + 'px; top: ' + (dj.y - 4).toFixed(1) + 'px; opacity: ' + (clamp(t * 3) * (1 - e) * (0.6 - j * 0.12)).toFixed(3) + '; transform: scale(' + (1 - j * 0.15).toFixed(2) + ');' });
+        }
+        o.wrap = circle(pt.x, pt.y, 54, (0.5 + 0.5 * e) * (hov(o.id) ? 1.1 : 1), clamp(t * 2.5)) + look(o);
+        o.labelStyle = pillLabel(pt.x - 36, pt.y + (i === 0 ? -40 : 0), clamp((t - 0.7) * 3.3));
+        return o;
+      });
+      vals.trail = trail;
+      fabRot = 90 * out3(p); scrimO = p * 0.34;
+    } else if (variant === 'split') {
+      letter = 'J'; title = 'Das Plus zerfällt'; subtitle = 'Waagerechter und senkrechter Strich werden zu den beiden Knöpfen';
+      const targets = [{ x: C.x - 92, y: C.y - 46 }, { x: C.x - 14, y: C.y - 118 }];
+      const bars = [{ w: 18, h: 3 }, { w: 3, h: 18 }];
+      opts = opts.map((o, i) => {
+        const t = [a, b][i]; const e = back(t), m = out3(t);
+        const x = C.x + (targets[i].x - C.x) * e, y = C.y + (targets[i].y - C.y) * e;
+        const w = bars[i].w + (56 - bars[i].w) * m, h = bars[i].h + (56 - bars[i].h) * m;
+        const on = hov(o.id);
+        o.iconColor = on ? '#FFFFFF' : k.icon;
+        o.iconSize = 24 * clamp((t - 0.55) * 2.5);
+        o.wrap = 'left: ' + (x - w / 2).toFixed(1) + 'px; top: ' + (y - h / 2).toFixed(1) + 'px; width: ' + w.toFixed(1) + 'px; height: ' + h.toFixed(1) + 'px; border-radius: ' + Math.min(w, h).toFixed(1) + 'px; opacity: ' + (t > 0.001 ? 1 : 0) + '; background: ' + (m < 0.5 ? '#FFFFFF' : (on ? accentGlass : k.glass)) + '; box-shadow: ' + (m < 0.5 ? 'none' : (on ? accentShadow : k.glassShadow)) + '; transform: scale(' + (on ? 1.1 : 1) + ');';
+        o.labelStyle = pillLabel(x - 36, y, clamp((t - 0.7) * 3.3));
+        return o;
+      });
+      plusO = 1 - clamp(p * 4);
+      scrimO = p * 0.32;
+    } else if (variant === 'slide') {
+      letter = 'K'; title = 'Halten und ziehen'; subtitle = 'Große Ziele, Finger hinziehen und loslassen – ein Griff';
+      vals.isSlide = true;
+      const dragging = phase === 'holding' || (phase === 'locked' && this.down);
+      vals.fingerX = (dragging ? st.fx : C.x).toFixed(1); vals.fingerY = (dragging ? st.fy : C.y).toFixed(1);
+      vals.bandO = dragging ? (0.55 * p).toFixed(3) : '0';
+      const dist = Math.hypot(st.fx - C.x, st.fy - C.y);
+      vals.bandW = Math.max(3, 14 - dist / 22).toFixed(1); vals.fingerR = (10 + 6 * p).toFixed(1);
+      vals.slideHintStyle = 'opacity: ' + clamp((p - 0.5) * 2).toFixed(3) + ';';
+      const targets = [{ x: 238, y: 620 }, { x: 330, y: 560 }];
+      opts = opts.map((o, i) => {
+        const t = [a, b][i]; const e = back(t);
+        const x = C.x + (targets[i].x - C.x) * e, y = C.y + (targets[i].y - C.y) * e;
+        const on = hov(o.id);
+        o.iconSize = 28;
+        o.wrap = circle(x, y, 76, (0.4 + 0.6 * out3(t)) * (on ? 1.15 : 1), clamp(t * 2)) + look(o) + (on ? ', 0 0 0 8px ' + rgba(accent, 0.25) : '');
+        o.labelStyle = 'left: ' + (x - 80).toFixed(1) + 'px; top: ' + (y + 44).toFixed(1) + 'px; width: 160px; text-align: center; font-size: 14px; font-weight: 700; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0,0,0,0.5); opacity: ' + clamp((t - 0.5) * 2).toFixed(3) + ';';
+        return o;
+      });
+      scrimO = p * 0.5; fabRot = 45 * out3(p);
+    } else if (variant === 'aura') {
+      letter = 'L'; title = 'Aura mit schwebenden Blasen'; subtitle = 'Lichtwellen beim Halten, danach schweben die Aktionen leicht';
+      vals.isAura = true;
+      const waves = [];
+      for (let j = 0; j < 3; j++) {
+        const ph = ((now / 900) + j / 3) % 1;
+        const r = 34 + ph * 120 * (0.4 + 0.6 * p);
+        const o = (1 - ph) * 0.55 * clamp(p * 3) * (phase === 'holding' || phase === 'locked' || !interacted ? 1 : 0.3);
+        waves.push({ style: 'width: ' + (2 * r).toFixed(1) + 'px; height: ' + (2 * r).toFixed(1) + 'px; margin-left: ' + (-r).toFixed(1) + 'px; margin-top: ' + (-r).toFixed(1) + 'px; opacity: ' + o.toFixed(3) + ';' });
+      }
+      vals.waves = waves;
+      const targets = [{ x: C.x - 124, y: C.y - 100 }, { x: C.x - 44, y: C.y - 172 }];
+      opts = opts.map((o, i) => {
+        const t = [a, b][i]; const e = back(t);
+        const bob = (phase === 'locked' || !interacted) ? Math.sin(now / 520 + i * 1.7) * 4 : 0;
+        const x = C.x + (targets[i].x - C.x) * e, y = C.y + (targets[i].y - C.y) * e + bob;
+        o.wrap = circle(x, y, 60, (0.35 + 0.65 * out3(t)) * (hov(o.id) ? 1.1 : 1), clamp(t * 2)) + '; background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), ' + rgba(accent, 0.18) + ' 70%, ' + rgba(accent, 0.35) + '); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7), 0 14px 28px -10px ' + rgba(accent, 0.6) + (hov(o.id) ? ', 0 0 0 6px ' + rgba(accent, 0.25) : '');
+        o.iconColor = deep;
+        o.labelStyle = 'left: ' + (x - 70).toFixed(1) + 'px; top: ' + (y + 36).toFixed(1) + 'px; width: 140px; text-align: center; font-size: 13px; font-weight: 600; color: #FFFFFF; text-shadow: 0 1px 6px rgba(0,0,0,0.5); opacity: ' + clamp((t - 0.6) * 2.5).toFixed(3) + ';';
+        return o;
+      });
+      scrimO = p * 0.38;
+    }
+
+    const active = p > 0.001 || q > 0.001;
+    const scrimStyle = scrimExtra
+      ? scrimExtra + ' pointer-events: ' + (phase === 'locked' || (!interacted && active) ? 'auto' : 'none') + ';'
+      : 'background: rgba(' + k.scrim + ',' + scrimO.toFixed(3) + '); backdrop-filter: blur(' + (2 * p).toFixed(1) + 'px); -webkit-backdrop-filter: blur(' + (2 * p).toFixed(1) + 'px); pointer-events: ' + (phase === 'locked' || (!interacted && active) ? 'auto' : 'none') + ';';
+    opts.forEach((o) => { if (!o.wrap) o.wrap = hidden; if (!active) o.wrap += ' pointer-events: none;'; });
+    const shown = st.toastT > 0;
+    return Object.assign(vals, {
+      k, theme, accent, light, deep, opts, letter, title, subtitle,
+      scrimStyle,
+      fabStyle: 'transform: scale(' + fabScale.toFixed(3) + '); box-shadow: inset 0 -4px 10px rgba(0,30,34,0.3), 0 16px 28px -8px ' + rgba(accent, 0.75) + ', 0 0 ' + (36 + 30 * p).toFixed(0) + 'px ' + rgba(accent, (0.35 + 0.25 * p).toFixed(2)) + '; opacity: ' + fabO + '; transition: transform 0.12s;',
+      plusStyle: 'transform: rotate(' + fabRot.toFixed(1) + 'deg); opacity: ' + plusO.toFixed(3) + ';',
+      barStyle: 'width: ' + (pressing ? clamp(((performance.now() - (this.t0 || 0)) / 800)) * 100 : (p >= 1 ? 100 : (12.5 + 75 * p) * (p > 0 ? 1 : 0))).toFixed(1) + '%;',
+      toast: st.toast, toastStyle: 'opacity: ' + (shown ? Math.min(1, st.toastT / 250) : 0).toFixed(3) + ';',
+      down: (e) => {
+        e.preventDefault();
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        if (this.state.phase === 'locked') { this.setState({ phase: 'closing' }); this.start(); this.tapClose = true; return; }
+        this.tapClose = false;
+        this.down = true; this.t0 = performance.now(); this.moved = false;
+        const pt = this.local(e);
+        this.setState({ phase: 'holding', p: this.state.p ?? 0, q: 0, hover: null, fx: pt.x, fy: pt.y });
+        this.start();
+      },
+      move: (e) => {
+        if (!this.down) return;
+        const pt = this.local(e);
+        if (Math.hypot(pt.x - 338, pt.y - 778) > 12) this.moved = true;
+        const h = this.hit(e);
+        if (h !== this.state.hover && h && navigator.vibrate) { try { navigator.vibrate(6); } catch (err) {} }
+        this.setState({ hover: h, fx: pt.x, fy: pt.y });
+      },
+      up: (e) => {
+        if (this.tapClose) { this.tapClose = false; return; }
+        if (!this.down) return;
+        this.down = false;
+        const el = performance.now() - this.t0;
+        const h = this.hit(e);
+        if (h) { this.choose(h); return; }
+        if (el < 100 && !this.moved) { this.setState({ phase: 'closing' }); this.say('Kurz getippt: Artikel hinzufügen'); return; }
+        if (this.state.phase === 'holding') { this.setState({ phase: 'closing', hover: null }); this.start(); }
+        else this.setState({ hover: null });
+      },
+      tapScrim: () => { if (this.state.phase === 'locked' || this.state.p === null) { this.setState({ phase: 'closing', p: this.state.p ?? 1, q: this.state.p === null ? 1 : this.state.q }); this.start(); } },
+      demo: () => {
+        (this.demoTimers || []).forEach(clearTimeout);
+        this.down = false; this.t0 = performance.now();
+        this.setState({ phase: 'holding', p: 0, q: 0, hover: null });
+        this.start();
+        this.demoTimers = [
+          setTimeout(() => { this.setState({ hover: 'photo' }); }, 1500),
+          setTimeout(() => { this.setState({ hover: 'scan' }); }, 2100),
+          setTimeout(() => { this.setState({ hover: null, phase: this.state.phase === 'locked' ? 'closing' : this.state.phase }); this.start(); }, 2900)
+        ];
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>

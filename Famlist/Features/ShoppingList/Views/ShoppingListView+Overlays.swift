@@ -28,8 +28,18 @@ extension ShoppingListView {
     @ViewBuilder
     func overlayLayer(t: ListTheme, insets: LayoutShift) -> some View {
         let k = OverlayTheme(appearance, variant: activeOverlay == .menu ? .listMenu : .dockMenu)
-        let dockOnTop = activeOverlay?.keepsDockOnTop ?? false
+        let dockOnTop = (activeOverlay?.keepsDockOnTop ?? false) || dockMorphOpen
         ZStack(alignment: .bottom) {
+            if dockMorphOpen && activeOverlay == nil {
+                // Dock ist „Barcode | Foto“: leichte Abdunkelung, Tippen daneben schließt.
+                k.scrim.opacity(0.7)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { dockMorphOpen = false }
+                    .transition(.opacity)
+                    .accessibilityHidden(true)
+                    .zIndex(1)
+            }
             if activeOverlay != nil {
                 // OverlayScrim: Weichzeichner 2 liegt auf der Liste, hier nur die Farbe + Tippen schließt
                 k.scrim
@@ -60,7 +70,9 @@ extension ShoppingListView {
         DockView(appearance: appearance, active: dockActive, pill: dockPill,
                  liveBlur: true,                   // backdrop-filter des Designs: Leiste ist nur zu 78/84 % deckend
                  onCheck: dockCheck, onSort: { toggle(.sort) }, onCopy: { toggle(.copy) },
-                 onDelete: { toggle(.delete) }, onAdd: openNewItem)
+                 onDelete: { toggle(.delete) }, onAdd: openNewItem,
+                 onScan: openScanner, onPhoto: openPhotoAdd,                // Plus gedrückt halten (Prototyp G)
+                 morphOpen: $dockMorphOpen.animation(.easeOut(duration: 0.25)))
             // Filter-Modus und Hinzufügen: Dock blendet aus (Canvas SearchInline / AddInline).
             .opacity(isFiltering || isAddOpen ? 0 : 1)
             .frame(height: 64)
