@@ -1,0 +1,200 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-25T14:02:16+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: eab47b2
+    head_subject: 'Merge branch ''redesign-hybrid'': Redesign „Hybrid“ Phasen 0–7, Offline-Artikelstamm, Fehlerbehebungen'
+    uncommitted_changes: false
+summary: |
+  Redesign „Hybrid“ (Phasen 0–7) ist fertig und nach main gemergt (eab47b2, gepusht, Branch main aktiv,
+  Working Tree sauber). In dieser Session: Phase 7 (Kassenzettel/Preise), Wisch-Fixes in Artikel/Kategorien
+  verwalten, Artikelstamm offline zuerst (OfflineItemCatalogRepository), Übernahme von Stamm-Änderungen in die
+  Liste, und zwei Gerätefehler behoben: Menge nach erneutem Hinzufügen nicht aktualisiert (.id im LazyVStack)
+  und Foto verschwand (Realtime-UPDATE ohne imagedata). Voller Testplan zuletzt 466 XCTest + 20 Swift Testing grün.
+  Robert-Abnahmetest der zwei Gerätefehler auf dem iPhone steht aus.
+goal: |
+  Famlist-Redesign „Hybrid“ vollständig, offline-first und fehlerfrei auf main; Robert will nur noch
+  Abnahmetests machen (kein Trial & Error: Fehler im Simulator nachstellen, beheben, verifizieren, dann liefern).
+  Fertig, wenn Robert die Abnahme auf dem iPhone bestätigt.
+current_state: |
+  Geprüft (git, 14:01): Branch main, HEAD eab47b2 = origin/main, keine uncommitteten Änderungen.
+  Geprüft: redesign-hybrid (05369e0) ist vollständig in main; Branch existiert noch (lokal + origin).
+  Geprüft: voller Testplan auf 05369e0 (= Inhalt von main) 466 XCTest + 20 Swift Testing, 0 fehlgeschlagen;
+  LiveDuplicateAddUITests 3/3 grün (Simulator, Supabase-Testkonto demo, mit App-Neustart).
+  Geprüft: iPhone 16 Pro Max hat den Stand mit beiden Fixes installiert (ca. 13:14, entspricht 05369e0).
+  Ungeprüft: Roberts Abnahme auf dem Gerät; nach dem Merge keine Tests auf main erneut ausgeführt.
+completed_work:
+  - |
+    Phase 7 (d9f0187): Kassenzettel scannen/prüfen, Preise speichern (PriceBook, Migration 012), Einkauf erledigt,
+    Preisverlauf mit echten Werten; Artikel verwalten nur Pfeil öffnet Bearbeiten; Kategorien Wischen-Löschen.
+  - |
+    2780ed9: ManageItemsViewModel serialisiert Schreibaufträge, load() wartet (Race beim Neuladen).
+  - |
+    8712458: OfflineItemCatalogRepository + CatalogLocalStore (Datei-Warteschlange, Senden bei Reconnect),
+    ListViewModel+CatalogEdits (geänderte Stamm-Felder in gleichnamige Listenartikel), PriceBook-Reconnect.
+  - |
+    5d26c28, ac41b13: fremde Änderungen (Launch/Splash, Dock-Breite, Undo-Wischen) committet auf Roberts Wunsch.
+  - |
+    05369e0: .id aus ShoppingListContent-Zeilen entfernt; RealtimeEventProcessor behält Foto, wenn imagedata fehlt;
+    neue Tests RealtimeImageEchoTests, DuplicateAddUITests, LiveDuplicateAddUITests; fremde Session-Änderungen
+    (Preise anzeigen, Einkauf abschließen, SyncEngine localWriteObserver) mit committet.
+  - |
+    eab47b2: redesign-hybrid --no-ff nach main gemergt und gepusht.
+decisions:
+  - decision: |
+      Artikelstamm-Warteschlange als JSON-Datei (Application Support/ItemCatalog), nicht SwiftData.
+    rationale: |
+      Stamm lag vorher gar nicht lokal; wie PriceBook; keine Schema-Migration. Abweichung von CLAUDE.md-Regel bewusst.
+  - decision: |
+      Realtime-UPDATE ohne Schlüssel imagedata = Foto behalten; ausdrückliches null = löschen.
+    rationale: |
+      Gerätelog 25.09.: Echo enthielt imagedata nicht (Postgres TOAST, unverändert); App hatte Foto gelöscht.
+  - decision: |
+      Zeilen-.id im LazyVStack entfernt statt Container zu tauschen.
+    rationale: |
+      Live-Test mit Neustart schlug mit .id reproduzierbar fehl (Anzeige 1 statt 2), ohne .id 3/3 grün.
+files:
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListContent.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      .id("open-…") je Zeile entfernt; committet in 05369e0.
+  - path: Famlist/Core/Sync/RealtimeEventProcessor.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      processUpdate: fehlendes imagedata → lokales Foto behalten; committet in 05369e0.
+  - path: Famlist/Repositories/Implementations/OfflineItemCatalogRepository.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Offline-Artikelstamm; dazu Repositories/Offline/CatalogLocalStore.swift, CatalogOperation.swift (8712458).
+  - path: FamlistUITests/LiveDuplicateAddUITests.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Live-Test gegen Supabase, nur mit TEST_RUNNER_FAMLIST_LIVE=1; legt „Livetest …“-Artikel im Testkonto demo an.
+  - path: design-handoff/PLAN.md
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Phase 7 abgehakt, §8a/§9 ergänzt (d9f0187).
+checks:
+  - method: |
+      Voller Testplan (Unit + UI) auf 05369e0.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF'
+    result: passed
+    detail: |
+      466 XCTest + 20 Swift Testing, 0 fehlgeschlagen (ca. 13:10). Auf main nach Merge nicht erneut ausgeführt.
+  - method: |
+      Live-Test doppeltes Hinzufügen mit App-Neustart (Simulator, echtes Supabase, Testkonto).
+    command: |
+      TEST_RUNNER_FAMLIST_LIVE=1 xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/LiveDuplicateAddUITests
+    result: passed
+    detail: |
+      3/3 grün; vor dem Fix reproduzierbar rot.
+  - method: |
+      Abnahme durch Robert auf dem iPhone (Milch erneut hinzufügen, Liste wechseln).
+    command: null
+    result: not_run
+    detail: |
+      Stand installiert ca. 13:14; Rückmeldung fehlt.
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'platform=iOS,id=00008140-000A64A201F1801C' -derivedDataPath <dd> -allowProvisioningUpdates && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <dd>/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone (Gerät muss entsperrt sein für launch --console).
+  - command: |
+      xcrun devicectl device process launch --console --terminate-existing --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 com.roxo.famlist
+    purpose: |
+      App auf dem Gerät starten und print-Logs mitschneiden (Logger nutzt nur print).
+  - command: |
+      xcrun devicectl device copy from --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 --domain-type appDataContainer --domain-identifier com.roxo.famlist --source "Library/Application Support/Default.store" --destination <ziel>
+    purpose: |
+      SwiftData-Datenbank vom Gerät holen (auch -shm/-wal), dann sqlite3 auf ZITEMENTITY.
+  - command: |
+      ruby <scratchpad>/xadd.rb <Target> <dateien…>
+    purpose: |
+      Neue Dateien in pbxproj eintragen (xcodeproj-Gem); Skript im flüchtigen Scratchpad, ggf. neu schreiben.
+open_items:
+  - |
+    Robert-Abnahme der zwei Gerätefehler (Menge/Foto) auf dem iPhone.
+  - |
+    PriceBook-Warteschlange wird beim Abmelden nicht geleert (Preise könnten im nächsten Konto landen).
+  - |
+    Katalog-Änderungen werden nur in der geöffneten Liste übernommen, nicht in anderen Listen.
+  - |
+    5 Testdateien waren nicht im Projekt (z. B. SyncEngineReactivationTests); Stand nach fremder Session ungeprüft.
+  - |
+    Branch redesign-hybrid existiert noch (lokal + origin); Löschen nur auf Wunsch.
+  - |
+    Robert: Apple-Provider im Supabase-Dashboard, URLs Nutzungsbedingungen/Datenschutz, Push-Versand.
+next_steps:
+  - step: |
+      Robert nach dem Abnahmetest fragen (Milch erneut hinzufügen, zu Rewe und zurück wechseln); bei Fehler zuerst im
+      Simulator mit LiveDuplicateAddUITests nachstellen, nicht auf dem Gerät probieren.
+    why: |
+      Letzter offener Punkt der Fehlerbehebung; Robert will kein Trial & Error.
+  - step: |
+      Voller Testplan auf main laufen lassen.
+    why: |
+      Nach dem Merge nicht erneut geprüft.
+waiting_on:
+  - what: |
+      Abnahmetest der Fixes Menge/Foto auf dem iPhone.
+    who: Robert
+    since: '2026-09-25'
+    detail: |
+      Installiert ca. 13:14 (entspricht 05369e0).
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer/Entwickler; testet auf iPhone 16 Pro Max (iOS 26.6.2).
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Eine zweite Session (lief in einer VM) hat heute parallel im selben Ordner gearbeitet; ihre Änderungen sind
+      mit committet, aber nur über den Testplan geprüft, nicht im Code-Review.
+  - type: assumption
+    detail: |
+      Ungeprüft: Remember-Notiz 12:30 nennt ein Audit mit „kritischen Befunden – RLS-Lücken, Datenverlust, Offline-Fehler“
+      (vermutlich aus der anderen Session). Inhalt und Ort des Berichts nicht gefunden/geprüft.
+  - type: assumption
+    detail: |
+      Ungeprüft: Der Fix für die Menge (.id entfernt) wirkt auf dem Gerät wie im Simulator. Prüfbar durch Roberts Abnahme.
+resources:
+  - type: file
+    ref: design-handoff/PLAN.md
+    detail: |
+      Plan, Prüfstände je Phase (§8a), Abweichungen (§9).
+  - type: file
+    ref: .remember/today-2026-09-25.md
+    detail: |
+      Kurzprotokoll des Tages (auch Einträge der anderen Session).
+  - type: account
+    ref: Simulator-Testkonten (AuthTestHelpers.swift)
+    detail: |
+      Nur DEBUG/Simulator; langer Druck auf die Korb-Kachel im Anmeldebildschirm. Zugangsdaten <redacted>.
+next_session_prompt: |
+  Famlist (/Users/robertbogner/GitPrivate/Famlist), Branch main, HEAD eab47b2 (Merge von redesign-hybrid), gepusht.
+  Redesign „Hybrid“ Phasen 0–7 fertig; zuletzt zwei Gerätefehler behoben (05369e0): Menge nach erneutem Hinzufügen
+  (.id in ShoppingListContent entfernt) und Foto-Verlust (RealtimeEventProcessor, fehlendes imagedata).
+  Lies das jüngste Handoff unter .claude/handoffs/ und design-handoff/PLAN.md.
+  Frag Robert zuerst nach seinem Abnahmetest auf dem iPhone. Bei Fehlern: im Simulator nachstellen
+  (LiveDuplicateAddUITests mit TEST_RUNNER_FAMLIST_LIVE=1), beheben, verifizieren – kein Trial & Error am Gerät.
+  Danach vollen Testplan auf main laufen lassen.

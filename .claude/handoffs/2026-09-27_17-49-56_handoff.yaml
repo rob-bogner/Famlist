@@ -1,0 +1,195 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-27T17:49:56+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: 75ed8e6
+    head_subject: 'FIX(watch): Krone erkennt schnelles Drehen ab 170 ms; Entwickler-Toast entfernt'
+    uncommitted_changes: true
+summary: |
+  Kommazahl-Mengen (1,5 kg), Mengen-Eingabe per Tastatur, Tastatur-Sichtbarkeit aller Formularfelder und
+  die Apple-Watch-App sind fertig, in main gemergt und nach origin/main gepusht (HEAD 75ed8e6). Uhr-Krone
+  mit Robert am Gerät abgestimmt (langsam 0,1 kg je 2 Rasten, schnell 1 kg je 2 Rasten, schnell = < 170 ms
+  zwischen Rasten). iPhone und Apple Watch Ultra laufen mit diesem Stand. Uhr-Installationen gehen jetzt
+  ohne Laufen über eine SSH-Brücke zum MacBook Air. Eine andere Session arbeitet parallel im Hauptordner am
+  Account-Archiv (uncommittet, nicht von dieser Session).
+goal: |
+  Robert (27.09.): Menge direkt eintippen statt hundertfach ±; Kommazahlen (1,5 kg) auf iPhone und Uhr;
+  fokussierte Eingabefelder nie verdeckt; watch-app nach main mergen; Uhr-Krone „smooth“ mit Punktlandung.
+  Erledigt, wenn Robert am Gerät abnimmt – für Mengen, Tastatur und Krone am 27.09. um 17:44 bestätigt
+  („Jetzt ist es perfekt“), danach Commit + Push gewünscht und erfolgt.
+current_state: |
+  Geprüft (17:49): main = origin/main = 75ed8e6; Tests auf 75ed8e6: Uhr 26/26, iOS-Unit 679 (8 übersprungen,
+  0 Fehler). iPhone-Build 75ed8e6 installiert (ohne Toast-Code, strings-Prüfung 0 Treffer). Uhr hat den
+  170-ms-Build (Uhr-Code identisch mit 75ed8e6), Zeitstempel lokal = Air 17:43:30.
+  Live auf Supabase: Migration 025 (items.units numeric, max. 2 Nachkommastellen, upsert_items_lww mit
+  trim_scale(round(x,2))), dazu 022–024 seit 26.09.
+  Uncommittet im Hauptordner, NICHT von dieser Session: migrations/026_new_user_profile_public_id.sql,
+  design-handoff/ACCOUNT_ARCHIVE_PROMPT.md, design-handoff/Design/SYNC.md, 26 geänderte, 4 gelöschte und
+  87 neue Dateien unter design-handoff/Design/html (laut .remember/now.md 17:48: Account-Archiv, Migration 026).
+  Worktree ../Famlist-watch (Branch watch-app 99cc8af) existiert noch, ist in main gemergt; origin/watch-app
+  steht auf f4b609c (älter, nicht mehr nötig).
+completed_work:
+  - |
+    Mengen-Eingabe der Design-Session committet (a0692d0); Tastatur-Sichtbarkeit: KeyboardRevealScrollView +
+    .revealsWhenFocused (0760483, 87c3420) inkl. UI-Test test_focusedPriceField_isVisibleAboveSaveButton.
+  - |
+    Kommazahlen (2e54603): Migration 025 live, ItemModel.units Double, ItemEntity.quantity: Double? + amount,
+    QuantityFormat, QuantityMerge (Regel B), Import behält 1,5 kg; Validierung 0,01…9999.
+  - |
+    watch-app ← main (99cc8af) mit Uhr-Anpassung auf Double; Merge watch-app → main (f7c21c3).
+  - |
+    72cc852: feine/grobe Schritte (kg 0,1/1), HoldRepeatButton (tippen fein, halten grob, 0,5 s / 0,7 s),
+    Krone mit eigener Tempo-Messung, Live-Abgleich des offenen Uhr-Artikels (remoteUnits).
+  - |
+    75ed8e6: Krone schnell ab < 170 ms; Entwickler-Toast (-devToast) wieder entfernt. Push nach origin/main.
+decisions:
+  - decision: |
+      Doppelter Artikel / Import in offenen Artikel: Regel B (QuantityMerge) – gleiche/keine Einheit addieren,
+      g↔kg, ml↔l, cm↔m umrechnen und addieren (500 g + 1 kg = 1,5 kg), sonst gilt die neue Eingabe.
+    rationale: |
+      Robert, 27.09. (vorher ergab 500 g + 1 kg „501“).
+  - decision: |
+      Server-Spalte items.units direkt auf numeric; lokal zusätzliches Feld ItemEntity.quantity statt Typänderung.
+    rationale: |
+      Nur Robert nutzt die App; SwiftData ohne Migrationsplan – Typänderung könnte Store verwerfen (Offline-Ops weg).
+  - decision: |
+      Krone: DigitalCrownEvent.velocity nicht nutzen, Tempo aus Rasten-Abstand; Werte 0,1/2 Rasten, 1 kg/2 Rasten, 170 ms.
+    rationale: |
+      Messung 27.09.: velocity während der Bewegung fast immer 0; .low ≈ 6 Rasten/Umdrehung; 170 ms von Robert abgenommen.
+files:
+  - path: FamlistWatch/Screens/WatchItemScreen.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet 75ed8e6. Krone (applyCrown/accumulate, fastTickInterval 0.17, ticksPerFineStep 2, ticksPerCoarseStep 2).
+  - path: Famlist/Shared/Components/KeyboardReveal/KeyboardRevealScrollView.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet 0760483/87c3420. ScrollView bleibt voll hoch; Anker berechnet (Wischen schließt Tastatur weiter).
+  - path: Famlist/Features/ShoppingList/Models/QuantityMerge.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet 2e54603. Regel B beim Zusammenführen von Mengen.
+  - path: Famlist/Shared/Components/HoldRepeatButton.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet 72cc852. Von iPhone-Stepper und Uhr genutzt (scripts/watch_shared_sources.txt).
+  - path: migrations/025_items_units_decimal.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet 2e54603; live (025 + 025b trim_scale).
+  - path: migrations/026_new_user_profile_public_id.sql
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Fremde Session (Account-Archiv / Magic-Link-Fix). Nicht anfassen ohne Absprache.
+checks:
+  - method: |
+      Uhr-Unit-Tests auf 75ed8e6.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme FamlistWatch -destination 'platform=watchOS Simulator,id=1766A235-DEB5-4D91-99BB-91A79EE51899'
+    result: passed
+    detail: |
+      26/26 (eigenes -derivedDataPath im Scratchpad).
+  - method: |
+      iOS-Unit-Tests auf 75ed8e6.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: passed
+    detail: |
+      679 Tests, 8 übersprungen, 0 Fehler.
+  - method: |
+      iOS-UI-Tests.
+    command: |
+      xcodebuild test ... -only-testing:FamlistUITests
+    result: not_run
+    detail: |
+      Zuletzt 27.09. ~10:24 auf 2e54603-Vorstand: 39 (6 übersprungen) + 2 bekannte Fehlschläge DuplicateAddUITests
+      (suchen Knopf „Artikel suchen oder hinzufügen“, seit 137608e „In dieser Liste filtern“). Auf 75ed8e6 nicht gelaufen.
+  - method: |
+      Gerätetest Mengen/Krone/Sync mit Robert.
+    command: null
+    result: passed
+    detail: |
+      27.09. 17:44 Robert: „Jetzt ist es perfekt“ (Krone 170 ms); Sync Uhr↔iPhone inkl. offenem Artikel bestätigt.
+commands:
+  - command: |
+      AIR=robert.bogner@MacBook-Air-von-Robert-2.local
+      rsync -a "<dd>/Build/Products/Debug-iphoneos/Famlist.app/Watch/FamlistWatch.app" "${AIR}:FamlistBridge/"
+      ssh "${AIR}" 'xcrun devicectl device install app --device 62852C76-93FB-54BF-BDEC-C13D50CBBCD2 ~/FamlistBridge/FamlistWatch.app'
+    purpose: |
+      Uhr-Installation über das MacBook Air (Robert sitzt dort). IMMER ${AIR} mit Klammern (zsh-Modifikator-Falle);
+      vorher Zeitstempel lokal vs. Air vergleichen. iPhone direkt vom Mac mini: xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <app>.
+open_items:
+  - |
+    DuplicateAddUITests (2 Tests) auf neuen Hinzufügen-Weg umstellen (InlineAddOverlay / ListFilterField).
+  - |
+    Worktree ../Famlist-watch und Branch watch-app/origin/watch-app aufräumen (in main gemergt) – nur nach Rückfrage.
+  - |
+    Optional: Krone mit .medium feiner machen (mehr Rasten pro Umdrehung); Robert ist mit .low + 170 ms zufrieden.
+next_steps:
+  - step: |
+      Robert fragen, was als Nächstes kommt; parallel laufende Account-Archiv-Session im Hauptordner beachten
+      (fremde uncommittete Dateien nicht committen, vor Merges/Builds pgrep -fl xcodebuild prüfen).
+    why: |
+      Alle Aufträge dieser Session sind abgenommen, committet und gepusht.
+  - step: |
+      DuplicateAddUITests reparieren und UI-Tests auf main laufen lassen.
+    why: |
+      Einzige bekannte rote Tests; UI-Tests auf 75ed8e6 nicht gelaufen.
+waiting_on: []
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Auftraggeber und Tester; arbeitet am MacBook Air per Bildschirmfreigabe auf dem Mac mini (Wohnzimmer).
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Parallele Session im selben Hauptordner (Account-Archiv, Migration 026, viele design-handoff-Dateien) –
+      Gefahr, fremde Dateien mitzucommitten oder Builds zu stören.
+  - type: assumption
+    detail: |
+      Ungeprüft: ob Migration 026 schon live ist (laut .remember/now.md „Magic-Link-Auth repariert“) – prüfbar
+      per Supabase list_migrations.
+resources:
+  - type: file
+    ref: .remember/now.md
+    detail: |
+      Kurzzeitnotizen beider Sessions; 17:48 Eintrag der Account-Archiv-Session.
+  - type: file
+    ref: design-handoff/WATCH_PLAN.md
+    detail: |
+      Architektur der Uhr-App (jetzt in main).
+  - type: file
+    ref: scripts/watch_shared_sources.txt
+    detail: |
+      Geteilte iOS-Dateien der Uhr; nach Änderung ruby scripts/watch_targets.rb.
+next_session_prompt: |
+  Projekt Famlist (iOS/SwiftUI/Supabase + Apple-Watch-App), Hauptordner /Users/robertbogner/GitPrivate/Famlist
+  auf main (= origin/main, 75ed8e6). Fertig und von Robert abgenommen: Kommazahl-Mengen (Migration 025 live),
+  Mengen-Eingabe, Tastatur-Sichtbarkeit (KeyboardRevealScrollView), Uhr-App in main inkl. Krone (0,1 kg/2 Rasten
+  langsam, 1 kg/2 Rasten schnell, schnell = < 170 ms). Achtung: Eine andere Session arbeitet im selben Ordner am
+  Account-Archiv (uncommittet: migrations/026, design-handoff/**) – deren Dateien nie mitcommitten; vor Builds/
+  Merges pgrep -fl xcodebuild prüfen. Uhr-Installation über SSH-Brücke zum MacBook Air (robert.bogner@
+  MacBook-Air-von-Robert-2.local, immer ${AIR} mit Klammern, Zeitstempel prüfen); Installation vorher im Chat
+  ankündigen. Offen: DuplicateAddUITests (2) auf neuen Hinzufügen-Weg umstellen; Worktree ../Famlist-watch nur
+  nach Rückfrage aufräumen. Frag Robert zuerst, was als Nächstes kommt.

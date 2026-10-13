@@ -1,0 +1,271 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-29T08:07:42+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: b399927
+    head_subject: 'FEAT(receipts): Auswertung „Verbrauch“ und Einstieg über das Archiv (Phase 4)'
+    uncommitted_changes: true
+summary: |
+  „Einkaufsdaten & Auswertung“ (design-handoff/RECEIPT_INSIGHTS_PROMPT.md) ist in 4 Phasen umgesetzt und committet
+  (ca4859f, d848e58, 1920333, b399927), dazu der Dokumentenscanner vom Vortag (063eadf). Alle 5 Commits sind NICHT gepusht.
+  Migration 030 (receipts.store_address, started_at, ended_at) ist live auf Supabase mbfztpbwfktiduemqqfe.
+  Bon-Detail zeigt Einkaufsdaten und Artikel; Archiv-Karte öffnet die Auswertung mit Reitern Ausgaben/Verbrauch.
+  Am 29.09. um 01:12 auf Roberts iPhone 16 Pro Max installiert; Rückmeldung steht aus.
+  Im Arbeitsbaum liegen weiter fremde, ungetestete Änderungen einer anderen Sitzung (ProductDetail*, HybridSheetLayer,
+  SheetQuantityStepper, Canvas-Abgleich in design-handoff/).
+goal: |
+  Auftrag RECEIPT_INSIGHTS_PROMPT.md: Metadaten je Bon (Ort, Datum, Uhrzeit, Dauer, Wert, Artikel mit Kategorie) und
+  Auswertung „Ausgaben“ + „Verbrauch“ aus allen Bons, Design freigegeben 28.09.2026. Nährwerte/„Ernährung“ ausdrücklich nicht.
+  Robert-Entscheidung 29.09.: Listenmenge = Gesamtmenge der Bon-Zeile → ReceiptLine.units = Listenmenge ÷ Bon-Stückzahl.
+  Vorher (gleiche Session): Robert hat den Dokumentenscanner auf dem iPhone abgenommen („super“) → Commit 063eadf.
+  Fertig, wenn Robert die Auswertung auf dem iPhone abnimmt und über Push entschieden ist.
+current_state: |
+  Geprüft:
+  - git: main, HEAD b399927, 5 Commits vor origin/main; uncommitted nur fremde Änderungen (pbxproj-Rest = nur ProductDetail-Zeilen).
+  - Unit-Tests 801 grün (11 übersprungen) und 6 ReceiptArchive-UI-Tests grün, auf dem Index-Stand in separater Kopie (29.09. ~01:05).
+  - ReceiptCaptureUITests und ShoppingDoneUITests grün (29.09. ~01:03).
+  - Migration 030 live: Prüfskript-Ergebnis wie erwartet, REST-Rundlauf mit Testkonto (anlegen 201, lesen 200, löschen 204).
+  - Screens hell/dunkel im Simulator gegen die Board-PNGs abgeglichen (Detail, Ausgaben, Verbrauch, Archiv-Karte).
+  - Device-Build 01:11:55, Installation 01:12:03 (devicectl ohne Fehler).
+  Gefolgert/ungeprüft:
+  - Verhalten auf dem iPhone mit echten Bons (Uhrzeit/Adresse-Erkennung) ist nicht getestet; Parser nur an nachgebauten Bons.
+  - Freier Speicher auf dem Mac nur 5 GB (df); ein erster isolierter Build scheiterte an kaputtem Modul-Cache (Ursache unbewiesen).
+completed_work:
+  - |
+    063eadf: Dokumentenscanner (Auto-Zuschnitt, Live-Rahmen, Auto-Auslösung, Ecken-Editor), Bon-Positionen (Migration 029),
+    ☰ → „Gespeicherte Kassenzettel“. Nur eigene Dateien, ProductDetail* ausgenommen.
+  - |
+    ca4859f Phase 1: Migration 030 + Prüfskript; ReceiptParser+Meta (detectTime inkl. TSE-UTC, detectAddress); ShoppingStartStore
+    (Einkaufsbeginn beim Abhaken, Reset nach Speichern/Erledigt); ReceiptTimes; ReceiptLineEnricher; ReceiptFlowViewModel aufgeteilt (+Review, +PriceChanges).
+  - |
+    d848e58 Phase 2: ReceiptDetailSheet nach ReceiptDetailMeta (ReceiptMetaGrid, SheetSegmentControl, ReceiptLinesCard), CategoryColorRanking,
+    InsightPalette, ActiveListSheet.receiptPriceHistory(entry, back:) mit Rückweg; UI-Tests angepasst + neuer Test.
+  - |
+    1920333 Phase 3: ReceiptInsights (Ausgaben), ReceiptInsightsSheet/ViewModel, MonthSwitcher, InsightBarChart (Canvas, SVG-Maße),
+    Kategorien/Läden-Karten, ArchivedReceipt.insightSamples mit Board-Zahlen, UserLog.UI.insightsOpened/-MonthChanged.
+  - |
+    b399927 Phase 4: ConsumptionStatistics/UsageAmount/UsageInsights, UsageInsightsView + Suche + Sparkline, ReceiptInsightsCard im Archiv,
+    UI-Test Archiv → Karte → Verbrauch → Preisverlauf → zurück; PLAN.md §11, SPEC.md §5.
+decisions:
+  - decision: |
+      units je Bon-Zeile = Listenmenge ÷ Bon-Stückzahl (Listenmenge ist Gesamtmenge).
+    rationale: |
+      Robert per Rückfrage 29.09.2026; Schwäche: mehr gekauft als gelistet wird unterschätzt.
+  - decision: |
+      Keine DB-Regel started_at < ended_at; Plausibilität (≤ 4 h, Beginn vor Ende) nur in der App.
+    rationale: |
+      Ein abgelehnter Insert bliebe in der Offline-Warteschlange hängen.
+  - decision: |
+      Alte Bons: fehlende Kategorie nur in der geöffneten Liste nachschlagen, nicht im Artikelstamm.
+    rationale: |
+      Artikelstamm nur asynchron; betroffen sind nur Bons vom 28.09. (zwischen Migration 029 und 030).
+  - decision: |
+      Auswertung ohne darunterliegendes Sheet, ✕ führt ins Archiv.
+    rationale: |
+      Board InsightSpend zeigt die Liste darunter; Auftrag verlangt Rückweg ins Archiv.
+  - decision: |
+      Abweichungen vom Board nach Auftrag/Code (z. B. 3,3 l pro Woche, 6 Stück statt Laibe, Ø 65,73 €) – 15 Punkte.
+    rationale: |
+      Dokumentiert in design-handoff/RECEIPT_INSIGHTS_PLAN.md §5.
+  - decision: |
+      Jeder Commit nur mit eigenen Änderungen; gemischte Dateien (pbxproj, ShoppingListView+Sheets, SPEC, PLAN) teilweise gestaged
+      und der Index-Stand je Phase in separatem Worktree gebaut und getestet.
+    rationale: |
+      Parallele Sitzung ändert denselben Arbeitsbaum.
+files:
+  - path: design-handoff/RECEIPT_INSIGHTS_PLAN.md
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet (b399927). Plan, Entscheidungen, §5 Abweichungen 1–15.
+  - path: migrations/030_receipt_meta.sql
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet (ca4859f), live angewandt 29.09.2026; Prüfung migrations/tests/030_receipt_meta_check.sql.
+  - path: Famlist/Features/Receipts/Services/ReceiptInsights.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet (1920333). Dazu ConsumptionStatistics.swift, SpendInsightsText.swift, UsageInsightsText.swift (b399927).
+  - path: Famlist/Features/Receipts/Views/ReceiptInsightsSheet.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet. Sheet der Auswertung; Views SpendInsightsView/UsageInsightsView, Karte ReceiptInsightsCard.
+  - path: Famlist/Features/Receipts/Views/ReceiptDetailSheet.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet (d848e58, 1920333).
+  - path: Famlist/Features/ShoppingList/Models/ActiveListSheet.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet: receiptInsights(tab:month:fromMenu:), receiptPriceHistory(entry, back:).
+  - path: design-handoff/SPEC.md
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      §5-Satz committet; §2-Tabellenzeilen (SwiftUI-Spalte, „umgesetzt 29.09.2026“) nur in der Arbeitskopie,
+      weil die Tabelle zum uncommitteten Canvas-Abgleich der anderen Sitzung gehört.
+  - path: design-handoff/PLAN.md
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      §11 committet; Rest der Änderungen fremd (Canvas-Abgleich).
+  - path: Famlist.xcodeproj/project.pbxproj
+    status: modified
+    staged: false
+    session_change: false
+    note: |
+      Verbleibende Änderung nur ProductDetail-Einträge der anderen Sitzung.
+  - path: Famlist/Features/ItemManagement/Views/ProductDetailSheet.swift
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Fremd, ungetestet, nicht committet; ebenso ProductDetail*-Komponenten, HybridSheetLayer.swift, SheetQuantityStepper.swift,
+      Teile von ShoppingListView+Sheets.swift.
+checks:
+  - method: |
+      Alle Unit-Tests auf dem Index-Stand (separater Worktree).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: passed
+    detail: |
+      801 Tests, 11 übersprungen, 0 Fehler (vor Commit b399927).
+  - method: |
+      Kassenzettel-UI-Tests (ReceiptArchive, ReceiptArchiveMenu, ReceiptCapture, ShoppingDone).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/ReceiptArchiveUITests -only-testing:FamlistUITests/ReceiptArchiveMenuUITests -only-testing:FamlistUITests/ReceiptCaptureUITests -only-testing:FamlistUITests/ShoppingDoneUITests
+    result: passed
+    detail: |
+      9 Tests grün (29.09. 01:03–01:05).
+  - method: |
+      Migration 030 Prüfskript (Supabase MCP execute_sql) und REST-Rundlauf mit Testkonto.
+    command: null
+    result: passed
+    detail: |
+      „1 Leopoldstr. 82 · 2 23 · 3 Milchprodukte 0.25 · 4 null null null · 5 abgelehnt · 6 angenommen 132000 · 7 true“; REST 201/200/204.
+  - method: |
+      Abnahme auf dem iPhone mit echten Bons.
+    command: null
+    result: not_run
+    detail: |
+      Installiert 29.09. 01:12, Rückmeldung von Robert fehlt.
+  - method: |
+      Vollständige UI-Test-Suite.
+    command: null
+    result: not_run
+    detail: |
+      Nicht gelaufen; vorbestehend kaputt: DuplicateAddUITests, AccountArchiveUITests, Live-UI-Tests (laut Handoff 28.09.).
+commands:
+  - command: |
+      ruby scripts/add_files.rb Famlist <Pfad.swift>
+    purpose: |
+      Neue Dateien in die pbxproj eintragen (Targets Famlist, FamlistTests, FamlistUITests).
+  - command: |
+      xcrun simctl launch F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF com.roxo.famlist -uiTestFixture -designFixture -designSheet receiptInsights
+    purpose: |
+      Design-Modus im Simulator; weitere Namen: receiptInsightsUsage, receiptDetail, receiptArchive.
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'id=00008140-000A64A201F1801C' && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 ~/Library/Developer/Xcode/DerivedData/Famlist-fsyznnezudcepubtphfdhilminha/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone (vorher ankündigen).
+open_items:
+  - |
+    Roberts Rückmeldung zu Detail, Auswertung und Archiv-Karte auf dem iPhone.
+  - |
+    Push der 5 Commits (063eadf … b399927) – nur mit Roberts Okay.
+  - |
+    SPEC.md §2-Zeilen und der Canvas-Abgleich (design-handoff/) sowie ProductDetail*-Arbeit der anderen Sitzung sind uncommitted.
+  - |
+    Folgeidee: Waagegewicht aus „0,512 kg x 9,99 EUR/kg“ übernehmen (Parser verwirft es heute), damit Verbrauch in kg stimmt.
+  - |
+    Speicherplatz auf dem Mac (5 GB frei) knapp für weitere Builds.
+next_steps:
+  - step: |
+      Robert nach seiner Rückmeldung vom iPhone fragen (Auswertung, Detail, Karte; echte Bons mit Uhrzeit/Adresse).
+    why: |
+      Parser und Einkaufsbeginn sind nur an nachgebauten Daten geprüft.
+  - step: |
+      Nach Okay pushen (git push origin main).
+    why: |
+      5 Commits liegen nur lokal.
+  - step: |
+      Optional Waagegewicht im Parser übernehmen und Nährwerte erst mit eigenem Auftrag angehen.
+    why: |
+      Verbesserung der Verbrauchsmengen; Nährwerte bewusst ausgeklammert.
+waiting_on:
+  - what: |
+      Abnahme der Einkaufsdaten und Auswertung auf dem iPhone; Entscheidung über Push.
+    who: Robert
+    since: '2026-09-29'
+    detail: |
+      Installation 29.09. 01:12.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer und einziger Entwickler; gibt Designs frei, testet auf iPhone 16 Pro Max.
+    contact: null
+risks:
+  - type: assumption
+    detail: |
+      Ungeprüft: Uhrzeit- und Adresserkennung auf echten Bons (nur synthetische Edeka/Rewe/Lidl/dm-Beispiele getestet).
+      Prüfbar durch Scannen echter Bons auf dem iPhone.
+  - type: risk
+    detail: |
+      Installierter Build enthält fremde, ungetestete ProductDetail/HybridSheetLayer-Änderungen (betreffen alle Sheets).
+  - type: risk
+    detail: |
+      Verbrauchsmengen hängen an der Listenmenge; mehr gekauft als gelistet oder Gewichtsartikel werden ungenau.
+  - type: risk
+    detail: |
+      Nur 5 GB frei; ein isolierter Build scheiterte einmal an beschädigtem Modul-Cache (Ursache nicht bewiesen).
+resources:
+  - type: file
+    ref: design-handoff/RECEIPT_INSIGHTS_PLAN.md
+    detail: |
+      Plan, Entscheidungen, Abweichungen vom Board.
+  - type: file
+    ref: design-handoff/RECEIPT_INSIGHTS_PROMPT.md
+    detail: |
+      Auftrag (One-Shot-Prompt).
+  - type: file
+    ref: .remember/today-2026-09-28.md
+    detail: |
+      Laufende Notizen dieser Nacht; stimmen mit Git überein (auch .remember/now.md).
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe
+    detail: |
+      Live-DB; Migration 030 angewandt.
+  - type: file
+    ref: /Users/robertbogner/.claude/projects/-Users-robertbogner-GitPrivate-Famlist/memory/receipt-insights.md
+    detail: |
+      Projekt-Gedächtnis zu diesem Vorhaben.
+next_session_prompt: |
+  Famlist (iOS, SwiftUI, /Users/robertbogner/GitPrivate/Famlist), Branch main, HEAD b399927, 5 Commits nicht gepusht
+  (063eadf Dokumentenscanner, ca4859f/d848e58/1920333/b399927 „Einkaufsdaten & Auswertung“ Phasen 1–4).
+  Migration 030 ist live. Plan und Abweichungen: design-handoff/RECEIPT_INSIGHTS_PLAN.md.
+  Achtung: uncommitted liegen nur fremde Änderungen einer anderen Sitzung (ProductDetail*, HybridSheetLayer,
+  SheetQuantityStepper, Teile von ShoppingListView+Sheets/pbxproj, Canvas-Abgleich in design-handoff/) – nicht mitcommitten.
+  Am 29.09. 01:12 auf Roberts iPhone installiert.
+  Nächste Schritte: 1) Robert nach der Abnahme auf dem iPhone fragen; 2) nach seinem Okay git push origin main;
+  3) optional Waagegewicht im ReceiptParser übernehmen. Lies dazu das neueste Handoff in .claude/handoffs/.

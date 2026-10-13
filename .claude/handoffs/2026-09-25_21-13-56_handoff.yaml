@@ -1,0 +1,220 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-25T21:13:56+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: audit-fixes
+    head: 7d54889
+    head_subject: 'FIX(account): Rückfrage beim Abmelden mit ungesendeten Änderungen'
+    uncommitted_changes: true
+summary: |
+  Audit-Fix-Loop auf Branch audit-fixes: Audit-Runde 1 vollständig umgesetzt, Audit-Runde 2 (4 unabhängige
+  Prüfer) durchgeführt; alle kritischen (2, DB-Leistung) und hohen Befunde (Realtime-Wiederverbindung,
+  Start-Lücke, Geister-Artikel nach 30 Tagen, Abmelden mit Ungesendetem, VoiceOver-Modalität) behoben,
+  committet (HEAD 7d54889, 13 Commits seit main eab47b2, nicht gepusht) und als Debug-Build auf Roberts
+  iPhone 16 Pro Max installiert (Start scheiterte nur an Gerätesperre). DB-Migrationen 013–020 live.
+  Offen: 7 mittlere Befunde aus Runde 2, Entscheidungen für Robert, danach Audit-Runden 3 und 4.
+goal: |
+  Roberts Auftrag (25.09.2026): alle Audit-Befunde beheben, in Simulator + Backend/DB testen, erneut
+  auditieren und loopen, bis 2 Audits hintereinander nichts Kritisches/Hohes/Mittleres und keine
+  Sicherheitsmängel liefern. Ziel: AAA-App auf Enterprise-Niveau, 250.000 aktive Nutzer.
+  Oberste Priorität (Robert): Realtime-Sync geteilter Listen, gleichrangig mit Sicherheit; Fotos offline.
+  Fertig: zwei aufeinanderfolgende saubere Audit-Runden + Abschlussbericht (deutsch), kein Push ohne Okay.
+current_state: |
+  Geprüft (git 21:12): Branch audit-fixes, HEAD 7d54889, Working Tree sauber bis auf untracked
+  .claude/handoffs/2026-09-25_14-02-16_handoff.yaml (fremd, vorbestehend).
+  Geprüft (xcodebuild, SE-Simulator 18E3C6A3, vor letztem Commit 7d54889 außer OfflineStart):
+  Unit 560 (4 übersprungen) + 20 Swift Testing grün, UI 34 grün, Live 4 (LiveRealtimeSharingTests inkl.
+  neuem Verbindungsabbruch-Test) + 2 Live-UI grün; OfflineStartUITests nach 7d54889 erneut grün.
+  Geprüft: Swift-6-Modus + STRICT_CONCURRENCY=complete, Build ohne Swift-Warnungen.
+  Geprüft: iPhone-Installation com.roxo.famlist (devicectl), Start wegen Sperre nicht möglich.
+  Gefolgert: Runde 2 hat noch 7 mittlere Befunde offen → Loop-Kriterium nicht erfüllt.
+completed_work:
+  - |
+    Runde 1 (Commits a1bc6c4…34e0393): Sicherheit/RLS, Token-Einladungen, LWW-Sync mit HLC (Server-Guard),
+    Fotos in Storage, private Broadcast-Realtime, Offline-Start/Listen/Abmelden, Parser/Preise/Kategorien,
+    Migration 019 (RLS konsolidiert, Schema private), Import-Hybrid-Sheet, SE/XXL-Layouts, Swift 6.
+  - |
+    75d1bc0 Migration 020: search_global_products (5,6 s → 6 ms), private.accessible_list_ids (Delta
+    231 → 11 Blöcke), items-Grenzen, imagedata nicht mehr angenommen, clock_timestamp, Rechte.
+  - |
+    5a60515: Realtime-Wiederverbindung (subscribing→subscribed) erkannt + Nachladen nach jeder Anmeldung,
+    Neuanmeldung aufgegebener Kanäle, Reconcile > 25 Tage, 5 s Überlappung, Spaltenliste ohne imagedata,
+    SentOperation (Absturzschutz), HLC-Zukunft verwerfen, NFC, Storage-Fehler, Prefetcher, Neuladen
+    gebündelt (80 ms), UI/A11y (modal, UserFacingError, Plural, Reduce Motion, 44 pt).
+  - |
+    7d54889: Abmelde-Rückfrage bei ungesendeten Änderungen (am Knopf verankert, iOS-26-Sprechblase),
+    live in OfflineStartUITests geprüft.
+decisions:
+  - decision: |
+      DB-Migrationen direkt live, einzeln, vorher als Datei in migrations/; Preis-UI bleibt; Branch
+      audit-fixes mit Commit je Paket; Dynamic Type bis XXL (AppFont.maxScale 21/17).
+    rationale: |
+      Entscheidungen Roberts per AskUserQuestion in dieser Session.
+  - decision: |
+      Globale Produktsuche erst ab 3 Zeichen, max. 300 Trigramm-Kandidaten, davon 5 beliebteste.
+    rationale: |
+      Volle Sortierung aller Treffer maß 2,6 s; begrenzte Kandidaten ≤ 150 ms. Ranking nur unter 300.
+  - decision: |
+      Dock-Beschriftung fest 13 pt (AppFont scaled:false) mit Large Content Viewer.
+    rationale: |
+      Pille hat auf dem SE keine Breite zum Wachsen; Apple-Muster für Tab-Leisten.
+files:
+  - path: migrations/020_scale_and_hardening.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet 75d1bc0, live eingespielt.
+  - path: Famlist/Repositories/Implementations/SupabaseRealtimeManager.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      keepSubscribed/subscribeWithRetry/resubscribeIfAbandoned, deinit beendet Sitzungen (5a60515).
+  - path: Famlist/Features/ShoppingList/ViewModels/ListViewModel+Reconcile.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Abgleich nach > 25 Tagen (5a60515).
+  - path: Famlist/App/AppSessionViewModel+SignOut.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Abmelden mit Zählung ungesendeter Änderungen (5a60515); Rückfrage in SettingsSheet (7d54889).
+  - path: Famlist/FamlistTests/LiveRealtimeSharingTests.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Neuer Test test_reconnect_triggersCatchUp_afterConnectionLoss (5a60515).
+checks:
+  - method: |
+      Unit + Swift Testing auf SE-Simulator (vor 7d54889; 7d54889 ändert nur SettingsSheet + UI-Test).
+    command: |
+      xcodebuild test-without-building -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=18E3C6A3-3F8B-45E4-88EF-F8EE9D36E21C' -derivedDataPath <dd> -only-testing:FamlistTests
+    result: passed
+    detail: |
+      560 Tests, 4 übersprungen, 0 Fehler; 20 Swift Testing grün.
+  - method: |
+      UI-Tests (Fixture) vor 7d54889.
+    command: null
+    result: passed
+    detail: |
+      34 Tests, 3 übersprungen (Live/Shots), 0 Fehler.
+  - method: |
+      Live-Tests gegen Supabase (Testkonten), inkl. Verbindungsabbruch; OfflineStartUITests nach 7d54889.
+    command: |
+      TEST_RUNNER_FAMLIST_LIVE=1 xcodebuild test-without-building … -only-testing:FamlistTests/LiveRealtimeSharingTests
+    result: passed
+    detail: |
+      4/4 Sharing grün; LiveDuplicateAdd + OfflineStart grün; Testdaten per LiveTestCleanup aufgeräumt (SQL: 0 Reste).
+  - method: |
+      Abnahme durch Robert auf dem iPhone.
+    command: null
+    result: not_run
+    detail: |
+      Build 7d54889 installiert 21:1x Uhr; App nicht gestartet (Gerät gesperrt).
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'platform=iOS,id=00008140-000A64A201F1801C' -derivedDataPath <dd> -allowProvisioningUpdates && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <dd>/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone 16 Pro Max.
+  - command: |
+      TEST_RUNNER_FAMLIST_SHOTS=<ordner> [TEST_RUNNER_FAMLIST_TEXTSIZE=UICTContentSizeCategoryXXL] [TEST_RUNNER_FAMLIST_DARK=1] xcodebuild test-without-building … -only-testing:FamlistUITests/ScreenTourUITests
+    purpose: |
+      Screenshots aller Screens/Overlays/Sheets (SE 18E3C6A3, Pro Max 78089BD5).
+  - command: |
+      ruby <scratchpad>/xadd.rb <Target> <dateien…>
+    purpose: |
+      Neue Dateien ins Xcode-Target eintragen (xcodeproj-Gem; Skript liegt im flüchtigen Scratchpad).
+open_items:
+  - |
+    Runde 2 mittel: Storage-Waisen + Kontolöschung löscht keine Fotos (Edge Function); entfernte Mitglieder
+    empfangen Realtime bis Neuverbindung (unverifiziert, ggf. JWT-Laufzeit); Fotos Base64 in SwiftData auf
+    Main-Thread; 96 Funktionen > 30 Zeilen; RLS/RPC-Tests nicht in CI; restliche feste Sleeps
+    (ListManagementTests 15×); Zeilen-LWW verliert parallele Feldänderungen (Designfrage).
+  - |
+    Runde 2 niedrig u. a.: HLC-Toleranz 24 h, last_modified_by fälschbar, is_username_available
+    unbegrenzt, OfflineStart-Test kurz instabil (Suchfeld einmal nicht gefunden, nicht reproduziert).
+  - |
+    items aus Publication supabase_realtime entfernen, sobald Roberts iPhone den neuen Stand nutzt.
+next_steps:
+  - step: |
+      Robert die Entscheidungsfragen vorlegen (siehe waiting_on) und seine Abnahme auf dem iPhone abfragen.
+    why: |
+      Mehrere offene Befunde hängen an Produkt-/Designentscheidungen.
+  - step: |
+      Offene mittlere Befunde aus Runde 2 beheben (Storage-Aufräumen per Edge Function zuerst, dann
+      Foto-Speicherung, Funktionslängen, RLS-SQL-Tests, Sleeps), testen, je Paket committen.
+    why: |
+      Loop-Kriterium verlangt 0 mittlere Befunde.
+  - step: |
+      Audit-Runde 3 mit 4 unabhängigen Prüfern (Sicherheit, Sync, UI/A11y, Qualität/Skalierung), dann Runde 4.
+    why: |
+      Fertig erst nach zwei sauberen Runden in Folge.
+waiting_on:
+  - what: |
+      Entscheidungen: Englisch ja/nein (Mischsprache); CTA-Kontrast 3,3–4,1:1 + blasse Einladungskarte dunkel
+      (Design ändern?); „0 von 1 Artikel“ weicht vom Design ab; Fehler-Toast ohne Design; iOS-17-Runtime
+      oder Target 18; Push/APNs oder Schalter ausblenden; ShoppingDone ohne Kassenzettel ohne Design;
+      Zeilen- vs. Feld-LWW.
+    who: Robert
+    since: '2026-09-25'
+    detail: |
+      Noch nicht gefragt/beantwortet.
+  - what: |
+      Supabase-Dashboard: Leaked-Password-Schutz, Postgres-Update (Sicherheitspatches), ggf. kürzere JWT-Laufzeit.
+    who: Robert
+    since: '2026-09-25'
+    detail: |
+      Nur im Dashboard möglich.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer/Entwickler; testet auf iPhone 16 Pro Max; erwartet 0 % Fehlertoleranz, deutsche Berichte.
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Commit 40b73d2 baut allein nicht (pbxproj erst in b5c06fd); relevant nur bei Bisect.
+  - type: assumption
+    detail: |
+      Ungeprüft: Wie lange entfernte Mitglieder Realtime-Nachrichten weiter empfangen (Supabase prüft
+      Kanalrechte nur beim Beitritt). Prüfbar mit Live-Test: Mitglied entfernen, Broadcast senden, Zeit messen.
+  - type: assumption
+    detail: |
+      Ungeprüft: VoiceOver, Reduce Motion und Tastaturverschiebung auf echtem SE nur gebaut/getestet, nicht manuell.
+resources:
+  - type: file
+    ref: /Users/robertbogner/.claude/projects/-Users-robertbogner-GitPrivate-Famlist/memory/audit-fix-loop.md
+    detail: |
+      Gedächtnisnotiz mit Entscheidungen, Stand und offenen Punkten.
+  - type: file
+    ref: .remember/today-2026-09-25.md
+    detail: |
+      Tagesprotokoll (Remember-Plugin).
+  - type: file
+    ref: migrations/
+    detail: |
+      Migrationen 013–020 (alle live eingespielt).
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe; Testkonten developer/tester/demo
+    detail: |
+      Passwörter nur in lokaler Secrets.plist (<redacted>); alte Passwörter aus der Git-Historie nachweislich ungültig.
+next_session_prompt: |
+  Famlist (/Users/robertbogner/GitPrivate/Famlist), Branch audit-fixes, HEAD 7d54889, nicht gepusht.
+  Auftrag: Audit-Befunde beheben und loopen, bis 2 Audit-Runden in Folge nichts Kritisches/Hohes/Mittleres
+  liefern (Realtime geteilter Listen hat oberste Priorität). Runde 2 ist durch; kritisch/hoch behoben.
+  Lies das jüngste Handoff unter .claude/handoffs/ und memory/audit-fix-loop.md.
+  1) Robert die offenen Entscheidungen vorlegen und nach der iPhone-Abnahme fragen.
+  2) Offene mittlere Befunde beheben (Storage-Aufräumen, Fotos, Funktionslängen, RLS-Tests, Sleeps).
+  3) Audit-Runden 3 und 4 mit unabhängigen Prüfern. Kein Push ohne Roberts Okay.

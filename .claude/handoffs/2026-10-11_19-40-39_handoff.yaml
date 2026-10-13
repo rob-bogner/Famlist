@@ -1,0 +1,284 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-10-11T19:40:39+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: 23e27e7
+    head_subject: 'BUILD(testflight): Build 4 (Version 1.0) hochgeladen'
+    uncommitted_changes: true
+summary: |
+  Alles ist committet und gepusht: main = origin/main = 23e27e7. TestFlight-Build 1.0 (4) liegt bei App Store
+  Connect; derselbe Code-Stand (db49ef5) ist seit 11.10. 18:07:40 als Debug-Build auf Roberts iPhone.
+  Seit dem Handoff vom 30.09. entstanden 6 Commits (3fcad2d..23e27e7) und Migration 036 (live seit 01.10.).
+  Drei Fehler behoben: (1) freigestellte eckige Packungen wurden gezoomt (ProductCutout, Rand + Eckpixel),
+  (2) gelöschtes Konto blieb „angemeldet“, Einladung scheiterte mit „prüfe die Verbindung“ (30fb148),
+  (3) Änderungen anderer Mitglieder kamen erst nach App-Neustart: tauber Realtime-Kanal (db49ef5).
+  Zu (3) ist die Ursache im Live-Test nachgestellt, der Auslöser auf dem echten Gerät aber nicht.
+  Nebenbei: Projekt supabuild-v3 geplant (eigener Ordner, eigene Sitzungen), Canvas-Zugriff per Artifact-Werkzeug belegt.
+goal: |
+  Robert steuert kurz: Fehler melden → Ursache belegen → beheben; „deploy auf iphone“ → bauen + installieren;
+  „commit und push“; TestFlight auf Zuruf. Offen aus dieser Sitzung: Robert testet am iPhone, ob Änderungen von
+  Sofie nach Hintergrund/Vordergrund ohne Neustart live erscheinen. Fertig, wenn Robert das bestätigt
+  oder den Fehler erneut meldet (dann Geräte-Protokolle nötig).
+current_state: |
+  Geprüft (11.10. 19:39):
+  - git: main, HEAD 23e27e7 = origin/main, 0 ungepusht; uncommittet nur design-handoff/_to_delete/ (+ .claude/, „Claude outputs/“).
+  - CURRENT_PROJECT_VERSION = 4 (Build 4 hochgeladen 18:12, Skript meldete „Fertig“; Famlist.app und FamlistWatch.app 1.0 (4)).
+  - iPhone-Installation 18:07:40 aus Build von 18:07:29 (Code = db49ef5, Build-Nummer im Paket 3).
+  - Tests 11.10. ~18:05 auf dem Stand vor dem Commit db49ef5 (identischer Code): 852 inkl. Live-Tests, 3 übersprungen, 0 Fehler.
+  - Supabase mbfztpbwfktiduemqqfe: letzte Migration 036_match_global_products (Funktion vorhanden, anon ohne Recht).
+  - Mac: macOS 27.0.1, Xcode 27.0 (xcode-select zeigt auf Xcode.app); Simulatoren B70B7A11 (iOS 18.5) und F1ECDBCC (iOS 26.5) vorhanden.
+  Gefolgert/ungeprüft:
+  - Dass Roberts Kanal am 10.10. über genau den behobenen Weg taub wurde (Indiz: Websocket 7 s nach Rückkehr aus dem Hintergrund).
+  - Ob Build 4 Sofies Testergruppe zugewiesen ist und ob ihr TestFlight automatisch aktualisiert.
+  - Neue Abläufe (Anmeldung abgelaufen, Kanal-Ersatz) sind nicht am echten Gerät bestätigt.
+completed_work:
+  - |
+    3fcad2d: ProductCutout.withMargin (3 % durchsichtiger Rand) + isCutout über echte Eckpixel; ProductCutoutTests (6).
+    Enthält außerdem Arbeit der parallelen Sitzung (Per Foto hinzufügen, Nachbessern ab iOS 27) und zwei Build-Fixes von mir:
+    IterativeCutoutRefiner an das iOS-27.0-SDK angepasst, ProductDetailSheet ohne await rechts von ??.
+  - |
+    Migration 036 match_global_products am 01.10. live eingespielt und mit „REWE Bio Süßrahm Butter“ geprüft.
+  - |
+    30fb148: AppSessionViewModel+SessionExpiry (.signedOut des SDK → Anmeldebildschirm mit Hinweis, Einladung bleibt),
+    AuthService.expectsSignedOutEvent, LocalAccountData.expiredSessionUserId, InviteError+Accept (42501/401 →
+    „Anmeldung abgelaufen“), SessionExpiryTests (8).
+  - |
+    db49ef5: SupabaseRealtimeManager.keepChannelAlive (Kanal je Anmeldeversuch neu aus realtime.channels; nach 5 s
+    „unsubscribed“ ersetzen), replaceUnregisteredChannels beim Wechsel in den Vordergrund (aus keepListsInSync),
+    teardown mit Identitätsprüfung vor removeChannel, Nutzerkanal user:<id> auf keepChannelAlive umgestellt,
+    4 neue Live-Tests, 1 umgeschrieben.
+  - |
+    TestFlight: Build 3 (27fb0c8, 04.10.) und Build 4 (23e27e7, 11.10.) per scripts/release_testflight.sh hochgeladen.
+  - |
+    Recherche/Planung Supabuild V3: /Users/robertbogner/GitPrivate/supabuild-v3/docs/PLAN.md und ONE_SHOT_PROMPT.md
+    am 02.10. angelegt; dort arbeitet seither eine eigene Sitzung (letzter Commit dort 42073ee).
+decisions:
+  - decision: |
+      Realtime: keine Prüfung im Takt und kein periodisches Nachladen. Nur ereignisgesteuert: Kanal-Ersatz bei
+      „unsubscribed“ und eine einmalige Prüfung beim Wechsel in den Vordergrund.
+    rationale: |
+      Roberts Vorgabe 11.10.: kein Akkuverbrauch durch regelmäßiges Prüfen. Die 15-s-Prüfung und der Vorschlag
+      „alle 30 s nachladen“ wurden verworfen.
+  - decision: |
+      Bei abgelaufener Anmeldung bleiben die lokalen Daten erhalten; meldet sich ein anderes Konto an, werden sie
+      vorher gelöscht (Merker LocalAccountData.expiredSessionUserId).
+    rationale: |
+      Ungesendete Änderungen desselben Kontos sollen nach erneuter Anmeldung noch ankommen (Offline-First).
+  - decision: |
+      Code der parallelen Sitzung wurde am 04.10. auf Roberts „full commit und push“ mitcommittet (3fcad2d),
+      Design-Dateien getrennt (c55b215); design-handoff/_to_delete/ weiterhin weder committet noch gelöscht.
+    rationale: |
+      Wie im Handoff vom 30.09. festgelegt; Entscheidung über _to_delete liegt bei Robert.
+files:
+  - path: Famlist/Repositories/Implementations/SupabaseRealtimeManager.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet db49ef5. keepChannelAlive, watch, replaceUnregisteredChannels, handlers je Liste, teardown mit Identitätsprüfung.
+  - path: Famlist/Repositories/Implementations/SupabaseListsRepository+UserChannel.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet db49ef5. Nutzerkanal über keepChannelAlive; wird auch vom Watch-Target gebaut.
+  - path: Famlist/Repositories/Implementations/SupabaseItemsRepository.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet db49ef5. keepListsInSync ruft replaceUnregisteredChannels (nur bei nicht leerer Menge).
+  - path: Famlist/FamlistTests/LiveRealtimeSharingTests.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet db49ef5. Neu: Stapel-Import des Mitglieds (2 Tests), Hintergrund/Vordergrund, ausgetragener Kanal;
+      test_catchUp_onceAfterFirstSubscribe_andAgainAfterChannelReplacement ersetzt den alten Reconnect-Test.
+  - path: Famlist/App/AppSessionViewModel+SessionExpiry.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet 30fb148. startObservingAuthState, handleSignedOutBySDK, markSessionExpired, discardDataOfExpiredSession.
+  - path: Famlist/Features/Sharing/Models/InviteError+Accept.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet 30fb148. Nur iPhone-Target (InviteError.swift selbst wird mit der Watch geteilt, UserFacingError nicht).
+  - path: Famlist/Core/Utils/ProductCutout.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet 3fcad2d. withMargin, isCutout über Eckpixel.
+  - path: migrations/036_match_global_products.sql
+    status: added
+    staged: null
+    session_change: false
+    note: |
+      Committet 3fcad2d (Datei von der parallelen Sitzung, von mir live eingespielt). Prüfskript unter migrations/tests/ fehlt.
+  - path: design-handoff/_to_delete/
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Fremd, 9 Dateien (~65 MB, Stand 30.09.). Bewusst nicht committet, nicht gelöscht.
+checks:
+  - method: |
+      Unit- und Live-Tests in einem Lauf (Simulator iPhone 17 Pro, iOS 26.5, Xcode 27).
+    command: |
+      TEST_RUNNER_FAMLIST_LIVE=1 xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: passed
+    detail: |
+      11.10. ~18:05: 852 Tests, 3 übersprungen, 0 Fehler; 8 LiveRealtimeSharingTests grün. Code identisch mit db49ef5;
+      danach nur Build-Nummer 3 → 4 (23e27e7).
+  - method: |
+      Nachweis des Fehlers: test_channelRemovedBySDK_appRecoversAndStillReceives gegen den alten Code.
+    command: null
+    result: passed
+    detail: |
+      Vor dem Fix rot (Zeitüberschreitung, Log realtime.resubscribeAbandoned ohne realtime.subscribed), danach grün.
+  - method: |
+      Build für iPhone inkl. Uhr-App und Installation auf Roberts iPhone 16 Pro Max.
+    command: null
+    result: passed
+    detail: |
+      BUILD SUCCEEDED 18:07:29, installiert 18:07:40 (devicectl, Gerät 00008140-000A64A201F1801C).
+  - method: |
+      Gerätetest: Änderung von Sofie erscheint nach Hintergrund/Vordergrund ohne Neustart.
+    command: null
+    result: not_run
+    detail: |
+      Wartet auf Robert. Im Simulator nicht nachstellbar (App wird dort nicht eingefroren).
+  - method: |
+      UI-Tests (FamlistUITests).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests
+    result: not_run
+    detail: |
+      Zuletzt 29.09. 23:29 rot (DuplicateAddUITests ×2, EditPriceDraftUITests, ListsUITests C/J). In dieser Sitzung nie gelaufen.
+commands:
+  - command: |
+      L=/tmp/famlist-test.log; xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests > $L 2>&1 & PID=$!; until grep -q -E "TEST (SUCCEEDED|FAILED)|BUILD FAILED" $L; do sleep 3; done; kill $PID; grep -E "' failed|TEST |Executed [0-9]+ tests" $L | tail -5
+    purpose: |
+      Unter Xcode 27 beendet sich xcodebuild test nach dem Lauf oft nicht. Deshalb im Hintergrund starten und das Log abfragen.
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'id=00008140-000A64A201F1801C' && xcrun devicectl device install app --device 00008140-000A64A201F1801C "$(ls -dt ~/Library/Developer/Xcode/DerivedData/Famlist-*/Build/Products/Debug-iphoneos/Famlist.app | head -1)"
+    purpose: |
+      „deploy auf iphone“. Das iPhone muss entsperrt sein, sonst erscheint es nicht in devicectl. Build-Ergebnis prüfen.
+  - command: |
+      scripts/release_testflight.sh
+    purpose: |
+      TestFlight-Upload (Build-Nummer +1, committet, pusht nicht). Braucht einen sauberen, committeten Stand.
+open_items:
+  - |
+    Gerätetest des Realtime-Fixes und der Meldung „Anmeldung abgelaufen“ steht aus.
+  - |
+    Prüfskript migrations/tests/036_*_check.sql fehlt (bisher gab es zu jeder Migration eines).
+  - |
+    UI-Tests seit 29.09. rot und seither nicht gelaufen; Tastatur-Ziehen im Produktdetail weiter ungeklärt.
+  - |
+    CLAUDE.md nennt noch „Xcode 26.6“ und „Test-Target braucht iOS 26.2+“; tatsächlich Xcode 27.0, Simulator F1ECDBCC = iOS 26.5.
+  - |
+    Arbeit der parallelen Sitzung vom 30.09. (Per Foto hinzufügen, Nachbessern) ist nur über Unit-Tests abgedeckt, nicht am Gerät abgenommen.
+  - |
+    design-handoff/_to_delete/ – Robert entscheiden lassen.
+  - |
+    Lokale Canvas-Kopie design-handoff/Design/html ist älter als der Canvas auf claude.ai (Stand 02.10.: Canvas 01.10. 14:31).
+next_steps:
+  - step: |
+      Robert nach dem Gerätetest fragen: App in den Hintergrund, einige Minuten warten, zurück, Sofie fügt einen Artikel hinzu.
+    why: |
+      Der Auslöser auf dem echten Gerät ist nicht nachgestellt; nur der Test am iPhone zeigt, ob der Fix reicht.
+  - step: |
+      Tritt der Fehler erneut auf: Geräte-Protokoll besorgen (App-Logs sind nur print(); Xcode-Konsole oder Console.app am Mac)
+      und nach action=realtime.* suchen (subscribed, subscribeError, channelAbandoned, channelReplaced, channelUnregistered).
+    why: |
+      Ohne Client-Protokoll lässt sich der Zustand des Kanals auf dem Gerät nicht belegen.
+  - step: |
+      Prüfskript für Migration 036 nachziehen und CLAUDE.md (Xcode-Version, Simulator) aktualisieren.
+    why: |
+      Beides weicht vom dokumentierten Stand ab.
+waiting_on:
+  - what: |
+      Gerätetest: Live-Änderungen nach Hintergrund/Vordergrund; Hinweis „Anmeldung abgelaufen“.
+    who: Robert
+    since: '2026-10-11'
+    detail: |
+      Installation 18:07:40. Für den Test reicht Roberts Gerät (Fehler lag auf der empfangenden Seite).
+  - what: |
+      Build 4 auf Sofies iPhone (TestFlight-Zuweisung und Aktualisierung).
+    who: Sofie / App Store Connect
+    since: '2026-10-11'
+    detail: |
+      Am 10.10. lief bei ihr Build 3 (User-Agent Famlist/3, Darwin/25.6.0). Zuweisung von Build 4 von hier nicht prüfbar.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer und einziger Entwickler; testet auf iPhone 16 Pro Max (iOS 27, User-Agent Darwin/27.0.0).
+    contact: null
+  - name: Sofie
+    role: |
+      Mitglied der Liste „Edeka“ seit 10.10. 09:56; testet über TestFlight (Darwin/25.6.0).
+    contact: null
+risks:
+  - type: assumption
+    detail: |
+      Ungeprüft: Roberts Kanal wurde am 10.10. über den behobenen Weg taub. Indiz ist nur das Server-Protokoll
+      (Websocket 7 s nach Rückkehr = defaultReconnectDelay des SDK). Prüfbar über Geräte-Protokolle beim nächsten Auftreten.
+  - type: risk
+    detail: |
+      Ein Kanal, der als angemeldet und eingetragen gilt, aber serverseitig tot ist, bleibt unbemerkt (kein Zustandswechsel).
+      Bewusst kein Takt als Sicherheitsnetz (Roberts Entscheidung); Ausweg für den Nutzer: Liste herunterziehen.
+  - type: assumption
+    detail: |
+      Ungeprüft: Build 4 liest die gespeicherte Anmeldung älterer Builds; falls nicht, erscheint der Anmeldebildschirm ohne Hinweis.
+  - type: risk
+    detail: |
+      Eine parallele Sitzung kann denselben Arbeitsbaum ändern (zuletzt 30.09.); vor Build/Commit Zeitstempel und neue migrations/*.sql prüfen.
+resources:
+  - type: file
+    ref: .remember/today-2026-10-11.md
+    detail: |
+      Tagesnotizen; decken sich mit Git. Der Eintrag „Wiederverbindung … rot, Ergebnis offen“ ist überholt (Test umgeschrieben, grün).
+  - type: file
+    ref: /Users/robertbogner/.claude/projects/-Users-robertbogner-GitPrivate-Famlist/memory/realtime-deaf-channel.md
+    detail: |
+      Memory zum Realtime-Befund (SDK-Verhalten, Test-Fallen).
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe
+    detail: |
+      Protokolle (edge_logs, auth_logs, realtime_logs) reichen 24 h je Abfragefenster; Geräte am User-Agent unterscheidbar.
+  - type: url
+    ref: https://claude.ai/artifact/4X8ZjEru2wMAwtP5hAVCDn
+    detail: |
+      Design-Canvas „Famlist“; mit dem Artifact-Werkzeug lesbar (project/canvas.json, project/<Board>.dc.html).
+  - type: file
+    ref: /Users/robertbogner/GitPrivate/supabuild-v3/docs/PLAN.md
+    detail: |
+      Eigenes Projekt Supabuild V3 (Board + Nacht-Agenten); wird in eigenen Sitzungen weitergeführt, nicht hier.
+  - type: file
+    ref: .claude/handoffs/2026-09-30_16-57-52_handoff.yaml
+    detail: |
+      Vorheriges Handoff.
+next_session_prompt: |
+  Famlist (iOS, SwiftUI, /Users/robertbogner/GitPrivate/Famlist), Branch main, HEAD 23e27e7 = origin/main, nichts offen
+  außer design-handoff/_to_delete/ (nicht committen, nicht löschen). TestFlight-Build 1.0 (4) ist hochgeladen; derselbe
+  Code läuft seit 11.10. 18:07 auf Roberts iPhone. Umgebung: macOS 27.0.1, Xcode 27.0.
+  Offen: Robert soll am iPhone bestätigen, dass Änderungen von Sofie nach Hintergrund/Vordergrund ohne Neustart live
+  erscheinen (Fix db49ef5: SupabaseRealtimeManager.keepChannelAlive ersetzt einen vom SDK ausgetragenen Kanal; bewusst
+  kein Takt, nur Prüfung beim Wechsel in den Vordergrund). Der Auslöser auf dem echten Gerät ist nicht nachgestellt –
+  tritt der Fehler wieder auf, Geräte-Protokoll holen und nach „action=realtime.“ suchen.
+  Weiter offen: Prüfskript für Migration 036, UI-Tests rot seit 29.09., CLAUDE.md nennt noch Xcode 26.6.
+  xcodebuild test hängt unter Xcode 27 nach dem Lauf: im Hintergrund starten und das Log abfragen.
+  Lies das neueste Handoff in .claude/handoffs/.

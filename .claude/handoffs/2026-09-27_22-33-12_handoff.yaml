@@ -1,0 +1,267 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-27T22:33:12+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: 24b6e00
+    head_subject: 'BUILD(testflight): Skript für TestFlight-Uploads mit automatischer Build-Nummer'
+    uncommitted_changes: true
+summary: |
+  Konto-Archiv (Löschen = 60 Tage archivieren, Wiederherstellen, danach endgültig inkl. Fotos) ist in
+  Datenbank, Edge Functions und iOS-App umgesetzt, nach main gemergt und gepusht (Merge 54b04c5).
+  TestFlight: App „Famlista“ (Bundle-ID com.roxo.famlist) angelegt, Build 1 und Build 2 hochgeladen,
+  interne Gruppe „Familie“ (Robert, Sofie). Neues Skript scripts/release_testflight.sh zählt die
+  Build-Nummer automatisch hoch (24b6e00, gepusht). Außerdem behoben: neue Konten konnten sich nicht
+  anmelden (Migration 026) und Apple-Anmeldung war in Supabase aus (von Robert eingeschaltet).
+  iPhone 16 Pro Max und Apple Watch haben den aktuellen Debug-Stand (Build 2) installiert.
+goal: |
+  Robert testet Teilen und Sync mit seiner Frau Sofie über TestFlight. Daraus entstand das Feature
+  „Konto löschen mit 60 Tagen Frist“ (Entscheidungen Roberts: 60 Tage, Wiederherstellen ja, geteilte
+  Listen verschwinden sofort, Fotos nach 60 Tagen weg, Mitgliedschaften in fremden Listen kommen zurück
+  außer Besitzer entfernt, Besitzer bekommt Hinweis, „Jetzt endgültig löschen“ auf dem Restore-Screen).
+  Fertig-Kriterium: Phasen 1–5 aus design-handoff/ACCOUNT_ARCHIVE_PLAN.md umgesetzt, getestet, TestFlight-Build.
+  Das ist erreicht; offen sind der Test mit zwei echten Geräten und die unten genannten Altlasten.
+current_state: |
+  Geprüft (git, Befehle): main = origin/main auf 24b6e00; Branch account-archive lokal (in main gemergt).
+  Uncommittet sind nur Änderungen in design-handoff/ (Boards, PNGs, SPEC.md, PLAN.md, START_HIER.md,
+  Design/SYNC.md) – stammen von der Claude-Design-Sitzung, nicht von dieser Session.
+  Live im Supabase-Projekt mbfztpbwfktiduemqqfe: Migrationen 026, 027, 028; Edge Functions account-purge v1,
+  purge-my-account v1, watch-session v2; Cron-Job account-purge 03:30; Extension pg_net.
+  Letzter voller Testlauf (nach Phase 5, vor Build-Nummer 2): Unit-Tests alle grün (FamlistTests), UI-Tests
+  bis auf 2 DuplicateAddUITests grün; diese 2 scheitern auch auf main (vorbestehend).
+  Installiert: iPhone „Rob's Iphone 16 Pro Max“ (Debug, Commit 81c81fe), Watch Build 2 (devicectl geprüft).
+  Gefolgert: Build 2 erscheint nach Verarbeitung in TestFlight; ob die Gruppe „Familie“ ihn automatisch bekommt, ungeprüft.
+completed_work:
+  - |
+    Build 1 nach TestFlight (15:35) inkl. ITSAppUsesNonExemptEncryption = NO (0af3e98).
+  - |
+    Migration 026: handle_new_user vergibt public_id/created_at; Sofies Profil repariert, später ihr
+    Konto samt Daten auf Wunsch gelöscht (Edeka-Liste von Robert unverändert, 39 Artikel).
+  - |
+    Migration 027 (8df6662): Archivieren, Sperre archivierter Konten, restore_my_account,
+    archived_list_members, remove_archived_member, account_notices, admin_delete_user; SQL-Test 35/35.
+  - |
+    Migration 028 + Edge Functions (b08588c): tägliches endgültiges Löschen inkl. Storage-Fotos;
+    Live-Test mit 2 Wegwerf-Konten erfolgreich (Konten danach vollständig gelöscht).
+  - |
+    App Phase 3 (0432f70): AccountRepository, RestoreAccountView, RestorePurgeDialog, DeleteAccountDialog
+    neu, Kanal user:<id> liefert member_restored/member_archived/account_archived; 27 Unit-Tests.
+  - |
+    App Phase 4 (efc072a): MemberDeletedToast, archivierte Mitglieder in ShareMembersSheet; 5 Unit-Tests.
+  - |
+    Phase 5 (81c81fe): Fixture-Screens, AccountArchiveUITests (4), Screenshot-Abgleich iPhone 16e, Build 2 hochgeladen.
+  - |
+    Merge nach main (54b04c5), Deploy auf iPhone und Watch, release_testflight.sh + CLAUDE.md-Eintrag (24b6e00).
+decisions:
+  - decision: |
+      Archivzustand in private.account_archive statt in profiles.
+    rationale: |
+      profiles_update erlaubt jedem die eigene Zeile; Frist wäre sonst selbst verschiebbar; Build 1 bleibt kompatibel.
+  - decision: |
+      „Sofort verschwinden“ über Kopieren und Löschen der list_members-Zeilen (private.archived_memberships).
+    rationale: |
+      Alle RLS-Regeln laufen über Mitgliedschaft; Trigger trg_list_member_removed meldet member_removed an Apps.
+  - decision: |
+      Fotos nur per Edge Function (Storage-API) löschen; pg_net aktiviert, Cron ruft account-purge mit Anon-Key.
+    rationale: |
+      storage.protect_delete blockiert SQL-DELETE; account-purge löscht nur Fälliges, braucht daher kein Geheimnis.
+  - decision: |
+      Archiv-Prüfung beim Start: ohne lokale Profilkopie vorher, mit Kopie im Hintergrund.
+    rationale: |
+      Offline-First: Kaltstart ohne Netz darf nicht auf ein Timeout warten.
+  - decision: |
+      design-handoff/ (SPEC, PLAN, MyListUI) nicht angefasst und nicht committet.
+    rationale: |
+      Die Claude-Design-Sitzung gleicht den Ordner laufend mit dem Canvas ab (Design/SYNC.md).
+  - decision: |
+      Build-Nummer per Skript statt manageAppVersionAndBuildNumber; Version (1.0) nur manuell per Argument.
+    rationale: |
+      Nummer im Repo = Nummer in TestFlight; App, Uhr und Widgets brauchen dieselbe Build-Nummer.
+files:
+  - path: migrations/027_account_archive.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 8df6662, live eingespielt; Test: migrations/tests/027_account_archive_check.sql.
+  - path: migrations/028_account_purge.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit b08588c, live; enthält den öffentlichen Anon-Key im Aufruf von private.invoke_account_purge.
+  - path: supabase/functions/account-purge/index.ts
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit b08588c; veröffentlicht (verify_jwt true). Ebenso purge-my-account/index.ts; watch-session geändert.
+  - path: Famlist/App/AppSessionViewModel+Archive.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 0432f70; Erkennen, Wiederherstellen, endgültig löschen, Kanal-Ereignisse, Hinweise.
+  - path: Famlist/Features/Account/Views/RestoreAccountView.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 0432f70/81c81fe; Board RestoreAccount; RestorePurgeDialog.swift daneben.
+  - path: Famlist/Repositories/Implementations/SupabaseListsRepository+UserChannel.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 0432f70; einziges Abonnement von user:<id>; auch im Watch-Target (scripts/watch_shared_sources.txt).
+  - path: Famlist/Features/Sharing/Views/ShareArchivedMemberCard.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit efc072a; dazu MemberDeletedToast.swift und Änderungen in ShareMembersSheet/ViewModel.
+  - path: design-handoff/ACCOUNT_ARCHIVE_PLAN.md
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Plan und §8 Umsetzung/Abweichungen vom Design (Commits 6023a9b, 81c81fe).
+  - path: scripts/release_testflight.sh
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 24b6e00; --dry-run getestet (Archiv 1.0 (3) für App und Uhr, danach zurückgesetzt).
+  - path: Famlist.xcodeproj/project.pbxproj
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Neue Dateien eingetragen; CURRENT_PROJECT_VERSION = 2 in allen Targets (81c81fe).
+  - path: design-handoff/SPEC.md
+    status: modified
+    staged: false
+    session_change: false
+    note: |
+      Uncommittet, von der Design-Sitzung (enthält §2/§3 zum Konto-Archiv); ebenso viele Boards/PNGs.
+checks:
+  - method: |
+      SQL-Test Migration 027 (zurückgerollt, 35 Prüfungen).
+    command: null
+    result: passed
+    detail: |
+      27.09.2026 ~19:58, alle Ergebnisse wie erwartet.
+  - method: |
+      Live-Test Löschweg mit Wegwerf-Konten (purge-my-account, admin_delete_user per pg_net).
+    command: null
+    result: passed
+    detail: |
+      27.09.2026 ~20:07; Konten, Zeilen und 5 Fotos gelöscht; 409/403 bei unzulässigen Aufrufen.
+  - method: |
+      Unit-Tests FamlistTests vollständig.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: not_run
+    detail: |
+      Zuletzt ~20:42 grün (vor Build-Nummer 2 und release_testflight.sh; Code seitdem unverändert).
+  - method: |
+      UI-Tests FamlistUITests.
+    command: null
+    result: not_run
+    detail: |
+      ~20:42: alle grün außer 2 DuplicateAddUITests (scheitern auch auf main, Suchfeld-Label fehlt).
+  - method: |
+      Test mit zwei echten Geräten (Toast, Liste verschwindet/kommt zurück).
+    command: null
+    result: not_run
+    detail: |
+      Nur mit TestFlight-Build 2 auf zwei iPhones möglich.
+commands:
+  - command: |
+      scripts/release_testflight.sh [Version] [--dry-run]
+    purpose: |
+      TestFlight-Upload mit automatischer Build-Nummer (commit nach Erfolg, kein Push).
+  - command: |
+      xcrun devicectl device install app --device 62852C76-93FB-54BF-BDEC-C13D50CBBCD2 <Famlist.app>/Watch/FamlistWatch.app
+    purpose: |
+      Uhr-App direkt auf die Watch installieren (übernimmt sie nicht automatisch vom iPhone).
+  - command: |
+      ruby scripts/add_files.rb <Target> <Pfad> ; ruby scripts/watch_targets.rb
+    purpose: |
+      Neue Dateien in pbxproj eintragen bzw. Watch-Quellen abgleichen.
+open_items:
+  - |
+    DuplicateAddUITests (2) scheitern auf main: Knopf „Artikel suchen oder hinzufügen“ nicht gefunden.
+  - |
+    DeleteAccountDialog sitzt auf iPhone 16e ~15 pt höher als im Board (offset insets.topShift, nicht untersucht).
+  - |
+    design-handoff/-Änderungen der Design-Sitzung uncommittet; lokaler Branch account-archive noch vorhanden.
+  - |
+    DSGVO-Prüfung der 60-Tage-Frist offen.
+next_steps:
+  - step: |
+      Robert und Sofie installieren Build 2 aus TestFlight und testen Teilen, Konto löschen/wiederherstellen,
+      Hinweis-Toast und archivierte Mitglieder mit zwei Geräten.
+    why: |
+      Einziger nicht automatisiert prüfbarer Teil (Realtime zwischen zwei Geräten).
+  - step: |
+      DuplicateAddUITests reparieren (Label-Änderung seit 137608e/InlineAddOverlay prüfen).
+    why: |
+      UI-Suite ist sonst nicht grün.
+waiting_on:
+  - what: |
+      Test mit zwei Geräten über TestFlight-Build 2.
+    who: Robert und Sofie
+    since: '2026-09-27'
+    detail: |
+      Ob Gruppe „Familie“ Build 2 automatisch bekommt, in App Store Connect prüfen.
+deadlines: []
+people:
+  - name: Sofie Bogner
+    role: |
+      Roberts Frau, interne TestFlight-Testerin (Rolle Marketing, Zugriff auf Famlista).
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      TestFlight-Build 1 ruft delete_my_account (jetzt archivieren), löscht aber vorher das Profilbild und hat
+      keinen Restore-Screen; „Konto löschen“ nur mit Build 2 benutzen.
+  - type: assumption
+    detail: |
+      Ungeprüft: Ob Mitglieder eine nach Restore zurückgeschriebene Liste ohne Neustart sehen
+      (App lädt Listen bei member_restored neu). Prüfbar mit zwei Geräten.
+  - type: assumption
+    detail: |
+      Ungeprüft: Laufzeit des Zugangs-Tokens (Supabase-Standard 1 h angenommen) für archivierte Geräte.
+resources:
+  - type: file
+    ref: design-handoff/ACCOUNT_ARCHIVE_PLAN.md
+    detail: |
+      Plan, Datenmodell, RPCs, Phasen, §8 Umsetzung und Abweichungen.
+  - type: file
+    ref: design-handoff/ACCOUNT_ARCHIVE_PROMPT.md
+    detail: |
+      Freigegebener Umsetzungs-Prompt mit Roberts Entscheidungen.
+  - type: account
+    ref: https://appstoreconnect.apple.com (App „Famlista“, SKU lists-app-001)
+    detail: |
+      TestFlight-Gruppe „Familie“; Name „Famlist“ im Store vergeben, daher Arbeitsname.
+  - type: file
+    ref: .remember/today-2026-09-27.md
+    detail: |
+      Tagesnotizen; stimmen mit diesem Stand überein.
+next_session_prompt: |
+  Projekt Famlist (iOS, SwiftUI, Supabase mbfztpbwfktiduemqqfe), Ordner /Users/robertbogner/GitPrivate/Famlist,
+  Branch main (24b6e00, gepusht). Das Konto-Archiv (Löschen = 60 Tage archivieren, Wiederherstellen,
+  endgültiges Löschen inkl. Fotos per Edge Function account-purge) ist fertig und gemergt; Details in
+  design-handoff/ACCOUNT_ARCHIVE_PLAN.md §8. TestFlight-Build 2 ist hochgeladen; neue Builds mit
+  scripts/release_testflight.sh. Offen: (1) Ergebnisse des Zwei-Geräte-Tests von Robert/Sofie abwarten und
+  Fehler beheben, (2) die 2 fehlschlagenden DuplicateAddUITests reparieren (scheitern auch vor dem Archiv),
+  (3) Dialog-Versatz ~15 pt bei DeleteAccountDialog prüfen. design-handoff/ wird von der Design-Sitzung
+  gepflegt – dort nichts committen ohne Rückfrage. Lies zuerst CLAUDE.md und ACCOUNT_ARCHIVE_PLAN.md.

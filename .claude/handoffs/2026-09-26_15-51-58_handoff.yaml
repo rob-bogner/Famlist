@@ -1,0 +1,264 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-26T15:51:58+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: audit-fixes
+    head: 88fedcf
+    head_subject: 'FEAT(list): Listenkopf klappt beim Scrollen fließend in den kompakten Zustand'
+    uncommitted_changes: true
+summary: |
+  Das Kassenzettel-Archiv ist fertig, getestet, committet und nach origin/audit-fixes gepusht
+  (e9b1013 bis 36bf10d). Nutzer können in Einstellungen → Kassenzettel „Fotos der Bons speichern“
+  schalten; „Preise speichern“ legt den Bon offline-first mit Fotos ab; Archiv und Detail
+  (Teilen, Löschen) sind nach den .dc.html-Designs gebaut. Migration 021 ist live.
+  Zusätzlich committet und gepusht: Tastatur-Fix (0b99fda) und der einklappbare Listenkopf (88fedcf),
+  beide aus einer anderen Session. Robert hat die aktuelle Version auf dem iPhone; seine Abnahme fehlt.
+goal: |
+  Robert (26.09.2026): Kassenzettel sollen in den Einstellungen und im Kassenzettel-Ablauf gespeichert
+  werden können. Präzisiert durch design-handoff/KASSENZETTEL_ARCHIV.md (Entscheidungen final):
+  Archiv in der App + Supabase Storage, pixelgenau nach Settings/ReceiptArchive/ReceiptDetail.dc.html,
+  Offline-First, Migration als migrations/021_receipts_archive.sql. Plan in 7 Paketen von Robert
+  freigegeben. Fertig, wenn Robert die Funktion auf dem Gerät abnimmt.
+current_state: |
+  Geprüft (15:50): HEAD 88fedcf auf audit-fixes, identisch mit origin/audit-fixes (git status -sb).
+  Ungetrackt und nie committet: .claude/audits/, drei Handoffs vom 25./26.09.
+  Geprüft auf Stand 88fedcf (vor Commit, 15:15): Unit 606 grün (4 übersprungen), UI 40 grün (6 übersprungen).
+  Geprüft: LiveReceiptArchiveUITests 3/3 grün, LiveReceiptPriceUITests 2/2 grün (Stand 36bf10d, ~10:00).
+  Geprüft: Supabase nach den Tests 0 Zeilen receipts, 0 Objekte im Bucket receipt-images.
+  Geprüft: App-Build auf Roberts iPhone installiert (zuletzt 15:07, Stand 36bf10d + damals uncommitteter
+  Listenkopf, inhaltlich = 88fedcf ohne verschobenen Kommentar).
+  Hinweis: .remember/now.md (10:28) sagt „nicht gepusht“ – veraltet, Git zeigt gepusht.
+completed_work:
+  - |
+    Migration 021 (e9b1013): Tabelle receipts, Bucket receipt-images, RLS (lesen mit Listenzugriff,
+    anlegen nur als man selbst mit Pfaden <list_id>/<id>/, löschen Ersteller oder Listenbesitzer,
+    Fotos nach Anlegen der Zeile unveränderlich). Live eingespielt; migrations/tests/021_receipts_rls_check.sql
+    (21 Prüfungen, rollt zurück).
+  - |
+    Datenschicht (81849fa): ReceiptArchive (+Sync, +Photos, +Preview), ReceiptArchiveLocalStore
+    (JSON + JPEG-Dateien), SupabaseReceiptsRepository, ReceiptPhotoCodec (2000 px, JPEG 0,7, ≤1,5 MB),
+    ReceiptArchiveSetting (Schalter, Standard an). Abmelden löscht lokal; ungesendete Bons zählen bei der Rückfrage.
+  - |
+    Anbindung (e4aacf2): ReceiptFlowViewModel.savePrices legt nach den Preispunkten den Archiv-Eintrag an
+    (ReceiptArchiveOrigin aus ShoppingListView).
+  - |
+    UI (d0db903): Einstellungen-Abschnitt „Kassenzettel“, ReceiptArchiveSheet, ReceiptDetailSheet,
+    ReceiptPhotoPager, ReceiptFullscreenViewer, ReceiptMiniBon, ReceiptArchiveRow; Sheets stapeln drei Ebenen;
+    SettingsGroup/SettingsRow ausgelagert. Fix Wettlauf: veraltete Server-Antwort brachte gelöschten Bon zurück.
+    PLAN §9 und SPEC §3.12 ergänzt.
+  - |
+    Live-Tests (36bf10d): LiveReceiptArchiveUITests, LiveReceiptSteps (aus LiveReceiptPriceUITests ausgelagert,
+    neu Tipp auf „Prüfen“ – seit 08f2f55 nötig, die alten Live-Tests waren dadurch rot), LiveTestCleanup
+    (removeLiveTestReceipts, storageFiles).
+  - |
+    Fremdänderungen nach Tests committet: 0b99fda (Tastatur in „Nicht auf dem Bon gefunden“),
+    08f2f55 (Nacht, nicht gefundene Artikel), 88fedcf (CollapsingListHeader). Nur Diff gelesen, nicht gegen Design geprüft.
+decisions:
+  - decision: |
+      Löschen fragt per System-Dialog nach; der Knopf fehlt, wenn man weder Ersteller noch Listenbesitzer ist.
+    rationale: |
+      Löschen betrifft alle Mitglieder; der Server erlaubt es nur diesen beiden (Migration 021). In PLAN §9.
+  - decision: |
+      Nicht gestaltete Teile (leeres Archiv, Vollbild, „wird hochgeladen“, ein Foto ohne Zähler) schlicht
+      im vorhandenen Stil; alle in PLAN §9 eingetragen.
+    rationale: |
+      CLAUDE.md: kein neues UI ohne Design; KASSENZETTEL_ARCHIV.md verlangt Vollbild und Upload-Hinweis.
+  - decision: |
+      Konto löschen: Bons auf fremden Listen bleiben, created_by wird NULL; Storage-Waisen gelöschter Listen
+      bleiben (wie bei Artikelfotos).
+    rationale: |
+      Im Plan so angekündigt, Robert hat nicht widersprochen („ja“ zum Plan).
+  - decision: |
+      Pakete 4–6 in einem Commit (d0db903) statt drei.
+    rationale: |
+      Einstellungen → Archiv → Detail hängen voneinander ab; einzeln nicht lauffähig.
+files:
+  - path: migrations/021_receipts_archive.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit e9b1013, live eingespielt.
+  - path: Famlist/Features/Receipts/ViewModels/ReceiptArchive.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 81849fa/d0db903: Offline-Warteschlange, refresh mit mutations-Zähler gegen veraltete Antworten.
+  - path: Famlist/Features/Receipts/Views/ReceiptArchiveSheet.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit d0db903; weitere Views: ReceiptDetailSheet, ReceiptPhotoPager, ReceiptFullscreenViewer,
+      ReceiptMiniBon, ReceiptArchiveRow.
+  - path: Famlist/Features/Account/Views/SettingsSheet.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit d0db903: Abschnitt „Kassenzettel“; SettingsGroup/SettingsRow nach Features/Account/Design/.
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView+Sheets.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit d0db903: dreistufige Sheet-Stapel; Datei hat 302 Zeilen (Grenze ~300).
+  - path: FamlistUITests/LiveReceiptArchiveUITests.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 36bf10d; gemeinsame Schritte in FamlistUITests/LiveReceiptSteps.swift.
+  - path: design-handoff/PLAN.md
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit d0db903: §9 sieben Abweichungen Receipt-Archiv/Detail.
+  - path: Famlist/Features/ShoppingList/Components/CollapsingListHeader.swift
+    status: added
+    staged: null
+    session_change: false
+    note: |
+      Commit 88fedcf, stammt aus einer anderen Session; nur Kommentar in ShoppingListView.swift verschoben.
+  - path: .claude/audits/2026-09-25_audit-runde-3_einzelberichte.md
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Befunde Audit-Runde 3 (13 hoch, ~35 mittel), unverändert und unbehoben.
+checks:
+  - method: |
+      Unit- und UI-Tests auf iPhone 17 Pro Simulator (iOS 26.5), Stand 88fedcf vor dem Commit.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests -only-testing:FamlistUITests
+    result: passed
+    detail: |
+      606 Unit (4 übersprungen), 40 UI (6 übersprungen), 0 Fehler. Danach nur ein Kommentar verschoben.
+  - method: |
+      Live-Tests gegen Supabase (Testkonto Tester), Bon-Bild als neuestes Simulator-Foto.
+    command: |
+      TEST_RUNNER_FAMLIST_LIVE=1 xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/LiveReceiptArchiveUITests -only-testing:FamlistUITests/LiveReceiptPriceUITests
+    result: not_run
+    detail: |
+      Auf Stand 36bf10d (~10:00) grün: Archiv 3/3, Preise 2/2. Auf 88fedcf (Listenkopf) nicht erneut gelaufen.
+  - method: |
+      RLS-Prüfung Migration 021 per MCP execute_sql.
+    command: |
+      migrations/tests/021_receipts_rls_check.sql (Inhalt als SQL ausführen)
+    result: passed
+    detail: |
+      21/21 wie erwartet, endet mit RAISE (zurückgerollt).
+  - method: |
+      Pixelvergleich Einstellungen/Archiv/Detail Hell+Dunkel gegen gerenderte .dc.html (Chrome headless).
+    command: null
+    result: passed
+    detail: |
+      Nach Korrektur Chipfarbe übereinstimmend; Schrift des gezeichneten Beispiel-Bons ~7 % kleiner (nur Fixture-Foto).
+  - method: |
+      Abnahme durch Robert auf dem iPhone 16 Pro Max.
+    command: null
+    result: not_run
+    detail: |
+      App installiert, Rückmeldung fehlt.
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS,id=00008140-000A64A201F1801C' -derivedDataPath <scratch>/dd-device -allowProvisioningUpdates
+      xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <scratch>/dd-device/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone 16 Pro Max.
+  - command: |
+      swift scripts/make_test_receipt.swift <scratch>/bon.png
+      xcrun simctl addmedia F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF <scratch>/bon.png
+    purpose: |
+      Test-Bon (EDEKA, 25.09.2026, 5,07 €) für die Live-Tests in die Simulator-Mediathek.
+  - command: |
+      TEST_RUNNER_FAMLIST_SHOTS=<ordner> [TEST_RUNNER_FAMLIST_DARK=1] xcodebuild test ... -only-testing:FamlistUITests/ScreenTourUITests
+    purpose: |
+      Screenshots aller Screens inkl. receiptArchive/receiptDetail (Design-Modus mit Beispiel-Bons).
+open_items:
+  - |
+    Roberts Abnahme des Kassenzettel-Archivs (und des Listenkopfs 88fedcf) auf dem Gerät.
+  - |
+    DuplicateAddUITests/test_addExistingItemWithLargeImage war in 1 von 6 vollen UI-Läufen rot
+    (Zeile 37: Suchfeld nicht in 5 s); Ursache nicht untersucht.
+  - |
+    ShoppingListView+Sheets.swift hat 302 Zeilen (Grenze ~300).
+  - |
+    Storage-Fotos gelöschter Listen/Konten bleiben liegen (Edge Function nötig, wie bei Artikelfotos).
+  - |
+    Archiv lädt höchstens 500 Bons (SupabaseReceiptsRepository.fetchLimit), kein Nachladen.
+  - |
+    Audit-Runde 3: 13 hohe und ~35 mittlere Befunde unbehoben (.claude/audits/, Memory audit-fix-loop).
+next_steps:
+  - step: |
+      Robert nach seiner Abnahme auf dem iPhone fragen (Speichern beim „Preise speichern“, Archiv, Detail,
+      Teilen, Löschen, Schalter aus) und Abweichungen beheben.
+    why: |
+      Fertig-Kriterium der Aufgabe.
+  - step: |
+      Den wackeligen DuplicateAddUITests-Fall untersuchen.
+    why: |
+      0 % Fehlertoleranz; einmalig rot ohne erklärte Ursache.
+  - step: |
+      Danach hohe Befunde der Audit-Runde 3 abarbeiten.
+    why: |
+      Übergeordneter Auftrag audit-fix-loop.
+waiting_on:
+  - what: |
+      Abnahmetest Kassenzettel-Archiv auf dem iPhone.
+    who: Robert
+    since: '2026-09-26'
+    detail: |
+      Version mit 36bf10d + Listenkopf installiert (15:07).
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Auftraggeber und Tester; entscheidet Produkt- und Designfragen, erwartet 0 % Fehlertoleranz.
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Supabase-CDN liefert gelöschte Fotos laut Doku „Smart CDN“ noch bis zu 60 s aus; nicht abstellbar.
+  - type: assumption
+    detail: |
+      Ungeprüft: Listenkopf 88fedcf entspricht dem Design (nur Tests liefen, kein Pixelvergleich).
+      Prüfbar per ScreenTourUITests gegen Hybrid.dc.html (header = "compact").
+  - type: risk
+    detail: |
+      Eine andere Session arbeitet parallel im selben Working Tree (Listenkopf, Nacht-Commits);
+      vor eigenen Änderungen git status prüfen.
+resources:
+  - type: file
+    ref: design-handoff/KASSENZETTEL_ARCHIV.md
+    detail: |
+      Übergabe mit finalen Entscheidungen und Datenmodell.
+  - type: file
+    ref: migrations/tests/021_receipts_rls_check.sql
+    detail: |
+      Wiederholbare RLS-Prüfung.
+  - type: file
+    ref: .remember/today-2026-09-26.md
+    detail: |
+      Kurzzeitnotizen des Tages; now.md „nicht gepusht“ ist veraltet.
+  - type: url
+    ref: https://supabase.com/docs/guides/storage/cdn/smart-cdn
+    detail: |
+      Beleg für die 60-s-CDN-Invalidierung.
+next_session_prompt: |
+  Projekt Famlist (iOS, SwiftUI, Supabase), Branch audit-fixes, HEAD 88fedcf, gepusht.
+  Zuletzt fertig: Kassenzettel-Archiv (Migration 021 live, ReceiptArchive offline-first, Einstellungen →
+  „Gespeicherte Kassenzettel“ → Archiv → Detail mit Teilen/Löschen), Commits e9b1013–36bf10d, Tests grün
+  (Unit 606, UI 40, Live 3/3). Details: design-handoff/KASSENZETTEL_ARCHIV.md, PLAN §9.
+  Frag Robert zuerst nach seiner Abnahme auf dem iPhone und behebe Abweichungen.
+  Offen: wackeliger DuplicateAddUITests-Fall (1/6 rot), ShoppingListView+Sheets.swift 302 Zeilen,
+  danach hohe Befunde aus .claude/audits/2026-09-25_audit-runde-3_einzelberichte.md (Memory audit-fix-loop:
+  Commit je Paket, Tests grün, Push nur nach Okay). Achtung: parallel arbeitende Session – vorher git status.

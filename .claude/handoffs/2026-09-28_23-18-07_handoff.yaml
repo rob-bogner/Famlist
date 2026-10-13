@@ -1,0 +1,329 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-28T23:18:07+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: 24b6e00
+    head_subject: 'BUILD(testflight): Skript für TestFlight-Uploads mit automatischer Build-Nummer'
+    uncommitted_changes: true
+summary: |
+  Der Kassenzettel-Scan funktioniert jetzt wie ein Dokumentenscanner (Office-Lens-Stil).
+  Jedes Foto wird automatisch auf den Bon zugeschnitten und gerade gezogen (Weg B).
+  Weg C ist gebaut: Live-Rahmen um den Bon, Auto-Auslösung nach 1 s Ruhe mit Schalter „Auto/Manuell“,
+  Tippen aufs Vorschaubild öffnet das Vollbild mit Zoom und der Pille „Ecken anpassen“ (Ecken-Editor mit Lupe).
+  Zwei Fehler sind behoben: Antippen des Vorschaubilds löschte oft die Aufnahme; ✕ im Vollbild reagierte nur auf die Striche.
+  Der Bon speichert seine Positionen in der DB (Migration 029, live), Preise verweisen auf ihren Bon.
+  ☰ → „Gespeicherte Kassenzettel“ öffnet das Archiv direkt.
+  Alles ist uncommitted auf main; zuletzt am 28.09. 08:22 auf Roberts iPhone installiert.
+  Im Arbeitsbaum liegen auch fremde, ungetestete Änderungen einer anderen Sitzung (ProductDetail*, HybridSheetLayer).
+goal: |
+  Roberts Wunsch: Kassenzettel automatisch aus dem Foto schneiden wie Office Lens, in gleicher oder besserer Qualität.
+  Präzisierungen von Robert: erst Weg B (Zuschnitt nach dem Foto), dann Weg C (live);
+  nur zuschneiden, kein Aufhellen; Auto-Auslösung mit Schalter; Entwürfe von Claude, Freigabe durch Robert (erteilt);
+  Tippen aufs Vorschaubild = Vollbild mit Zoom + Pille „Ecken anpassen“.
+  Nachträglich gewünscht: Bon „dem Einkauf zuordnen“ = Bon speichert seine Artikel (Option „Bon mit seinen Artikeln“)
+  und das Archiv ist aus dem Hamburger-Menü erreichbar.
+  Fertig, wenn: Robert das Verhalten auf dem iPhone abnimmt, die Anzeige der Positionen im Bon-Detail entschieden ist
+  und alles committet ist.
+current_state: |
+  Geprüft:
+  - git: branch main, HEAD 24b6e00, keine neuen Commits; alle Arbeiten uncommitted (git status).
+  - Unit-Tests: 740 grün, 11 übersprungen (Lauf 28.09. ~01:15, vor den fremden ProductDetail-Änderungen).
+  - UI-Tests ReceiptArchiveMenu/ReceiptArchive/ReceiptCapture/ShoppingDone: 6 grün (gleicher Zeitpunkt).
+  - Migration 029 live auf mbfztpbwfktiduemqqfe; Prüfskript liefert erwartete Werte; Rundlauf per REST mit Testkonto
+    Tester (Bon mit lines einfügen/laden, price_points.receipt_id) erfolgreich, Testdaten gelöscht.
+  - Device-Build 28.09. 08:22:33, installiert 08:22:37 auf iPhone 16 Pro Max.
+  Gefolgert / ungeprüft:
+  - Live-Rahmen und Auto-Auslösung sind auf echter Hardware noch nicht von Robert abgenommen (Simulator hat keine Kamera).
+  - Die 3 Vision-Tests (ReceiptPageCropperTests) liefen nie auf einem Gerät.
+  - Fremde Änderungen (ProductDetail*, HybridSheetLayer, SheetQuantityStepper, Teile von ShoppingListView+Sheets
+    und project.pbxproj) wurden nicht getestet.
+completed_work:
+  - |
+    Weg B: ReceiptDocumentDetector (VNDetectDocumentSegmentationRequest, Sicherheit ≥ 0,5, Fläche ≥ 8 %),
+    ReceiptPageCropper (CIPerspectiveCorrection), ReceiptQuad, ReceiptPage; ReceiptFlowViewModel.scans mit
+    sofortiger Anzeige, späterem Ersatz durch den Zuschnitt, finishCropping() vor der Erkennung.
+  - |
+    Weg C: ReceiptAutoCapture (Ruhe 1 s, Toleranz 3 %, Aussetzer ≤ 0,3 s, Sperre bis 15 % Bewegung),
+    ReceiptLiveScanner, ReceiptCamera mit Video-Ausgang (≤ 10 Analysen/s, setDocumentHandler),
+    CameraPreviewView zeichnet den Rahmen per layerPointConverted, ReceiptShutterButton (Ring), ReceiptAutoToggle
+    (@AppStorage receiptAutoCapture), ReceiptLiveHint, ReceiptCheckButton (ausgelagert).
+  - |
+    Ecken-Editor: ReceiptCropEditView, ReceiptCropCanvas, ReceiptCropLoupe, ReceiptPagePreviewCover;
+    ReceiptFlowViewModel.adjustCorners(of:to:) mit Schutz gegen spätes Überschreiben durch den Auto-Zuschnitt.
+  - |
+    Fehler behoben: ReceiptFullscreenViewer-✕ mit contentShape(Circle()) und accessibilityIdentifier
+    receiptFullscreenClose; ReceiptPageThumbnail: Tippen öffnet Vollbild, ✕-Tippfläche nur noch 14 × 14 pt über dem Bild.
+  - |
+    Design-Entwürfe (von Robert freigegeben): ReceiptCaptureLive(+Manual/Search), ReceiptCropEdit(+Drag),
+    ReceiptFullscreenCrop als .dc.html und PNG in design-handoff/Design; SPEC.md §5 aktualisiert.
+  - |
+    Migration 029 (receipts.lines jsonb, price_points.receipt_id ohne FK) + Prüfskript; ReceiptLine;
+    ArchivedReceipt.lines (optional), ReceiptArchiveDraft.id/lines, PricePoint.receiptId, beide Supabase-Repos erweitert.
+  - |
+    Menü: ListMenuItem.receiptArchive, ActiveListSheet.receiptArchive(fromMenu:) und receiptDetail(_, fromMenu:);
+    aus dem Menü liegt das Archiv direkt über der Liste, „Zurück“ schließt.
+  - |
+    Tests neu: ReceiptQuadTests, ReceiptPageCropperTests, ReceiptFlowCropTests, ReceiptAutoCaptureTests,
+    ReceiptFlowArchiveTests (+2), ReceiptCaptureUITests, ReceiptArchiveMenuUITests, ReceiptArchiveUITests (+1).
+decisions:
+  - decision: |
+      Vision-Dokumenterkennung ist im Simulator abgeschaltet (#if targetEnvironment(simulator) → nil).
+    rationale: |
+      Im Simulator liefert das Modell bei jedem Bild denselben falschen Streifen (Sicherheit bis 0,97), mit CGImage und
+      CIImage. Auf dem Mac (swift-Skript) korrekt: Bon 0,99, leeres Bild Sicherheit 0. Die 3 Vision-Tests überspringen sich im Simulator.
+  - decision: |
+      Positionen als jsonb-Spalte receipts.lines statt eigener Tabelle; price_points.receipt_id ohne Fremdschlüssel.
+    rationale: |
+      Ein Bon wird einmal angelegt und nie geändert, die Zeilen erben die RLS des Bons. Preise werden vor dem Bon
+      gesendet (Bon erst nach Foto-Upload); ein FK ließe die Preise scheitern.
+  - decision: |
+      Preise bekommen receiptId nur, wenn „Fotos der Bons speichern“ an ist und eine Liste bekannt ist.
+    rationale: |
+      Ohne Archiv-Eintrag gibt es keinen Bon, auf den verwiesen werden kann.
+  - decision: |
+      Icon für „Gespeicherte Kassenzettel“ im Menü: EKKIcon.gallery.
+    rationale: |
+      Kein Kassenzettel-Icon existiert in den Designs; Regel erlaubt nur Original-SVG-Pfade. Robert kann es austauschen.
+  - decision: |
+      Mac mini NICHT im Provisioning registriert (Tests auf „My Mac Designed for iPad“ scheitern daran).
+    rationale: |
+      Würde Roberts Apple-Developer-Konto ändern; nur mit seiner Zustimmung.
+files:
+  - path: migrations/029_receipt_lines.sql
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Live angewandt am 28.09.2026 (~01:10). Prüfung: migrations/tests/029_receipt_lines_check.sql.
+  - path: Famlist/Features/Receipts/ViewModels/ReceiptFlowViewModel.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      scans/pages, addPage(_:automatic:), finishCropping, adjustCorners, savePrices mit receiptId. 327 Zeilen (>300, Aufteilung vorschlagen).
+  - path: Famlist/Features/Receipts/Views/ReceiptCaptureView.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      Live-Rahmen, Auto-Auslösung, Schalter, Vollbild-Cover; 290 Zeilen.
+  - path: Famlist/Features/Receipts/Services/ReceiptDocumentDetector.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Erkennung auf UIImage/CIImage und CVPixelBuffer; minimumConfidence 0,5; Simulator-Sperre.
+  - path: Famlist/Features/Receipts/Services/ReceiptCamera.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      Zweiter Ausgang AVCaptureVideoDataOutput, setDocumentHandler, analysisInterval 0,1 s.
+  - path: Famlist/Features/Receipts/Views/ReceiptFullscreenViewer.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      ✕-Fix (contentShape), Pille „Ecken anpassen“ 100 pt über dem Rand.
+  - path: Famlist/Features/ShoppingList/Models/ActiveListSheet.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      receiptArchive(fromMenu:), receiptDetail(_, fromMenu:); baseSheet je nach Herkunft.
+  - path: Famlist/Repositories/Implementations/SupabaseReceiptsRepository.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      lines in Select und Insert.
+  - path: design-handoff/SPEC.md
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      §5: Freigabe Dokumentenscanner, Menüeintrag und Positionen (Anzeige noch nicht gestaltet). Datei hatte schon fremde Änderungen.
+  - path: Famlist.xcodeproj/project.pbxproj
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      Neue Dateien per scripts/add_files.rb eingetragen; enthält auch Einträge der anderen Sitzung (ProductDetail*).
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView+Sheets.swift
+    status: modified
+    staged: false
+    session_change: true
+    note: |
+      Von dieser UND der anderen Sitzung geändert (diese: .receiptArchive()).
+  - path: Famlist/Features/ItemManagement/Views/ProductDetailSheet.swift
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Fremd (andere Sitzung, 28.09. 01:37–08:21), zusammen mit ProductDetail*-Komponenten; ungetestet.
+  - path: Famlist/Shared/Components/Hybrid/HybridSheetLayer.swift
+    status: modified
+    staged: false
+    session_change: false
+    note: |
+      Fremd (08:12), betrifft alle Sheets; ungetestet. Ebenso SheetQuantityStepper.swift.
+  - path: design-handoff/Design/html/ReceiptCaptureLive.dc.html
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Mit ReceiptCropEdit.dc.html, ReceiptFullscreenCrop.dc.html und 6 PNGs in design-handoff/Design/png.
+  - path: Famlist/FamlistTests/ReceiptAutoCaptureTests.swift
+    status: untracked
+    staged: false
+    session_change: true
+    note: |
+      Plus ReceiptQuadTests, ReceiptPageCropperTests, ReceiptFlowCropTests, FamlistUITests/ReceiptCaptureUITests,
+      FamlistUITests/ReceiptArchiveMenuUITests (alle untracked). Weitere ~20 neue Swift-Dateien unter Features/Receipts.
+checks:
+  - method: |
+      Alle Unit-Tests im Simulator (iPhone 17 Pro).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: not_run
+    detail: |
+      Zuletzt 28.09. ~01:15: 740 grün, 11 übersprungen. Danach fremde Änderungen (ProductDetail*, HybridSheetLayer) → für den aktuellen Stand erneut nötig.
+  - method: |
+      Kassenzettel-UI-Tests (ReceiptArchiveMenu, ReceiptArchive, ReceiptCapture, ShoppingDone).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/ReceiptArchiveMenuUITests -only-testing:FamlistUITests/ReceiptArchiveUITests -only-testing:FamlistUITests/ReceiptCaptureUITests -only-testing:FamlistUITests/ShoppingDoneUITests
+    result: not_run
+    detail: |
+      Zuletzt 28.09. ~01:15: 6 grün. Vor den fremden Änderungen gelaufen.
+  - method: |
+      Migration 029 Prüfskript per Supabase MCP execute_sql.
+    command: null
+    result: passed
+    detail: |
+      Ergebnis „1 2 · 2 KERRYGOLD BUTTER · 3 [] · 4 abgelehnt · 5 abgelehnt · 6 true“, alles zurückgerollt.
+  - method: |
+      REST-Rundlauf mit Testkonto tester@grocerygenius.app (Skript im Scratchpad, Zugangsdaten aus Secrets.plist).
+    command: null
+    result: passed
+    detail: |
+      Bon mit lines einfügen 201, laden 200 mit beiden Positionen; Preis mit receipt_id 201/200; Aufräumen 204, Daten weg.
+  - method: |
+      Vision-Tests (ReceiptPageCropperTests: 3 Tests mit echter Erkennung) auf dem iPhone.
+    command: null
+    result: not_run
+    detail: |
+      Im Simulator übersprungen; auf dem Gerät nie ausgeführt (hätte Roberts Tests gestört).
+  - method: |
+      Live-UI-Tests LiveReceiptArchiveUITests/LiveReceiptPriceUITests (TEST_RUNNER_FAMLIST_LIVE=1).
+    command: null
+    result: failed
+    detail: |
+      Scheitern bei der Anmeldung: Knopf „Artikel suchen oder hinzufügen“ existiert nicht mehr. Gleiche Ursache wie
+      DuplicateAddUITests, die auch auf HEAD 24b6e00 scheitern → vorbestehend, nicht repariert.
+  - method: |
+      Vergleich der UI-Fehlschläge auf sauberem Worktree von HEAD 24b6e00.
+    command: null
+    result: passed
+    detail: |
+      AccountArchiveUITests (1) und DuplicateAddUITests (2) scheitern auch dort; EditPriceDraft/ManageSwipe laufen einzeln → wackelig.
+commands:
+  - command: |
+      ruby scripts/add_files.rb Famlist <Pfad.swift>
+    purpose: |
+      Neue Dateien in die pbxproj eintragen (Target Famlist, FamlistTests oder FamlistUITests).
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'id=00008140-000A64A201F1801C' && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 ~/Library/Developer/Xcode/DerivedData/Famlist-fsyznnezudcepubtphfdhilminha/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone 16 Pro Max (vorher ankündigen).
+  - command: |
+      node scripts/render_dc.mjs design-handoff/Design/html/<Name>.dc.html design-handoff/Design/png/<Name>.png 2
+    purpose: |
+      Design-Entwurf als PNG rendern (@2x).
+open_items:
+  - |
+    Anzeige der gespeicherten Positionen (receipts.lines) im Bon-Detail: noch nicht gestaltet; Robert fragen, ob Entwurf gewünscht.
+  - |
+    Robert muss Live-Rahmen, Auto-Auslösung und Ecken-Editor auf dem iPhone abnehmen (Feedback steht aus).
+  - |
+    Commit fehlt; fremde ProductDetail-Änderungen der anderen Sitzung sind im selben Arbeitsbaum und dürfen nicht versehentlich mitcommittet werden.
+  - |
+    ReceiptFlowViewModel.swift (327 Zeilen) aufteilen: Aufnahme-Verwaltung in eigenen Typ.
+  - |
+    Vorbestehend kaputte Tests: Live-UI-Tests und DuplicateAddUITests (Knopf „Artikel suchen oder hinzufügen“ fehlt), AccountArchiveUITests.
+next_steps:
+  - step: |
+      Roberts Rückmeldung zum Verhalten auf dem iPhone einholen (Rahmen, Auto nach 1 s, Zuschnittqualität, Ecken-Editor).
+    why: |
+      Kamera und Erkennung sind nur auf echter Hardware prüfbar; Schwellen (0,5 Sicherheit, 1 s, 3 %) sind nur am Mac/Test gemessen.
+  - step: |
+      Kassenzettel-Arbeit committen – nur die eigenen Dateien (Features/Receipts, Tests, ShoppingList-Menü/Sheets-Teile, migrations/029, Design-Entwürfe), ProductDetail* ausnehmen; vorher Unit- und Kassenzettel-UI-Tests neu laufen lassen.
+    why: |
+      Alles ist uncommitted; eine parallele Sitzung ändert denselben Arbeitsbaum (pbxproj, ShoppingListView+Sheets).
+  - step: |
+      Entscheiden lassen, ob die Positionen im Bon-Detail angezeigt werden; dann Entwurf als .dc.html.
+    why: |
+      Daten werden bereits gespeichert, sind aber für Robert unsichtbar.
+waiting_on:
+  - what: |
+      Abnahme des Scanners auf dem iPhone und Entscheidung zur Positionen-Anzeige.
+    who: Robert
+    since: '2026-09-28'
+    detail: |
+      Letzte Installation 28.09. 08:22.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer und einziger Entwickler; gibt Designs frei; testet auf iPhone 16 Pro Max.
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Fremde Änderungen im Arbeitsbaum (ProductDetail*, HybridSheetLayer betrifft alle Sheets) sind ungetestet und
+      stecken im installierten Build; beim Commit sauber trennen.
+  - type: assumption
+    detail: |
+      Ungeprüft: dass VNDetectDocumentSegmentationRequest auf dem iPhone so gut wie auf dem Mac arbeitet (Schwelle 0,5).
+      Prüfbar durch die 3 übersprungenen ReceiptPageCropperTests auf dem Gerät und echte Fotos.
+  - type: assumption
+    detail: |
+      Ungeprüft: Koordinaten des Live-Rahmens (Sensor-Koordinaten → layerPointConverted) auf dem Gerät korrekt.
+      Prüfbar nur per Sichtprüfung auf dem iPhone.
+  - type: risk
+    detail: |
+      Gewellte/geknickte oder sehr lange Bons: Perspektivkorrektur zieht nur flache Vierecke gerade; lange Bons weiterhin in Teilen.
+resources:
+  - type: file
+    ref: .remember/today-2026-09-28.md
+    detail: |
+      Fortlaufende Kurznotizen des Tages; stimmen mit diesem Stand überein.
+  - type: file
+    ref: design-handoff/SPEC.md
+    detail: |
+      §5 enthält Freigabe und offene Punkte zum Dokumentenscanner und zum Menüeintrag.
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe
+    detail: |
+      Live-DB; Migrationen werden direkt live angewandt (einzeln, Datei im Repo, danach testen).
+  - type: file
+    ref: /Users/robertbogner/.claude/projects/-Users-robertbogner-GitPrivate-Famlist/memory/receipt-document-scanner.md
+    detail: |
+      Projekt-Gedächtnis zu diesem Vorhaben.
+next_session_prompt: |
+  Famlist (iOS, SwiftUI, /Users/robertbogner/GitPrivate/Famlist), Branch main, HEAD 24b6e00, alles uncommitted.
+  Der Kassenzettel-Scan wurde zum Dokumentenscanner ausgebaut: Auto-Zuschnitt (ReceiptDocumentDetector/ReceiptPageCropper),
+  Live-Rahmen + Auto-Auslösung (ReceiptAutoCapture, ReceiptLiveScanner, ReceiptCamera-Video-Ausgang), Ecken-Editor
+  (ReceiptCropEditView), Vollbild mit „Ecken anpassen“; Bon speichert Positionen (Migration 029 live: receipts.lines,
+  price_points.receipt_id), ☰ → „Gespeicherte Kassenzettel“.
+  Achtung: Eine andere Sitzung hat ProductDetail*-Dateien, HybridSheetLayer.swift und SheetQuantityStepper.swift im selben
+  Arbeitsbaum geändert – nicht mitcommitten. Vision-Erkennung ist im Simulator absichtlich aus (liefert dort Müll).
+  Nächste Schritte: 1) Roberts Feedback vom iPhone erfragen; 2) Unit- und Kassenzettel-UI-Tests neu laufen lassen und nur
+  die Kassenzettel-Arbeit committen (Format „FEAT(receipts): …“); 3) fragen, ob die Positionen im Bon-Detail angezeigt
+  werden sollen (braucht Design-Entwurf). Lies dazu design-handoff/SPEC.md §5 und das neueste Handoff in .claude/handoffs/.

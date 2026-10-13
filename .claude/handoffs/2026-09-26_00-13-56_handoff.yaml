@@ -1,0 +1,296 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-26T00:13:56+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: audit-fixes
+    head: 28159d3
+    head_subject: 'FEAT(receipts): Bon-Preise als Artikelpreise übernehmen; Preis beim Bearbeiten nicht mehr verloren'
+    uncommitted_changes: true
+summary: |
+  Kassenzettel-Preise werden jetzt als Artikelpreise gespeichert (Rückfrage „Artikelpreise
+  aktualisieren?“), und ein beim Bearbeiten eingetippter Preis geht nicht mehr verloren, wenn man
+  zwischendurch den Preisverlauf öffnet. Beides ist im Simulator gegen den echten Supabase-Server
+  per Live-UI-Test belegt, committet (28159d3) und nach origin/audit-fixes gepusht. Die App ist auf
+  Roberts iPhone 16 Pro Max installiert; sein Abnahmetest steht aus.
+goal: |
+  Robert: Nach der Artikelerkennung im Kassenzettel-Scan soll man die Bon-Preise als neue
+  Artikelpreise speichern können. Präzisierung nach Rückmeldung „Preise werden nicht gespeichert“:
+  Code gründlich prüfen, im Simulator loopen bis die Preise im Artikel gespeichert sind (auch der
+  Fall „Preis beim Bearbeiten nicht gespeichert“ vom Nachmittag), 0 % Fehlertoleranz, danach auf
+  das iPhone für den Abnahmetest. Fertig, wenn Robert die Abnahme auf dem Gerät bestätigt.
+current_state: |
+  Geprüft: HEAD 28159d3 auf Branch audit-fixes, identisch mit origin/audit-fixes (git status -sb).
+  Ungetrackt und nicht von dieser Session: .claude/audits/, zwei Handoffs vom 25.09.
+  Geprüft: App-Build für Gerät 00008140-000A64A201F1801C erfolgreich, per devicectl installiert.
+  Geprüft: Unit 574 (4 übersprungen) und UI 37 (5 übersprungen) grün; Live-Tests 3/3 grün.
+  Gefolgert: Roberts Meldung „nicht gespeichert“ kam vom alten Build auf dem iPhone (Rückfrage war
+  dort noch nicht installiert) plus dem nun behobenen Entwurf-Fehler im Bearbeiten-Formular.
+  Ungeprüft: Verhalten mit echten Bons auf dem Gerät (Zuordnungsquote, Status „Neuer Artikel?“).
+  Übergeordneter Auftrag (Memory audit-fix-loop): Audit-Runde 3 fand 13 hohe, ~35 mittlere Befunde,
+  noch keiner davon behoben.
+completed_work:
+  - |
+    Rückfrage „Artikelpreise aktualisieren?“ in ReceiptReviewSheet (System-Alert, nicht gestaltet;
+    in SPEC §3.12 und PLAN §9 dokumentiert). „Preise übernehmen“ ruft
+    ListViewModel.applyReceiptPrices: gleichnamige Listenartikel über updateItem (SwiftData +
+    SyncEngine) und Artikelstamm über catalogRepository.update (Offline-Warteschlange).
+  - |
+    ReceiptFlowViewModel.priceChanges: nur zugeordnete/geprüfte Positionen mit abweichendem Preis
+    (Liste oder Artikelstamm); Decimal→Double über Text (doubleValue lieferte 2,4899999999999998).
+  - |
+    ReceiptParser: Mengenzeilen („2 Stk x 1,29“, „2 x 1,29“) setzen quantity der Position mit
+    passendem Betrag (davor, sonst danach); Preisverlauf und Artikelpreis speichern den Stückpreis.
+    „2 x 1,29“ wurde vorher fälschlich als Artikel „2 x“ erkannt.
+  - |
+    Fehler behoben: EditItemSheet verlor Eingaben beim Wechsel in den Preisverlauf (Formular wurde
+    aus altem ItemModel neu aufgebaut). Jetzt Entwurf in ShoppingListView.editDraft, verworfen bei
+    jedem anderen Sheet; `item` bleibt Vergleichsbasis für onPriceChanged.
+  - |
+    Tests: ReceiptItemPriceTests, erweiterte ReceiptFlowTests/ReceiptParserTests,
+    EditPriceDraftUITests (Fixture, schlug vor dem Fix fehl), LiveReceiptPriceUITests (2 Tests:
+    Bearbeiten, Bon mit echter Vision-Texterkennung aus Simulator-Fotos, Einkauf abschließen und
+    neu hinzufügen, Artikel verwalten; prüft Karte, Neustart und Server items/item_catalog).
+  - |
+    Commit 28159d3 gepusht (Upstream origin/audit-fixes neu gesetzt); App aufs iPhone installiert.
+decisions:
+  - decision: |
+      Rückfrage als System-Alert statt eigenem UI.
+    rationale: |
+      CLAUDE.md: kein neues UI ohne Design; Korrekturen in „Kassenzettel prüfen“ nutzen bereits
+      System-Dialoge. Als Abweichung in PLAN §9 eingetragen.
+  - decision: |
+      Positionen mit Status „Neuer Artikel“ ändern keinen Artikelpreis und legen keinen Artikel an.
+    rationale: |
+      Es gibt keinen Artikel zum Aktualisieren; ob „Als neuen Artikel speichern“ künftig einen
+      Artikelstamm-Eintrag anlegen soll, ist Roberts Entscheidung (offen).
+  - decision: |
+      Preispunkte (Preisverlauf) speichern jetzt den Stückpreis statt des Zeilenbetrags.
+    rationale: |
+      Konsistent mit manuellen Preisen (ItemModel.price ist je Stück) und der Kartensumme.
+files:
+  - path: Famlist/Features/Receipts/ViewModels/ReceiptFlowViewModel.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: priceChanges, priceChangeMessage, listPrices/catalogPrices, Stückpreis.
+  - path: Famlist/Features/Receipts/Views/ReceiptReviewSheet.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: Alert „Artikelpreise aktualisieren?“, onUpdateItemPrices.
+  - path: Famlist/Features/ShoppingList/ViewModels/ListViewModel+ReceiptPrices.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: applyReceiptPrices, receiptPriceUpdates (Liste + Artikelstamm).
+  - path: Famlist/Features/Receipts/Models/ReceiptPriceChange.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: name + price (Double), key über CatalogOperation.key.
+  - path: Famlist/Features/Receipts/Services/ReceiptParser.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: countPattern, countLine, applyCount; Rabatt behält quantity.
+  - path: Famlist/Features/Receipts/Models/ParsedReceipt.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: Line.quantity, static unitPrice(price:quantity:) auf Cent gerundet.
+  - path: Famlist/Features/Receipts/Models/ReceiptReviewLine.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: quantity, unitPrice.
+  - path: Famlist/Features/ItemManagement/Views/EditItemSheet.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: draft-Parameter, onPriceHistory liefert currentDraft.
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: @State editDraft, onChange(of: activeSheet?.id) verwirft Entwurf.
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView+Sheets.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: .edit reicht draft durch; Datei hat 296 Zeilen (Grenze ~300).
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView+Receipts.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: listPrices an den Ablauf, onUpdateItemPrices → applyReceiptPrices.
+  - path: FamlistUITests/LiveReceiptPriceUITests.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: 354 Zeilen (über 300er-Regel, Auslagerung der Helfer offen).
+  - path: FamlistUITests/EditPriceDraftUITests.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: Fixture-Test Preis → Preisverlauf → zurück → Speichern.
+  - path: scripts/make_test_receipt.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Commit 28159d3: erzeugt Bon-PNG für den Live-Test. Weitere Commit-Dateien: Tests, pbxproj,
+      UserLog+DataLists.swift, LiveTestCleanup.swift (serverRows), SPEC.md, PLAN.md.
+  - path: .claude/audits/2026-09-25_audit-runde-3_einzelberichte.md
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Aus früherer Session; Einzelberichte Audit-Runde 3 (13 hoch, ~35 mittel), nicht committet.
+checks:
+  - method: |
+      Alle Unit-Tests auf iPhone 17 Pro Simulator (iOS 26.5).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: passed
+    detail: |
+      574 Tests, 4 übersprungen, 0 Fehler. Lief vor dem Commit auf identischem Code-Stand.
+  - method: |
+      Alle UI-Tests (Fixture) auf demselben Simulator.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests
+    result: passed
+    detail: |
+      37 Tests, 5 übersprungen (Live/Screenshot), 0 Fehler. Danach nur Kopfkommentar in
+      LiveReceiptPriceUITests.swift geändert.
+  - method: |
+      Live-UI-Tests gegen Supabase mit Testkonto „Tester“; Bon-Bild muss neuestes Simulator-Foto sein.
+    command: |
+      TEST_RUNNER_FAMLIST_LIVE=1 xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/LiveReceiptPriceUITests
+    result: passed
+    detail: |
+      2/2 grün (Lauf 15), Screenshots im Scratchpad der Session geprüft: Rückfrage, Karten
+      2,49 €/1,29 €, Neustart, Server items + item_catalog.
+  - method: |
+      Abnahmetest durch Robert auf dem iPhone 16 Pro Max mit echtem Kassenzettel.
+    command: null
+    result: not_run
+    detail: |
+      App installiert (Bundle com.roxo.famlist), Rückmeldung fehlt.
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS,id=00008140-000A64A201F1801C' -derivedDataPath <scratch>/dd-device -allowProvisioningUpdates
+      xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <scratch>/dd-device/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      Build und Installation auf Roberts iPhone 16 Pro Max (Gerät muss entsperrt sein).
+  - command: |
+      swift scripts/make_test_receipt.swift /tmp/bon.png
+      xcrun simctl addmedia F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF /tmp/bon.png
+    purpose: |
+      Bon-Bild für LiveReceiptPriceUITests in die Simulator-Mediathek legen (neuestes Foto).
+  - command: |
+      ruby -e "require 'xcodeproj'; p = Xcodeproj::Project.open('Famlist.xcodeproj'); ..."
+    purpose: |
+      Neue Swift-Dateien ins Xcode-Ziel eintragen (Projekt listet jede Datei einzeln; Gem
+      xcodeproj 1.23.0 ist installiert). Gruppe über eine Nachbardatei finden, new_reference,
+      source_build_phase.add_file_reference, save.
+open_items:
+  - |
+    Roberts Abnahmetest auf dem iPhone steht aus.
+  - |
+    Entscheidung offen: Soll „Als neuen Artikel speichern“ einen Artikelstamm-Eintrag mit Preis anlegen?
+  - |
+    LiveReceiptPriceUITests.swift hat 354 Zeilen; Helfer in eigene Datei auslagern.
+  - |
+    Rabatt zwischen Position und Mengenzeile verhindert die Stückzahl-Erkennung (dann 1 Stück).
+  - |
+    Audit-Runde 3: 13 hohe und ~35 mittlere Befunde unbehoben (siehe .claude/audits/ und Memory
+    audit-fix-loop); Loop endet erst nach zwei sauberen Audits.
+next_steps:
+  - step: |
+      Roberts Ergebnis des Abnahmetests abfragen und etwaige Abweichungen mit echtem Bon nachstellen
+      (Bon fotografieren → Simulator-Mediathek → LiveReceiptPriceUITests-Muster).
+    why: |
+      Fertig-Kriterium der Aufgabe ist die Abnahme auf dem Gerät.
+  - step: |
+      Entscheidung zu „Als neuen Artikel speichern“ einholen und ggf. umsetzen.
+    why: |
+      Häufige Ursache, dass ein Bon-Preis in keinem Artikel landet.
+  - step: |
+      Danach mit den hohen Befunden der Audit-Runde 3 weitermachen (z. B. Kontowechsel ohne
+      Bereinigung S1/R1, Import-Absturz R2, kein VersionedSchema A3, Realtime-Datum A15).
+    why: |
+      Übergeordneter Auftrag audit-fix-loop.
+waiting_on:
+  - what: |
+      Abnahmetest der Preis-Übernahme und des Bearbeiten-Fixes auf dem iPhone.
+    who: Robert
+    since: '2026-09-26'
+    detail: |
+      Build von 28159d3 installiert.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Auftraggeber und Tester; entscheidet Produkt-/Designfragen, erwartet 0 % Fehlertoleranz.
+    contact: null
+risks:
+  - type: assumption
+    detail: |
+      Ungeprüft: dass Roberts Fehlermeldung allein vom alten Build und dem Entwurf-Fehler kam.
+      Prüfbar durch seinen Abnahmetest mit dem neuen Build.
+  - type: risk
+    detail: |
+      Live-Test hängt davon ab, dass das Bon-Bild das neueste Foto im Simulator ist und dass
+      LiveTestCleanup alle „Livetest…“-Daten löscht; sonst falsche Zuordnung.
+  - type: assumption
+    detail: |
+      Ungeprüft: Stückzahl-Erkennung bei echten Bons anderer Ketten (nur REWE-Format „Position,
+      dann 2 Stk x P“ im Testbestand). Prüfbar mit Fotos echter Bons.
+resources:
+  - type: file
+    ref: .remember/today-2026-09-25.md
+    detail: |
+      Kurzzeitnotizen; Eintrag 22:58 „blocked Xcode target integration“ ist erledigt (Dateien per
+      xcodeproj-Gem eingetragen, Build grün).
+  - type: file
+    ref: .claude/audits/2026-09-25_audit-runde-3_einzelberichte.md
+    detail: |
+      Befunde Audit-Runde 3.
+  - type: file
+    ref: design-handoff/PLAN.md
+    detail: |
+      §9 Abweichungen, neuer Eintrag ReceiptReview-Rückfrage.
+  - type: url
+    ref: https://github.com/rob-bogner/Famlist/tree/audit-fixes
+    detail: |
+      Gepushter Branch mit Commit 28159d3.
+next_session_prompt: |
+  Projekt Famlist (iOS, SwiftUI, Supabase), Branch audit-fixes, HEAD 28159d3 (gepusht).
+  Zuletzt umgesetzt: Kassenzettel → Rückfrage „Artikelpreise aktualisieren?“ → Preise in Liste und
+  Artikelstamm (ListViewModel+ReceiptPrices.swift), Stückpreise aus Mengenzeilen (ReceiptParser),
+  und Fix: eingetippter Preis in „Artikel bearbeiten“ bleibt nach dem Preisverlauf erhalten
+  (ShoppingListView.editDraft). Belegt durch LiveReceiptPriceUITests (TEST_RUNNER_FAMLIST_LIVE=1,
+  Bon-Bild via scripts/make_test_receipt.swift + simctl addmedia) und EditPriceDraftUITests.
+  Die App ist auf Roberts iPhone installiert. Frage Robert zuerst nach dem Ergebnis seines
+  Abnahmetests und ob „Als neuen Artikel speichern“ einen Artikelstamm-Eintrag anlegen soll.
+  Danach: hohe Befunde aus .claude/audits/2026-09-25_audit-runde-3_einzelberichte.md abarbeiten
+  (Memory audit-fix-loop beachten: Commit je Paket, Tests grün, Push nur nach Okay).

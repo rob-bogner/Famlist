@@ -1,0 +1,250 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-26T17:36:46+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: audit-fixes
+    head: 88fedcf
+    head_subject: 'FEAT(list): Listenkopf klappt beim Scrollen fließend in den kompakten Zustand'
+    uncommitted_changes: true
+summary: |
+  Apple-Watch-App für Famlist: Phase 0 (Plan), Phase 1 (Targets + geteilter Sync-Kern) und
+  Phase 2 (Designsystem + 5 Screens pixelgenau) sind fertig und committet – im eigenen Worktree
+  /Users/robertbogner/GitPrivate/Famlist-watch, Branch watch-app (1dd88bf, dc071b1), nicht gepusht.
+  Der Hauptordner /Users/robertbogner/GitPrivate/Famlist gehört einer parallelen Session (audit-fixes,
+  Inline-Suche); die Git-Angaben dieses Handoffs (audit-fixes/88fedcf) beschreiben deshalb NICHT
+  die Uhr-Arbeit. Nächster Schritt: Phase 3 (Migration 022 + Edge Function watch-session) –
+  wartet auf Roberts Okay für die Live-Server-Änderungen.
+goal: |
+  Robert (26.09.2026, design-handoff/WATCH_PROMPT.md): watchOS-Companion (watchOS 10+) mit Widgets/
+  2 Komplikationen, Screens pixelgenau aus design-handoff/WatchUI + Watch*.dc.html, Watch und iPhone
+  immer synchron (auch Änderungen anderer Familienmitglieder), Offline-First auf der Uhr, Konflikte per
+  HLC/LWW wie auf dem iPhone. Phasenweise, Build grün und eigener Commit je Phase.
+  Roberts Entscheidungen (16:32): eigener Supabase-Zugang der Uhr JETZT; „Oft gekauft“ = Migration 022
+  (use_count/last_used_at, zählt beim Hinzufügen); jedes Gerät behält seine aktive Liste, alle Listen
+  bleiben auf beiden Geräten synchron. Plan: design-handoff/WATCH_PLAN.md (7 Phasen, im Worktree).
+  Fertig, wenn Robert Uhr + iPhone auf seinen Geräten abnimmt (Phase 7).
+current_state: |
+  Geprüft (17:35): Worktree Famlist-watch auf watch-app, HEAD dc071b1, sauber (git status leer),
+  kein Remote-Branch. Hauptordner: audit-fixes 88fedcf mit ~10 geänderten Dateien der ANDEREN Session.
+  Geprüft nach Phase-2-Code: Uhr-Tests 3/3, iOS-Unit 606 grün (4 übersprungen), iOS-Build mit
+  eingebetteter Uhr-App grün. iOS-UI 40/40 (6 übersprungen) zuletzt auf Stand Phase 1 (vor dc071b1).
+  Geprüft: Signierter Build für echte Uhren (generic/platform=watchOS, -allowProvisioningUpdates) grün,
+  App Group group.com.roxo.famlist.watch im Profil (Stand Phase 1).
+  Pixelvergleich 46-mm-Simulator vs. gerenderte dc.html, ohne Uhrzeit: mittlere Abweichung
+  2,5–3,0/255, 1,7–2,3 % starke Pixel (Schriftkanten).
+  Noch NICHT gebaut: Phasen 3–7 (Server, Sync, echte Daten, Widgets, Accessibility, Gerätetest).
+completed_work:
+  - |
+    Phase 0: Bestandsaufnahme und design-handoff/WATCH_PLAN.md mit belegten Plattform-Grenzen
+    (TN3135: kein WebSocket/NWPathMonitor auf der Uhr; Keychain nicht geräteübergreifend; Supabase
+    widerruft Sitzung bei Refresh-Token-Wiederverwendung; generateLink sendet keine Mail) und
+    Architektur: Uhr = eigener Sync-Knoten mit derselben SyncEngine, eigene HLC-Geräte-ID,
+    eigene Sitzung über Edge Function, WatchConnectivity-Sofort-Weg, Polling alle 10 s.
+  - |
+    Phase 1 (1dd88bf): Targets FamlistWatch + FamlistWatchTests + Scheme per scripts/watch_targets.rb;
+    geteilte iOS-Dateien per Target-Mitgliedschaft (scripts/watch_shared_sources.txt); ImportTarget
+    und ProductImageCodec+Encoding (UIKit) ausgelagert; Design-Quellen (WatchUI, Watch*.dc.html,
+    WATCH_PROMPT.md) mit committet.
+  - |
+    Phase 2 (dc071b1): WatchTheme/WatchFont (CoreText-Achsen wie AppFont)/WatchIcon, Bausteine auf
+    geteiltem CSSBox/Paint/BoxShadow, WatchScreenChrome (eigener Titel, Nav-Bar aus), 5 Screens mit
+    Beispieldaten + #Preview, DEBUG-Galerie -watchDesignScreen. Korrigiert: CSS-Rand vor Padding (+1 pt),
+    CSS-Zeilenhöhen (SwiftUI rundet Textboxen auf Pixel), Erledigt-Ring r 42. PLAN.md §9 ergänzt.
+  - |
+    Werkzeuge: scripts/render_dc.mjs (dc.html ohne support.js rendern), scripts/watch_design_shots.sh,
+    scripts/png_compare.py (ohne Pillow), scripts/add_files.rb (auch --remove).
+  - |
+    Branch-Unfall behoben: git switch -c watch-app im Hauptordner hatte den Branch der parallelen
+    Session umgestellt; zurück auf audit-fixes, eigene Dateien in den Worktree verlegt, pbxproj im
+    Hauptordner = 88fedcf + die zwei Inline-Such-Dateien der anderen Session.
+decisions:
+  - decision: |
+      Arbeit ausschließlich im Worktree /Users/robertbogner/GitPrivate/Famlist-watch (Branch watch-app).
+    rationale: |
+      Im Hauptordner arbeitet parallel eine andere Session; ein Branchwechsel dort verschiebt ihren Stand.
+  - decision: |
+      Code-Teilung per Target-Mitgliedschaft statt Framework/Package.
+    rationale: |
+      Package verlangt public an ~40 Typen und einen Umbau der iOS-App; gleiche Dateien = keine Kopie.
+  - decision: |
+      transferUserInfo nur für Abmelden/Kontowechsel; Änderungen laufen über die SwiftData-Warteschlange
+      der SyncEngine direkt an Supabase (Abweichung vom Prompt, in WATCH_PLAN.md §2 begründet).
+    rationale: |
+      Server-quittiert, übersteht Neustarts, funktioniert ohne iPhone.
+  - decision: |
+      Widget-Erweiterung erst in Phase 6; Uhr-Screens zeichnen den Titel selbst (Nav-Bar aus).
+    rationale: |
+      Extension braucht die Widget-Views als Einstieg; watchOS 26 setzt Toolbar-Titel unter die Uhrzeit.
+files:
+  - path: design-handoff/WATCH_PLAN.md
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Liegt im Worktree Famlist-watch (Commit 1dd88bf, Nachtrag dc071b1 nicht); Architektur + Phasen.
+  - path: scripts/watch_targets.rb
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, 1dd88bf. Targets anlegen + geteilte Dateien abgleichen (prüft zuerst, ob alle im Projekt).
+  - path: scripts/watch_shared_sources.txt
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, 1dd88bf/dc071b1. Liste der vom Uhr-Target mitkompilierten iOS-Dateien.
+  - path: FamlistWatch/Design/Components/WatchScreenChrome.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, dc071b1. Rahmen aller Screens; weitere Dateien unter FamlistWatch/Design, Screens, Models.
+  - path: FamlistWatch/App/FamlistWatchApp.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, dc071b1. DEBUG zeigt WatchDesignGallery; Release nur Platzhalter-Liste (Phase 5 ersetzt).
+  - path: Famlist/Core/Utils/ProductImageCodec+Encoding.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, 1dd88bf. UIKit-Teil ausgelagert; ImportTarget.swift ebenso ausgelagert.
+  - path: design-handoff/PLAN.md
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Worktree, dc071b1. §9 um vier Watch-Abweichungen ergänzt.
+checks:
+  - method: |
+      Uhr-Unit-Tests auf Apple Watch Series 11 (46mm) Simulator, Stand dc071b1.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme FamlistWatch -destination 'platform=watchOS Simulator,id=1766A235-DEB5-4D91-99BB-91A79EE51899'
+    result: passed
+    detail: |
+      3/3 (WatchHybridLogicalClockTests), im Worktree ausgeführt.
+  - method: |
+      iOS-Unit-Tests (baut die eingebettete Uhr-App mit), Stand dc071b1.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: passed
+    detail: |
+      606 Tests, 4 übersprungen, 0 Fehler.
+  - method: |
+      iOS-UI-Tests im Worktree.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests
+    result: not_run
+    detail: |
+      Auf Stand 1dd88bf (Phase 1, 17:11) 40/40 grün (6 übersprungen); nach dc071b1 nicht erneut
+      (kein iOS-Code geändert, nur Uhr-Dateien und die Liste geteilter Dateien).
+  - method: |
+      Pixelvergleich aller 5 Screens gegen gerenderte Watch*.dc.html (Chrome headless, @2x).
+    command: |
+      zsh scripts/watch_design_shots.sh <ordner> && python3 scripts/png_compare.py <ordner>/list-ref.png <ordner>/list.png <ordner>/cmp-list.png --ignore 300,16,116,56
+    result: passed
+    detail: |
+      Stand dc071b1: mittlere Abweichung 2,48–3,00/255; Rest = Schriftkanten (Chrome vs. CoreText).
+  - method: |
+      Signierter Build der Uhr-App für echte Geräte.
+    command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme FamlistWatch -destination 'generic/platform=watchOS' -allowProvisioningUpdates
+    result: not_run
+    detail: |
+      Auf Stand Phase 1 (~16:47) grün, App Group im Profil; nach dc071b1 nicht wiederholt.
+commands:
+  - command: |
+      ruby scripts/watch_targets.rb
+      ruby scripts/add_files.rb <Target> <pfad> … | ruby scripts/add_files.rb --remove <pfad> …
+    purpose: |
+      pbxproj nur per Skript ändern (im Worktree ausführen). Neue geteilte Dateien: erst add_files.rb
+      Famlist …, dann Zeile in watch_shared_sources.txt, dann watch_targets.rb.
+  - command: |
+      zsh scripts/watch_design_shots.sh /tmp/shots
+      python3 scripts/png_compare.py /tmp/shots/item-ref.png /tmp/shots/item.png /tmp/shots/cmp-item.png --ignore 300,16,116,56
+    purpose: |
+      Pixelvergleich Watch-Screens gegen Design (Uhrzeit ist im Watch-Simulator nicht einstellbar).
+open_items:
+  - |
+    Phase 3: migrations/022_catalog_usage.sql (use_count, last_used_at, RPC catalog_note_use + Prüfskript),
+    Edge Function supabase/functions/watch-session (JWT prüfen, generateLink magiclink, nur hashed_token,
+    1 Aufruf/10 s), iPhone: Zähl-Auftrag beim Hinzufügen, fetchItemsSince(listIds:since:), Realtime für
+    alle Listen. Live-Einspielen erst nach Roberts Okay.
+  - |
+    Phasen 4–7 laut WATCH_PLAN.md §8 (Sync-Schicht Uhr, echte Daten, Widgets/Komplikationen/Deep Links,
+    Accessibility + Dynamic Type + Gerätetest auf Roberts Apple Watch Ultra).
+  - |
+    DuplicateAddUITests scheitert im Hauptordner wegen der Inline-Suche der anderen Session (Suchfeld heißt
+    jetzt „Artikel suchen oder hinzufügen“); Anpassung ist Sache der anderen Session.
+  - |
+    Unverifiziert: Supabase-Grenze Realtime-Kanäle je Verbindung (Plan nennt 100) – in Phase 3 prüfen.
+next_steps:
+  - step: |
+      Robert nach dem Okay für Phase 3 fragen (Migration 022 und Edge Function watch-session live).
+    why: |
+      Live-Server-Änderungen; in der Session zugesagt, erst nach seinem Okay einzuspielen.
+  - step: |
+      Phase 3 im Worktree bauen: SQL + Prüfskript, Edge Function, iPhone-Seite; Tests; Commit.
+    why: |
+      Voraussetzung für Anmeldung und Sync der Uhr (Phase 4).
+waiting_on:
+  - what: |
+      Okay für Live-Server-Änderungen Phase 3 (Migration 022, Edge Function watch-session).
+    who: Robert
+    since: '2026-09-26'
+    detail: |
+      Frage am Ende der Session gestellt, noch unbeantwortet.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Auftraggeber und Tester; entscheidet Produkt/Design, erwartet 0 % Fehlertoleranz.
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Parallele Session im Hauptordner (audit-fixes). Nie dort git switch/checkout; Handoffs liegen dort,
+      Code im Worktree. Merge von watch-app später gegen deren neue Commits nötig.
+  - type: risk
+    detail: |
+      Uhr kann kein Realtime (WebSocket gesperrt, TN3135); „sofort“ nur über iPhone-Relais, sonst ≤10 s
+      Polling bei sichtbarer App. Simulator erlaubt WebSockets und kennt kein transferUserInfo → Gerätetest.
+  - type: assumption
+    detail: |
+      Ungeprüft: Einträge in .remember/today-2026-09-26.md um 17:08 („iPhone 16 Pro Max deploy (WatchKit)“)
+      stammen nicht aus dieser Session; diese Session hat nichts auf Geräte installiert.
+resources:
+  - type: file
+    ref: /Users/robertbogner/GitPrivate/Famlist-watch/design-handoff/WATCH_PLAN.md
+    detail: |
+      Architektur, Roberts Entscheidungen, Phasen, Tests, Risiken (nur im Worktree, nicht im Hauptordner).
+  - type: file
+    ref: .remember/today-2026-09-26.md
+    detail: |
+      Kurzzeitnotizen; mischen Einträge beider Sessions.
+  - type: url
+    ref: https://developer.apple.com/documentation/technotes/tn3135-low-level-networking-on-watchos
+    detail: |
+      Beleg: WebSocket/Network framework/NWPathMonitor auf watchOS gesperrt.
+  - type: other
+    ref: memory watch-app (~/.claude/projects/-Users-robertbogner-GitPrivate-Famlist/memory/watch-app.md)
+    detail: |
+      Entscheidungen und Worktree-Regel dauerhaft gespeichert.
+next_session_prompt: |
+  Projekt Famlist (iOS/SwiftUI/Supabase). Apple-Watch-App wird im Worktree
+  /Users/robertbogner/GitPrivate/Famlist-watch auf Branch watch-app gebaut (HEAD dc071b1, nicht gepusht).
+  NIE im Hauptordner /Users/robertbogner/GitPrivate/Famlist branchen oder committen – dort arbeitet eine
+  andere Session auf audit-fixes. Plan: design-handoff/WATCH_PLAN.md im Worktree (Roberts Entscheidungen:
+  eigene Uhr-Sitzung via Edge Function watch-session, Migration 022 use_count/last_used_at, aktive Liste je
+  Gerät, alle Listen synchron). Phasen 1–2 fertig (Targets, geteilter Sync-Kern, 5 Screens pixelgenau).
+  Nächstes: Robert nach Okay für Phase 3 (Migration 022 + Edge Function live) fragen, dann Phase 3 bauen.
+  pbxproj nur per scripts/watch_targets.rb / scripts/add_files.rb; Commit je Phase, Push nur nach Okay.

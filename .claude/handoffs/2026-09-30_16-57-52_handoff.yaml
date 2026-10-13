@@ -1,0 +1,235 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-30T16:57:52+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: d6df913
+    head_subject: 'DOCS(design): Boards PhotoCutout (Scan, Done, Fix), SPEC/PLAN'
+    uncommitted_changes: true
+summary: |
+  Alles ist committet und gepusht: main = origin/main = d6df913. Der Stand läuft seit 30.09. 16:51 auf Roberts iPhone.
+  Seit dem Handoff vom 29.09. 22:46 gab es 17 Commits (0e6dd6d..d6df913) und die Migrationen 031–035, alle live.
+  Von dieser Sitzung: Listen-Anlegen repariert (031), Realtime-Deadlock (supabase-swift 2.55.3), Absturzberichte
+  per MetricKit (032), Suche „Weitere Produkte“ nach Wörtern in Name+Marke (034), Produktbild aus dem globalen
+  Katalog samt Adresse im Artikelstamm (035), Kamera öffnet beim ersten Tippen, Platzhalter „Foto hinzufügen“ auch
+  beim Ansehen. Eine parallele Sitzung hat viele UI-Features beigesteuert; ich habe sie gebaut, installiert, committet.
+  Offen: UI-Tests rot (siehe open_items), Tastatur-Ziehen im Produktdetail weiter ungeklärt.
+goal: |
+  Robert steuert kurz: Fehler melden → beheben, „deploy auf iphone“ → bauen + installieren,
+  „commit und push“ → alles committen (inkl. Arbeit der parallelen Sitzung, Design-Dateien getrennt).
+  Fertig je Auftrag, wenn Build grün, App installiert bzw. origin/main aktuell ist.
+current_state: |
+  Geprüft (30.09. 16:56):
+  - git: main, HEAD d6df913 = origin/main; uncommitted nur design-handoff/_to_delete/ (+ .claude/, „Claude outputs/“).
+  - Supabase (mbfztpbwfktiduemqqfe): letzte Migrationen 031–035 live (schema_migrations).
+  - iPhone-Installation 16:51:29 = Code von 963b56e (seit dem Build keine Änderung).
+  - Unit-Tests zuletzt 14:55: 830 grün, 14 übersprungen (vor den Foto-/Freistell-Änderungen).
+  - UI-Tests zuletzt 29.09. 23:29: rot DuplicateAddUITests ×2, EditPriceDraftUITests, ListsUITests C und J.
+  Gefolgert/ungeprüft:
+  - Kamera beim ersten Tippen, Platzhalter-Speichern beim Ansehen, Bild-Nachladen aus OpenFoodFacts: nur gebaut,
+    nicht auf dem Gerät bestätigt (Simulator hat keine Kamera).
+  - Tastatur schließt im Produktdetail per Ziehen: weiter ungeklärt (Handoff 29.09.).
+completed_work:
+  - |
+    6753cc4 + Migration 031: Neue Listen scheiterten seit 020 mit 403/42501 (insert…returning vs. lists_select).
+  - |
+    b705828: supabase-swift 2.31.2 → 2.55.3 (Deadlock URLSessionWebSocket/Task-Lock, Watchdog 0x8BADF00D);
+    DiagnosticsReporter (MetricKit) → Tabelle diagnostic_reports (Migration 032); DiagnosticsInboxTests, Live-Test.
+  - |
+    55c65fa + Migration 034: search_global_products zerlegt in Wörter, jedes in Name+Marke; Index
+    idx_gpc_search_text_trgm; „schokolade“ 16,9 → 7,9 ms.
+  - |
+    b0235cd + Migration 035: Produktbild aus globalem Katalog nachladen (RemoteProductImage,
+    ListViewModel+RemoteImage, addItem(remoteImageURL:)); item_catalog.image_url; RemoteProductImageTests (13).
+  - |
+    963b56e: PhotoPickerSource (.sheet(item:)) gegen Mediathek-statt-Kamera; Platzhalter „Foto hinzufügen“ beim
+    Ansehen + savePhotoInView; zusammen mit Freistellen der parallelen Sitzung.
+  - |
+    Arbeit der parallelen Sitzung committet: 0b46068, a782dcb, c232275 (+Migration 033 live eingespielt),
+    1a2bb5e, de34770 (+ Build-Fix hasTopLine), 963b56e; Design-Commits getrennt (DOCS(design)).
+decisions:
+  - decision: |
+      Migrationen direkt live einspielen (einzeln, Datei vorher im Repo, danach Prüfskript in migrations/tests/).
+    rationale: |
+      Feste Regel aus Memory audit-fix-loop; bei 033 nötig, weil der neue Code die Spalte color las.
+  - decision: |
+      Code der parallelen Sitzung mitcommitten, wenn Dateien (pbxproj, ProductDetailSheet) verflochten sind;
+      Commit-Nachricht nennt Herkunft und „Tests nicht gelaufen“.
+    rationale: |
+      Robert verlangt „commit und push“ für alles; getrennte Commits hätten nicht baubare Zwischenstände erzeugt.
+  - decision: |
+      design-handoff/_to_delete/ (canvas.json-Kopie, pick.tgz 6,5 MB) nie committet und nicht gelöscht.
+    rationale: |
+      Fremde Dateien, Name deutet auf Löschen; Entscheidung liegt bei Robert.
+files:
+  - path: Famlist/Features/ItemManagement/Views/ProductDetailSheet.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet 963b56e. pickerRequest/.sheet(item:), onChange(formVM.selectedImage) → savePhotoInView (nur .view).
+      Picker schreibt inzwischen in pickedPhoto (Freistellen, parallele Sitzung). Datei > 800 Zeilen.
+  - path: Famlist/Features/ItemManagement/Components/ProductDetailHero.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet 963b56e. Platzhalter „Foto hinzufügen“ in allen Modi; Canvas-Board ProductDetail weicht ab.
+  - path: Famlist/Features/ShoppingList/ViewModels/ListViewModel+RemoteImage.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet b0235cd. loadRemoteImageIfNeeded / attachRemoteImage (nur ohne eigenes Foto).
+  - path: Famlist/Core/Diagnostics/DiagnosticsReporter.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet b705828. MetricKit-Empfang; Inbox in Application Support/Diagnostics (max. 20).
+  - path: migrations/035_item_catalog_image_url.sql
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      Committet b0235cd; live. Ebenso 031, 032, 034 (von mir) und 033 (parallele Sitzung, von mir eingespielt).
+  - path: design-handoff/_to_delete/
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Fremd (parallele Sitzung, 30.09. 08:13): canvas.json-Kopie + pick.tgz. Bewusst nicht committet.
+checks:
+  - method: |
+      Unit-Tests (Stand vor den Foto-Änderungen 16:00–16:43).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: not_run
+    detail: |
+      Zuletzt 30.09. 14:55 grün (830, 14 übersprungen). Für d6df913 nicht erneut gelaufen.
+  - method: |
+      UI-Tests.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests
+    result: not_run
+    detail: |
+      Zuletzt 29.09. 23:29: rot DuplicateAddUITests ×2, EditPriceDraftUITests, ListsUITests C/J. Für d6df913 nicht gelaufen.
+  - method: |
+      SQL-Prüfskripte 031–035 live (zurückgerollt).
+    command: null
+    result: passed
+    detail: |
+      Alle erwarteten Ergebnisse; Dateien migrations/tests/03{1,2,4,5}_*_check.sql.
+  - method: |
+      Live-Test Absturzbericht-Upload gegen Supabase.
+    command: |
+      TEST_RUNNER_FAMLIST_LIVE=1 xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests/LiveDiagnosticsUploadTests
+    result: passed
+    detail: |
+      29.09. 23:40, 3/3; Testzeile (app_version live-test) danach gelöscht.
+  - method: |
+      Kamera beim ersten Tippen / Platzhalter-Speichern / OpenFoodFacts-Bild auf dem iPhone.
+    command: null
+    result: not_run
+    detail: |
+      Nur Build grün; Robert hat noch keine Rückmeldung gegeben.
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'id=00008140-000A64A201F1801C' && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 ~/Library/Developer/Xcode/DerivedData/Famlist-fsyznnezudcepubtphfdhilminha/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      „deploy auf iphone“. Bei BUILD FAILED installiert der zweite Teil sonst das alte Paket – Build-Ergebnis prüfen.
+  - command: |
+      git status --porcelain | grep -v '^?? \.claude\|Claude outputs\|_to_delete' | cut -c4- | sed 's/"//g' | while read p; do [ -e "$p" ] && stat -f '%Sm %N' -t '%H:%M:%S' "$p"; done | sort | tail -5
+    purpose: |
+      Vor Build/Commit prüfen, ob und wann die parallele Sitzung zuletzt geändert hat.
+  - command: |
+      xcrun devicectl device info files --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 --domain-type systemCrashLogs
+    purpose: |
+      Absturzberichte (.ips) vom iPhone auflisten; kopieren mit device copy from … --domain-type systemCrashLogs.
+  - command: |
+      ruby scripts/add_files.rb <Target> <Pfad> …
+    purpose: |
+      Neue Dateien in project.pbxproj eintragen (sortiert Einträge um; danach plutil -lint).
+open_items:
+  - |
+    UI-Tests rot: DuplicateAddUITests ×2 (alt), EditPriceDraftUITests (Tastatur-Ziehen, alt), ListsUITests C/J (neu seit Wischen in „Meine Listen“).
+  - |
+    Tastatur im Produktdetail per Ziehen schließen: Ursache offen, Roberts Gerätetest fehlt.
+  - |
+    Canvas-Board ProductDetail (Ansehen ohne Foto) zeigt noch durchgestrichene Kamera; Code zeigt Platzhalter.
+  - |
+    ProductDetailSheet.swift > 800 Zeilen, ListViewModel+ItemCRUD.swift > 300 Zeilen (Projektregel ~300).
+  - |
+    Artikel, die vor 30.09. aus „Weitere Produkte“ kamen, haben keine Bildadresse und bekommen kein Bild.
+  - |
+    design-handoff/_to_delete/ – Robert entscheiden lassen (löschen?).
+next_steps:
+  - step: |
+      Robert fragen, ob auf dem iPhone Kamera (erstes Tippen), „Foto hinzufügen“ beim Ansehen und Bilder aus
+      „Weitere Produkte“ funktionieren.
+    why: |
+      Alle drei sind nur gebaut, nicht am Gerät bestätigt.
+  - step: |
+      Unit- und UI-Tests auf d6df913 laufen lassen und ListsUITests C/J untersuchen.
+    why: |
+      Seit 14:55 kamen ungetestete Änderungen dazu; C/J sind neu rot.
+  - step: |
+      Vor jedem Build/Commit Zeitstempel der parallelen Sitzung prüfen und neue Migrationen live abgleichen.
+    why: |
+      Sie ändert laufend denselben Arbeitsbaum; 033 war einmal nötig, bevor die App lief.
+waiting_on:
+  - what: |
+      Gerätetest der Foto-Änderungen und des Tastatur-Ziehens im Produktdetail.
+    who: Robert
+    since: '2026-09-30'
+    detail: |
+      Installation 16:51:29.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer und einziger Entwickler; testet auf iPhone 16 Pro Max; gibt Aufträge knapp („deploy auf iphone“, „commit und push“).
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Parallele Sitzung ändert denselben Arbeitsbaum; Commits nehmen ihre ungetestete Arbeit mit, Builds können
+      an ihren Zwischenständen scheitern (30.09. 15:56 hasTopLine, 29.09. 22:48 @MainActor überschrieben).
+  - type: assumption
+    detail: |
+      Ungeprüft, ob iOS Watchdog-Abbrüche (0x8BADF00D) als MetricKit-crashDiagnostics liefert; prüfbar erst beim nächsten Hänger.
+  - type: assumption
+    detail: |
+      Ungeprüft, dass savePhotoInView nach dem Freistellen (pickedPhoto → formVM.selectedImage) greift; aus Code gefolgert.
+resources:
+  - type: file
+    ref: .remember/today-2026-09-30.md
+    detail: |
+      Tagesnotizen; decken sich mit Git (Zeiten einzelner Einträge ungenau).
+  - type: file
+    ref: design-handoff/PLAN.md
+    detail: |
+      Umsetzungsstand der Design-Features der parallelen Sitzung.
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe
+    detail: |
+      Migrationen 031–035 live; Absturzberichte in public.diagnostic_reports (nur mit Service-Rechten lesbar).
+  - type: file
+    ref: .claude/handoffs/2026-09-29_22-46-18_handoff.yaml
+    detail: |
+      Vorheriges Handoff (Tastatur-Ziehen im Produktdetail).
+next_session_prompt: |
+  Famlist (iOS, SwiftUI, /Users/robertbogner/GitPrivate/Famlist), Branch main, HEAD d6df913 = origin/main,
+  am 30.09. 16:51 auf Roberts iPhone installiert. Supabase-Migrationen 031–035 sind live.
+  Offen: Robert soll auf dem Gerät bestätigen, dass „Foto aufnehmen“ beim ersten Tippen die Kamera öffnet, dass
+  „Foto hinzufügen“ beim Ansehen sofort speichert und dass Produkte aus „Weitere Produkte“ ihr Bild bekommen.
+  UI-Tests rot (DuplicateAddUITests ×2, EditPriceDraftUITests, ListsUITests C/J); Tastatur-Ziehen im Produktdetail
+  ungeklärt. Eine parallele Sitzung ändert laufend denselben Arbeitsbaum – vor Build/Commit Zeitstempel und neue
+  migrations/*.sql prüfen (ggf. live einspielen). design-handoff/_to_delete/ nicht committen.
+  Lies das neueste Handoff in .claude/handoffs/.

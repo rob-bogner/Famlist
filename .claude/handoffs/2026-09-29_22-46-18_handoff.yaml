@@ -1,0 +1,189 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-29T22:46:18+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: 0e6dd6d
+    head_subject: 'DOCS(design): Aktionskarten-Dialoge im Canvas-Abgleich (Boards, PNGs, SPEC/PLAN)'
+    uncommitted_changes: true
+summary: |
+  Alles ist committet, gepusht (origin/main = 0e6dd6d) und um 22:35 auf Roberts iPhone 16 Pro Max installiert.
+  Seit dem letzten Handoff (08:07): Design-Abgleich 65a059d, Fix der anderen Sitzung 00cde30 (Parser), dann
+  700cc9c (Produktdetails-Sheet + Aktionskarten der anderen Sitzung, mit zwei Reparaturen von mir) und 0e6dd6d (Dialog-Boards).
+  Offen: Im Produktdetail schließt Ziehen die Zahlentastatur nicht – EditPriceDraftUITests ist rot, Ursache nicht gefunden.
+  Neu seit 22:43: design-handoff/SPEC.md wieder geändert (Board SlideToDelete) – eine andere Sitzung arbeitet erneut.
+goal: |
+  Robert: „commit und push alles und zum Schluss deploy“ inkl. der Arbeit der anderen Sitzung (ProductDetail, Aktionskarten,
+  Canvas-Abgleich); vorher Tastatur-Fehler im Produktdetail reparieren.
+  Fertig, wenn EditPriceDraftUITests grün ist oder Robert das Verhalten auf dem iPhone als in Ordnung abnimmt.
+current_state: |
+  Geprüft:
+  - git: main, HEAD 0e6dd6d = origin/main; uncommitted nur design-handoff/SPEC.md (Änderung 22:43, nicht von dieser Session).
+  - Gesamtstand vor Commit 700cc9c: 808 Unit-Tests grün (11 übersprungen), 41 UI-Tests grün, rot: DuplicateAddUITests ×2
+    (schon auf 24b6e00 rot), EditPriceDraftUITests (ohne ProductDetail grün, mit ProductDetail reproduzierbar rot).
+  - Messung mit temporärem os_log: SheetPullTracker hängt an HostingScrollView (content 1240, bounds 790, alwaysBounce 1,
+    scrollEnabled 1, kb 308), aber während des Test-Zugs kommt kein einziges Pan-Ereignis – auch vom neutralen Startpunkt
+    (Lücke zwischen den Karten) und mit bounces=true bei offener Tastatur. Alle Versuche wieder entfernt (Build grün).
+  - Test setzt seinen Zug auf „Kategorie“ an; im Bearbeiten-Modus ist das ein Menu (ProductDetailSheet.swift:412).
+  - Device-Build 22:35:01, „App installed“ 22:35:08.
+  Gefolgert/ungeprüft:
+  - Ob Nutzer die Tastatur auf dem Gerät per Ziehen schließen können, ist ungeprüft.
+  - Remember-Notiz 22:07 („keyboard … fixed“) ist falsch; der Tastatur-Fehler ist NICHT behoben.
+completed_work:
+  - |
+    65a059d DOCS(design): Canvas-Abgleich (349 Dateien in design-handoff/).
+  - |
+    700cc9c FEAT(ui): ProductDetailSheet + Aktionskarten (andere Sitzung); meine Reparaturen: drei Pfade mit „+“ in
+    project.pbxproj gequotet (Projekt war nicht lesbar), ActionCardContent+PhotoSource.photoSource @MainActor (Swift-6-Fehler).
+  - |
+    0e6dd6d DOCS(design): Dialog-Boards, SPEC.md/PLAN.md. Push 00cde30..0e6dd6d.
+  - |
+    Installation auf dem iPhone 22:35 (Stand 0e6dd6d).
+decisions:
+  - decision: |
+      Unbewiesene Tastatur-Reparaturen (Schließen beim Ziehen in die Tastatur, bounces bei offener Tastatur) wieder entfernt.
+    rationale: |
+      Keiner der Versuche erzeugte ein Pan-Ereignis; nichts Unbelegtes committen.
+  - decision: |
+      ProductDetail und Aktionskarten in einem Commit (700cc9c) mit Vermerk des roten Tests.
+    rationale: |
+      Robert per Rückfrage („Alles committen + deployen“); ProductDetail nutzt .actionCard, getrennt nicht baubar.
+files:
+  - path: Famlist/Features/ItemManagement/Views/ProductDetailSheet.swift
+    status: read
+    staged: null
+    session_change: false
+    note: |
+      Committet in 700cc9c (andere Sitzung). SheetPullTracker ab ca. Zeile 585; lockBounce setzt bounces=false.
+  - path: FamlistUITests/EditPriceDraftUITests.swift
+    status: read
+    staged: null
+    session_change: false
+    note: |
+      Unverändert; Zug ab staticTexts["Kategorie"] bis Tastatur-Oberkante + 40 (Zeilen 38–47).
+  - path: Famlist.xcodeproj/project.pbxproj
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      700cc9c: path = "ActionCardContent+PhotoSource.swift" / "View+ActionCard.swift" / "Icon+ActionCard.swift" gequotet.
+  - path: Famlist/Shared/Components/Hybrid/ActionCardContent+PhotoSource.swift
+    status: read
+    staged: null
+    session_change: true
+    note: |
+      700cc9c: @MainActor an photoSource.
+  - path: design-handoff/SPEC.md
+    status: modified
+    staged: false
+    session_change: false
+    note: |
+      Uncommitted, geändert 22:43 von einer anderen Sitzung (Board SlideToDelete, „Schieben zum Löschen“).
+checks:
+  - method: |
+      Alle Unit- und UI-Tests auf dem Gesamtstand (vor 700cc9c, mit beiden Reparaturen).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests -only-testing:FamlistUITests
+    result: failed
+    detail: |
+      808 Unit grün; UI 41 grün, 3 rot (DuplicateAddUITests ×2 vorbestehend, EditPriceDraftUITests neu durch ProductDetail).
+  - method: |
+      EditPriceDraftUITests mit und ohne ProductDetail (separater Worktree).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/EditPriceDraftUITests
+    result: failed
+    detail: |
+      Mit ProductDetail rot („Tastatur geschlossen“, Zeile 47), ohne grün. SwipeUITests K/L waren nur wackelig (einzeln grün).
+  - method: |
+      Tastatur im Produktdetail auf dem iPhone per Ziehen schließen.
+    command: null
+    result: not_run
+    detail: |
+      Robert wurde darum gebeten; Rückmeldung fehlt.
+commands:
+  - command: |
+      xcrun simctl spawn F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF log show --start "<Zeit>" --predicate 'eventMessage CONTAINS "PULLDBG"' --style compact
+    purpose: |
+      os_log-Ausgaben der App aus dem Simulator lesen (so wurde die fehlende Pan-Geste gemessen).
+  - command: |
+      xcrun xcresulttool export attachments --path <xcresult> --output-path <Ordner>
+    purpose: |
+      UI-Hierarchie/Screenshots eines fehlgeschlagenen UI-Tests ansehen.
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Debug -destination 'id=00008140-000A64A201F1801C' && xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 ~/Library/Developer/Xcode/DerivedData/Famlist-fsyznnezudcepubtphfdhilminha/Build/Products/Debug-iphoneos/Famlist.app
+    purpose: |
+      iPhone-Installation (Gerät muss entsperrt und per WLAN erreichbar sein; vorher ankündigen).
+open_items:
+  - |
+    EditPriceDraftUITests rot: Pan-Geste der ScrollView im ProductDetailSheet kommt im Test nie an; Ursache offen.
+  - |
+    DuplicateAddUITests (2) seit längerem rot (Knopf „Artikel suchen oder hinzufügen“ fehlt laut Handoff 28.09.).
+  - |
+    ProductDetailSheet.swift hat ca. 690 Zeilen (Projektregel ~300) – Aufteilung vorschlagen.
+  - |
+    design-handoff/SPEC.md uncommitted (andere Sitzung, 22:43); ältere Handoffs, .claude/audits/, „Claude outputs/“ untracked.
+next_steps:
+  - step: |
+      Roberts Rückmeldung einholen, ob die Tastatur im Produktdetail auf dem Gerät per Ziehen schließt.
+    why: |
+      Entscheidet, ob ein echter Nutzerfehler oder nur ein Test-Problem vorliegt.
+  - step: |
+      Ursache der fehlenden Pan-Geste weiter eingrenzen (z. B. UIKit-Gestenerkenner in der Hierarchie der HostingScrollView
+      mit Recognizer-Delegate/Logging prüfen; Vergleich mit EditItemSheet, das denselben KeyboardRevealScrollView nutzt).
+    why: |
+      Nur so lässt sich EditPriceDraftUITests belegbar reparieren.
+  - step: |
+      Vor jedem Commit prüfen, ob die andere Sitzung noch arbeitet (git status, Datei-Zeitstempel).
+    why: |
+      Sie hat heute wiederholt denselben Arbeitsbaum geändert (zuletzt SPEC.md 22:43).
+waiting_on:
+  - what: |
+      Test der Tastatur im Produktdetail auf dem iPhone.
+    who: Robert
+    since: '2026-09-29'
+    detail: |
+      Installation 22:35.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer und einziger Entwickler; testet auf iPhone 16 Pro Max.
+    contact: null
+risks:
+  - type: assumption
+    detail: |
+      Ungeprüft, ob der Fehler Nutzer betrifft: Im Test beginnt der Zug auf einem Menu; von der Kartenlücke aus kam aber
+      ebenfalls kein Ereignis. Prüfbar auf dem Gerät.
+  - type: risk
+    detail: |
+      Eine andere Sitzung ändert parallel denselben Arbeitsbaum; Commits können fremde, ungetestete Arbeit mitnehmen.
+  - type: risk
+    detail: |
+      Handschriftliche pbxproj-Einträge der anderen Sitzung waren ungültig (ungequotete „+“); künftig scripts/add_files.rb nutzen.
+resources:
+  - type: file
+    ref: .remember/today-2026-09-29.md
+    detail: |
+      Tagesnotizen; Eintrag 22:07 („keyboard … fixed“) widerspricht dem geprüften Stand (nicht behoben).
+  - type: file
+    ref: design-handoff/RECEIPT_INSIGHTS_PLAN.md
+    detail: |
+      Einkaufsdaten & Auswertung (fertig, gepusht).
+  - type: file
+    ref: .claude/handoffs/2026-09-29_08-07-42_handoff.yaml
+    detail: |
+      Vorheriges Handoff (Einkaufsdaten & Auswertung).
+next_session_prompt: |
+  Famlist (iOS, SwiftUI, /Users/robertbogner/GitPrivate/Famlist), Branch main, HEAD 0e6dd6d = origin/main, am 29.09. 22:35
+  auf Roberts iPhone installiert. Offen: Im Produktdetail (Famlist/Features/ItemManagement/Views/ProductDetailSheet.swift,
+  SheetPullTracker ab ca. Zeile 585) schließt Ziehen die Zahlentastatur nicht; FamlistUITests/EditPriceDraftUITests ist rot
+  (ohne ProductDetail grün). Gemessen: Die Pan-Geste der HostingScrollView feuert im Test nie – auch nicht vom neutralen
+  Startpunkt und mit bounces=true; Ursache unbekannt. Frage zuerst Robert, ob es auf dem Gerät klappt, dann Ursache
+  belegbar eingrenzen (kein Probieren). Achtung: Eine andere Sitzung ändert parallel (zuletzt design-handoff/SPEC.md 22:43,
+  uncommitted) – nichts Fremdes ungeprüft committen. Lies das neueste Handoff in .claude/handoffs/.

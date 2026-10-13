@@ -1,0 +1,192 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-09-26T21:41:27+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: audit-fixes
+    head: 137608e
+    head_subject: 'FEAT(list): Listenfilter, Eingabe über der Tastatur und Glas-Knöpfe'
+    uncommitted_changes: true
+summary: |
+  Apple-Watch-App Phasen 3–7 fertig, getestet, committet und gepusht: Branch watch-app (HEAD c751bf5,
+  origin/watch-app) im Worktree /Users/robertbogner/GitPrivate/Famlist-watch. Live auf Supabase: Migrationen
+  022/023/024 und Edge Function watch-session. Gerätetest blockiert: Die parallele Session hat um 20:51 ihren
+  audit-fixes-Build auf Roberts iPhone gespielt und damit den watch-app-Build ersetzt; ohne WatchBridge auf dem
+  iPhone bekommt die Uhr keinen Anmelde-Code (Fehler 7007/7017). Robert muss entscheiden: watch-app erneut
+  installieren oder erst watch-app mit audit-fixes zusammenführen.
+goal: |
+  WATCH_PROMPT.md: watchOS-Companion (watchOS 10+), Screens pixelgenau, Uhr und iPhone immer synchron
+  (auch Änderungen anderer Mitglieder), Offline-First, HLC/LWW, Widgets + 2 Komplikationen, Deep Links,
+  Bedienungshilfen. Robert (26.09. 18:12): „Alle Phasen durchziehen“. Fertig, wenn Robert Uhr + iPhone auf
+  seinen Geräten abnimmt (Phase 7).
+current_state: |
+  Geprüft (21:40): Worktree Famlist-watch auf watch-app, sauber, gleich origin/watch-app, HEAD c751bf5.
+  Hauptordner: audit-fixes HEAD 137608e (neu: f7a971d, 137608e der anderen Session), uncommittete Dateien dort.
+  Geprüft vor dem Commit von Phase 7: Uhr-Tests 23/23, iOS-Unit 648 (8 übersprungen, 0 Fehler),
+  iOS-UI 40 (6 übersprungen, 0 Fehler), signierter Gerätebuild grün.
+  Geprüft 21:3x per devicectl-Konsole: iPhone läuft mit einem Build ohne Uhr-Code (Log SupabaseClient.swift:194
+  statt :200, kein watch.activated/keepListsInSync); Uhr: reachable=false, request.failed 7007 und 7017.
+  Server: seit 18:30Z kein Aufruf von watch-session.
+  Platte: 3,3 GB frei (397 von 460 GB belegt).
+completed_work:
+  - |
+    Phase 3 (e8fe127): Migration 022 (use_count/last_used_at, RPC catalog_note_use), 023 (Aufruf-Grenze
+    watch-session), Edge Function watch-session; iPhone zählt Hinzufügen, fetchItemsSince(listIds:),
+    Realtime für alle Listen (max. 90). Live-Tests grün.
+  - |
+    Phase 4 (7f3d89d): WatchMessage/WatchTransport/WatchConnectivityService (geteilt), WatchBridge (iOS),
+    WatchSessionManager + WatchSyncCoordinator (Uhr, Abfrage alle 10 s, Zurücksetzen), Szenario-Tests.
+  - |
+    Phase 5 (3526035): WatchListViewModel, WatchRootView, echte Daten; Fix Absturz (WCSession-Rückrufe im
+    Main Actor); Migration 024 (ensure_default_list 403 seit Migration 019 → Anmelden auf neuen Geräten
+    scheiterte, auch Hauptzweig); Gerätepaar-Test im Simulator in beide Richtungen erfolgreich.
+  - |
+    Phase 6 (7b660c6): Target FamlistWatchWidgets (Smart Stack, Ring, Plus), App-Group-Stand,
+    Hintergrund-Aktualisierung, Deep Links; Pixelvergleich Zifferblatt 1,66/255.
+  - |
+    Phase 7 (c751bf5): Textgröße bis +24 % ohne Abschneiden, VoiceOver-Zeilen; PLAN.md §9, SPEC.md §5.
+  - |
+    Gepusht (origin/watch-app) und 20:40 auf iPhone + Uhr installiert; danach von anderer Session überschrieben.
+decisions:
+  - decision: |
+      Das iPhone zeigt keinen Anmelde-Code; der Code läuft unsichtbar per sendMessage-Antwort zur Uhr.
+    rationale: |
+      Plan §2; verifyOTP auf der Uhr, nie iPhone-Sitzung teilen.
+  - decision: |
+      Migration 024 ohne eigene Rückfrage live eingespielt (verhaltensgleiche Fehlerbehebung).
+    rationale: |
+      Blockierte jede Anmeldung ohne lokale Listen-Kopie; Prüfskript 6/6.
+  - decision: |
+      Keine Installation auf Roberts Geräten ohne seine Entscheidung (überschreibt die andere Session).
+    rationale: |
+      Zwei Sessions installieren abwechselnd auf dasselbe iPhone.
+files:
+  - path: FamlistWatch/Sync/WatchSyncCoordinator.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree Famlist-watch, committet (7f3d89d ff.). Kern der Uhr-Synchronisation.
+  - path: Famlist/Features/Watch/WatchBridge.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, committet. iPhone-Partner der Uhr; fehlt im audit-fixes-Build.
+  - path: Famlist/Core/Watch/WatchConnectivityService.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, committet. Rückrufe bewusst nonisolated (Swift-6-Absturz).
+  - path: migrations/024_ensure_default_list_rls.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Worktree, committet 3526035; live eingespielt.
+  - path: design-handoff/WATCH_PLAN.md
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Worktree, committet. Status: Phasen 1–7 gebaut, offen Gerätetest.
+checks:
+  - method: |
+      Uhr-Unit-Tests, Stand c751bf5.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme FamlistWatch -destination 'platform=watchOS Simulator,id=1766A235-DEB5-4D91-99BB-91A79EE51899'
+    result: passed
+    detail: |
+      23/23 (im Worktree, eigenes -derivedDataPath im Scratchpad).
+  - method: |
+      iOS-Unit- und UI-Tests, Stand c751bf5.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=<eigener Sim, gelöscht>' -only-testing:FamlistTests / -only-testing:FamlistUITests
+    result: passed
+    detail: |
+      648 (8 übersprungen) bzw. 40 (6 übersprungen), 0 Fehler. Der verwendete Sim ist gelöscht; F1ECDBCC nutzbar.
+  - method: |
+      Gerätetest auf iPhone 16 Pro Max + Apple Watch Ultra.
+    command: null
+    result: not_run
+    detail: |
+      Blockiert: iPhone läuft mit audit-fixes-Build ohne WatchBridge (21:3x geprüft).
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -destination 'generic/platform=iOS' -derivedDataPath <scratch>/dd -allowProvisioningUpdates
+      xcrun devicectl device install app --device 1F2A53B1-353C-5BF5-BB1F-DF63F98BF801 <dd>/Build/Products/Debug-iphoneos/Famlist.app
+      xcrun devicectl device install app --device 62852C76-93FB-54BF-BDEC-C13D50CBBCD2 <dd>/Build/Products/Debug-iphoneos/Famlist.app/Watch/FamlistWatch.app
+    purpose: |
+      Im Worktree bauen und auf iPhone bzw. Uhr installieren (Uhr-Tunnel bricht teils ab → wiederholen).
+  - command: |
+      xcrun devicectl device process launch --console --terminate-existing --device <id> com.roxo.famlist(.watchkitapp)
+    purpose: |
+      App auf dem Gerät mit Konsole starten (logVoid-Ausgaben, nur DEBUG).
+open_items:
+  - |
+    Entscheidung Robert: watch-app erneut installieren (Option 1) oder erst mit audit-fixes zusammenführen (Option 2).
+  - |
+    Merge watch-app ↔ audit-fixes: audit-fixes hat f7a971d/137608e und uncommittete Arbeit; CSSBox.swift
+    (von Uhr + Widgets mitkompiliert) wurde dort geändert → Uhr-Build und Pixelvergleich danach wiederholen.
+  - |
+    Gerätetest-Liste: abhaken Uhr→iPhone, iPhone→Uhr, Flugmodus Uhr, Uhr ohne iPhone, Abmelden, Komplikationen.
+next_steps:
+  - step: |
+      Robert nach Option 1 oder 2 fragen; bei 2 den Merge mit der anderen Session abstimmen.
+    why: |
+      Ohne WatchBridge auf dem iPhone keine Anmeldung der Uhr.
+  - step: |
+      Danach installieren, Uhr anmelden (Famlist auf beiden Geräten öffnen), Gerätetest-Liste abarbeiten.
+    why: |
+      Phase-7-Abnahme.
+waiting_on:
+  - what: |
+      Entscheidung: erneut installieren oder erst zusammenführen.
+    who: Robert
+    since: '2026-09-26'
+    detail: |
+      Am Ende der Session gestellt, unbeantwortet.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Auftraggeber und Tester; Abnahme auf seinen Geräten.
+    contact: null
+risks:
+  - type: blocker
+    detail: |
+      Parallele Session installiert audit-fixes auf dasselbe iPhone und überschreibt watch-app-Builds.
+  - type: risk
+    detail: |
+      Platte fast voll (3,3 GB frei); Builds beider Sessions können scheitern. Eigener Build-Ordner im Scratchpad ~1,6 GB.
+  - type: assumption
+    detail: |
+      Ungeprüft auf Geräten: Uhr ohne iPhone (eigenes Netz), transferUserInfo beim Abmelden, Häufigkeit der
+      Hintergrund-Aktualisierung (teilt watchOS zu).
+resources:
+  - type: file
+    ref: /Users/robertbogner/GitPrivate/Famlist-watch/design-handoff/WATCH_PLAN.md
+    detail: |
+      Architektur, Phasen, Server-Änderungen (022–024), Risiken.
+  - type: file
+    ref: .remember/now.md
+    detail: |
+      Kurzzeitnotizen beider Sessions; 20:51 bestätigt die Installation der anderen Session auf dem iPhone.
+  - type: url
+    ref: https://github.com/rob-bogner/Famlist/pull/new/watch-app
+    detail: |
+      Pull Request für watch-app anlegen (noch keiner).
+next_session_prompt: |
+  Projekt Famlist (iOS/SwiftUI/Supabase). Die Apple-Watch-App ist komplett (Phasen 1–7) im Worktree
+  /Users/robertbogner/GitPrivate/Famlist-watch auf Branch watch-app (c751bf5, gepusht). NIE im Hauptordner
+  /Users/robertbogner/GitPrivate/Famlist branchen oder committen – dort arbeitet eine andere Session auf audit-fixes.
+  Blocker: Auf Roberts iPhone läuft der audit-fixes-Build ohne WatchBridge; deshalb meldet sich die Uhr nicht an
+  (Das iPhone zeigt nie einen Code – der Austausch läuft im Hintergrund). Frage Robert: watch-app erneut
+  installieren oder erst watch-app mit audit-fixes zusammenführen (CSSBox.swift dort geändert → Uhr neu prüfen).
+  Danach Gerätetest laut open_items. Builds mit eigenem -derivedDataPath im Scratchpad; Platte fast voll.

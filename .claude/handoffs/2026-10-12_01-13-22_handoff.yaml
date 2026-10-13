@@ -1,0 +1,279 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-10-12T01:13:22+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: b531c23
+    head_subject: 'STYLE(list): Marke direkt unter dem Artikelnamen (Board ListBrand)'
+    uncommitted_changes: true
+summary: |
+  Die App hat 27 statt 8 Standard-Kategorien. Der Code ist committet und gepusht (e64ac2a, HEAD 12ade93 = origin/main).
+  Migration 040 ist live: vier Konten (rob, Sofie, tester, demo) haben je 19 neue Kategorien bekommen.
+  23 von 31 nicht gelöschten Artikeln in Roberts Listen Aldi, Edeka und Rewe sind direkt in der Datenbank
+  neu zugeordnet. Ein Release-Build von 12ade93 (Version 1.0, Build 9) wurde um 01:07 auf Roberts iPhone installiert.
+  Offen: Robert hat das Ergebnis am Gerät noch nicht bestätigt, und der Artikelstamm (item_catalog) ist nicht zugeordnet.
+  Parallel arbeitet eine zweite Claude-Sitzung im selben Ordner; deren uncommittete Änderungen gehören nicht zu dieser Sitzung.
+goal: |
+  Auftrag Robert (12.10.2026): gängige Supermarkt-Kategorien recherchieren, deutlich mehr Kategorien in die App
+  einbauen und in der Datenbank nur die Artikel aus seinen Listen den passenden Kategorien zuordnen.
+  Folgeauftrag: committen, pushen, auf dem iPhone installieren.
+  Fertig ist es, wenn Robert am iPhone die neuen Kategorien und die Zuordnung gesehen und abgenommen hat.
+current_state: |
+  Geprüft (Git, 01:12): Branch main, HEAD 12ade93 = origin/main. e64ac2a enthält alle Kategorie-Dateien und
+  migrations/040_more_default_categories.sql. Den Commit und den Push hat die parallele Sitzung gemacht.
+  Geprüft (Supabase mbfztpbwfktiduemqqfe, 00:29): rob, Sofie, tester, demo haben je 27 Kategorien, Positionen 0–26
+  lückenlos, „Sonstiges“ zuletzt, kein Icon leer. Alle 31 Artikel stehen in einer Kategorie, die Robert hat.
+  Geprüft (devicectl, 01:07): „App installed“ com.roxo.famlist auf Gerät 00008140-000A64A201F1801C.
+  Geprüft (git status, 01:12): uncommittet sind ItemCard.swift, ShoppingListView.swift, canvas.json, PLAN.md, SPEC.md.
+  Diese Änderungen stammen von der parallelen Sitzung (Marke unter dem Namen, Tab-Fehler) und fehlen im installierten Build.
+  Gefolgert, ungeprüft: Die App zeigt nach dem Neustart die neuen Kategorien und Artikel richtig an.
+completed_work:
+  - |
+    Recherche: Sortimente von Edeka24, Knuspr und myTime verglichen (REWE-Shop antwortete mit HTTP 403).
+    Daraus 19 neue Kategorien: Wurst & Aufschnitt, Käse, Eier, Vegetarisch & Vegan, Frühstück & Aufstriche,
+    Backzutaten, Nudeln & Reis, Konserven, Fertiggerichte, Saucen & Dips, Öl, Essig & Gewürze, Kaffee, Tee & Kakao,
+    Süßigkeiten, Snacks & Knabbereien, Bier, Wein & Spirituosen, Drogerie, Baby & Kind, Tierbedarf, Blumen & Pflanzen.
+  - |
+    Code (in e64ac2a): ItemCategory mit 27 Fällen in Ladenweg-Reihenfolge und `coarser`; Icons nur aus dem
+    vorhandenen 60er-Raster (CategoryIconCatalog.key(for:)); je eine eigene Palettenfarbe (CategoryColor.defaults);
+    CategoryDefinition.standard(_:); ProductPhotoSuggester schlägt feine Kategorien vor und fällt auf die grobe zurück.
+  - |
+    Tests: 3 neue Tests in CategoryStoreTests, 2 Tests an die neue Reihenfolge angepasst (ItemCategoryTests,
+    ListSectionBuilderTests); in CategoryStoreTests heißt die frei angelegte Testkategorie jetzt „Baumarkt“ statt „Drogerie“.
+  - |
+    Migration 040 per apply_migration live. Regel: Reihenfolge des Kontos bleibt, jede neue Kategorie steht hinter
+    einer verwandten alten, „Sonstiges“ bleibt zuletzt, Farbe NULL, mehrfach ausführbar.
+  - |
+    23 Artikel per SQL neu zugeordnet (z. B. Parmesan → Käse, Jasminreis → Nudeln & Reis, Kokoswasser → Getränke).
+    Jede Zeile bekam hlc_timestamp = jetzt und hlc_node_id 'server-kategorien-2026-10-12', sonst verwirft
+    der Trigger items_lww_guard die Änderung.
+  - |
+    Release-Build von 12ade93 in getrennter Arbeitskopie gebaut (eigener DerivedData-Ordner) und auf dem iPhone
+    installiert. Arbeitskopie und Build-Ordner danach wieder entfernt.
+decisions:
+  - decision: |
+      Bestehende Konten bekommen die neuen Kategorien per Datenbank-Migration, nicht über Logik in der App.
+    rationale: |
+      Es gibt nur sechs Profile. Die Migration wirkt sofort, auch für ältere App-Versionen, weil nur vorhandene
+      Icon-Schlüssel verwendet werden.
+  - decision: |
+      Auch Sofie, tester und demo haben die 19 Kategorien bekommen, nicht nur Robert.
+    rationale: |
+      Sofie teilt die Liste „Edeka“. Ohne die Kategorien stünden die umsortierten Artikel bei ihr unter „Sonstiges“
+      (CategoryResolver ordnet unbekannte Namen dort ein).
+  - decision: |
+      Nur nicht gelöschte Artikel in Roberts Listen wurden zugeordnet. item_catalog und gelöschte Artikel blieben unverändert.
+    rationale: |
+      Robert sagte ausdrücklich „nur die Artikel aus meiner Liste“.
+  - decision: |
+      Der iPhone-Build entstand aus dem gepushten Stand in einer getrennten Arbeitskopie, nicht aus dem Projektordner.
+    rationale: |
+      Die parallele Sitzung ließ gleichzeitig xcodebuild test laufen und änderte Dateien. Ein Build im selben
+      Ordner hätte einen halbfertigen Stand erfasst und den DerivedData-Ordner geteilt.
+files:
+  - path: Famlist/Features/ItemManagement/Models/ItemCategory.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet in e64ac2a. 27 Fälle, `coarser`, SF-Symbol nur für die alten acht.
+  - path: Famlist/Features/Categories/Services/CategoryIconCatalog.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet in e64ac2a. key(for:) für alle 27, legacyKey(for:) liefert jetzt String?.
+  - path: Famlist/Features/Categories/Services/CategoryColor.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet in e64ac2a. 19 neue Standardfarben aus der 36er-Palette.
+  - path: Famlist/Features/Categories/Models/CategoryDefinition.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet in e64ac2a. Neue Hilfsfunktion standard(_:).
+  - path: Famlist/Core/Utils/ProductPhotoSuggester.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet in e64ac2a. categoryName(_:userCategories:) und feinere Zuordnung.
+  - path: Famlist/FamlistTests/CategoryStoreTests.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet in e64ac2a. 3 neue Tests, Zugriff über Namen statt Position.
+  - path: migrations/040_more_default_categories.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet in e64ac2a. Live in Supabase als „040_more_default_categories“.
+  - path: Famlist/Features/ShoppingList/Components/ItemCard.swift
+    status: modified
+    staged: false
+    session_change: false
+    note: |
+      Uncommittet, von der parallelen Sitzung (Marke unter dem Namen, Design ListBrand). Nicht anfassen.
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView.swift
+    status: modified
+    staged: false
+    session_change: false
+    note: |
+      Uncommittet, von der parallelen Sitzung (Tab-Wechsel in der Einkaufsliste). Nicht anfassen.
+  - path: design-handoff/PLAN.md
+    status: modified
+    staged: false
+    session_change: false
+    note: |
+      Uncommittet, von der parallelen Sitzung. Ebenso design-handoff/SPEC.md und design-handoff/Design/html/canvas.json.
+checks:
+  - method: |
+      Unit-Tests im Simulator iPhone 17 Pro (iOS 26.5).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: not_run
+    detail: |
+      Für den aktuellen Stand nicht gelaufen. Letzter Lauf dieser Sitzung um 00:31 vor dem Commit e64ac2a:
+      862 ausgeführt, 18 übersprungen, 0 Fehler, dazu 20 Swift-Testing-Tests grün. Danach kamen Änderungen der
+      parallelen Sitzung dazu.
+  - method: |
+      UI-Tests „Kategorien verwalten“ (3 Tests in ManageSwipeUITests) im Simulator.
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests/ManageSwipeUITests
+    result: not_run
+    detail: |
+      Für den aktuellen Stand nicht gelaufen. Um 00:33–00:40 waren alle drei grün; test_categories_tapName_opensEdit
+      erst im dritten Anlauf, weil der Test-Runner zweimal vor dem Teststart beendet wurde (signal kill).
+  - method: |
+      Release-Build von 12ade93 für das iPhone in getrennter Arbeitskopie, Info.plist geprüft.
+    command: null
+    result: passed
+    detail: |
+      BUILD SUCCEEDED um 01:07. CFBundleShortVersionString 1.0, CFBundleVersion 9, Team YHSZ8G8RWJ.
+  - method: |
+      Installation auf dem iPhone 16 Pro Max mit devicectl.
+    command: null
+    result: passed
+    detail: |
+      „App installed“, bundleID com.roxo.famlist, 01:07:49. Am Gerät angesehen hat es niemand.
+  - method: |
+      Datenbank nach Migration 040 und Artikel-Update per SQL abgefragt.
+    command: null
+    result: passed
+    detail: |
+      00:29: 4 Konten je 27 Kategorien; Update meldete geplant 23, geändert 23; alle 31 Artikel in vorhandener Kategorie.
+commands:
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Release -destination 'id=00008140-000A64A201F1801C' -derivedDataPath <ordner> -allowProvisioningUpdates
+    purpose: |
+      Release-Build für Roberts iPhone. Mit eigenem -derivedDataPath stört er keinen parallel laufenden Build.
+  - command: |
+      xcrun devicectl device install app --device 00008140-000A64A201F1801C <ordner>/Build/Products/Release-iphoneos/Famlist.app
+    purpose: |
+      Installation auf dem iPhone. Das iPhone muss entsperrt und erreichbar sein.
+  - command: |
+      git worktree add --detach <scratchpad>/wt-install <commit> && cp Secrets.plist <scratchpad>/wt-install/
+    purpose: |
+      Getrennte Arbeitskopie eines Commits bauen, wenn im Projektordner eine andere Sitzung arbeitet.
+      Danach mit git worktree remove --force wieder entfernen.
+open_items:
+  - |
+    Robert hat das Ergebnis am iPhone noch nicht bestätigt (neue Kategorien, Farben, 23 umsortierte Artikel).
+  - |
+    Artikelstamm: Roberts item_catalog hat 152 Einträge, 42 ohne Kategorie und 17 mit „Andere“ (Abfrage 01:12).
+    Ein neu hinzugefügter Artikel übernimmt die Kategorie aus dem Artikelstamm. Frage an Robert ist gestellt, Antwort fehlt.
+    Im Chat stand fälschlich „125 Einträge, 49 ohne Kategorie, 18 Andere“.
+  - |
+    Unsichere Zuordnungen: Doradenfilets (Golden Seafood) evtl. Tiefkühl, Petites Madeleines evtl. Backwaren,
+    Sesam geröstet unter Öl, Essig & Gewürze, Kokoswasser von Konserven zu Getränke.
+  - |
+    Die Apple Watch hat keinen neuen Build bekommen.
+  - |
+    Es gibt keine Zuordnung nach Artikelname beim Hinzufügen. Ein frei getippter Artikel bleibt ohne Kategorie.
+next_steps:
+  - step: |
+      Robert fragen, ob die 27 Kategorien und die Zuordnung der Artikel am iPhone stimmen.
+    why: |
+      Das ist das Fertig-Kriterium. Der Stand am Gerät ist ungeprüft.
+  - step: |
+      Auf Roberts Antwort hin den Artikelstamm (item_catalog, 152 Einträge) genauso zuordnen.
+    why: |
+      Sonst bringen wieder hinzugefügte Artikel ihre alte oder gar keine Kategorie mit.
+  - step: |
+      Vor jedem Build oder Commit mit git status und pgrep -fl xcodebuild prüfen, ob die parallele Sitzung noch arbeitet.
+    why: |
+      Zwei Sitzungen im selben Ordner können sich Builds und Installationen gegenseitig überschreiben.
+waiting_on:
+  - what: |
+      Rückmeldung zum installierten Build und Entscheidung zum Artikelstamm.
+    who: Robert
+    since: '2026-10-12'
+    detail: |
+      Beide Fragen stehen im Chat dieser Sitzung.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Besitzer des Projekts und der Listen Aldi, Edeka, Rewe (Profil 3a9830f9-9166-4e80-8c12-315d2fdae545).
+    contact: null
+  - name: Sofie
+    role: |
+      Mitglied der geteilten Liste „Edeka“ (Profil b20c57ff-5c94-457e-ba4e-6d633259d974). Sie nutzt die TestFlight-Version.
+    contact: null
+risks:
+  - type: risk
+    detail: |
+      Parallele Sitzung im selben Ordner. Hat sie kurz vor 01:07 selbst auf dem iPhone installiert, hat der Build
+      dieser Sitzung ihren überschrieben. Der installierte Build enthält ihre uncommitteten Änderungen nicht.
+  - type: assumption
+    detail: |
+      Ungeprüft: Die App zeigt nach dem Neustart die neuen Kategorien und die 23 Artikel an der richtigen Stelle.
+      Prüfbar am iPhone in der Liste „Edeka“ mit Sortierung „Nach Kategorie“.
+  - type: assumption
+    detail: |
+      Ungeprüft: Kein Gerät hatte beim Update um 00:29 eine ältere, noch nicht gesendete Änderung an einem der
+      23 Artikel. Eine solche Änderung hätte der Server verworfen. Prüfbar nur, wenn Robert eine fehlende Änderung bemerkt.
+  - type: risk
+    detail: |
+      Sofies TestFlight-Version kennt die neuen Standardfarben nur, wenn sie Build 9 hat. Ältere Versionen leiten
+      die Farbe der neuen Kategorien aus dem Namen ab (CategoryColor.defaultHex).
+resources:
+  - type: file
+    ref: .remember/now.md
+    detail: |
+      Notizen beider Sitzungen. Der Eintrag 00:36 nennt „Drogerie→Baumarkt in ProductPhotoSuggester“; laut Git
+      betrifft das CategoryStoreTests.swift.
+  - type: file
+    ref: migrations/040_more_default_categories.sql
+    detail: |
+      Regeln der Migration stehen im Kopfkommentar.
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe („Famllist“)
+    detail: |
+      Zugriff über den Supabase-MCP-Server (execute_sql, apply_migration).
+  - type: url
+    ref: https://www.mytime.de/
+    detail: |
+      Quelle der Recherche, zusammen mit https://www.edeka24.de/Lebensmittel/ und https://www.knuspr.de/.
+next_session_prompt: |
+  Projekt Famlist (/Users/robertbogner/GitPrivate/Famlist, iOS-Einkaufsliste, SwiftUI, Supabase). Lies zuerst CLAUDE.md
+  und das neueste Handoff mit /mtk:handoff-resume. Stand 12.10.2026, 01:12: Die App hat 27 Standard-Kategorien
+  (Commit e64ac2a, HEAD 12ade93 gepusht), Migration 040 ist live, 23 Artikel in Roberts Listen sind neu zugeordnet,
+  und ein Release-Build von 12ade93 ist auf Roberts iPhone installiert. Prüfe zuerst mit git status und
+  pgrep -fl xcodebuild, ob eine zweite Sitzung im Ordner arbeitet; fremde uncommittete Dateien (ItemCard.swift,
+  ShoppingListView.swift, design-handoff) nicht anfassen. Frage Robert dann, ob Kategorien und Zuordnung am iPhone
+  stimmen und ob der Artikelstamm (item_catalog, 152 Einträge von Profil 3a9830f9-9166-4e80-8c12-315d2fdae545,
+  42 ohne Kategorie, 17 „Andere“) genauso zugeordnet werden soll. Direkte SQL-Änderungen an items brauchen eine
+  höhere hlc_timestamp, sonst verwirft sie der Trigger items_lww_guard. Vor einer Installation auf iPhone oder Uhr
+  im Chat ankündigen.

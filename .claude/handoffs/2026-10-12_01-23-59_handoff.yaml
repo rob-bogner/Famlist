@@ -1,0 +1,367 @@
+schema_version: 2
+language: de
+profile: software
+generated_at: "2026-10-12T01:23:59+0200"
+focus: null
+project:
+  path: /Users/robertbogner/GitPrivate/Famlist
+  name: Famlist
+  scope: null
+  git:
+    branch: main
+    head: b531c23
+    head_subject: 'STYLE(list): Marke direkt unter dem Artikelnamen (Board ListBrand)'
+    uncommitted_changes: true
+summary: |
+  Alles ist committet und gepusht: main = origin/main = b531c23 (geprüft 12.10. 01:22). In dieser Sitzung
+  (11.10. 19:41 bis 12.10. 01:22) entstanden 17 Commits (fefb3d1..b531c23) und die TestFlight-Builds 5 bis 9.
+  Behoben bzw. gebaut: Suche und Barcode-Scanner schließen nach dem Hinzufügen; Rahmen der kleinen
+  Fortschrittsleiste; Profilbild „hinzugefügt von“ (Migration 039 live); Stottern beim Scrollen (Schatten des
+  Profilbilds); Tab-Wechsel scrollt nach oben; Tabs reagieren im Nachlauf; leere Liste nach Tab-Wechsel (iOS 27).
+  TestFlight-Build 9 enthält die letzten zwei Commits NICHT (1c2853e Tab-Fix, b531c23 Marke unter dem Namen).
+  Auf Roberts iPhone läuft seit 01:08:34 ein Release-Build mit genau dem Code von b531c23.
+  Parallel lief eine zweite Claude-Sitzung im selben Ordner; ihr Handoff ist 2026-10-12_01-13-22_handoff.yaml.
+goal: |
+  Robert steuert kurz: Fehler melden → Ursache belegen → beheben → aufs iPhone → TestFlight → Commit und Push.
+  Letzter Stand: Der Fehler „leere Liste nach Tab-Wechsel“ „scheint erst mal weg“ (Robert 01:11); er bat nur um
+  Commit und Push. Fertig ist dieser Faden, wenn Robert den Fehler nicht mehr meldet und Build 10 mit den
+  Commits 1c2853e und b531c23 bei TestFlight liegt (hochladen nur auf Roberts Zuruf).
+current_state: |
+  Geprüft (12.10. 01:22, git): Branch main, HEAD b531c23 = origin/main, 0 ungepusht. Unversioniert nur
+  design-handoff/_to_delete/, .claude/audits/, „Claude outputs/“ und die Handoff-Dateien.
+  Geprüft: CURRENT_PROJECT_VERSION = 9 an allen 10 Stellen; Build 9 hochgeladen 00:54 (Skript „Fertig“).
+  Geprüft (devicectl, 01:08:34): „App installed“ com.roxo.famlist, Release-Build von 01:08:30; der Arbeitsbaum
+  entsprach dabei dem späteren Stand b531c23. Die Build-Nummer im Paket ist 9.
+  Geprüft (Supabase mbfztpbwfktiduemqqfe, 00:42): Migrationsliste endet mit 036, 039, 040. Spalte
+  items.created_by und Trigger trg_items_created_by existieren (037), stehen aber nicht in der Liste.
+  Tabellen stores/store_trips (038) existieren nicht.
+  Geprüft durch Robert am Gerät: Suche/Scanner schließen, Rahmen der Fortschrittsleiste, Profilbild erscheint,
+  Scrollen im Release-Build flüssig, Tab-Wechsel scrollt nach oben („Sehr gut“).
+  Ungeprüft: Tab-Tipp im Nachlauf am Gerät nicht ausdrücklich bestätigt; Ursache der leeren Liste nur aus dem
+  Muster gefolgert; Mengen-Pille, Marke unter dem Namen und 27 Kategorien habe ich nicht am Gerät gesehen.
+completed_work:
+  - |
+    fefb3d1: InlineAddOverlay und BarcodeScanSheet schließen nach dem Hinzufügen (auch Return-Taste);
+    „Weiter scannen“ bleibt. 2c05063: UI-Test wählt gezielt den Treffer „Brot, Stück“ – die App übernahm die
+    Einheit aus dem Artikelstamm schon (ListViewModel.fillingMissingFields).
+  - |
+    16d8d7a: CompactProgressBar.showsSurface – der Rahmen der 40-pt-Leiste erscheint erst bei p >= 1.
+    ScreenTourUITests.test_headerTransition fotografiert den Kopf im Übergang.
+  - |
+    e24d969 (aus paralleler Sitzung, von mir committet): Profilbild des Mitglieds am Mengen-Chip, Migration 037.
+    da2341e: Migration 039 (live) setzt created_by auch bei gelöscht → wieder da und abgehakt → offen;
+    SwiftDataItemStore.writeLocal entfernt lokal den alten Ersteller. Prüfskript 039 deckt 037 mit ab.
+  - |
+    cb96abb: ContributorAvatar – Ring und Schatten über CSSBox statt .shadow (Stottern beim Scrollen).
+    Rest des Stotterns kam aus dem Debug-Build; im Release-Build laut Robert flüssiger.
+  - |
+    e64ac2a: Tab-Wechsel scrollt nach oben (scrollListToTop); CoastingTabsCatcher (unsichtbare Tab-Reihe über
+    der Scroll-Ansicht, nur im Nachlauf bei eingeklapptem Kopf); ListScrollState.isCoasting/isHeaderCompact.
+    Enthält außerdem aus der parallelen Sitzung: Mengen-Pille in der Liste, 27 Kategorien, Migration 040.
+  - |
+    1c2853e: ShoppingListView.switchFilter – erst nach oben scrollen, dann (sobald die Liste oben steht,
+    höchstens ~0,25 s) den Filter wechseln; Tabs schreiben über filterSelection.
+  - |
+    b531c23, 2f8aed9, 814ce78, 90c3011: Arbeit der parallelen Sitzung auf Roberts Auftrag committet (Marke unter
+    dem Namen, Design-Boards, STORE_ROUTE_DESIGN_PROMPT.md, Migration 038 als „noch nicht live“).
+  - |
+    TestFlight: Builds 5 (20:45), 6 (21:35), 7 (22:02), 8 (23:14), 9 (00:54) per scripts/release_testflight.sh.
+decisions:
+  - decision: |
+      created_by („hinzugefügt von“) wird auch gesetzt, wenn ein abgehakter Artikel wieder offen wird.
+    rationale: |
+      Robert, 11.10. 21:49, in Kenntnis der Nebenwirkung: „Zurücksetzen“ oder ein entfernter Haken zählt als
+      Hinzufügen. Der Server kann beides nicht von „erneut hinzugefügt“ unterscheiden.
+  - decision: |
+      Jeder Tab-Wechsel (Alle · Offen · Erledigt) setzt die Liste ganz nach oben; der Kopf zeigt die große Karte.
+    rationale: |
+      Wunsch Robert, 12.10. 00:08 und 00:19.
+  - decision: |
+      Seit 22:54 bekommt das iPhone Release-Builds (xcodebuild -configuration Release), nicht mehr Debug.
+    rationale: |
+      Im Release-Build scrollt die Liste laut Robert flüssiger. Eine ausdrückliche Standard-Entscheidung von
+      Robert gibt es nicht; Nachteil: App-Protokollzeilen (print) gibt es nur im Debug-Build.
+  - decision: |
+      Nach 1c2853e nur Commit und Push, kein TestFlight-Build.
+    rationale: |
+      Robert, 01:11: „Mache erst mal Commit and Push. Falls er nicht weg ist, müssen wir dann noch mal schauen.“
+  - decision: |
+      design-handoff/_to_delete/ bleibt unangetastet (nicht committet, nicht gelöscht).
+    rationale: |
+      Entscheidung liegt laut Handoff vom 11.10. bei Robert.
+files:
+  - path: Famlist/Features/ShoppingList/Views/ShoppingListView.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet e64ac2a und 1c2853e. switchFilter, filterSelection, scrollListToTop, listCoastingChanged,
+      Overlay CoastingTabsCatcher. Enthält auch die Mengen-Pille der parallelen Sitzung.
+  - path: Famlist/Features/ShoppingList/Components/CoastingTabsCatcher.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet e64ac2a. Unsichtbare Tab-Reihe (opacity 0.011) bei CollapsingListHeader.compactTabsTop = 120;
+      TrackListCoasting (iOS 18+, onScrollPhaseChange).
+  - path: Famlist/Features/ShoppingList/Models/ListScrollState.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet e64ac2a. isCoasting, isHeaderCompact, collapseRange, returnToTopWhenIdle, update(offset:).
+  - path: Famlist/Features/ShoppingList/Components/CollapsingListHeader.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet 16d8d7a und e64ac2a. showsSurface bei p >= 1, compactTabsTop, trägt collapseRange ein.
+  - path: Famlist/Features/ShoppingList/Components/CompactProgressBar.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet 16d8d7a. Schalter showsSurface.
+  - path: Famlist/Features/Sharing/Models/ItemContributor.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet cb96abb. ContributorAvatar mit CSSBox, zwei Vorschauen.
+  - path: Famlist/Core/Storage/SwiftDataItemStore.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet da2341e. writeLocal: addedByMe entfernt den bisherigen Ersteller.
+  - path: migrations/039_items_created_by_on_return.sql
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet da2341e, live seit 11.10. 21:52:40. Prüfskript migrations/tests/039_items_created_by_on_return_check.sql.
+  - path: Famlist/Features/ItemManagement/Views/InlineAddOverlay.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet fefb3d1. add() schließt die Eingabe. Ebenso BarcodeScanSheet.swift.
+  - path: FamlistUITests/ListFilterTabsUITests.swift
+    status: added
+    staged: null
+    session_change: true
+    note: |
+      Committet e64ac2a. 4 Tests. Der Test „im Nachlauf“ trifft den Nachlauf nicht (XCUITest wartet auf Ruhe).
+  - path: FamlistUITests/DuplicateAddUITests.swift
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet fefb3d1 und 2c05063. Weg über das Plus im Dock, 2 neue Tests (Suche, Scanner schließen).
+  - path: migrations/038_stores_route.sql
+    status: added
+    staged: null
+    session_change: false
+    note: |
+      Committet 90c3011, aus paralleler Sitzung. NICHT live; Prüfskript 038 nie gelaufen.
+  - path: design-handoff/SPEC.md
+    status: modified
+    staged: null
+    session_change: true
+    note: |
+      Committet fefb3d1, 814ce78, 2f8aed9, b531c23. §3: Schließen nach Hinzufügen, Tab-Wechsel, Nachlauf.
+  - path: design-handoff/_to_delete/
+    status: untracked
+    staged: false
+    session_change: false
+    note: |
+      Fremd, 14 Einträge, 72 MB (gezählt 11.10. 19:41). Nicht committen, nicht löschen.
+checks:
+  - method: |
+      Alle Unit-Tests (Simulator iPhone 17 Pro, iOS 26.5).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests
+    result: passed
+    detail: |
+      12.10. 01:12 auf dem Arbeitsstand, der danach als 1c2853e + b531c23 committet wurde:
+      864 Tests, 18 übersprungen (Live-Tests), 0 Fehler.
+  - method: |
+      UI-Tests ListFilterTabsUITests (4 Tests).
+    command: null
+    result: passed
+    detail: |
+      12.10. 01:06 mit switchFilter und der ItemCard-Änderung im Arbeitsbaum: 4 bestanden, 0 fehlgeschlagen.
+      Gegenprobe 00:16 ohne scrollListToTop: test_switchingTabs_scrollsToTop_andShowsLargeHeader rot.
+  - method: |
+      UI-Tests DuplicateAddUITests (4) und SwipeUITests (6).
+    command: null
+    result: not_run
+    detail: |
+      Zuletzt 12.10. 00:47 grün (10 Tests), aber VOR 1c2853e und b531c23. Auf dem aktuellen Stand nicht gelaufen.
+  - method: |
+      Komplette UI-Test-Suite (FamlistUITests).
+    command: |
+      xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistUITests
+    result: not_run
+    detail: |
+      In dieser Sitzung nie komplett gelaufen. Laut Handoff vom 11.10. zuletzt am 29.09. rot.
+  - method: |
+      Prüfskript Migration 039 gegen den Live-Stand (rollt alles zurück).
+    command: null
+    result: passed
+    detail: |
+      11.10. ~21:53: alle 10 Fälle wie erwartet (1 applied M · 2 M · 3 M · 4 O · 5 O · 6 M · 7 M · 8 stale M · 9 M · 10 M).
+  - method: |
+      Lage der unsichtbaren Tab-Reihe: vorübergehend rot eingefärbt, Bildschirmfoto des eingeklappten Kopfs.
+    command: null
+    result: passed
+    detail: |
+      12.10. 00:43 im Simulator: deckungsgleich mit den echten Tabs. Die Einfärbung ist wieder entfernt.
+  - method: |
+      Gerätetest durch Robert: Tipp auf einen Tab, während die Liste nachläuft.
+    command: null
+    result: not_run
+    detail: |
+      Nicht ausdrücklich bestätigt. Robert meldete danach den Fehler „leere Liste“ und um 01:11 „scheint weg“.
+  - method: |
+      Instruments „Animation Hitches“ am iPhone (xctrace) zur Messung des Stotterns.
+    command: null
+    result: failed
+    detail: |
+      11.10. 22:55: --attach fand den Prozess nicht; --all-processes brach nach 1,4 s ab („Device disconnected“).
+      iPhone hängt per WLAN am Mac (transportType = localNetwork).
+commands:
+  - command: |
+      L=/tmp/famlist-test.log; xcodebuild test -project Famlist.xcodeproj -scheme Famlist -destination 'platform=iOS Simulator,id=F1ECDBCC-15DC-4E12-8B57-9A6D5073B1AF' -only-testing:FamlistTests > $L 2>&1 & PID=$!; until grep -q -E "TEST (SUCCEEDED|FAILED)|BUILD FAILED|Executed [0-9]{3,} tests" $L; do sleep 3; done; sleep 4; kill $PID; grep -E "' failed|TEST |Executed [0-9]+ tests" $L | tail -5
+    purpose: |
+      xcodebuild test beendet sich unter Xcode 27 oft nicht. Im Hintergrund starten, Log abfragen, dann beenden.
+      Bei UI-Tests auf Zeilen „Test Case … passed|failed (“ warten; das xcresult ist nach kill oft unbrauchbar.
+  - command: |
+      xcodebuild build -project Famlist.xcodeproj -scheme Famlist -configuration Release -destination 'id=00008140-000A64A201F1801C' && xcrun devicectl device install app --device 00008140-000A64A201F1801C "$(ls -dt ~/Library/Developer/Xcode/DerivedData/Famlist-*/Build/Products/Release-iphoneos/Famlist.app | head -1)" && xcrun devicectl device process launch --terminate-existing --device 00008140-000A64A201F1801C com.roxo.famlist
+    purpose: |
+      Release-Build aufs iPhone und App starten. Vorher ankündigen und auf Roberts „los“ warten, außer er
+      verlangt die sofortige Installation ausdrücklich.
+  - command: |
+      scripts/release_testflight.sh
+    purpose: |
+      TestFlight-Upload (Build-Nummer +1, committet, pusht nicht). Braucht einen sauberen, committeten Code-Stand.
+open_items:
+  - |
+    TestFlight: 1c2853e (Tab-Fix) und b531c23 (Marke unter dem Namen) fehlen in Build 9. Build 10 nur auf Zuruf.
+  - |
+    Leere Liste nach Tab-Wechsel: Ursache nicht bewiesen, im Simulator (iOS 26.5) nie nachgestellt.
+    Falls sie wiederkommt: kurze Tabs nicht mehr lazy aufbauen (VStack statt LazyVStack) oder .id je Filter.
+  - |
+    Tab-Tipp im Nachlauf am Gerät noch nicht ausdrücklich bestätigt. Grenzen: nur bei eingeklapptem Kopf, nur iOS 18+.
+  - |
+    Standard für iPhone-Installationen (Debug oder Release) von Robert nicht entschieden.
+  - |
+    Migration 037 fehlt in der Supabase-Migrationsliste (Spalte und Trigger sind live). Migration 038 ist nicht live.
+  - |
+    Prüfskript für Migration 036 fehlt weiterhin; CLAUDE.md nennt noch „Xcode 26.6“ und „iOS 26.2+“
+    (laut Handoff vom 11.10.: Xcode 27.0, Simulator F1ECDBCC = iOS 26.5).
+  - |
+    Aus dem Handoff vom 11.10. 19:40: Gerätetest „Sofies Änderungen nach Hintergrund/Vordergrund ohne Neustart“
+    und der Hinweis „Anmeldung abgelaufen“ sind nicht ausdrücklich bestätigt.
+  - |
+    design-handoff/_to_delete/ – Robert entscheiden lassen.
+next_steps:
+  - step: |
+      Robert fragen, ob die leere Liste nach dem Tab-Wechsel und der Tab-Tipp im Nachlauf am iPhone passen.
+      Wenn ja und er es will: scripts/release_testflight.sh (Build 10), danach git push.
+    why: |
+      Die letzten zwei Commits sind nur auf Roberts iPhone, nicht bei TestFlight.
+  - step: |
+      Meldet Robert die leere Liste erneut: Bildschirmfoto, Ausgangs-Tab, Ziel-Tab und Scroll-Tiefe erfragen;
+      dann ShoppingListContent für kurze Abschnittslisten nicht lazy aufbauen und am Gerät prüfen lassen.
+    why: |
+      Der Fehler ist nur auf iOS 27 am Gerät sichtbar; ohne Gerätebeleg wäre jede weitere Änderung geraten.
+  - step: |
+      Komplette UI-Test-Suite laufen lassen und rote Tests einzeln bewerten.
+    why: |
+      Seit den vielen Listen-Änderungen dieser Nacht liefen nur 3 von 17 UI-Testdateien.
+waiting_on:
+  - what: |
+      Bestätigung am iPhone: leere Liste weg, Tab-Tipp im Nachlauf, Mengen-Pille, Marke unter dem Namen.
+    who: Robert
+    since: '2026-10-12'
+    detail: |
+      Release-Build von 01:08:30 ist installiert. Robert 01:11: „scheint erst mal weg zu sein“.
+  - what: |
+      Zuweisung der Builds 5 bis 9 an Sofies Testergruppe und Aktualisierung bei ihr.
+    who: Sofie / App Store Connect
+    since: '2026-10-11'
+    detail: |
+      Von hier aus nicht prüfbar.
+deadlines: []
+people:
+  - name: Robert Bogner
+    role: |
+      Eigentümer und einziger Entwickler; testet auf iPhone 16 Pro Max (iOS 27.0.1), arbeitet zeitweise mit
+      zwei Claude-Sitzungen im selben Ordner.
+    contact: null
+  - name: Sofie
+    role: |
+      Mitglied der Liste „Edeka“; testet über TestFlight. Ihre Artikel zeigten am 11.10. das Profilbild.
+    contact: null
+risks:
+  - type: assumption
+    detail: |
+      Ungeprüft: Die leere Liste entsteht, weil iOS 27 die oberen Zeilen des LazyVStack nicht neu aufbaut, wenn
+      der Inhalt unter die Scroll-Position schrumpft. Beleg wäre ein Ansichtsbaum vom Gerät (UI-Test auf dem
+      iPhone mit -uiTestFixture) oder ein iOS-27-Simulator; beides gab es nicht.
+  - type: assumption
+    detail: |
+      Ungeprüft: scrollTo beendet den Nachlauf der Liste. Abgesichert durch returnToTopWhenIdle und das Warten
+      in switchFilter (höchstens ~0,25 s). Prüfbar nur am Gerät.
+  - type: risk
+    detail: |
+      CoastingTabsCatcher hängt an der festen Lage der Tabs (compactTabsTop = 120, Rand 20). Ändert sich der
+      eingeklappte Listenkopf, muss die Lage neu geprüft werden (rot einfärben, test_headerTransition).
+  - type: risk
+    detail: |
+      Zwei Sitzungen im selben Arbeitsbaum: Zweimal lagen fremde, unfertige Änderungen in denselben Dateien
+      (ShoppingListView.swift, project.pbxproj). Vor Build, Commit und TestFlight git status und Änderungszeiten
+      prüfen; notfalls in einer Kopie des gepushten Stands bauen.
+  - type: risk
+    detail: |
+      created_by: „Zurücksetzen“ schreibt alle vorher abgehakten Artikel dem Zurücksetzenden zu (bewusst so).
+resources:
+  - type: file
+    ref: .claude/handoffs/2026-10-12_01-13-22_handoff.yaml
+    detail: |
+      Handoff der parallelen Sitzung (27 Kategorien, Migration 040, Zuordnung der Artikel in der Datenbank).
+  - type: file
+    ref: .claude/handoffs/2026-10-11_19-40-39_handoff.yaml
+    detail: |
+      Vorheriges Handoff dieser Linie (Realtime-Fix, Session-Expiry, Build 4).
+  - type: file
+    ref: .remember/now.md
+    detail: |
+      Tagesnotizen bis 01:03. Der Eintrag „Anzeigefehler im Tab Erledigt noch offen“ ist überholt (1c2853e).
+      Enthält auch Notizen der parallelen Sitzung (Kategorien, Supabase-Free-Plan-Recherche).
+  - type: file
+    ref: /Users/robertbogner/.claude/projects/-Users-robertbogner-GitPrivate-Famlist/memory/scroll-stutter.md
+    detail: |
+      Memory: Ursachen für Stottern (weiche SwiftUI-Schatten, Debug-Build), Instruments über WLAN reißt ab.
+  - type: account
+    ref: Supabase-Projekt mbfztpbwfktiduemqqfe
+    detail: |
+      Live: Migrationen bis 036, dazu 037 (ohne Listeneintrag), 039, 040. Nicht live: 038.
+  - type: other
+    ref: Gerät 00008140-000A64A201F1801C
+    detail: |
+      Roberts iPhone 16 Pro Max, per WLAN mit dem Mac mini gekoppelt.
+next_session_prompt: |
+  Famlist (iOS, SwiftUI, /Users/robertbogner/GitPrivate/Famlist), Branch main, HEAD b531c23 = origin/main,
+  nichts offen außer design-handoff/_to_delete/ (nicht committen, nicht löschen). TestFlight hat Build 1.0 (9);
+  die Commits 1c2853e (Tab-Wechsel: erst nach oben scrollen, dann Filter wechseln) und b531c23 (Marke unter dem
+  Namen) sind NICHT darin, laufen aber seit 12.10. 01:08 als Release-Build auf Roberts iPhone.
+  Offen: Robert bestätigt am iPhone, dass die Liste nach einem Tab-Wechsel nicht mehr leer bleibt („scheint erst
+  mal weg“) und dass Tabs reagieren, während die Liste nachläuft (CoastingTabsCatcher). Danach auf Zuruf
+  scripts/release_testflight.sh (Build 10) und push. Kommt die leere Liste wieder: Bildschirmfoto und Ablauf
+  erfragen, dann kurze Tabs in ShoppingListContent nicht mehr lazy aufbauen – der Fehler zeigt sich nur auf
+  iOS 27 am Gerät, nicht im Simulator (iOS 26.5).
+  Vor jedem Build git status und Änderungszeiten prüfen: Es lief eine zweite Sitzung im selben Ordner.
+  xcodebuild test hängt unter Xcode 27 nach dem Lauf: im Hintergrund starten und das Log abfragen.
+  Lies das neueste Handoff in .claude/handoffs/ (es gibt zwei vom 12.10.: 01-13-22 der anderen Sitzung und dieses).
