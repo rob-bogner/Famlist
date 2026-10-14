@@ -17,6 +17,8 @@
  - Halten: Ausrollen startet sofort, rastet nach 0,4 s ein (vorher Start 0,1 s, Einrasten 0,7 s; Wunsch Robert 14.10.2026).
  - Plus: `onPress` (UIKit-Erkenner) statt DragGesture, weil iOS 27 das Aufsetzen verzögert meldet (14.10.2026).
  - Nach der Auswahl bleibt „Barcode | Foto erkennen“ stehen, bis × oder daneben getippt wird (Wunsch Robert 14.10.2026).
+ - Zeiten je +0,05 s: Tippen 0,15 s, Hinziehen ab 0,25 s, Einrasten 0,45 s (DockHold; Wunsch Robert 14.10.2026).
+ - Ausrollen beginnt erst nach 0,1 s; Tippen erlaubt 20 pt Bewegung statt 10 pt (Wunsch Robert 14.10.2026).
  - DockGeometry, DockItemModel, DockActionButton und DockFAB in eigene Dateien ausgelagert (Audit 25.09.2026).
  ------------------------------------------------------------------------
  */
@@ -142,8 +144,8 @@ struct DockView: View {
 // MARK: - Plus gedrückt halten
 
 extension DockView {
-    /// Plus mit eigener Geste: Tippen (unter 0,1 s) = Hinzufügen; beim Drücken rollt „Barcode | Foto“ sofort aus,
-    /// bei 0,4 s rastet es ein; während des Haltens auf eine Pille ziehen und loslassen wählt sie.
+    /// Plus mit eigener Geste: Tippen (unter 0,15 s, höchstens 20 pt bewegt) = Hinzufügen; ab 0,1 s rollt
+    /// „Barcode | Foto“ aus, bei 0,45 s rastet es ein; während des Haltens auf eine Pille ziehen und loslassen wählt sie (DockHold).
     /// `onPress` statt DragGesture: Die erkennt das Aufsetzen seit iOS 27 verzögert (siehe PressGestureRecognizer).
     fileprivate func holdFAB(t: ListTheme) -> some View {
         DockFAB(t: t, action: onAdd, rotation: 45 * Double(morph), glow: morph, isButton: false)
@@ -169,13 +171,16 @@ extension DockView {
             if locked { tapToClose = true; return }
             tapToClose = false
             pressTask?.cancel()
-            // Ausrollen startet sofort und dauert 0,4 s; die erste Haptik kommt erst, wenn es kein Tippen mehr ist.
-            withAnimation(.timingCurve(0.2, 0, 0.2, 1, duration: 0.4)) { morph = 1 }
+            // Ausrollen beginnt bei DockHold.start und ist beim Einrasten fertig; die erste Haptik kommt erst,
+            // wenn es kein Tippen mehr ist.
             pressTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(100))
+                try? await Task.sleep(for: .seconds(DockHold.start))
+                guard !Task.isCancelled, pressing else { return }
+                withAnimation(.timingCurve(0.2, 0, 0.2, 1, duration: DockHold.lock - DockHold.start)) { morph = 1 }
+                try? await Task.sleep(for: .seconds(DockHold.tap - DockHold.start))
                 guard !Task.isCancelled, pressing else { return }
                 UIImpactFeedbackGenerator(style: .soft).impactOccurred()
-                try? await Task.sleep(for: .milliseconds(300))
+                try? await Task.sleep(for: .seconds(DockHold.lock - DockHold.tap))
                 guard !Task.isCancelled, pressing else { return }
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 locked = true
@@ -183,9 +188,9 @@ extension DockView {
             }
         }
         guard !tapToClose else { return }
-        if abs(translation.width) > 10 || abs(translation.height) > 10 { moved = true }
+        if hypot(translation.width, translation.height) > DockHold.moveRadius { moved = true }
         // Hinziehen: über welcher Hälfte der Leiste liegt der Finger? (44 pt Spielraum über und unter der Leiste)
-        let held = Date().timeIntervalSince(pressStart) > 0.2 || locked
+        let held = Date().timeIntervalSince(pressStart) > DockHold.drag || locked
         var target: DockMorphOption?
         if held, location.x >= navFrame.minX, location.x < navFrame.maxX,
            location.y > navFrame.minY - 44, location.y < navFrame.minY + 108 {
@@ -202,7 +207,7 @@ extension DockView {
         pressTask?.cancel()
         if tapToClose { tapToClose = false; collapse(); return }
         if let hover { select(hover); return }
-        let short = Date().timeIntervalSince(pressStart) < 0.1 && !moved
+        let short = Date().timeIntervalSince(pressStart) < DockHold.tap && !moved
         if locked { return }                                  // eingerastet: bleibt offen
         collapse()
         if short { onAdd() }

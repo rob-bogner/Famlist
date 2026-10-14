@@ -164,7 +164,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
    - Scan-Knopf in der Eingabe unten → Barcode-Scanner.
    - Erkannter Artikel → „Zur Liste hinzufügen“ legt ihn an und schließt den Scanner (seit 11.10.2026); „Weiter scannen“ verwirft den Treffer und scannt weiter. Während der Suche „Artikel wird gesucht …“ (BarcodeLookup); ohne Kamera Hinweis „Kamera nicht verfügbar“ (BarcodeNoCamera). Unbekannter Code → Neuer Artikel (vorbefüllt).
    - Karte „Artikel erkannt“ (seit 14.10.2026): Artikelbild 84 (eigenes Foto, sonst Katalog-Bild auf Weiß, sonst Wagen-Symbol) · Name · Marke · Chips (Menge/Einheit, Kategorie, letzter Preis) · Beschreibung (max. 3 Zeilen).
-   - Menge: Kreis antippen zählt weiter (1× … 9×). Gedrückt halten rollt rechts 2× … 6× über „Zur Liste hinzufügen“ aus – gleicher Stil und gleiche Animation wie Plus halten im Dock, nur nach rechts (0,4 s, Rolle an der Vorderkante, rastet ein). Auf eine Zahl ziehen und loslassen oder eingerastet antippen wählt; danach rollt es zurück. Kreis (×) oder daneben tippen schließt.
+   - Menge: Kreis antippen zählt weiter (1× … 9×). Gedrückt halten rollt rechts 2× … 6× über „Zur Liste hinzufügen“ aus – gleicher Stil und gleiche Animation wie Plus halten im Dock, nur nach rechts (0,45 s, Rolle an der Vorderkante, rastet ein). Auf eine Zahl ziehen und loslassen oder eingerastet antippen wählt; danach rollt es zurück. Kreis (×) oder daneben tippen schließt.
 3. **Menge**
    - Stepper plus direktes Eintippen der Zahl; beim Tippen ersetzt eine Schnellwahl-Leiste den Hauptknopf (EditItemAmount).
    - Schrittweite je Einheit: g/ml 50, kg/l/m 0,1 (gedrückt halten: 1), sonst 1. Kommazahlen sind erlaubt (1,5 kg). Grenzen 1 … 9999, bei 0,1-Schritten ab 0,1.

@@ -454,7 +454,7 @@ Abgleich (`ProductPhotoMatcher`):
 |---|---|
 | ListAddHold (Prototyp G, FabHoldDock) | `DockView(onScan:onPhoto:morphOpen:)` + `DockMorphMenu` (`DockMorphLayer`, `DockItemsRollMask`, beide `Animatable` über einen Fortschrittswert). Plus: `DockFAB(isButton: false, rotation:, glow:)` mit eigener DragGesture |
 
-- Ablauf (Stand 14.10.2026, Wunsch Robert): Tippen < 0,1 s = Artikel hinzufügen. Beim Drücken rollt die Fläche „Barcode | Foto“ sofort vom Plus nach links über die Dock-Knöpfe (0,4 s, Rolle an der Vorderkante, Plus dreht zu ×, Schein). Bei 0,4 s einrasten (Haptik). Vorher loslassen → rollt zurück.
+- Ablauf (Stand 14.10.2026, Wunsch Robert): Tippen < 0,15 s = Artikel hinzufügen. Ab 0,1 s nach dem Drücken rollt die Fläche „Barcode | Foto“ vom Plus nach links über die Dock-Knöpfe (fertig bei 0,45 s, Rolle an der Vorderkante, Plus dreht zu ×, Schein). Bei 0,45 s einrasten (Haptik). Hinziehen wählt ab 0,25 s. Tippen erlaubt bis 20 pt Bewegung. Zeiten und Radius gemeinsam in `DockHold` (Wunsch Robert 14.10.2026). Vorher loslassen → rollt zurück.
 - Pillen: Lage nach FabHold.dc.html (Variante „dock“): ab Rahmen 5, Abstand 2, Höhe 54. Aussehen wie die gewählte Dock-Pille „Alle abhaken“ (Icon 18, Text 13/600, Verlauf Akzent .55 → .22, Rahmen weiß .22, Schein Akzent .3; Wunsch Robert 14.10.2026).
 - Beschriftung: „Barcode“ und „Foto erkennen“ (statt „Foto“; passt mit Icon bis 375 pt Bildschirmbreite in die Pille).
 - Nach der Auswahl bleibt das Dock als „Barcode | Foto erkennen“ stehen, auch wenn Scanner oder Foto-Erkennung wieder zu sind. So lässt sich gleich der nächste Artikel scannen. Schließen: × oder daneben tippen (Wunsch Robert 14.10.2026).
@@ -470,7 +470,7 @@ Abgleich (`ProductPhotoMatcher`):
 | BarcodeScan (interaktiv), BarcodeScanQtyRoll, BarcodeScanQtyOpen, BarcodeScanQtyOpenDark | `ScanQuantityControl` (neu, `Features/ItemManagement/Components/ScanQuantityRoll.swift`) in `BarcodeScanSheet.resultCard`: Kreis 56 + „Zur Liste hinzufügen“. `ScanQuantityRollMask` / `ScanQuantityRollLayer` = gespiegelte `DockItemsRollMask` / `DockMorphLayer` (Vorderkante läuft nach rechts, Rolle mit Schatten −4). Fläche rgba(6,14,16,.97), Pillen ab Rand 3, Abstand 2, `DockMorphPillBackground`. |
 | BarcodeScan, BarcodeScanNoImage | `productHeader` / `productImage`: Bild 84 (Radius 20; `imageData`, sonst `imageUrl` per AsyncImage auf Weiß, sonst Wagen-Symbol), Name, Marke (13/500), Chips aus `ScannedProduct.detailChips()`, Beschreibung (13, 3 Zeilen). |
 
-- Geste und Zeiten 1:1 aus `DockView.holdFAB`: `onPress`, Tippen < 0,1 s = weiterzählen, sofort ausrollen (0,4 s, timingCurve 0.2/0/0.2/1), Haptik bei 0,1 s, Einrasten bei 0,4 s, Hinziehen ab 0,2 s (44 pt Spielraum), Zurückrollen mit Feder 0,36/0,86.
+- Geste und Zeiten 1:1 aus `DockView.holdFAB`: `onPress`, Tippen < 0,15 s und ≤ 20 pt = weiterzählen, Ausrollen ab 0,1 s (fertig bei 0,45 s, timingCurve 0.2/0/0.2/1), Haptik bei 0,15 s, Einrasten bei 0,45 s, Hinziehen ab 0,25 s (44 pt Spielraum), Zurückrollen mit Feder 0,36/0,86.
 - Abweichung vom Dock (bewusst): Nach der Wahl rollt die Fläche zurück und der Kreis zeigt die neue Menge (im Dock bleibt das Menü stehen).
 - Rolle und Pillen-Hintergrund jetzt geteilte Bausteine in `DockMorphMenu.swift` (`DockMorphRollEdge`, `DockMorphPillBackground`); Dock sieht unverändert aus.
 - `BarcodeScanViewModel.setQuantity(_:)` (1 … 9); VoiceOver: Wischen hoch/runter ändert die Menge.

@@ -13,7 +13,7 @@
  - Alles hängt an EINEM Wert `progress` (0…1). Die Views sind `Animatable`: SwiftUI rechnet jeden Frame mit
    dem Zwischenwert, deshalb wandert die Vorderkante gleichmäßig (ein normales withAnimation würde nur
    Anfangs- und Endwert überblenden).
- - Ablauf: Beim Drücken rollt die neue Fläche vom Plus nach links über die Dock-Knöpfe (0,4 s), dann rastet
+ - Ablauf: Beim Drücken rollt die neue Fläche vom Plus nach links über die Dock-Knöpfe (0,45 s), dann rastet
    sie ein. Vorher loslassen → rollt zurück.
  - Die Pillen stehen von Anfang an an ihrem Platz. Sichtbar ist nur der Teil rechts der Vorderkante; die
    Dock-Knöpfe sind nur links davon sichtbar. Nichts schiebt sich herein.
@@ -23,6 +23,8 @@
  - Aufrollen statt Hereinschieben, Pillen bündig nach Design (5 pt Rand, 2 pt Abstand), 0,4 s (Wunsch Robert 14.10.2026).
  - Pillen sehen aus wie die gewählte Dock-Pille „Alle abhaken“ (Wunsch Robert 14.10.2026).
  - Rolle und Pillen-Hintergrund als geteilte Bausteine (Mengen-Ausrollen im Barcode-Scanner, 14.10.2026).
+ - Zeiten gemeinsam in DockHold, je +0,05 s: Tippen 0,15 s, Hinziehen ab 0,25 s, Einrasten 0,45 s (Wunsch Robert 14.10.2026).
+ - Ausrollen beginnt erst nach 0,1 s; Tippen erlaubt 20 pt Bewegung statt 10 pt (Wunsch Robert 14.10.2026).
  ------------------------------------------------------------------------
  */
 
@@ -44,6 +46,21 @@ enum DockMorphIcon {
         .path("M4 8.5A1.5 1.5 0 0 1 5.5 7h2.3l1.4-2h5.6l1.4 2h2.3A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"),
         .circle(12, 12.8, 3.2),
     ]
+}
+
+/// Zeiten und Bewegungsradius für „gedrückt halten“, gemeinsam für das Plus im Dock und den Mengen-Kreis im
+/// Barcode-Scanner. Alle Zeiten zählen ab dem Aufsetzen des Fingers.
+enum DockHold {
+    /// Ab hier beginnt das Ausrollen (ein schneller Tipp zeigt so keine Rolle).
+    static let start: Double = 0.1
+    /// Kürzer losgelassen und nicht weiter als `moveRadius` bewegt = Tippen. Danach kommt die erste Haptik.
+    static let tap: Double = 0.15
+    /// Ab hier wählt das Hinziehen eine Pille aus.
+    static let drag: Double = 0.25
+    /// Hier ist das Ausrollen fertig und rastet ein.
+    static let lock: Double = 0.45
+    /// Weiter als so viele Punkte bewegt (Abstand zum Aufsetzpunkt) zählt nicht mehr als Tippen.
+    static let moveRadius: CGFloat = 20
 }
 
 /// Maße der Rolle an der Vorderkante.

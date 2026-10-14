@@ -12,14 +12,16 @@
  🔰 Notes for Beginners:
  - Alles hängt an EINEM Wert `morph` (0…1). Die Ebenen sind `Animatable`, deshalb wandert die Vorderkante
    gleichmäßig über den Knopf.
- - Ablauf wie im Dock: Tippen (unter 0,1 s) = Menge weiterzählen. Beim Drücken rollt es sofort aus (0,4 s) und
-   rastet dann ein. Vorher loslassen → rollt zurück. Während des Haltens auf eine Zahl ziehen und loslassen wählt
+ - Ablauf wie im Dock (Zeiten in DockHold): Tippen (unter 0,15 s, höchstens 20 pt bewegt) = Menge weiterzählen.
+   Ab 0,1 s rollt es aus und rastet bei 0,45 s ein. Vorher loslassen → rollt zurück. Während des Haltens auf eine Zahl ziehen und loslassen wählt
    sie; eingerastet genügt Antippen. Der Kreis wird dabei zum ×: Antippen schließt.
  - Nach der Wahl rollt die Fläche zurück und der Kreis zeigt die neue Menge.
  - `.onPress` statt DragGesture (Verzögerung seit iOS 27, siehe PressGestureRecognizer).
 
  📝 Last Change:
  - Initial creation (Wunsch Robert 14.10.2026).
+ - Zeiten aus DockHold (je +0,05 s, gemeinsam mit dem Dock; Wunsch Robert 14.10.2026).
+ - Ausrollen beginnt erst nach 0,1 s; Tippen erlaubt 20 pt Bewegung statt 10 pt (Wunsch Robert 14.10.2026).
  ------------------------------------------------------------------------
  */
 
@@ -209,13 +211,16 @@ struct ScanQuantityControl<Trailing: View>: View {
             if locked { tapToClose = true; return }
             tapToClose = false
             pressTask?.cancel()
-            // Ausrollen startet sofort und dauert 0,4 s; die erste Haptik kommt erst, wenn es kein Tippen mehr ist.
-            withAnimation(.timingCurve(0.2, 0, 0.2, 1, duration: 0.4)) { morph = 1 }
+            // Ausrollen beginnt bei DockHold.start und ist beim Einrasten fertig; die erste Haptik kommt erst,
+            // wenn es kein Tippen mehr ist.
             pressTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(100))
+                try? await Task.sleep(for: .seconds(DockHold.start))
+                guard !Task.isCancelled, pressing else { return }
+                withAnimation(.timingCurve(0.2, 0, 0.2, 1, duration: DockHold.lock - DockHold.start)) { morph = 1 }
+                try? await Task.sleep(for: .seconds(DockHold.tap - DockHold.start))
                 guard !Task.isCancelled, pressing else { return }
                 UIImpactFeedbackGenerator(style: .soft).impactOccurred()
-                try? await Task.sleep(for: .milliseconds(300))
+                try? await Task.sleep(for: .seconds(DockHold.lock - DockHold.tap))
                 guard !Task.isCancelled, pressing else { return }
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 locked = true
@@ -223,9 +228,9 @@ struct ScanQuantityControl<Trailing: View>: View {
             }
         }
         guard !tapToClose else { return }
-        if abs(translation.width) > 10 || abs(translation.height) > 10 { moved = true }
+        if hypot(translation.width, translation.height) > DockHold.moveRadius { moved = true }
         // Hinziehen: über welcher Zahl liegt der Finger? (44 pt Spielraum über und unter dem Knopf)
-        let held = Date().timeIntervalSince(pressStart) > 0.2 || locked
+        let held = Date().timeIntervalSince(pressStart) > DockHold.drag || locked
         var target: Int?
         let values = ScanQuantityRoll.values
         if held, rowFrame.width > 0, location.x >= rowFrame.minX, location.x < rowFrame.maxX,
@@ -245,7 +250,7 @@ struct ScanQuantityControl<Trailing: View>: View {
         pressTask?.cancel()
         if tapToClose { tapToClose = false; collapse(); return }
         if let hover { select(hover); return }
-        let short = Date().timeIntervalSince(pressStart) < 0.1 && !moved
+        let short = Date().timeIntervalSince(pressStart) < DockHold.tap && !moved
         if locked { return }                                  // eingerastet: bleibt offen
         collapse()
         if short { onCycle() }
