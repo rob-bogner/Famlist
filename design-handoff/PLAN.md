@@ -476,3 +476,12 @@ Abgleich (`ProductPhotoMatcher`):
 - `BarcodeScanViewModel.setQuantity(_:)` (1 … 9); VoiceOver: Wischen hoch/runter ändert die Menge.
 - Tests: `ScanQuantityRollTests`.
 
+### Produktdetails: Foto-Platzhalter mit Kamera · Mediathek (14.10.2026)
+
+| Board | Umsetzung |
+|---|---|
+| ProductNew, ProductNewDark | `ProductDetailHero` ohne Foto: Fläche 390 × 330 randlos (unten Radius 40), `PlaceholderBorder` gestrichelt ohne Oberkante, Inhalt 28 tiefer. Überschrift „Foto hinzufügen“ (16/600), `sourceButton` Kamera (Glas Akzent, `Icon.camera`) · Mediathek (Glas neutral, `PhotoCaptureIcon.gallery`), Abstand 28. |
+
+- `ProductDetailHero(onCamera:onLibrary:)` → `ProductDetailSheet` setzt `pickerRequest` direkt (Kamera ohne Gerät-Kamera → Mediathek). Die Aktionskarte Quellenauswahl bleibt für „Bild ändern“.
+- Gilt in allen Modi (Neu, Bearbeiten, Ansehen). Canvas: `ProductDetail.dc.html` Prop `fill` (Standard true, false = alter Stand).
+

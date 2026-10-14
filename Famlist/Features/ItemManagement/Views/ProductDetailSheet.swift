@@ -284,7 +284,12 @@ struct ProductDetailSheet: View {
                     VStack(spacing: 0) {
                         if showImages {
                             ProductDetailHero(k: k, image: formVM.selectedImage, mode: mode,
-                                              onPhoto: { showPhotoSource = true }, onEdit: startEditing,
+                                              onPhoto: { showPhotoSource = true },
+                                              onCamera: {
+                                                  pickerRequest = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .library
+                                              },
+                                              onLibrary: { pickerRequest = .library },
+                                              onEdit: startEditing,
                                               isProcessing: isCutting || isRecognizing,
                                               processingLabel: isRecognizing ? "Artikel wird erkannt …" : "Artikel wird freigestellt …",
                                               highlights: isRecognizing ? photoHighlights : [],

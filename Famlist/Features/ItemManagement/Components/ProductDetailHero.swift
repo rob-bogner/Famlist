@@ -11,7 +11,7 @@
  🔰 Notes for Beginners:
  - Eigene Fotos füllen den ganzen Kopf (390 × 330, unten Radius 40), oben Verlauf Schwarz 28 % → 0 auf 140.
  - Ohne Foto füllt in allen Modi (Ansehen, Bearbeiten, Neu) der gestrichelte Platzhalter „Foto hinzufügen“
-   den ganzen Kopf.
+   den ganzen Kopf, mit zwei Knöpfen: Kamera (Akzent) und Mediathek (neutral).
  - Unten rechts am Bild (16 vom Rand, 48 rund): beim Ansehen der Glas-Stift „Bearbeiten“,
    beim Bearbeiten mit Foto der Akzent-Knopf „Bild ändern“. Produktbild 300 oben 16, Kachel 200 oben 65.
 
@@ -20,6 +20,7 @@
  - Freigestellte Fotos auf dem Verlauf, „Artikel wird freigestellt …“, Umschalter „Freigestellt · Original“, Nachbessern (30.09.2026).
  - Platzhalter „Foto hinzufügen“ auch beim Ansehen statt der durchgestrichenen Kamera (Wunsch Robert 30.09.2026).
  - Platzhalter „Foto hinzufügen“ füllt den ganzen Kopf (Kamera-Glaskugel, „Kamera oder Mediathek“) (30.09.2026).
+ - Platzhalter randlos wie das Foto, mit zwei Knöpfen Kamera · Mediathek statt Quellenauswahl (14.10.2026).
  - Im Sheet: Höhe 330, Stift „Bearbeiten“ unten rechts am Bild.
  ------------------------------------------------------------------------
  */
@@ -33,6 +34,9 @@ struct ProductDetailHero: View {
     let image: UIImage?
     let mode: ProductDetailMode
     let onPhoto: () -> Void
+    /// Ohne Foto: Kamera / Mediathek direkt aus dem Platzhalter (nil → `onPhoto`, also die Quellenauswahl).
+    var onCamera: (() -> Void)? = nil
+    var onLibrary: (() -> Void)? = nil
     var onEdit: () -> Void = {}
     /// Freistellen läuft: Foto abgedunkelt, unten „Artikel wird freigestellt …“ (PhotoCutoutScan).
     var isProcessing = false
@@ -131,40 +135,68 @@ struct ProductDetailHero: View {
                 }
                 .accessibilityLabel("Produktbild")
         } else {
-            // Platzhalter füllt den ganzen Kopf wie ein Foto (Wunsch Robert 30.09.2026) – in allen Modi, auch beim
-            // Ansehen (dort speichert das Sheet das gewählte Foto sofort): gestrichelt, 12 Rand,
-            // oben 24 (unter dem Griff), Radius 22 oben / 30 unten; Kamera-Glaskugel 72, Titel + Untertitel.
-            let shape = UnevenRoundedRectangle(topLeadingRadius: 22, bottomLeadingRadius: 30,
-                                               bottomTrailingRadius: 30, topTrailingRadius: 22)
-            Button(action: onPhoto) {
-                VStack(spacing: 10) {
-                    ZStack {
-                        GlassCircleBackground(style: .accent, appearance: k.appearance, accent: k.a, size: 72)
-                        SVGIcon(Icon.camera, size: 30, color: .white, lineWidth: 1.9)
-                    }
-                    .frame(width: 72, height: 72)
-                    VStack(spacing: 4) {
-                        Text("Foto hinzufügen")
-                            .font(AppFont.dm(16, 600))
-                            .foregroundStyle(k.text)
-                        Text("Kamera oder Mediathek")
-                            .font(AppFont.dm(13, 400))
-                            .foregroundStyle(k.sub)
-                    }
+            // Platzhalter füllt den Kopf genau wie das Foto (randlos, unten Radius 40, gestrichelt ohne Oberkante) und
+            // bietet Kamera und Mediathek direkt an – ohne Zwischenschritt (Wunsch Robert 14.10.2026, Board ProductNewFullPhoto).
+            // In allen Modi, auch beim Ansehen (dort speichert das Sheet das gewählte Foto sofort).
+            VStack(spacing: 20) {
+                Text("Foto hinzufügen")
+                    .font(AppFont.dm(16, 600))
+                    .foregroundStyle(k.text)
+                    .accessibilityAddTraits(.isHeader)
+                HStack(spacing: 28) {
+                    sourceButton(title: "Kamera", subtitle: "Foto aufnehmen", icon: Icon.camera, accent: true,
+                                 action: onCamera ?? onPhoto)
+                    sourceButton(title: "Mediathek", subtitle: "Aus der Galerie", icon: PhotoCaptureIcon.gallery, accent: false,
+                                 action: onLibrary ?? onPhoto)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(CSSBox(shape: shape, paint: .color(photoFill), border: 1.5, borderColor: k.dashed,
-                                   dash: [4.5, 4.5]))
-                .contentShape(shape)
             }
-            .buttonStyle(.plain)
-            .padding(.top, 24)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.top, 28)                                     // unter Griff und ✕
+            .frame(maxWidth: .infinity)
             .frame(height: Self.height)
-            .accessibilityLabel("Foto hinzufügen")
-            .accessibilityHint("Kamera oder Mediathek")
+            .background(placeholderFill)
+            .accessibilityElement(children: .contain)
         }
+    }
+
+    /// Fläche des Platzhalters: Foto-Ton, Strichlinie links, unten, rechts (oben endet das Sheet), 0,75 eingerückt.
+    private var placeholderFill: some View {
+        let shape = UnevenRoundedRectangle(bottomLeadingRadius: 40, bottomTrailingRadius: 40)
+        return ZStack {
+            shape.fill(photoFill)
+            PlaceholderBorder(radius: 40)
+                .stroke(k.dashed, style: StrokeStyle(lineWidth: 1.5, dash: [4.5, 4.5]))
+                .padding(.horizontal, 0.75)
+                .padding(.bottom, 0.75)
+        }
+    }
+
+    /// Quelle als Glas-Knopf 72 mit Titel (15/600) und Untertitel (12, sub); Kamera Akzent, Mediathek neutral.
+    private func sourceButton(title: String, subtitle: String, icon: [SVGElement], accent: Bool,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 10) {
+                ZStack {
+                    GlassCircleBackground(style: accent ? .accent : .neutral, appearance: k.appearance, accent: k.a, size: 72)
+                    SVGIcon(icon, size: 30, color: accent ? .white : k.accentText, lineWidth: 1.9)
+                }
+                .frame(width: 72, height: 72)
+                VStack(spacing: 2) {
+                    Text(title)
+                        .font(AppFont.dm(15, 600))
+                        .foregroundStyle(k.text)
+                    Text(subtitle)
+                        .font(AppFont.dm(12, 400))
+                        .foregroundStyle(k.sub)
+                }
+            }
+            .frame(width: 120)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityHint(subtitle)
+        .accessibilityAddTraits(.isButton)
     }
 
     /// Abdunkelung + Glas-Pille „Artikel wird freigestellt …“ mit drehendem Ring.
@@ -273,5 +305,22 @@ private struct CutoutSpinner: View {
             .rotationEffect(.degrees(spinning ? 360 : 0))
             .animation(.linear(duration: 0.9).repeatForever(autoreverses: false), value: spinning)
             .onAppear { spinning = true }
+    }
+}
+
+/// Rand des Platzhalters ohne Oberkante: links runter, unten mit Radius, rechts hoch.
+private struct PlaceholderBorder: Shape {
+    let radius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let r = min(radius, rect.width / 2, rect.height)
+        var p = Path()
+        p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - r))
+        p.addQuadCurve(to: CGPoint(x: rect.minX + r, y: rect.maxY), control: CGPoint(x: rect.minX, y: rect.maxY))
+        p.addLine(to: CGPoint(x: rect.maxX - r, y: rect.maxY))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.maxY - r), control: CGPoint(x: rect.maxX, y: rect.maxY))
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        return p
     }
 }
