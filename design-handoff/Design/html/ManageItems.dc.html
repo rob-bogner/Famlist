@@ -92,18 +92,20 @@ class Component extends DCLogic {
       chipOnBg: 'linear-gradient(180deg, ' + accent + ', ' + deep + ')', chipOnText: '#FFFFFF', chipOffBg: '#F4F7F7',
       fade: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #FFFFFF 85%)', accentText: deep
     };
-    const filters = ['Alle', 'Milchprodukte', 'Obst & Gemüse', 'Backwaren', 'Sonstiges'].map((label, i) => ({
+    // ManageItemsViewModel.filters: „Alle“ + nur Kategorien mit Einträgen, in Ladenweg-Reihenfolge (27 Standard-Kategorien)
+    const filters = ['Alle', 'Milchprodukte', 'Süßigkeiten', 'Sonstiges'].map((label, i) => ({
       label,
       bg: i === 0 ? k.chipOnBg : k.chipOffBg,
       color: i === 0 ? k.chipOnText : k.text,
       border: i === 0 ? 'transparent' : k.fieldBorder,
       weight: i === 0 ? '600' : '500'
     }));
+    // ManageItemsViewModel.meta: Marke (sonst Kategorie) · „1 “ + Einheit – der Katalog speichert keine Menge
     const items = [
-      { name: 'Bio Vollmilch-Schokolade', meta: 'Fairglobe · 100 g' },
+      { name: 'Bio Vollmilch-Schokolade', meta: 'Fairglobe · 1 g' },
       { name: 'Butter', meta: 'Sonstiges · 1 Packung' },
-      { name: 'Kerrygold, original irische Butter aus Weidemilch', meta: 'Kerrygold · 250 g' },
-      { name: 'Kokosmilch', meta: 'Freshona · 400 ml' },
+      { name: 'Kerrygold, original irische Butter aus Weidemilch', meta: 'Kerrygold · 1 g' },
+      { name: 'Kokosmilch', meta: 'Freshona · 1 ml' },
       { name: 'Milch Mandel ohne Zucker', meta: 'Lidl · 1 l' },
       { name: 'Soyamilch', meta: 'alpro · 1 l' }
     ];

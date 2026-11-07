@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Plus halten – Dock</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'DM Sans',system-ui,sans-serif}
+</style>
+</helmet>
+<!-- Plus im Dock gedrückt halten (DockView.swift + DockMorphMenu.swift, Zeiten DockHold):
+     ab 0,1 s rollt „Barcode | Foto erkennen“ vom Plus nach links aus (Kurve 0.2,0,0.2,1), bei 0,45 s rastet es ein.
+     Tippen = unter 0,15 s und höchstens 20 pt bewegt → Artikel hinzufügen. Hinziehen ab 0,25 s wählt die Pille
+     unter dem Finger (linke Hälfte Barcode, rechte Foto; 44 pt über bis 108 pt unter der Leistenoberkante).
+     Eingerastet: leichte Abdunkelung (Overlay-Scrim × 0,7, ohne Weichzeichner); Auswahl lässt die Leiste stehen,
+     × oder daneben tippen rollt zurück. preview = Standbild 0…1 (1 = eingerastet). -->
+<div data-hold-root="1" style="width: 390px; height: 844px; position: relative; overflow: hidden; user-select: none; -webkit-user-select: none">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; pointer-events: none">
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" state="fruit" dock="off" hint-size="390px,844px"></dc-import>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: {{scrim}}; opacity: {{scrimO}}; transition: opacity 0.25s ease-out; pointer-events: {{scrimPE}}" onPointerDown="{{tapScrim}}"></div>
+<div style="position: absolute; left: 20px; bottom: 34px; width: 350px; height: 64px; pointer-events: none">
+<dc-import name="Dock" theme="{{theme}}" accent="{{accent}}" pill="open" active="none" morph="{{morph}}" hover="{{hover}}" hint-size="350px,64px"></dc-import>
+</div>
+<!-- Trefferflächen: Pillen (nur eingerastet) und Plus -->
+<sc-if value="{{locked}}" hint-placeholder-val="{{ false }}">
+<div role="button" aria-label="Barcode scannen" style="position: absolute; left: 21px; top: 747px; width: 137px; height: 62px; cursor: pointer" onPointerDown="{{pickScan}}"></div>
+<div role="button" aria-label="Per Foto erkennen" style="position: absolute; left: 158px; top: 747px; width: 137px; height: 62px; cursor: pointer" onPointerDown="{{pickPhoto}}"></div>
+</sc-if>
+<div role="button" aria-label="{{fabLabel}}" style="position: absolute; left: 306px; top: 746px; width: 64px; height: 64px; border-radius: 50%; cursor: pointer; touch-action: none; transform: scale({{fabScale}}); transition: transform 0.15s" onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}"></div>
+<!-- Rückmeldung (nur im Board) -->
+<div style="position: absolute; left: 0; right: 0; top: 168px; display: flex; justify-content: center; pointer-events: none; opacity: {{toastO}}; transition: opacity 0.25s"><span style="padding: 10px 16px; border-radius: 20px; background: rgba(15,27,29,0.94); color: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 16px 32px -14px rgba(12,30,33,0.5)">{{toast}}</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"preview":{"editor":"range","default":1,"min":0,"max":1,"step":0.05},"hover":{"editor":"enum","default":"none","options":["none","scan","photo"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    // p 0…1, phase idle/holding/locked/closing; null = noch nicht angefasst (Standbild aus `preview`)
+    this.state = { p: null, phase: 'idle', hover: null, toast: '', toastOn: false };
+    this.raf = 0;
+    this.loop = this.loop.bind(this);
+  }
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); clearTimeout(this.toastTimer); }
+  start() { if (!this.raf) { this.last = performance.now(); this.raf = requestAnimationFrame(this.loop); } }
+  // .timingCurve(0.2, 0, 0.2, 1) wie in DockView
+  ease(x) {
+    const bz = (t, a, b) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+    let lo = 0, hi = 1, t = x;
+    for (let i = 0; i < 24; i++) { t = (lo + hi) / 2; if (bz(t, 0.2, 0.2) < x) lo = t; else hi = t; }
+    return bz(t, 0, 1);
+  }
+  loop(t) {
+    const dt = Math.min(48, t - (this.last || t)); this.last = t;
+    let { p, phase } = this.state; if (p === null) p = 0;
+    if (phase === 'holding') {
+      const el = t - this.t0;                                   // DockHold: start 100, lock 450 ms
+      p = Math.max(p, el < 100 ? 0 : this.ease(Math.min(1, (el - 100) / 350)));
+      if (el >= 450) { p = 1; phase = 'locked'; if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} } }
+    } else if (phase === 'closing') {
+      p = p * Math.exp(-dt / 75);                               // Feder 0,36 / 0,86 (zurückrollen)
+      if (p < 0.003) { p = 0; phase = 'idle'; }
+    }
+    this.setState({ p, phase });
+    if (phase === 'holding' || phase === 'closing') this.raf = requestAnimationFrame(this.loop); else this.raf = 0;
+  }
+  say(text) {
+    clearTimeout(this.toastTimer);
+    this.setState({ toast: text, toastOn: true });
+    this.toastTimer = setTimeout(() => this.setState({ toastOn: false }), 1600);
+  }
+  close() { this.setState({ phase: 'closing', hover: null, p: this.state.p ?? 1 }); this.start(); }
+  // Auswahl: Leiste bleibt eingerastet stehen (DockView.select)
+  select(opt) {
+    if (navigator.vibrate) { try { navigator.vibrate(10); } catch (e) {} }
+    this.down = false;
+    this.setState({ phase: 'locked', p: 1, hover: null });
+    this.say(opt === 'scan' ? 'Barcode-Scanner öffnet …' : 'Foto-Erkennung öffnet …');
+  }
+  local(e) {
+    const root = e.currentTarget.closest('[data-hold-root]');
+    const r = root.getBoundingClientRect(); const sc = r.width / 390 || 1;
+    return { x: (e.clientX - r.left) / sc, y: (e.clientY - r.top) / sc };
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0FA3AE';
+    const theme = this.props.theme ?? 'light';
+    const dark = theme === 'dark';
+    const st = this.state;
+    const touched = st.p !== null;
+    const p = touched ? st.p : Math.max(0, Math.min(1, Number(this.props.preview ?? 1)));
+    const locked = touched ? st.phase === 'locked' : p >= 1;
+    const hover = touched ? st.hover : (this.props.hover === 'scan' || this.props.hover === 'photo' ? this.props.hover : null);
+    // OverlayTheme.scrim × 0,7 (ShoppingListView+Overlays: dockMorphOpen)
+    const scrim = dark ? 'rgba(0,0,0,0.45)' : 'rgba(8,24,27,0.18)';
+    return {
+      theme, accent, scrim, locked,
+      morph: p.toFixed(3), hover: hover ?? 'none',
+      scrimO: locked ? '0.7' : '0', scrimPE: locked ? 'auto' : 'none',
+      fabScale: this.pressing ? '0.93' : '1', fabLabel: locked ? 'Schließen' : 'Artikel hinzufügen',
+      toast: st.toast, toastO: st.toastOn ? '1' : '0',
+      tapScrim: () => { if (locked) { this.state.p === null && this.setState({ p: 1, phase: 'locked' }); this.close(); } },
+      pickScan: () => this.select('scan'),
+      pickPhoto: () => this.select('photo'),
+      down: (e) => {
+        e.preventDefault();
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        this.pressing = true;
+        if (locked) { this.tapClose = true; this.setState({ p: p, phase: 'locked' }); return; }   // × schließt
+        this.tapClose = false;
+        this.down = true; this.t0 = performance.now(); this.moved = false;
+        const pt = this.local(e); this.x0 = pt.x; this.y0 = pt.y;
+        this.setState({ phase: 'holding', p: 0, hover: null });
+        this.start();
+      },
+      move: (e) => {
+        if (!this.down) return;
+        const pt = this.local(e);
+        if (Math.hypot(pt.x - this.x0, pt.y - this.y0) > 20) this.moved = true;
+        const held = performance.now() - this.t0 > 250 || this.state.phase === 'locked';
+        let h = null;                                            // Leiste: x 20…296, Oberkante 746
+        if (held && pt.x >= 20 && pt.x < 296 && pt.y > 746 - 44 && pt.y < 746 + 108) h = pt.x < 158 ? 'scan' : 'photo';
+        if (h !== this.state.hover) { if (h && navigator.vibrate) { try { navigator.vibrate(6); } catch (err) {} } this.setState({ hover: h }); }
+      },
+      up: () => {
+        this.pressing = false;
+        if (this.tapClose) { this.tapClose = false; this.close(); return; }
+        if (!this.down) { this.setState({}); return; }
+        this.down = false;
+        const h = this.state.hover;
+        if (h) { this.select(h); return; }
+        const short = performance.now() - this.t0 < 150 && !this.moved;
+        if (this.state.phase === 'locked') { this.setState({}); return; }    // eingerastet: bleibt offen
+        this.close();
+        if (short) this.say('Kurz getippt: Artikel hinzufügen');
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

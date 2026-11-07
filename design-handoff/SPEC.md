@@ -31,7 +31,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Wisch-Aktionen offen (nach links wischen) | SwipeActions | ja | `ListScreen(state: .swipe)` |
 |  | Artikel nicht verfügbar | ItemUnavailable | ja | – (nur HTML) |
 |  | Gelöscht – Rückgängig | UndoToast | ja | `UndoToastScreen` |
-|  | Abgehakt – Rückgängig (12.10.2026) | – (wie UndoToast, Haken statt Papierkorb) | ja | `UndoToast(message:icon:)` |
+|  | Abgehakt – Rückgängig (12.10.2026) | UndoCheckToast | ja | `UndoToast(message:icon:)` |
 |  | Sync fehlgeschlagen | ItemSyncFailed | ja | – (nur HTML) |
 |  | Sync fehlgeschlagen – erneut versuchen? | ItemSyncFailedDialog | ja | – (nur HTML) |
 | 3 · Artikel hinzufügen & bearbeiten | Artikel hinzufügen (Plus → Eingabe unten; Suchleiste mit Foto- und Barcode-Knopf) | AddInline | ja | – (nur HTML) |
@@ -96,12 +96,12 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Geteilte Liste – Profilbild am Mengen-Chip (Artikel anderer Mitglieder) | ListShared, ListSharedNoImages | ja | `ContributorAvatar`, `ListContributorsStore` |
 |  | Liste – Menge direkt ändern (Chip → Pille, Foto bündig) | ListQuantityEdit | ja | `InlineQuantityPill`, `InlineQuantityEditor`, `ItemThumbnailTile(flush:)` |
 |  | Artikelkarte – Marke unter dem Namen | ListBrand, ListBrandNoImages | ja | `ItemCard` |
-|  | Plus gedrückt halten – Dock wird „Barcode · Foto erkennen“ und bleibt nach der Auswahl stehen | ListAddHold | ja | `DockView`, `DockMorphMenu` |
+|  | Plus gedrückt halten – Dock rollt „Barcode · Foto erkennen“ aus und bleibt nach der Auswahl stehen | ListAddHold (Komponente DockHold, interaktiv) | ja | `DockView`, `DockMorphMenu` |
 |  | Abmelden – ungesendete Änderungen | SignOutDialog | ja | – (nur HTML) |
 |  | Profil bearbeiten | EditProfile | ja | `EditProfileScreen` |
 |  | Kassenzettel-Archiv | ReceiptArchive | ja | – (nur HTML) |
 |  | Kassenzettel-Archiv – leer | ReceiptArchiveEmpty | ja | – (nur HTML) |
-|  | Kassenzettel – Detail | ReceiptDetail | ja | – (nur HTML) |
+|  | Kassenzettel – Detail (Reiter Bon-Foto / Artikel) | ReceiptDetail, ReceiptDetailMeta | ja | `ReceiptDetailSheet` |
 |  | Kassenzettel – Vollbild (immer dunkel) | ReceiptFullscreen | – | – (nur HTML) |
 |  | Kassenzettel löschen – Bestätigung | ReceiptDeleteDialog | ja | – (nur HTML) |
 |  | Konto löschen | DeleteAccount | ja | `DeleteAccountScreen` |
@@ -121,7 +121,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 | Bausteine & Referenz | Dock | Dock | – | `DockView(active:pill:)` |
 |  | Dock – alle Zustände | DockStates | – | `DockView(active:pill:)` |
 |  | Kategorie-Icons (60) | CategoryIcons | – | – |
-|  | Zielstruktur (Schritt 1) | StructureMap | – | – |
+|  | App-Struktur (Stand Okt. 2026) | StructureMap | – | – |
 |  | Schieben zum Löschen – Zustände | SlideToDelete | ja | – |
 | Produktbilder | Obst – Stil & Regeln (Phase 1) | FruitStyle | – | – |
 |  | Obst in der Einkaufsliste | FruitList | ja | – |

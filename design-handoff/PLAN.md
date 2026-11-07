@@ -485,3 +485,17 @@ Abgleich (`ProductPhotoMatcher`):
 - `ProductDetailHero(onCamera:onLibrary:)` → `ProductDetailSheet` setzt `pickerRequest` direkt (Kamera ohne Gerät-Kamera → Mediathek). Die Aktionskarte Quellenauswahl bleibt für „Bild ändern“.
 - Gilt in allen Modi (Neu, Bearbeiten, Ansehen). Canvas: `ProductDetail.dc.html` Prop `fill` (Standard true, false = alter Stand).
 
+### Canvas-Abgleich mit dem Code (14.10.2026, Code = Wahrheit)
+
+Alle Boards der User Journey, Bausteine und Watch gegen die Swift-Views geprüft und angepasst (Canvas Version 168, Repo `Design/html` + `Design/png`).
+
+- **Liste & Dock:** ItemCard mit bündigem Foto (92, links Radius 23), Preis „je … · Summe“, Kategorie-Icons aus `CategoryIconCatalog`, Sync-Warnsymbol; Hybrid neue Props `state="done"`, `dock="off"`; Dock-Props `morph`/`hover`; ListAddHold nutzt neue interaktive Komponente `DockHold` (Aufrollen wie `DockView`); DockStates +2 Zeilen; UndoToast `kind="check"` + neue Boards UndoCheckToast(+Dark).
+- **Overlays:** ☰-Menü mit Kassenzettel scannen / Gespeicherte Kassenzettel / Import; „Einkauf erledigt“-Popup (Zeiger, Trenner, „Abgehakte löschen & fertig“ in Gefahr-Ton, Hintergrund ruhende Liste); Kategorien verwalten mit 27 Standard-Kategorien; Artikel verwalten, Zwischenablage-Import, Mitglied-gelöscht-Toast.
+- **Artikel & Produkt:** AddInline (Return „Fertig“), Suchtreffer wie ItemCard, Produktdetails ohne Fokus-Ring, Preisverlauf-Karte im Feld-Stil, Kategorie-Icons, Foto-Quelle nur noch als „Foto ändern“ mit „Foto entfernen“, PhotoAdd-Schritte/Nachbessern, Freistellen ohne Leuchtrand.
+- **Listen & Konto:** Meine Listen (Häkchen nur aktive Liste, Rand 1,5, „0 Listen“), Umbenennen-Höhe 280, „Liste löschen“-Hintergrund Meine Listen, Fehler-Toast, Mitglieder-Texte, Anmelden (Adresse bleibt stehen), StructureMap neu als App-Struktur (1760 × 1700).
+- **Kassenzettel:** Archiv mit Auswertungs-Karte und leerem Zustand, Bon-Detail neu (Reiter Bon-Foto; ReceiptDetailMeta = Reiter Artikel, jetzt in der User Journey), Laden/Datum statt Platzhalter, Auto/Manuell-Schalter in der Kamera, Vollbild ohne Drehung; Auswertungen Ausgaben/Verbrauch (Werte nachgerechnet) in die User Journey; ReceiptArchiveInsights ins Archiv (überholt).
+- **Watch:** passt zum Code, unverändert.
+
+Offen (Code ohne Board, noch nicht gezeichnet): Kamera „Bon erkannt (Auto)“, Ecken anpassen (+ Vollbild), Watch „Verbinde mit dem iPhone“ und Leer-/Wartezustände, Zwischenablage leer, Neue Kategorie / „Sonstiges“ bearbeiten, Kategorie-Menü mit „anlegen“, Listen-Optionen für geteilte Liste („Liste verlassen“), Mitglied entfernen per Wischen, diverse Fehler-Toasts, Auswertung ohne Einkäufe / ohne Treffer, Ladeanzeige „nächste Seite“, Sortierung „Manuell“.
+Offen (Board ohne Code): Hinweis „Aufziehen zum Zoomen · Doppeltippen“ im Bon-Vollbild, Etikett „Apfel hinzufügen“ in PhotoCutoutFix, Beispielhinweis im Preisverlauf, SplashTomatoesBottom (nur HTML).
+

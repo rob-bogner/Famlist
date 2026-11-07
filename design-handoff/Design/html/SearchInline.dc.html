@@ -37,13 +37,15 @@ button,input{font-family:inherit}
 <!-- Treffer als normale Artikel-Karten (abhaken, wischen, bearbeiten wie gewohnt) -->
 <div style="position: absolute; left: 20px; right: 20px; top: 224px; display: flex; flex-direction: column; gap: 12px">
 <sc-for list="{{hits}}" as="h" hint-placeholder-count="2">
-<div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{k.card}}; border: 1px solid {{k.cardBorder}}; box-shadow: {{f.cardShadow}}; display: flex; align-items: center; gap: 16px">
-<div style="width: 64px; height: 64px; border-radius: 18px; background: {{k.thumb}}; box-shadow: {{k.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{h.op}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{k.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div>
-<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; align-items: flex-start; min-width: 0; opacity: {{h.op}}">
+<!-- Karte wie ItemCard.swift: Foto bündig links (92, Radius 23 links), Name · Marke · Menge, rechts Kreis oben / Preis unten -->
+<div style="height: 94px; box-sizing: border-box; padding: 0 15px 0 0; border-radius: 24px; background: {{k.card}}; border: 1px solid {{k.cardBorder}}; box-shadow: {{f.cardShadow}}; display: flex; align-items: stretch; gap: 16px">
+<div style="width: 92px; height: 92px; border-radius: 23px 0 0 23px; background: {{k.thumb}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{h.op}}"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{k.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div>
+<div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1; align-items: flex-start; min-width: 0; opacity: {{h.op}}">
 <span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{k.text}}; text-decoration: {{h.strike}}; white-space: nowrap">{{h.pre}}<span style="color: {{k.accentText}}; background: {{k.hl}}; border-radius: 5px; padding: 0 1px">{{h.hit}}</span>{{h.post}}</span>
-<span style="padding: 4px 11px; border-radius: 999px; background: {{f.chipBg}}; color: {{k.accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{f.chipInset}}">{{h.qty}}</span>
+<sc-if value="{{h.brand}}" hint-placeholder-val="{{ false }}"><span style="margin-top: 1px; font-size: 13px; font-weight: 500; color: {{k.sub}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{h.brand}}</span></sc-if>
+<span style="margin-top: {{h.chipTop}}; padding: 4px 11px; border-radius: 999px; background: {{f.chipBg}}; color: {{k.accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{f.chipInset}}">{{h.qty}}</span>
 </div>
-<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0">
+<div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; padding: {{h.colPad}}; flex-shrink: 0">
 <sc-if value="{{h.done}}" hint-placeholder-val="{{ false }}"><span style="width: 32px; height: 32px; border-radius: 50%; background: {{f.checkOn}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></sc-if>
 <sc-if value="{{h.open}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{f.checkRing}}; background: {{f.checkBg}}; box-shadow: {{f.checkShadow}}"></span></sc-if>
 <span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{k.text}}; opacity: {{h.op}}">{{h.price}}</span>
@@ -128,9 +130,9 @@ class Component extends DCLogic {
     };
     f.checkOn = 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)';
     const hits = [
-      { pre: '', hit: 'Milch', post: '', qty: '2 Liter', price: '2,38 €', done: false, op: 1, strike: 'none' },
-      { pre: 'Butter', hit: 'milch', post: '', qty: '1 Becher', price: '0,79 €', done: true, op: 0.55, strike: 'line-through' }
-    ].map((h) => Object.assign({ open: !h.done }, h));
+      { pre: '', hit: 'Milch', post: '', brand: 'Weihenstephan', qty: '2 Liter', price: '2,38 €', done: false, op: 1, strike: 'none' },
+      { pre: 'Butter', hit: 'milch', post: '', brand: '', qty: '1 Becher', price: '0,79 €', done: true, op: 0.55, strike: 'line-through' }
+    ].map((h) => Object.assign({ open: !h.done, chipTop: h.brand ? '6px' : '8px', colPad: h.brand ? '8px 0' : '14px 0' }, h));
     return { k, gp, gn, f, cta, theme, accent, hits };
   }
 }

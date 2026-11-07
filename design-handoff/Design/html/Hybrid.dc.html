@@ -95,10 +95,11 @@ input::placeholder{color:inherit;opacity:1}
 </div>
 
 <sc-if value="{{fruit}}" hint-placeholder-val="{{ false }}">
+<!-- Kategorie-Icons wie in der App (CategoryIconCatalog: Obst & Gemüse → apple, Sonstiges → tag) -->
 <!-- Produktbilder (fruit.*): Asset füllt die bestehende 64er-Kachel (Radius 18) ganz, der Innenabstand steckt im Asset -->
 <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -2px">
 <div style="display: flex; align-items: center; gap: 10px">
-<div style="width: 30px; height: 30px; border-radius: 10px; background: {{catObst.bg}}; box-shadow: {{catObst.shadow}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14zM5 19l8-8"></path></svg></div>
+<div style="width: 30px; height: 30px; border-radius: 10px; background: {{catObst.bg}}; box-shadow: {{catObst.shadow}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7.5c-1.5-1-5-1.3-6.3 1.6-1.4 3.1.2 7.4 2.3 9.4 1.2 1.1 2.4 1 4 .3 1.6.7 2.8.8 4-.3 2.1-2 3.7-6.3 2.3-9.4-1.3-2.9-4.8-2.6-6.3-1.6zM12 7.5c0-1.9.8-3.3 2.5-4.3"></path></svg></div>
 <h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 600; color: {{t.text}}">Obst &amp; Gemüse</h2>
 <span style="font-size: 14px; font-weight: 600; color: {{t.sub}}">5</span>
 </div>
@@ -109,7 +110,7 @@ input::placeholder{color:inherit;opacity:1}
 <div style="height: 94px; box-sizing: border-box; padding: {{tb.pad}}; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px">
 <sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="position: relative; width: {{tb.size}}; height: {{tb.size}}; flex-shrink: 0"><div style="width: {{tb.size}}; height: {{tb.size}}; border-radius: {{tb.radius}}; background: {{t.thumb}}; box-shadow: {{tb.shadow}}; overflow: hidden; flex-shrink: 0"><img src="{{f.img}}" alt="" width="64" height="64" style="display: block; width: 100%; height: 100%; object-fit: cover; transform: scale({{tb.zoom}})"></div><sc-if value="{{f.hasBy}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="Hinzugefügt von {{f.by}}" style="position: absolute; right: -6px; bottom: -6px; width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2.5px solid {{t.byRing}}; background: {{f.byBg}}; box-shadow: 0 3px 8px -2px rgba(12,40,44,0.35); display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 12px; font-weight: 700">{{f.byInitial}}</span></sc-if></div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 0; flex-grow: 1; min-width: 0; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; line-height: 24px; color: {{t.text}}">{{f.name}}</span><sc-if value="{{f.hasBrand}}" hint-placeholder-val="{{ false }}"><span style="margin-top: 1px; font-size: 13px; font-weight: 500; line-height: 17px; color: {{t.sub}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{f.brand}}</span></sc-if><span style="height: {{f.chipGap}}"></span><sc-if value="{{f.noEdit}}" hint-placeholder-val="{{ true }}"><span style="display: flex; align-items: center; gap: 8px"><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap">{{f.qty}}</span><sc-if value="{{f.hasByInline}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="Hinzugefügt von {{f.by}}" style="width: 24px; height: 24px; border-radius: 50%; background: {{f.byBg}}; box-shadow: 0 0 0 2px {{t.byRing}}, 0 2px 6px -2px rgba(12,40,44,0.35); display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 11px; font-weight: 700; flex-shrink: 0">{{f.byInitial}}</span></sc-if></span></sc-if><sc-if value="{{f.editing}}" hint-placeholder-val="{{ false }}"><span role="group" aria-label="Menge von {{f.name}}" style="height: 40px; box-sizing: border-box; padding: 0 3px; border-radius: 999px; background: {{qp.bg}}; border: 1.5px solid {{qp.ring}}; box-shadow: 0 0 0 4px {{qp.ringSoft}}; display: flex; align-items: center; gap: 4px"><span style="width: 32px; height: 32px; border-radius: 50%; background: {{gn.bg}}; box-shadow: {{gn.shadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{gn.icon}}" stroke-width="2.6" stroke-linecap="round"><path d="M6 12h12"></path></svg></span><span style="width: 58px; text-align: center; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; color: {{t.text}}">{{f.qtyNum}}</span><span style="width: 32px; height: 32px; border-radius: 50%; background: {{qp.plusBg}}; box-shadow: {{qp.plusShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"><path d="M12 6v12M6 12h12"></path></svg></span><span style="padding: 0 8px 0 2px; font-size: 13px; font-weight: 600; color: {{accentText}}">{{f.qtyUnit}}</span></span></sc-if></div>
-<div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; align-self: stretch; padding: {{f.rightPad}}; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{f.price}}</span></div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; align-self: stretch; padding: {{f.rightPad}}; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><span style="flex-grow: 1; min-height: 6px"></span><sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="display: flex; align-items: baseline; gap: 6px; white-space: nowrap"><sc-if value="{{f.perUnit}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 500; color: {{t.sub}}">je {{f.unit}}</span></sc-if><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; color: {{t.text}}">{{f.price}}</span></span></sc-if></div>
 </div>
 </sc-for>
 </div>
@@ -131,7 +132,7 @@ input::placeholder{color:inherit;opacity:1}
 <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -2px">
 <div style="display: flex; align-items: center; gap: 10px">
 <div style="width: 30px; height: 30px; border-radius: 10px; background: {{catSonst.bg}}; box-shadow: {{catSonst.shadow}}; display: flex; align-items: center; justify-content: center">
-<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="8" cy="8" r="1.4"></circle></svg>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM8 7.2v1.6"></path></svg>
 </div>
 <h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 600; color: {{t.text}}">Sonstiges</h2>
 <span style="font-size: 14px; font-weight: 600; color: {{t.sub}}">1</span>
@@ -175,19 +176,21 @@ input::placeholder{color:inherit;opacity:1}
 </sc-for>
 </div>
 </sc-if>
-<div style="position: absolute; left: {{cardLeft}}; top: 0; width: 350px; height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; overflow: hidden">
-<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="position: relative; width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{itemOpacity}}">
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg>
+<!-- ItemCard.swift: Höhe 94, Rand 1, Foto links bündig (ItemThumbnailTile flush 92, Radius 23 links, ohne Foto Kamera durchgestrichen 28),
+     Name Outfit 19/600 · Mengen-Chip 8 darunter · rechts Kreis 32 oben, Preis unten (Abstand oben/unten 14) -->
+<div style="position: absolute; left: {{cardLeft}}; top: 0; width: 350px; height: 94px; box-sizing: border-box; padding: {{tb.pad}}; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; overflow: hidden">
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="position: relative; width: {{tb.size}}; height: {{tb.size}}; border-radius: {{tb.radius}}; background: {{t.thumb}}; box-shadow: {{tb.shadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: {{itemOpacity}}">
+<svg width="{{tb.icon}}" height="{{tb.icon}}" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg>
 </div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0; align-items: flex-start; opacity: {{itemOpacity}}">
-<span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}; text-decoration: {{strike}}">Butter</span>
+<span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; line-height: 24px; color: {{t.text}}; text-decoration: {{strike}}">Butter</span>
 <div style="display: flex; align-items: center; gap: 8px; max-width: 100%; overflow: hidden"><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap; flex-shrink: 0">1 Packung</span><sc-if value="{{unavailable}}" hint-placeholder-val="{{ false }}"><span style="padding: 4px 11px; border-radius: 999px; background: {{na.bg}}; color: {{na.text}}; font-size: 13px; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(240,138,44,0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">Nicht verfügbar</span></sc-if></div>
 </div>
 <sc-if value="{{syncFailed}}" hint-placeholder-val="{{ false }}">
 <!-- Sync endgültig fehlgeschlagen: Warn-Dreieck, Tippen fragt „Erneut synchronisieren?“ -->
-<button aria-label="Sync fehlgeschlagen. Tippen zum erneuten Synchronisieren." style="width: 32px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{na.text}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"></path></svg></button>
+<button aria-label="Sync fehlgeschlagen. Tippen zum erneuten Synchronisieren." style="width: 32px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{na.text}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4zM12 10v4.5M12 17.3v.2"></path></svg></button>
 </sc-if>
-<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0">
+<div style="display: flex; flex-direction: column; align-items: flex-end; align-self: stretch; box-sizing: border-box; padding: 14px 0; flex-shrink: 0">
 <sc-if value="{{checkedCircle}}" hint-placeholder-val="{{ false }}">
 <button aria-label="Butter ist abgehakt" style="position: relative; width: 32px; height: 32px; border-radius: 50%; border: 0; background: {{fabBg}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 5px 11px -5px {{accentGlow}}; padding: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
@@ -196,16 +199,17 @@ input::placeholder{color:inherit;opacity:1}
 <sc-if value="{{uncheckedCircle}}" hint-placeholder-val="{{ true }}">
 <button aria-label="Butter abhaken" style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}; padding: 0; cursor: pointer; flex-shrink: 0"></button>
 </sc-if>
+<span style="flex-grow: 1; min-height: 6px"></span>
 <sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}; opacity: {{itemOpacity}}">1,49 €</span></sc-if>
 </div>
 </div>
 </div>
 <sc-if value="{{compact}}" hint-placeholder-val="{{ false }}">
 <sc-for list="{{more}}" as="m" hint-placeholder-count="4">
-<div style="height: 94px; box-sizing: border-box; padding: 14px; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; margin-top: -6px">
-<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="width: 64px; height: 64px; border-radius: 18px; background: {{t.thumb}}; box-shadow: {{t.thumbShadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div></sc-if>
-<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; color: {{t.text}}">{{m.name}}</span><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}">{{m.qty}}</span></div>
-<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; white-space: nowrap; color: {{t.text}}">{{m.price}}</span></sc-if></div>
+<div style="height: 94px; box-sizing: border-box; padding: {{tb.pad}}; border-radius: 24px; background: {{t.card}}; border: 1px solid {{t.cardBorder}}; box-shadow: {{t.cardShadow}}; display: flex; align-items: center; gap: 16px; margin-top: -6px; overflow: hidden">
+<sc-if value="{{images}}" hint-placeholder-val="{{ true }}"><div style="width: {{tb.size}}; height: {{tb.size}}; border-radius: {{tb.radius}}; background: {{t.thumb}}; box-shadow: {{tb.shadow}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="{{tb.icon}}" height="{{tb.icon}}" viewBox="0 0 24 24" fill="none" stroke="{{t.thumbIcon}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5h5l1.5 2H19a2 2 0 0 1 2 2v8.5M17 19H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path><path d="M9.9 10.2a3 3 0 0 0 4 4"></path></svg></div></sc-if>
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0; align-items: flex-start"><span style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 600; line-height: 24px; color: {{t.text}}">{{m.name}}</span><span style="padding: 4px 11px; border-radius: 999px; background: {{t.chipBg}}; color: {{accentText}}; font-size: 13px; font-weight: 600; box-shadow: {{t.chipInset}}; white-space: nowrap">{{m.qty}}</span></div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; align-self: stretch; box-sizing: border-box; padding: 14px 0; flex-shrink: 0"><sc-if value="{{circles}}" hint-placeholder-val="{{ true }}"><span style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%; border: 2px solid {{t.checkRing}}; background: {{t.checkBg}}; box-shadow: {{t.checkShadow}}"></span></sc-if><span style="flex-grow: 1; min-height: 6px"></span><sc-if value="{{showPrices}}" hint-placeholder-val="{{ true }}"><span style="display: flex; align-items: baseline; gap: 6px; white-space: nowrap"><sc-if value="{{m.perUnit}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 500; color: {{t.sub}}">je {{m.unit}}</span></sc-if><span style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600; line-height: 19px; color: {{t.text}}">{{m.price}}</span></span></sc-if></div>
 </div>
 </sc-for>
 </sc-if>
@@ -228,14 +232,16 @@ input::placeholder{color:inherit;opacity:1}
 </sc-if>
 </div>
 
-<!-- Dock: eigene Komponente (Dock.dc.html) -->
+<!-- Dock: eigene Komponente (Dock.dc.html); dock="off", wenn ein Board ein eigenes Dock darüberlegt (DockHold) -->
+<sc-if value="{{showDock}}" hint-placeholder-val="{{ true }}">
 <div style="position: absolute; left: 20px; bottom: 34px; width: 350px; height: 64px">
 <dc-import name="Dock" theme="{{theme}}" accent="{{accent}}" pill="{{pillState}}" active="none" hint-size="350px,64px"></dc-import>
 </div>
+</sc-if>
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"check":{"editor":"enum","default":"both","options":["both","swipe","circle"]},"state":{"editor":"enum","default":"default","options":["default","checked","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"qty":{"editor":"enum","default":"chip","options":["chip","edit"]},"thumb":{"editor":"enum","default":"flush","options":["flush","tile","full"]},"shared":{"editor":"enum","default":"off","options":["off","on"]},"images":{"editor":"enum","default":"on","options":["on","off"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"check":{"editor":"enum","default":"both","options":["both","swipe","circle"]},"state":{"editor":"enum","default":"default","options":["default","checked","done","swipe","swipeCheck","swipeDelete","unavailable","syncFailed","openEmpty","doneEmpty","empty","fruit"]},"prices":{"editor":"boolean","default":true},"header":{"editor":"enum","default":"full","options":["full","compact"]},"qty":{"editor":"enum","default":"chip","options":["chip","edit"]},"thumb":{"editor":"enum","default":"flush","options":["flush","tile","full"]},"shared":{"editor":"enum","default":"off","options":["off","on"]},"images":{"editor":"enum","default":"on","options":["on","off"]},"dock":{"editor":"enum","default":"on","options":["on","off"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -276,7 +282,8 @@ class Component extends DCLogic {
     };
 
     const state = this.props.state ?? 'default';
-    const checked = state === 'checked' || state === 'swipeDelete' || state === 'openEmpty';
+    // done = abgehakt, Karte in Ruhe (z. B. hinter dem Rückgängig-Toast nach dem Abhaken)
+    const checked = state === 'checked' || state === 'done' || state === 'swipeDelete' || state === 'openEmpty';
     const filterEmpty = state === 'openEmpty' || state === 'doneEmpty';
     const tabSel = state === 'openEmpty' ? 'Offen' : (state === 'doneEmpty' ? 'Erledigt' : 'Alle');
     const leading = state === 'swipeCheck' || state === 'swipeDelete';
@@ -311,10 +318,12 @@ class Component extends DCLogic {
     };
     const __v = {
       images: (this.props.images ?? 'on') === 'on',
+      showDock: (this.props.dock ?? 'on') !== 'off',
       fruits: undefined,
       gn,
       full: !compact, compact,
-      more: [{ name: 'Milch', qty: '2 Liter', price: '2,38 €' }, { name: 'Eier', qty: '10 Stück', price: '3,29 €' },
+      // Preis × Stückzahl bei Zähl-Einheiten, davor „je …“ (ItemCard.priceLabel / PriceDisplaySetting.multiplier)
+      more: [{ name: 'Milch', qty: '2 Liter', price: '2,38 €' }, { name: 'Eier', qty: '10 Stück', price: '3,30 €', unit: '0,33 €', perUnit: true },
              { name: 'Vollkornbrot', qty: '1 Stück', price: '2,99 €' }, { name: 'Äpfel', qty: '1 kg', price: '2,49 €' }],
       heroShadowCompact: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,30,34,0.2), 0 12px 24px -12px ' + rgba(accent, dark ? 0.6 : 0.65),
       t, dark, showPrices: this.props.prices ?? true, theme: dark ? 'dark' : 'light', pillState: state === 'empty' ? 'empty' : (checked ? 'allDone' : 'open'),
@@ -324,15 +333,15 @@ class Component extends DCLogic {
       checkedCircle: checked && (this.props.check ?? 'both') !== 'swipe',
       uncheckedCircle: !checked && (this.props.check ?? 'both') !== 'swipe',
       leading, lead, undoShown: state === 'checked',
-      cardLeft: swipe ? '-256px' : (leading ? '96px' : (checked ? '-86px' : '0px')),
+      cardLeft: swipe ? '-256px' : (leading ? '96px' : (state === 'checked' ? '-86px' : '0px')),
       itemOpacity: (checked || state === 'unavailable') ? '0.55' : '1',
       strike: checked ? 'line-through' : 'none',
       empty: state === 'empty', hasItems: state !== 'empty' && !filterEmpty && state !== 'fruit', filterEmpty,
       fruit: state === 'fruit',
       fruitsRaw: [
-        { name: 'Bananen', brand: 'Chiquita', qty: '6 Stück', price: '1,49 €', img: 'assets/fruit/fruit.banana.svg' },
+        { name: 'Bananen', brand: 'Chiquita', qty: '6 Stück', price: '1,50 €', unit: '0,25 €', perUnit: true, img: 'assets/fruit/fruit.banana.svg' },
         { name: 'Äpfel', brand: 'Rewe Bio · Elstar', qty: '1 kg', price: '2,49 €', img: 'assets/fruit/fruit.apple.svg', by: 'Anna', byBg: 'center / cover no-repeat url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjRkZEOUI4Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRjRBOTdBIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTEwIDY0YzItMTMgMTEtMTkgMjItMTlzMjAgNiAyMiAxOXoiIGZpbGw9IiMzRTZFOEUiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjI4IiByPSIxMiIgZmlsbD0iI0U4QjQ4RiIvPjxwYXRoIGQ9Ik0xOSAyN2MwLTEwIDctMTUgMTQtMTUgOCAwIDEzIDYgMTIgMTQtMy00LTgtNi0xMy02LTUgMC05IDMtMTMgN3oiIGZpbGw9IiM1QTNBMkEiLz48L3N2Zz4=)', byInitial: '' },
-        { name: 'Orangen', qty: '4 Stück', price: '2,99 €', img: 'assets/fruit/fruit.orange.svg', by: 'Max', byBg: 'linear-gradient(150deg, #9C8CFF, #6A55E0)', byInitial: 'M' },
+        { name: 'Orangen', qty: '4 Stück', price: '3,00 €', unit: '0,75 €', perUnit: true, img: 'assets/fruit/fruit.orange.svg', by: 'Max', byBg: 'linear-gradient(150deg, #9C8CFF, #6A55E0)', byInitial: 'M' },
         { name: 'Erdbeeren', qty: '500 g', price: '3,49 €', img: 'assets/fruit/fruit.strawberry.svg' },
         { name: 'Ananas', qty: '1 Stück', price: '2,29 €', img: 'assets/fruit/fruit.pineapple.svg' }
       ],
@@ -355,7 +364,9 @@ class Component extends DCLogic {
       unavailable: state === 'unavailable', syncFailed: state === 'syncFailed',
       na: dark ? { bg: 'rgba(240,138,44,0.18)', text: '#FFC08A' } : { bg: 'rgba(240,138,44,0.12)', text: '#BD5F0E' },
       p: state === 'fruit'
-        ? { label: '0 von 5 Artikeln', pct: '0', open: '5 offen', done: '0 erledigt', money: '12,75 € gesamt', moneyShort: '12,75 €' }
+        ? { label: '0 von 5 Artikeln', pct: '0', open: '5 offen', done: '0 erledigt', money: '12,77 € gesamt', moneyShort: '12,77 €' }
+        : compact
+        ? { label: '0 von 5 Artikeln', pct: '0', open: '5 offen', done: '0 erledigt', money: '12,65 € gesamt', moneyShort: '12,65 €' }
         : state === 'empty'
         ? { label: '0 von 0 Artikeln', pct: '0', open: '', done: '', money: '0,00 € gesamt', moneyShort: '0,00 €' }
         : checked
@@ -380,7 +391,7 @@ class Component extends DCLogic {
       const editing = __qty === 'edit' && i === 1;
       const parts = f.qty.split(' ');
       return Object.assign({}, f, { hasBy: false, hasByInline: __shared && !!f.by, editing, noEdit: !editing,
-        qtyNum: parts[0], qtyUnit: parts.slice(1).join(' '), hasBrand: !!f.brand, chipGap: f.brand ? '6px' : '8px', rightPad: f.brand ? '9px 0' : '15px 0' });
+        qtyNum: parts[0], qtyUnit: parts.slice(1).join(' '), hasBrand: !!f.brand, chipGap: f.brand ? '6px' : '8px', rightPad: f.brand ? '8px 0' : '14px 0', perUnit: !!f.perUnit });
     });
     const __dark = (this.props.theme ?? 'light') === 'dark';
     __v.qp = { bg: __dark ? 'rgba(255,255,255,0.08)' : '#FFFFFF', ring: rgba(accent, 0.75), ringSoft: rgba(accent, 0.12),
@@ -388,10 +399,10 @@ class Component extends DCLogic {
       plusShadow: 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 6px 12px -6px ' + rgba(accent, 0.7) };
     const __thumb = this.props.thumb ?? 'flush';
     __v.tb = __thumb === 'flush'
-      ? { pad: '0 14px 0 0', size: '92px', radius: '23px 0 0 23px', shadow: 'none', zoom: 1.12 }
+      ? { pad: '0 14px 0 0', size: '92px', radius: '23px 0 0 23px', shadow: 'none', zoom: 1.12, icon: '28' }
       : __thumb === 'full'
-        ? { pad: '4px 14px 4px 4px', size: '84px', radius: '20px', shadow: __v.t.thumbShadow, zoom: 1.08 }
-        : { pad: '14px', size: '64px', radius: '18px', shadow: __v.t.thumbShadow, zoom: 1 };
+        ? { pad: '4px 14px 4px 4px', size: '84px', radius: '20px', shadow: __v.t.thumbShadow, zoom: 1.08, icon: '24' }
+        : { pad: '14px', size: '64px', radius: '18px', shadow: __v.t.thumbShadow, zoom: 1, icon: '24' };
     // Ohne Artikelbild: links derselbe Abstand wie rechts (14 + Rand 1).
     if (!__v.images) __v.tb = Object.assign({}, __v.tb, { pad: '0 14px' });
     __v.t.byRing = (this.props.theme ?? 'light') === 'dark' ? '#16282B' : '#FFFFFF';

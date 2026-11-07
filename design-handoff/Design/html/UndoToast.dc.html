@@ -17,12 +17,13 @@ button{font-family:inherit}
 </helmet>
 <div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif">
 <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
-<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" state="empty" hint-size="390px,844px"></dc-import>
+<dc-import name="Hybrid" theme="{{theme}}" accent="{{accent}}" state="{{listState}}" hint-size="390px,844px"></dc-import>
 </div>
 
 <div role="status" aria-live="polite" style="position: absolute; left: 20px; right: 20px; bottom: 114px; height: 56px; box-sizing: border-box; padding: 0 8px 0 16px; border-radius: 20px; background: {{k.toast}}; border: 1px solid {{k.toastBorder}}; box-shadow: {{k.toastShadow}}; backdrop-filter: blur(24px) saturate(160%); display: flex; align-items: center; gap: 12px; overflow: hidden">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 11.2a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8L17.5 7M10 11v5M14 11v5"></path></svg>
-<span style="flex-grow: 1; font-size: 15px; font-weight: 500; color: #FFFFFF">1 Artikel gelöscht</span>
+<!-- UndoToast.swift: Löschen → Papierkorb + „n Artikel gelöscht“; Abhaken (ein Artikel, Kreis oder „Alle abhaken“) → Haken + „„Name“ abgehakt“ bzw. „n Artikel abgehakt“ -->
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{k.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{icon}}"></path></svg>
+<span style="flex-grow: 1; font-size: 15px; font-weight: 500; color: #FFFFFF">{{message}}</span>
 <button style="height: 40px; padding: 0 14px; border: 0; border-radius: 14px; background: {{k.undoBg}}; color: {{k.undo}}; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{k.undo}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg>
 Rückgängig
@@ -32,7 +33,7 @@ Rückgängig
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"kind":{"editor":"enum","default":"delete","options":["delete","check"]},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -49,7 +50,11 @@ class Component extends DCLogic {
       toast: 'rgba(15,27,29,0.94)', toastBorder: 'rgba(255,255,255,0.1)', toastShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 32px -14px rgba(12,30,33,0.5)',
       icon: 'rgba(255,255,255,0.75)', undo: light, undoBg: rgba(accent, 0.18), timer: rgba(accent, 0.9)
     };
-    return { k, theme, accent };
+    const check = (this.props.kind ?? 'delete') === 'check';
+    return { k, theme, accent,
+      listState: check ? 'done' : 'empty',
+      message: check ? '„Butter“ abgehakt' : '1 Artikel gelöscht',
+      icon: check ? 'M5 12.5l4.5 4.5L19 7.5' : 'M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 11.2a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8L17.5 7M10 11v5M14 11v5' };
   }
 }
 </script>

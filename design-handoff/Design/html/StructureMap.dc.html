@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>Zielstruktur Famlist</title>
+<title>App-Struktur Famlist</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -14,12 +14,12 @@
 body{margin:0;font-family:'DM Sans',system-ui,sans-serif;background:#F6F9F9}
 </style>
 </helmet>
-<div style="width: 1760px; height: 1320px; box-sizing: border-box; padding: 56px 64px; background: #F6F9F9; color: #0F2528; font-family: 'DM Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 36px">
+<div style="width: 1760px; height: 1700px; box-sizing: border-box; padding: 56px 64px; background: #F6F9F9; color: #0F2528; font-family: 'DM Sans', system-ui, sans-serif; display: flex; flex-direction: column; gap: 36px">
 
 <div style="display: flex; align-items: flex-end; justify-content: space-between">
 <div style="display: flex; flex-direction: column; gap: 6px">
-<span style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #0B6C75">Schritt 1 · Zur Abstimmung</span>
-<h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 44px; font-weight: 700; letter-spacing: -0.02em">Zielstruktur Famlist</h1>
+<span style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #0B6C75">Stand 14.10.2026 · entspricht dem App-Code</span>
+<h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 44px; font-weight: 700; letter-spacing: -0.02em">App-Struktur Famlist</h1>
 </div>
 <div style="display: flex; gap: 12px">
 <sc-for list="{{legend}}" as="l" hint-placeholder-count="3">
@@ -62,71 +62,78 @@ body{margin:0;font-family:'DM Sans',system-ui,sans-serif;background:#F6F9F9}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":1320}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":1700}}'>
 class Component extends DCLogic {
   renderVals() {
     const S = {
       done: { label: 'Fertig', bg: '#E8F6F7', border: '#0FA3AE', text: '#0B6C75', line: 'solid' },
       adjust: { label: 'Anpassen', bg: '#FFF6E6', border: '#D99A2B', text: '#8A5A00', line: 'solid' },
-      neu: { label: 'Neu', bg: '#F1F2FF', border: '#6570E8', text: '#3A43B5', line: 'dashed' }
+      neu: { label: 'Neu seit Planung', bg: '#F1F2FF', border: '#6570E8', text: '#3A43B5', line: 'dashed' }
     };
     const it = (name, s, note) => Object.assign({ name, note: note || '', hasNote: !!note }, S[s]);
+    // Stand 14.10.2026 = heutiger App-Code (alle Screens gebaut). „Fertig“ = im Code, „Neu“ = seit dem letzten Abgleich dazugekommen.
     const groups = [
       { letter: 'A', title: 'Einstieg', items: [
-        it('Anmelden / Registrieren', 'neu'),
-        it('Profil anlegen', 'neu', 'Benutzername erst nach Eingabe prüfen'),
-        it('Einladung annehmen', 'neu', 'Aus dem Einladungslink'),
-        it('Leere Liste', 'neu', 'Erster Artikel, erste Liste')
+        it('Anmelden', 'done', 'E-Mail-Link oder „Mit Apple anmelden“; Hinweis „Anmeldelink gesendet“'),
+        it('Profil anlegen', 'done', 'Foto, Benutzername (frei/vergeben), voller Name'),
+        it('Einladung annehmen', 'done', 'Aus dem Einladungslink; Annehmen öffnet die Liste'),
+        it('Konto wiederherstellen', 'neu', 'Nach erneutem Anmelden innerhalb von 60 Tagen; auch offline-Hinweis und „Endgültig löschen“'),
+        it('Leere Liste', 'done', 'Erster Artikel, erste Liste')
       ] },
       { letter: 'B', title: 'Liste', items: [
-        it('Liste · Alle / Offen / Erledigt', 'adjust', '„Ansicht wechseln“ raus, Live-Gesamtkosten, Avatar „wer hat was“'),
-        it('Abgehakt · Zurück', 'done'),
+        it('Liste · Alle / Offen / Erledigt', 'done', 'Live-Gesamtkosten, Profilbild „Hinzugefügt von“, Menge direkt ändern'),
+        it('Abhaken · Rückgängig', 'done', 'Wischen und/oder Kreis (Einstellung), Rückgängig-Toast'),
         it('Wisch-Aktionen', 'done'),
-        it('Kontext-Menü (☰)', 'neu', 'Mitglieder & Teilen (aktuelle Liste), Artikel verwalten, Kategorien, Einstellungen'),
-        it('Artikel löschen · Auswahl', 'neu', 'Nur abgehakte oder alle, mit Rückgängig')
+        it('Dock', 'done', 'Alle abhaken / Zurücksetzen, Sortieren, Kopieren, Löschen; „Einkauf erledigt“ als Popup'),
+        it('Kontext-Menü (☰)', 'done', 'Mitglieder & Teilen, Artikel/Kategorien verwalten, Kassenzettel scannen, Gespeicherte Kassenzettel, Import, Artikelbilder, Einstellungen'),
+        it('Artikel löschen · Auswahl', 'done', 'Nur abgehakte oder alle, mit Rückgängig')
       ] },
       { letter: 'C', title: 'Artikel', items: [
-        it('Suchen · leer / Treffer', 'done'),
-        it('Neuer Artikel', 'done'),
-        it('Artikel bearbeiten', 'adjust', 'Link zum Preisverlauf'),
-        it('Produktbild', 'done'),
-        it('Artikel verwalten', 'neu', 'Alle gespeicherten Artikel: bearbeiten, Foto ändern, löschen'),
-        it('Barcode-Scanner', 'neu'),
-        it('Preisverlauf', 'neu', 'Preise pro Artikel und Laden über die Zeit')
+        it('Hinzufügen · Eingabe / Treffer', 'done', 'Plus im Dock'),
+        it('Neuer Artikel', 'done', 'Marke unter dem Namen'),
+        it('Produktdetails / bearbeiten', 'done', 'Link zum Preisverlauf'),
+        it('Barcode-Scanner', 'done', 'Plus halten → „Barcode“; Menge halten'),
+        it('Foto erkennen', 'neu', 'Plus halten → „Foto erkennen“; Kamera · Mediathek'),
+        it('Artikel verwalten', 'done', 'Alle gespeicherten Artikel: bearbeiten, Foto ändern, löschen'),
+        it('Preisverlauf', 'done', 'Preise pro Artikel und Laden über die Zeit'),
+        it('Import aus Zwischenablage', 'neu')
       ] },
       { letter: 'D', title: 'Listen & Teilen', items: [
-        it('Meine Listen', 'done', 'Wechseln, erstellen'),
-        it('Listen-Optionen', 'done', 'Einziger Ort für Umbenennen, Duplizieren, Teilen, Favorit, Löschen/Verlassen'),
-        it('Liste erstellen', 'neu'),
-        it('Mitglieder & Teilen', 'neu', 'Ersetzt „Liste teilen“, „Mitglieder“ und die ID im Profil')
+        it('Meine Listen', 'done', 'Wechseln, erstellen; Wischen: Favorit · Löschen/Verlassen, Umbenennen, Duplizieren, Mitglieder; Rückgängig'),
+        it('Listen-Optionen', 'done', 'Langer Druck: Umbenennen, Duplizieren, Favorit, Mitglieder & Teilen, Löschen/Verlassen'),
+        it('Liste erstellen · umbenennen', 'done', 'Neue Liste mit „Als Favorit“'),
+        it('Liste löschen', 'done', 'Schieben zum Löschen; letzte Liste nicht löschbar'),
+        it('Mitglieder & Teilen', 'done', 'Einladungslink teilen/kopieren, öffentliche ID; archivierte Mitglieder entfernen')
       ] },
       { letter: 'E', title: 'Kassenzettel', items: [
-        it('Kassenzettel fotografieren', 'neu'),
-        it('Erkennung prüfen', 'neu', 'Erkannte Artikel und Preise bestätigen und der Liste zuordnen'),
-        it('Einkauf abgeschlossen', 'neu', 'Summe, gespeicherte Preise')
+        it('Kassenzettel fotografieren', 'done'),
+        it('Erkennung prüfen', 'done', 'Erkannte Artikel und Preise bestätigen und der Liste zuordnen'),
+        it('Einkauf erledigt', 'done', 'Summe, gespeicherte Preise'),
+        it('Gespeicherte Kassenzettel', 'neu', 'Archiv, Bon-Details, Auswertungen (Ausgaben, Verbrauch)')
       ] },
       { letter: 'F', title: 'Kategorien', items: [
-        it('Kategorien verwalten', 'neu', 'Anlegen, umbenennen, Reihenfolge = Ladenweg'),
-        it('Kategorie bearbeiten', 'neu', 'Name und Icon')
+        it('Kategorien verwalten', 'done', '27 Standard-Kategorien; anlegen, umbenennen, Reihenfolge = Ladenweg'),
+        it('Kategorie bearbeiten', 'done', 'Name, Icon und Farbe')
       ] },
       { letter: 'G', title: 'Konto', items: [
+        it('Einstellungen', 'done', 'Erscheinungsbild, Preise, Artikelbilder, Artikel abhaken, Kassenzettel, Benachrichtigungen, Abmelden'),
         it('Profil bearbeiten', 'done', 'Nur über Einstellungen erreichbar'),
-        it('Einstellungen', 'neu', 'Erscheinungsbild, Benachrichtigungen, Abmelden'),
-        it('Konto löschen', 'neu', 'Pflicht für den App Store')
+        it('Abmelden', 'done', 'Bei ungesendeten Änderungen: „Trotzdem abmelden?“'),
+        it('Konto löschen', 'done', 'Schieben zum Löschen; 60 Tage wiederherstellbar')
       ] }
     ];
     const all = groups.reduce((a, g) => a.concat(g.items), []);
     const count = (k) => all.filter((x) => x.label === S[k].label).length;
     const legend = ['done', 'adjust', 'neu'].map((k) => Object.assign({ count: count(k) }, S[k]));
     const flows = [
-      { n: '1', title: 'Artikel hinzufügen', steps: 'Suchfeld → Treffer → „+“  ·  Plus-Button → direkt „Neuer Artikel“' },
-      { n: '2', title: 'Per Barcode', steps: 'Suche → Scan-Button → Barcode-Scanner → Treffer oder Neuer Artikel (vorausgefüllt)' },
-      { n: '3', title: 'Einkaufen', steps: 'Liste → abhaken → Gesamtkosten laufen live mit → Rückgängig per „Zurück“' },
-      { n: '4', title: 'Kassenzettel', steps: 'Einkauf fertig → Kassenzettel fotografieren → Erkennung prüfen → Preise gespeichert → Preisverlauf' },
-      { n: '5', title: 'Teilen', steps: '☰ → Mitglieder & Teilen → Einladungslink teilen oder kopieren' },
+      { n: '1', title: 'Artikel hinzufügen', steps: 'Plus im Dock → Eingabe → Treffer übernehmen oder „Neuer Artikel“' },
+      { n: '2', title: 'Barcode · Foto', steps: 'Plus gedrückt halten → „Barcode | Foto erkennen“ → Scanner bzw. Foto → Treffer oder Neuer Artikel (vorausgefüllt)' },
+      { n: '3', title: 'Einkaufen', steps: 'Liste → abhaken (Wischen/Kreis) → Rückgängig-Toast → alles abgehakt → „Einkauf erledigt“' },
+      { n: '4', title: 'Kassenzettel', steps: '☰ → Kassenzettel scannen → Erkennung prüfen → Preise gespeichert → Gespeicherte Kassenzettel · Preisverlauf' },
+      { n: '5', title: 'Teilen', steps: '☰ (oder Meine Listen → Wischen / langer Druck) → Mitglieder & Teilen → Einladungslink teilen oder kopieren' },
       { n: '6', title: 'Einladung', steps: 'Link öffnen → Anmelden → Profil anlegen → Einladung annehmen → geteilte Liste' },
-      { n: '7', title: 'Listen', steps: 'Titel „Edeka ⌄“ → Meine Listen → wechseln · erstellen  ·  langer Druck → Listen-Optionen' },
-      { n: '8', title: 'Konto', steps: '☰ → Einstellungen → Profil · Abmelden · Konto löschen (mit Bestätigung)' }
+      { n: '7', title: 'Listen', steps: 'Titel „Edeka ⌄“ → Meine Listen → wechseln · erstellen · wischen  ·  langer Druck → Listen-Optionen' },
+      { n: '8', title: 'Konto', steps: '☰ → Einstellungen → Profil · Abmelden · Konto löschen (Schieben) → neu anmelden → Konto wiederherstellen' }
     ];
     return { groups, legend, flows };
   }

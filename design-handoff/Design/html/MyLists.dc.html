@@ -53,8 +53,9 @@ button{font-family:inherit}
 </button>
 </sc-if>
 <sc-if value="{{noLists}}" hint-placeholder-val="{{ false }}">
-<!-- Noch keine Liste (MyListsSheet) -->
-<span style="padding: 0 4px; font-size: 14px; line-height: 1.45; color: {{k.sub}}">Noch keine Listen. Lege unten deine erste Liste an.</span>
+<!-- Noch keine Liste (MyListsSheet): Zähler „0 Listen“ bleibt sichtbar -->
+<span style="font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{k.sub}}; padding: 0 4px">0 Listen</span>
+<span style="padding: 4px 4px 0 4px; font-size: 15px; font-weight: 500; color: {{k.sub}}">Noch keine Listen. Lege unten deine erste Liste an.</span>
 </sc-if>
 </div>
 

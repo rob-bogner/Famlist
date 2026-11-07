@@ -30,7 +30,7 @@ input::placeholder{color:inherit;opacity:0.75}
 </div>
 <div style="position: absolute; left: 24px; right: 24px; top: 432px; display: flex; flex-direction: column; gap: 12px">
 <span style="padding-left: 4px; font-size: 13px; font-weight: 600; color: {{k.sub}}">E-Mail-Adresse</span>
-<input type="email" aria-label="E-Mail-Adresse" placeholder="name@beispiel.de" style="height: 54px; box-sizing: border-box; padding: 0 18px; border-radius: 27px; border: 1px solid {{k.fieldBorder}}; background: {{k.field}}; font-size: 16px; color: {{k.sub}}; outline: none">
+<input type="email" aria-label="E-Mail-Adresse" placeholder="name@beispiel.de" value="{{email}}" style="height: 54px; box-sizing: border-box; padding: 0 18px; border-radius: 27px; border: 1px solid {{k.fieldBorder}}; background: {{k.field}}; font-size: 16px; color: {{k.sub}}; outline: none">
 <button style="position: relative; width: 100%; height: 56px; flex-shrink: 0; border-radius: 28px; border: 0; padding: 0; background: {{cta.bg}}; box-shadow: {{cta.shadow}}; color: {{cta.text}}; font-size: 16px; font-weight: 600; cursor: pointer; overflow: hidden">
 <span aria-hidden="true" style="position: absolute; left: 16px; right: 16px; top: 3px; height: 22px; border-radius: 11px; background: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0)); filter: blur(1px); pointer-events: none"></span>
 <span aria-hidden="true" style="position: absolute; left: 40px; right: 40px; bottom: 3px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.16); filter: blur(3px); pointer-events: none"></span>
@@ -47,7 +47,7 @@ input::placeholder{color:inherit;opacity:0.75}
 <span style="position: absolute; left: 36px; right: 36px; bottom: 40px; font-size: 12px; line-height: 1.5; color: {{k.sub}}; text-align: center">Mit dem Fortfahren akzeptierst du die <span style="color: {{k.accentText}}; font-weight: 600">Nutzungsbedingungen</span> und die <span style="color: {{k.accentText}}; font-weight: 600">Datenschutzerklärung</span>.</span>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"email":{"editor":"text","default":""},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const accent = this.props.accent ?? '#0FA3AE';
@@ -93,7 +93,7 @@ class Component extends DCLogic {
       shadow: 'inset 0 -3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.14), 0 10px 20px -10px rgba(0,0,0,0.55)',
       gloss: 'rgba(255,255,255,0.3)', glow: 'rgba(255,255,255,0.12)'
     };
-    return { ga, k, cta, theme, accent, bg, heroBg, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
+    return { email: this.props.email ?? '', ga, k, cta, theme, accent, bg, heroBg, avatarBg: 'linear-gradient(150deg, ' + light + ', ' + deep + ')' };
   }
 }
 </script>

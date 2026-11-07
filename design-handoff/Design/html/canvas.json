@@ -290,7 +290,7 @@
    "y": 260
   },
   "DockStates.dc.html": {
-   "h": 1060,
+   "h": 1370,
    "page": "bausteine",
    "radius": 24,
    "title": "Dock – alle Zustände",
@@ -552,39 +552,39 @@
   },
   "InsightSpend.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
    "title": "Auswertung – Ausgaben",
    "w": 390,
-   "x": 940,
-   "y": 260
+   "x": 6580,
+   "y": 17316
   },
   "InsightSpendDark.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
    "title": "Auswertung – Ausgaben – Dark",
    "w": 390,
-   "x": 940,
-   "y": 1264
+   "x": 6580,
+   "y": 18320
   },
   "InsightUsage.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
    "title": "Auswertung – Verbrauch",
    "w": 390,
-   "x": 1410,
-   "y": 260
+   "x": 7050,
+   "y": 17316
   },
   "InsightUsageDark.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
    "title": "Auswertung – Verbrauch – Dark",
    "w": 390,
-   "x": 1410,
-   "y": 1264
+   "x": 7050,
+   "y": 18320
   },
   "ItemSyncFailed.dc.html": {
    "h": 844,
@@ -1124,7 +1124,7 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Foto hinzufügen – Quelle wählen",
+   "title": "Foto ändern – Quelle wählen",
    "w": 390,
    "x": 4700,
    "y": 5276
@@ -1133,7 +1133,7 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Foto hinzufügen – Quelle wählen – Dark",
+   "title": "Foto ändern – Quelle wählen – Dark",
    "w": 390,
    "x": 4700,
    "y": 6280
@@ -1632,20 +1632,20 @@
   },
   "ReceiptArchiveInsights.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "archiv",
    "radius": 44,
-   "title": "Kassenzettel-Archiv – Einstieg Auswertung",
+   "title": "Kassenzettel-Archiv – Einstieg Auswertung (überholt, = Kassenzettel-Archiv)",
    "w": 390,
-   "x": 0,
+   "x": 7090,
    "y": 260
   },
   "ReceiptArchiveInsightsDark.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "archiv",
    "radius": 44,
-   "title": "Kassenzettel-Archiv – Einstieg Auswertung – Dark",
+   "title": "Kassenzettel-Archiv – Einstieg Auswertung – Dark (überholt, = Kassenzettel-Archiv)",
    "w": 390,
-   "x": 0,
+   "x": 7090,
    "y": 1264
   },
   "ReceiptAssignDialog.dc.html": {
@@ -1697,7 +1697,7 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Kassenzettel – Detail",
+   "title": "Kassenzettel – Detail (Bon-Foto)",
    "w": 390,
    "x": 7050,
    "y": 15308
@@ -1706,28 +1706,28 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Kassenzettel – Detail – Dark",
+   "title": "Kassenzettel – Detail (Bon-Foto) – Dark",
    "w": 390,
    "x": 7050,
    "y": 16312
   },
   "ReceiptDetailMeta.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "Kassenzettel – Detail mit Metadaten",
+   "title": "Kassenzettel – Detail (Artikel)",
    "w": 390,
-   "x": 470,
-   "y": 260
+   "x": 6110,
+   "y": 17316
   },
   "ReceiptDetailMetaDark.dc.html": {
    "h": 844,
-   "page": "prototypes",
+   "page": "screens",
    "radius": 44,
-   "title": "Kassenzettel – Detail mit Metadaten – Dark",
+   "title": "Kassenzettel – Detail (Artikel) – Dark",
    "w": 390,
-   "x": 470,
-   "y": 1264
+   "x": 6110,
+   "y": 18320
   },
   "ReceiptFullscreen.dc.html": {
    "h": 844,
@@ -2225,10 +2225,10 @@
    "y": 260
   },
   "StructureMap.dc.html": {
-   "h": 1320,
+   "h": 1700,
    "page": "bausteine",
    "radius": 24,
-   "title": "Zielstruktur (Schritt 1)",
+   "title": "App-Struktur (Stand Okt. 2026)",
    "w": 1760,
    "x": 3190,
    "y": 260
@@ -2619,7 +2619,7 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Plus gedrückt halten – Dock wird „Barcode | Foto“",
+   "title": "Plus gedrückt halten – Dock rollt „Barcode | Foto erkennen“ aus",
    "w": 390,
    "x": 4700,
    "y": 15308,
@@ -2629,7 +2629,7 @@
    "h": 844,
    "page": "screens",
    "radius": 44,
-   "title": "Plus gedrückt halten – Dock wird „Barcode | Foto“ – Dark",
+   "title": "Plus gedrückt halten – Dock rollt „Barcode | Foto erkennen“ aus – Dark",
    "w": 390,
    "x": 4700,
    "y": 16312,
@@ -2670,6 +2670,24 @@
    "w": 390,
    "x": 6580,
    "y": 7284
+  },
+  "UndoCheckToast.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abgehakt – Rückgängig",
+   "w": 390,
+   "x": 7520,
+   "y": 2768
+  },
+  "UndoCheckToastDark.dc.html": {
+   "h": 844,
+   "page": "screens",
+   "radius": 44,
+   "title": "Abgehakt – Rückgängig – Dark",
+   "w": 390,
+   "x": 7520,
+   "y": 3772
   }
  },
  "createdOnFiles": {
@@ -3105,7 +3123,9 @@
   "FabHoldSplit.dc.html",
   "FabHoldSlide.dc.html",
   "FabHoldAura.dc.html",
-  "FabHold.dc.html"
+  "FabHold.dc.html",
+  "UndoCheckToastDark.dc.html",
+  "UndoCheckToast.dc.html"
  ],
  "pages": [
   {

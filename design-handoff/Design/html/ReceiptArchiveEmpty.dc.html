@@ -17,10 +17,8 @@ button,input{font-family:inherit}
 </helmet>
 <div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'DM Sans', system-ui, sans-serif">
 <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px">
-<dc-import name="ReceiptArchive" theme="{{theme}}" accent="{{accent}}" hint-size="390px,844px"></dc-import>
+<dc-import name="ReceiptArchive" theme="{{theme}}" accent="{{accent}}" mode="empty" hint-size="390px,844px"></dc-import>
 </div>
-<!-- Noch keine Bons gespeichert: Inhalt unter dem Kopf ersetzt -->
-<div style="position: absolute; left: 0; right: 0; top: 128px; bottom: 0; background: {{sh.bg}}; box-sizing: border-box; padding: 18px 24px 0 24px"><span style="font-size: 13px; color: {{sh.sub}}">Noch keine Kassenzettel gespeichert.</span></div>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0FA3AE","options":["#0FA3AE","#2E7DF6","#7C5CFF","#F07A3C"]},"theme":{"editor":"enum","default":"light","options":["light","dark"]},"$preview":{"width":390,"height":844}}'>
