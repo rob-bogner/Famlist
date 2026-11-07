@@ -130,4 +130,35 @@ final class ReceiptParserMetaTests: XCTestCase {
     func test_priceIsNoTime() {
         XCTAssertNil(ReceiptParser.detectTime(["24.09.2026", "BUTTER 12,49 A"]))
     }
+
+    // MARK: - TSE in UTC: Versatz vom Datum des Zeitstempels, nicht vom Lauftag
+
+    private func tse(_ stamp: String) -> String? {
+        hm(ReceiptParser.detectTime(["TSE-Stop: \(stamp)"]))
+    }
+
+    /// Sommerzeit: +2 h, auch ohne Sekunden im Zeitstempel.
+    func test_tseUTC_summer_addsTwoHours() {
+        XCTAssertEqual(tse("2026-07-01T10:05Z"), "12:05")
+    }
+
+    /// Winterzeit: +1 h.
+    func test_tseUTC_winter_addsOneHour() {
+        XCTAssertEqual(tse("2026-01-15T10:05:00.000Z"), "11:05")
+    }
+
+    /// Umstellung am 29.03.2026 um 01:00 UTC.
+    func test_tseUTC_dstStartDay_switchesAtOneUTC() {
+        XCTAssertEqual(tse("2026-03-29T00:30:00Z"), "01:30")
+        XCTAssertEqual(tse("2026-03-29T01:30:00Z"), "03:30")
+    }
+
+    func test_tseUTC_crossesMidnight() {
+        XCTAssertEqual(tse("2026-09-12T23:30:00Z"), "01:30")
+    }
+
+    /// Ein unmögliches Datum (Lesefehler) ergibt keine Uhrzeit statt einer falschen.
+    func test_tseUTC_impossibleDate_isNil() {
+        XCTAssertNil(ReceiptParser.detectTime(["TSE-Stop: 2026-02-30T10:05:00Z"]))
+    }
 }

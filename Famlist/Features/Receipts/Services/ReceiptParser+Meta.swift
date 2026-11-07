@@ -19,6 +19,7 @@
  - Reine Funktionen → Unit-Tests (ReceiptParserMetaTests).
 
  📝 Last Change:
+ - 08.11.2026: TSE-Zeit in UTC mit dem Berlin-Versatz vom Datum des Zeitstempels (vorher still der von heute).
  - 29.09.2026: Adresse ohne fremde Wörter aus derselben OCR-Zeile.
  - Initial creation (Einkaufsdaten & Auswertung).
  ------------------------------------------------------------------------
@@ -30,8 +31,9 @@ extension ReceiptParser {
     /// Uhrzeit „17:42“ oder „17:42:10“; nicht Teil einer längeren Zahl und nicht Teil eines
     /// TSE-Zeitstempels („…T15:12:40Z“ ist UTC und wird gesondert umgerechnet).
     private static let timePattern = #"(?<![\d:T])([01]?\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?(?![\d:])"#
-    /// TSE-Zeitstempel „2026-09-24T17:42:10(.000)(Z|+00:00)“. Gruppe 1/2 = Stunde/Minute, Gruppe 3 = Zone.
-    private static let isoPattern = #"\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})(?::\d{2})?(?:\.\d+)?(Z|[+-]\d{2}:?\d{2})?"#
+    /// TSE-Zeitstempel „2026-09-24T17:42:10(.000)(Z|+00:00)“.
+    /// Gruppe 1/2/3 = Jahr/Monat/Tag, Gruppe 4/5 = Stunde/Minute, Gruppe 6 = Zone.
+    private static let isoPattern = #"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?(?:\.\d+)?(Z|[+-]\d{2}:?\d{2})?"#
     /// Straße mit Hausnummer: „Leopoldstr. 82“, „Hauptstraße 12a“, „Am Mühlweg 3“.
     private static let streetPattern =
         #"^[A-ZÄÖÜa-zäöüß][A-ZÄÖÜa-zäöüß.\- ]*?(str\.?|straße|strasse|weg|platz|allee|gasse|ring|damm|ufer|chaussee)\s*\d{1,4}\s*[a-zA-Z]?\b"#
@@ -65,25 +67,24 @@ extension ReceiptParser {
         guard let line = candidates.first(where: { upper($0).contains("STOP") || upper($0).contains("ENDE") })
                 ?? candidates.last,
               let m = firstMatch(isoPattern, in: line),
-              var hour = Int(m[1]), let minute = Int(m[2]) else { return nil }
-        if isUTC(m[3]) {
-            // UTC → Berlin: Versatz am Einkaufstag (Sommer-/Winterzeit) aus dem Zeitstempel selbst.
-            let offset = berlin.secondsFromGMT(for: isoDate(line) ?? Date()) / 3600
-            hour = (hour + offset + 24) % 24
-        }
-        return DateComponents(hour: hour, minute: minute)
+              let hour = Int(m[4]), let minute = Int(m[5]) else { return nil }
+        guard isUTC(m[6]) else { return DateComponents(hour: hour, minute: minute) }
+        return berlinTime(fromUTC: m)
     }
 
     private static func isUTC(_ zone: String) -> Bool {
         zone == "Z" || zone == "+00:00" || zone == "+0000" || zone == "-00:00"
     }
 
-    private static func isoDate(_ line: String) -> Date? {
-        guard let range = line.range(of: #"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}"#, options: .regularExpression) else { return nil }
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate, .withTime, .withColonSeparatorInTime, .withDashSeparatorInDate]
-        formatter.timeZone = TimeZone(identifier: "UTC")
-        return formatter.date(from: String(line[range]))
+    /// UTC → Berlin. Der Versatz (Sommer-/Winterzeit) kommt aus dem Datum des Zeitstempels selbst.
+    /// Ein unmögliches Datum (z. B. Lesefehler „30.02.“) ergibt nil: lieber keine Uhrzeit als eine falsche.
+    private static func berlinTime(fromUTC m: [String]) -> DateComponents? {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = .gmt
+        let parts = DateComponents(year: Int(m[1]), month: Int(m[2]), day: Int(m[3]),
+                                   hour: Int(m[4]), minute: Int(m[5]))
+        guard parts.isValidDate(in: utc), let instant = utc.date(from: parts) else { return nil }
+        return ReceiptTimes.calendar.dateComponents([.hour, .minute], from: instant)
     }
 
     // MARK: - Adresse
