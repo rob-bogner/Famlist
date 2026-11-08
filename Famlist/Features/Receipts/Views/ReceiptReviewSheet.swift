@@ -17,7 +17,12 @@
  - „Preise speichern“: Weichen Bon-Preise von gespeicherten Artikelpreisen ab, fragt ein System-Dialog
    (nicht gestaltet), ob sie als neue Artikelpreise übernommen werden. Der Preisverlauf wird immer gespeichert.
 
+ - Kaufdatum nicht erkannt (ReceiptReviewNoDate): Kopfkarte „<Laden> · Datum fehlt“, darunter
+   ReceiptDateHintCard; „Datum ändern“ öffnet die Aktionskarte „Kaufdatum ändern“ (ReceiptDateDialog,
+   Inhalt ReceiptDatePicker). Speichern geht ohne Rückfrage; ohne Wahl gilt heute.
+
  📝 Last Change:
+ - 08.11.2026: Hinweis und Datumswahl bei nicht erkanntem Kaufdatum (T-008).
  - Rückfrage „Artikelpreise aktualisieren?“ vor dem Speichern.
  ------------------------------------------------------------------------
  */
@@ -42,6 +47,8 @@ struct ReceiptReviewSheet: View {
     @State private var correcting: ReceiptReviewLine?
     @State private var editingStore = false
     @State private var storeDraft = ""
+    @State private var editingDate = false
+    @State private var dateDraft = Date()
     @State private var isSaving = false
     @State private var pendingPriceChanges: [ReceiptPriceChange] = []
     @State private var askingPriceUpdate = false
@@ -74,6 +81,11 @@ struct ReceiptReviewSheet: View {
                           VStack(spacing: 0) {
                             summaryCard(t: t)
                                 .padding(.top, 16)
+
+                            if flow.isPurchaseDateMissing {
+                                ReceiptDateHintCard(appearance: appearance, onChange: openDatePicker)
+                                    .padding(.top, 10)
+                            }
 
                             EKKSectionLabel(text: "Zuordnung", k: k)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -152,6 +164,17 @@ struct ReceiptReviewSheet: View {
                                               stores: Array(ReceiptParser.knownStores.prefix(4))))
                 })
         }
+        .actionCard(isPresented: $editingDate, k: SheetTheme(appearance)) {
+            ActionCardContent(
+                icon: ReceiptMetaIcon.calendar, tone: .info, title: "Kaufdatum ändern",
+                message: "Wann hast du eingekauft? Das Datum erscheint im Preisverlauf und im Kassenzettel-Archiv.",
+                buttons: [ActionCardButton(title: "Übernehmen", icon: Icon.check, role: .primary) {
+                              flow.choosePurchaseDate(dateDraft)
+                          }],
+                accessory: { _ in
+                    AnyView(ReceiptDatePicker(k: SheetTheme(appearance), selection: $dateDraft, today: flow.now()))
+                })
+        }
         .actionCard(isPresented: $askingPriceUpdate, k: SheetTheme(appearance)) {
             ActionCardContent(
                 icon: Icon.tag, tone: .info, title: "Artikelpreise aktualisieren?",
@@ -173,8 +196,15 @@ struct ReceiptReviewSheet: View {
 
     private var storeAndDate: String {
         let store = flow.storeName ?? "Laden unbekannt"
-        let date = (flow.purchaseDate ?? Date()).formatted(.dateTime.day().month(.twoDigits).year())
+        if flow.isPurchaseDateMissing { return "\(store) · Datum fehlt" }
+        let date = flow.effectivePurchaseDate.formatted(.dateTime.day().month(.twoDigits).year())
         return "\(store) · \(date)"
+    }
+
+    /// „Datum ändern“: Auswahl startet beim aktuellen Datum (ohne Bon-Datum: heute).
+    private func openDatePicker() {
+        dateDraft = Calendar.current.startOfDay(for: flow.effectivePurchaseDate)
+        editingDate = true
     }
 
     /// Summen-Karte: Padding 14 / 16, Radius 20, Hero-Verlauf.
