@@ -64,7 +64,7 @@ class Component extends DCLogic {
     };
     const imgOn = (this.props.images ?? 'on') === 'on';
     k.toggleOn = 'linear-gradient(180deg, ' + (dark ? light : accent) + ', ' + (dark ? accent : deep) + ')';
-    k.toggleOff = dark ? 'rgba(255,255,255,0.14)' : '#DCE5E6';
+    k.toggleOff = dark ? 'rgba(255,255,255,0.36)' : '#7E8D8F';
     const row = (label, icon, meta, opts) => {
       const o = opts || {};
       return {
