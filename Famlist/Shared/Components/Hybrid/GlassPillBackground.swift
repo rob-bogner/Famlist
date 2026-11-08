@@ -14,6 +14,7 @@
  - Farben: GlassStyleTokens (gleich wie die runden Glas-Knöpfe).
 
  📝 Last Change:
+ - 08.11.2026 (T-011): `selected` – gewählte Pille mit selectedPillPaint (dunkle Schrift, ≥ 4,5:1).
  - Initial creation (einheitliche Glas-Knöpfe auf allen Screens).
  ------------------------------------------------------------------------
  */
@@ -27,6 +28,8 @@ struct GlassPillBackground: View {
     let height: CGFloat
     /// Abweichende Höhe des Lichtsaums, wenn das Board sie anders setzt (z. B. 50-pt-Knöpfe in RestoreAccount: 5).
     var glowHeightOverride: CGFloat? = nil
+    /// Gewählte Pille (nur mit `.accent`): Füllung `selectedPillPaint`, Schrift `GlassStyleTokens.selectedPillText`.
+    var selected = false
 
     var body: some View {
         let t = GlassStyleTokens(style: style, appearance: appearance, accent: accent)
@@ -53,7 +56,8 @@ struct GlassPillBackground: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
         }
         .clipShape(Capsule())
-        .background(CSSBox(shape: Capsule(), paint: t.pillPaint, shadows: t.shadows))
+        .background(CSSBox(shape: Capsule(), paint: selected && style == .accent ? t.selectedPillPaint : t.pillPaint,
+                           shadows: t.shadows))
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -62,8 +66,9 @@ struct GlassPillBackground: View {
 #Preview("GlassPillBackground") {
     let a = AccentScale(Appearance.light.defaultAccent, .light)
     VStack(spacing: 16) {
-        Text("Zuordnen").font(AppFont.dm(13, 600)).foregroundStyle(.white).padding(.horizontal, 11).frame(height: 34)
-            .background(GlassPillBackground(style: .accent, appearance: .light, accent: a, height: 34))
+        Text("Zuordnen").font(AppFont.dm(13, 600)).foregroundStyle(GlassStyleTokens.selectedPillText)
+            .padding(.horizontal, 11).frame(height: 34)
+            .background(GlassPillBackground(style: .accent, appearance: .light, accent: a, height: 34, selected: true))
         Text("Teilen").font(AppFont.dm(15, 600)).padding(.horizontal, 40).frame(height: 52)
             .background(GlassPillBackground(style: .neutral, appearance: .light, accent: a, height: 52))
     }
@@ -73,8 +78,9 @@ struct GlassPillBackground: View {
 #Preview("GlassPillBackground – Dark") {
     let a = AccentScale(Appearance.dark.defaultAccent, .dark)
     VStack(spacing: 16) {
-        Text("Zuordnen").font(AppFont.dm(13, 600)).foregroundStyle(.white).padding(.horizontal, 11).frame(height: 34)
-            .background(GlassPillBackground(style: .accent, appearance: .dark, accent: a, height: 34))
+        Text("Zuordnen").font(AppFont.dm(13, 600)).foregroundStyle(GlassStyleTokens.selectedPillText)
+            .padding(.horizontal, 11).frame(height: 34)
+            .background(GlassPillBackground(style: .accent, appearance: .dark, accent: a, height: 34, selected: true))
         Text("Löschen").font(AppFont.dm(15, 600)).foregroundStyle(.white).padding(.horizontal, 40).frame(height: 52)
             .background(GlassPillBackground(style: .danger, appearance: .dark, accent: a, height: 52))
     }

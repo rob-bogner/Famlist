@@ -111,6 +111,7 @@ class Component extends DCLogic {
     ];
     // Glas-Knöpfe (Designsprache wie FAB): gp = Akzent, gn = neutral, gnd = neutral dunkel (Kamera/Bild), gd = Gefahr
     const gp = {
+      sel: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 100%)', selText: '#04262A',
       bg: 'radial-gradient(circle at 32% 22%, ' + light + ' 0%, ' + accent + ' 45%, ' + deep + ' 100%)',
       pbg: 'linear-gradient(180deg, ' + light + ' 0%, ' + accent + ' 50%, ' + deep + ' 100%)',
       shadow: dark ? 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 14px -7px ' + rgba(accent, 0.55) : 'inset 0 -3px 6px rgba(0,30,34,0.3), 0 8px 16px -6px ' + rgba(accent, 0.7) + ', 0 0 18px ' + rgba(accent, 0.25),

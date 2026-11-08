@@ -94,13 +94,13 @@ struct ReceiptArchiveSheet: View {
         Button(action: { withAnimation(.easeInOut(duration: 0.2)) { viewModel.selectedStore = store } }) {
             Text(store)
                 .font(AppFont.dm(13, 600))
-                .foregroundStyle(on ? .white : k.accentText)
+                .foregroundStyle(on ? GlassStyleTokens.selectedPillText : k.accentText)
                 .lineLimit(1)
                 .padding(.horizontal, 14)
                 .frame(height: 34)
                 // Glas-Pille: gewählt Akzent, sonst neutral (Canvas-Token gp / gn)
                 .background(GlassPillBackground(style: on ? .accent : .neutral, appearance: k.appearance,
-                                                accent: k.a, height: 34))
+                                                accent: k.a, height: 34, selected: on))
                 .fixedSize()
         }
         .buttonStyle(.plain)

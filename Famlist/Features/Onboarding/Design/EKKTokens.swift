@@ -12,6 +12,7 @@
    Werte 1:1 aus dem Design (1 CSS-px = 1 pt), nicht runden oder „verschönern“.
 
  📝 Last Change:
+ - 08.11.2026 (T-011): receiptHeroBg / receiptHeroText / receiptHeroSub für die Bon-Kopfkarte.
  - Initial creation (Redesign „Hybrid“, Handoff 24.09.2026).
  ------------------------------------------------------------------------
  */
@@ -79,6 +80,14 @@ struct EKKTokens {
     var heroBg: Paint {
         .linear(150, [stop(a.light.color(), 0), stop(a.base.color(), 0.42), stop((isDark ? a.deeper : a.deep).color(), 1)])
     }
+
+    /// Bon-Kopfkarte (T-011, Board `receiptHeroBg`): `linear-gradient(150deg, light 0%, accent 100%)` – ohne das
+    /// tiefe Ende, damit die dunkle Schrift überall ≥ 4,5:1 hält. `heroBg` bleibt für Listenkopf und Fortschritt.
+    var receiptHeroBg: Paint { .linear(150, [stop(a.light.color(), 0), stop(a.base.color(), 1)]) }
+    /// Hauptzeile und Summe auf `receiptHeroBg` (Board `#04262A`).
+    static let receiptHeroText = Color.hex("#04262A")
+    /// Unterzeilen auf `receiptHeroBg` (Board `rgba(4,38,42,0.92)`; 85 % ergäbe hell nur 4,15:1).
+    static let receiptHeroSub = Color.rgba(4, 38, 42, 0.92)
 
     /// `linear-gradient(150deg, light, deep)`
     var avatarBg: Paint {

@@ -55,12 +55,12 @@ struct ReceiptStoreField: View {
         Button(action: { text = store }) {
             Text(store)
                 .font(AppFont.dm(13, 600))
-                .foregroundStyle(isOn ? .white : d.text)
+                .foregroundStyle(isOn ? GlassStyleTokens.selectedPillText : d.text)
                 .lineLimit(1)
                 .padding(.horizontal, 14)
                 .frame(height: 34)
                 .background(GlassPillBackground(style: isOn ? .accent : .neutral, appearance: k.appearance,
-                                                accent: k.a, height: 34))
+                                                accent: k.a, height: 34, selected: isOn))
                 .contentShape(Pill)
         }
         .buttonStyle(.plain)

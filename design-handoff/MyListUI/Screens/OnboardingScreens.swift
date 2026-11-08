@@ -73,6 +73,11 @@ struct EKKTokens {
         .linear(150, [stop(a.light.color(), 0), stop(a.base.color(), 0.42), stop((isDark ? a.deeper : a.deep).color(), 1)])
     }
 
+    /// Bon-Kopfkarte (T-011): `receiptHeroBg = linear-gradient(150deg, light 0%, accent 100%)`, Schrift #04262A.
+    var receiptHeroBg: Paint { .linear(150, [stop(a.light.color(), 0), stop(a.base.color(), 1)]) }
+    var receiptHeroText: Color { .hex("#04262A") }
+    var receiptHeroSub: Color { .rgba(4, 38, 42, 0.92) }
+
     /// `linear-gradient(150deg, light, deep)`
     var avatarBg: Paint {
         .linear(150, [stop(a.light.color(), 0), stop(a.deep.color(), 1)])

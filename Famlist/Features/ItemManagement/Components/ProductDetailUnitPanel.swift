@@ -139,12 +139,12 @@ struct ProductDetailUnitPanel: View {
         return Button { choose(unit) } label: {
             Text(unit.localizedName)
                 .font(AppFont.dm(13, isOn ? 600 : 500))
-                .foregroundStyle(isOn ? Color.white : k.text)
+                .foregroundStyle(isOn ? GlassStyleTokens.selectedPillText : k.text)
                 .padding(.horizontal, 14)
                 .frame(height: 34)
                 .background {
                     if isOn {
-                        GlassPillBackground(style: .accent, appearance: k.appearance, accent: k.a, height: 34)
+                        GlassPillBackground(style: .accent, appearance: k.appearance, accent: k.a, height: 34, selected: true)
                     } else {
                         CSSBox(shape: Capsule(), paint: .color(k.fieldFocus), border: 1, borderColor: k.fieldBorder)
                     }

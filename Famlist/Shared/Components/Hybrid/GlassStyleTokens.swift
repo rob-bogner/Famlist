@@ -13,6 +13,7 @@
  - Glanz = Deckkraft der Glanz-Ellipse oben, Schein = weicher Lichtsaum unten.
 
  📝 Last Change:
+ - 08.11.2026 (T-011): selectedPillPaint / selectedPillText für gewählte Pillen (Board gp.sel / gp.selText).
  - Initial creation (einheitliche Glas-Knöpfe auf allen Screens).
  ------------------------------------------------------------------------
  */
@@ -51,6 +52,13 @@ struct GlassStyleTokens {
     }
 
     var orbPaint: Paint { .radialCircle(UnitPoint(x: 0.32, y: 0.22), stops) }
+
+    /// Gewählte Pille (Board-Token `gp.sel`): Akzent ohne das tiefe Ende, damit die dunkle Schrift
+    /// `selectedPillText` (`gp.selText`) überall ≥ 4,5:1 hält (T-011). Einzige Quelle für alle gewählten Pillen.
+    var selectedPillPaint: Paint { .linear(180, [stop(accent.light.color(), 0), stop(accent.base.color(), 1)]) }
+
+    /// Schrift auf `selectedPillPaint` (Board `gp.selText`).
+    static let selectedPillText = Color.hex("#04262A")
 
     var pillPaint: Paint {
         switch style {

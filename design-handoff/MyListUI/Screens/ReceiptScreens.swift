@@ -211,20 +211,20 @@ struct ReceiptReviewScreen: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(storeAndDate)
                                 .font(AppFont.dm(13, 400))
-                                .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
+                                .foregroundStyle(t.receiptHeroSub)
                             Text("\(lines.count) Positionen erkannt")
                                 .font(AppFont.dm(15, 600))
-                                .foregroundStyle(Color.white)
+                                .foregroundStyle(t.receiptHeroText)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         Text(total)
                             .font(AppFont.outfit(26, 600))
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(t.receiptHeroText)
                             .fixedSize()
                     }
                     .padding(.vertical, 14)
                     .padding(.horizontal, 16)
-                    .background(CSSBox(shape: RR(20), paint: t.heroBg))
+                    .background(CSSBox(shape: RR(20), paint: t.receiptHeroBg))
                     .padding(.top, 16)
 
                     EKKSectionLabel(text: "Zuordnung", k: k)
