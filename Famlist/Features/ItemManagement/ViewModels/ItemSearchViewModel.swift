@@ -23,6 +23,7 @@
  - globalCatalogRepository is optional; passing nil disables OFF search gracefully.
 
  📝 Last Change:
+ - 08.11.2026 (T-009): OFF-Treffer nur bei eingeschaltetem „Produktvorschläge“ (Standard aus).
  - Split merged results into personalResults + globalResults (separate sections).
  ------------------------------------------------------------------------
  */
@@ -45,6 +46,8 @@ final class ItemSearchViewModel: ObservableObject {
 
     private let catalogRepository: any ItemCatalogRepository
     private let globalCatalogRepository: (any GlobalProductCatalogRepository)?
+    /// Quelle des Schalters „Produktvorschläge“ (Tests geben eigene Defaults hinein).
+    private let defaults: UserDefaults
 
     // MARK: - Private State
 
@@ -60,10 +63,12 @@ final class ItemSearchViewModel: ObservableObject {
 
     init(
         catalogRepository: any ItemCatalogRepository,
-        globalCatalogRepository: (any GlobalProductCatalogRepository)? = nil
+        globalCatalogRepository: (any GlobalProductCatalogRepository)? = nil,
+        defaults: UserDefaults = .standard
     ) {
         self.catalogRepository = catalogRepository
         self.globalCatalogRepository = globalCatalogRepository
+        self.defaults = defaults
     }
 
     // MARK: - Search
@@ -136,8 +141,9 @@ final class ItemSearchViewModel: ObservableObject {
     }
 
     /// Fetches global OFF catalog results. Returns [] on error (offline-first degradation).
+    /// Schalter „Produktvorschläge“ aus (Standard): keine Anfrage an den OFF-Katalog (T-009).
     private func fetchGlobal(query: String) async -> [GlobalProductEntry] {
-        guard let repo = globalCatalogRepository else { return [] }
+        guard ProductSuggestionSetting.isEnabled(defaults), let repo = globalCatalogRepository else { return [] }
         do {
             return try await repo.search(query: query)
         } catch {
