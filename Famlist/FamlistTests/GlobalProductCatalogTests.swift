@@ -21,6 +21,7 @@
  - StubGlobalProductCatalogRepository simulates server errors for offline-first tests.
 
  📝 Last Change:
+ - 08.11.2026 (T-009): Schalter „Produktvorschläge“ – Startwert aus, bei aus keine OFF-Anfrage.
  - Initial creation for OpenFoodFacts integration tests.
  ------------------------------------------------------------------------
  */
@@ -35,8 +36,11 @@ import XCTest
 final class StubGlobalProductCatalogRepository: GlobalProductCatalogRepository {
     var stubbedResults: [GlobalProductEntry] = []
     var shouldThrow = false
+    /// Zählt Anfragen – belegt, dass bei ausgeschalteten Produktvorschlägen keine entsteht.
+    private(set) var searchCallCount = 0
 
     func search(query: String) async throws -> [GlobalProductEntry] {
+        searchCallCount += 1
         if shouldThrow { throw URLError(.badServerResponse) }
         return stubbedResults
     }
@@ -199,14 +203,58 @@ final class ItemSearchViewModelMergeTests: XCTestCase {
     var sut: ItemSearchViewModel!
     var personalSpy: SpyItemCatalogRepository!
     var globalStub: StubGlobalProductCatalogRepository!
+    var defaults: UserDefaults!
+    private let suiteName = "ItemSearchViewModelMergeTests"
 
     override func setUp() async throws {
         personalSpy = SpyItemCatalogRepository()
         globalStub = StubGlobalProductCatalogRepository()
+        defaults = UserDefaults(suiteName: suiteName)
+        defaults.removePersistentDomain(forName: suiteName)
+        // Die Merge-Tests prüfen die OFF-Treffer, also Produktvorschläge an (Startwert ist aus).
+        defaults.set(true, forKey: ProductSuggestionSetting.storageKey)
         sut = ItemSearchViewModel(
             catalogRepository: personalSpy,
-            globalCatalogRepository: globalStub
+            globalCatalogRepository: globalStub,
+            defaults: defaults
         )
+    }
+
+    override func tearDown() async throws {
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    // MARK: - Schalter „Produktvorschläge“ (T-009)
+
+    func test_productSuggestionSetting_defaultIsOff() {
+        defaults.removePersistentDomain(forName: suiteName)
+        XCTAssertFalse(ProductSuggestionSetting.defaultValue)
+        XCTAssertFalse(ProductSuggestionSetting.isEnabled(defaults))
+    }
+
+    func test_performSearch_settingOff_doesNotQueryGlobal() async throws {
+        defaults.set(false, forKey: ProductSuggestionSetting.storageKey)
+        personalSpy.stubbedResults = [makePersonalEntry(name: "Milch")]
+        globalStub.stubbedResults = [makeGlobalEntry(name: "Milch")]
+
+        sut.searchText = "Mi"
+        sut.onSearchTextChanged()
+        await sut.searchTask?.value
+
+        XCTAssertEqual(globalStub.searchCallCount, 0, "Bei AUS darf keine Anfrage an OFF entstehen")
+        XCTAssertTrue(sut.globalResults.isEmpty)
+        XCTAssertEqual(sut.personalResults.count, 1, "Eigene Artikel bleiben")
+    }
+
+    func test_performSearch_settingOn_queriesGlobal() async throws {
+        globalStub.stubbedResults = [makeGlobalEntry(name: "Milch")]
+
+        sut.searchText = "Mi"
+        sut.onSearchTextChanged()
+        await sut.searchTask?.value
+
+        XCTAssertEqual(globalStub.searchCallCount, 1)
+        XCTAssertEqual(sut.globalResults.count, 1)
     }
 
     // MARK: - Separate Collections

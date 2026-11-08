@@ -15,6 +15,7 @@
    (siehe design-handoff/PLAN.md, Risiko R5).
 
  📝 Last Change:
+ - 08.11.2026 (T-009): Zeile „Produktvorschläge“ (Open Food Facts, Standard aus).
  - Zeile „Artikelbilder anzeigen“ (30.09.2026).
  - 29.09.2026: Liste → „Artikel abhaken“ (Wischen · Kreis · Beides).
  - Abschnitt „Kassenzettel“: „Fotos der Bons speichern“ und „Gespeicherte Kassenzettel“ (Archiv).
@@ -28,6 +29,7 @@ struct SettingsSheet: View {
     @AppStorage(ListAccountAppearanceChoice.storageKey) private var appearanceRaw = ListAccountAppearanceChoice.system.rawValue
     @AppStorage(PriceDisplaySetting.storageKey) private var showPrices = PriceDisplaySetting.defaultValue
     @AppStorage(ItemImageSetting.storageKey) private var showImages = ItemImageSetting.defaultValue
+    @AppStorage(ProductSuggestionSetting.storageKey) private var offSuggestions = ProductSuggestionSetting.defaultValue
     @AppStorage(CheckGesture.storageKey) private var checkGestureRaw = CheckGesture.defaultValue.rawValue
     @AppStorage(ReceiptArchiveSetting.storageKey) private var saveReceipts = ReceiptArchiveSetting.defaultValue
     @EnvironmentObject var receiptArchive: ReceiptArchive
@@ -91,6 +93,10 @@ struct SettingsSheet: View {
             SettingsRow(t: t, title: "Artikelbilder anzeigen", titleColor: k.text,
                         subtitle: "In der Liste, in den Vorschlägen und in den Produktdetails", hasTopLine: true) {
                 ListAccountToggle(t: t, isOn: $showImages, label: "Artikelbilder anzeigen")
+            }
+            SettingsRow(t: t, title: "Produktvorschläge", titleColor: k.text,
+                        subtitle: "Aus Open Food Facts, beim Hinzufügen von Artikeln", hasTopLine: true) {
+                ListAccountToggle(t: t, isOn: $offSuggestions, label: "Produktvorschläge")
             }
             // Wischen · Kreis · Beides (nur dieses Gerät)
             CheckGestureSettingRow(t: t, raw: $checkGestureRaw)
