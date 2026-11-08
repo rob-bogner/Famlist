@@ -25,7 +25,12 @@
    gehen in den Archiv-Eintrag (ReceiptTimes); die Zeilen bekommen Kategorie, Einheit und Inhalt je Stück
    (ReceiptLineEnricher).
 
+ - Kaufdatum (T-008): `isPurchaseDateMissing` = der Scanner hat kein Datum erkannt und es wurde noch keines
+   gewählt. `choosePurchaseDate` nimmt nur heute oder frühere Tage. Gespeichert wird `effectivePurchaseDate`
+   (gewählt bzw. laut Bon, sonst heute) – im Preisverlauf und im Archiv-Eintrag.
+
  📝 Last Change:
+ - 08.11.2026: Kaufdatum nicht erkannt → Hinweis und Wahl vor dem Speichern (T-008).
  - 29.09.2026: Ignorierte Zeilen kommen nicht ins Archiv und zählen nicht als Position.
  - Einkaufsdaten für das Archiv; Preisvergleich nach ReceiptFlowViewModel+PriceChanges ausgelagert.
  ------------------------------------------------------------------------
@@ -47,7 +52,10 @@ final class ReceiptFlowViewModel: ObservableObject {
     @Published private(set) var phase: Phase = .capturing
     @Published var lines: [ReceiptReviewLine] = []
     @Published var storeName: String?
+    /// Kaufdatum laut Bon oder vom Nutzer gewählt (`choosePurchaseDate`). nil = beim Speichern gilt heute.
     @Published var purchaseDate: Date?
+    /// Der Scanner hat kein Kaufdatum erkannt, und der Nutzer hat noch keines gewählt (Hinweis-Karte, T-008).
+    @Published private(set) var isPurchaseDateMissing = false
     @Published private(set) var receiptTotal: Decimal?
     /// Uhrzeit und Adresse laut Bon (nur für den Archiv-Eintrag).
     private(set) var receiptTime: DateComponents?
@@ -169,6 +177,7 @@ final class ReceiptFlowViewModel: ObservableObject {
         lines = []
         storeName = nil
         purchaseDate = nil
+        isPurchaseDateMissing = false
         receiptTotal = nil
         receiptTime = nil
         storeAddress = nil
@@ -195,6 +204,7 @@ final class ReceiptFlowViewModel: ObservableObject {
     func apply(_ parsed: ParsedReceipt) {
         storeName = parsed.store
         purchaseDate = parsed.date
+        isPurchaseDateMissing = parsed.date == nil
         receiptTotal = parsed.total
         receiptTime = parsed.time
         storeAddress = parsed.address
@@ -243,11 +253,31 @@ final class ReceiptFlowViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Kaufdatum (T-008)
+
+    /// Datum für Preisverlauf und Archiv: laut Bon bzw. gewählt, sonst heute.
+    var effectivePurchaseDate: Date { purchaseDate ?? now() }
+
+    /// Wählbar sind heute und alle Tage davor.
+    func isSelectable(_ day: Date) -> Bool {
+        Calendar.current.startOfDay(for: day) <= Calendar.current.startOfDay(for: now())
+    }
+
+    /// „Kaufdatum ändern“ → „Übernehmen“. Tage nach heute werden abgewiesen (Rückgabe false).
+    @discardableResult
+    func choosePurchaseDate(_ day: Date) -> Bool {
+        guard isSelectable(day) else { return false }
+        purchaseDate = Calendar.current.startOfDay(for: day)
+        isPurchaseDateMissing = false
+        UserLog.Data.receiptDateChanged(day)
+        return true
+    }
+
     // MARK: - Speichern
 
     func savePrices() async {
         let store = (storeName?.isEmpty == false ? storeName : nil) ?? "Unbekannter Laden"
-        let date = purchaseDate ?? Date()
+        let date = effectivePurchaseDate
         // Die Preise verweisen nur dann auf den Bon, wenn er auch archiviert wird (Schalter an, Liste bekannt).
         let receiptId = UUID()
         let link = archive?.isEnabled == true && origin != nil ? receiptId : nil

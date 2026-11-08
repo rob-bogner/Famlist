@@ -38,6 +38,11 @@ extension UserLog.Data {
         UserLog.log("🧾 Kassenzettel erkannt: \(lines) Positionen\(store.map { " bei \($0)" } ?? "")")
     }
 
+    /// Kassenzettel: Kaufdatum von Hand gewählt (z. B. weil der Scanner keines erkannt hat)
+    static func receiptDateChanged(_ day: Date) {
+        UserLog.log("🧾 Kaufdatum auf \(day.formatted(.dateTime.day().month(.twoDigits).year())) gesetzt")
+    }
+
     /// Kassenzettel: nicht gefundenen Artikel einer Bon-Zeile zugeordnet
     static func receiptMissingAssigned(name: String) {
         UserLog.log("🧾 „\(name)“ einer Bon-Zeile zugeordnet")
