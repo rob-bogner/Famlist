@@ -128,13 +128,13 @@ struct ReceiptMissingItemCard: View {
         Button(action: action) {
             Text(title)
                 .font(AppFont.dm(13, 600))
-                .foregroundStyle(active ? .white : (muted ? k.sub : k.accentText))
+                .foregroundStyle(active ? GlassStyleTokens.selectedPillText : (muted ? k.sub : k.accentText))
                 .lineLimit(1)
                 .padding(.horizontal, 11)
                 .frame(height: 34)
                 // Glas-Pille: aktiv Akzent, sonst neutral (Canvas-Token gp / gn)
                 .background(GlassPillBackground(style: active ? .accent : .neutral, appearance: k.appearance,
-                                                accent: k.a, height: 34))
+                                                accent: k.a, height: 34, selected: active))
                 .contentShape(Pill)
                 .fixedSize()
         }

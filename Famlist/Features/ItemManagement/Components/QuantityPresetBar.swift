@@ -37,12 +37,12 @@ struct QuantityPresetBar: View {
                 Button(action: { onSelect(preset) }) {
                     Text(preset.label)
                         .font(AppFont.dm(13, 600))
-                        .foregroundStyle(on ? .white : k.accentText)
+                        .foregroundStyle(on ? GlassStyleTokens.selectedPillText : k.accentText)
                         .lineLimit(1)
                         .padding(.horizontal, 12)
                         .frame(height: 34)
                         .background(GlassPillBackground(style: on ? .accent : .neutral, appearance: k.appearance,
-                                                        accent: k.a, height: 34))
+                                                        accent: k.a, height: 34, selected: on))
                         .fixedSize()
                 }
                 .buttonStyle(.plain)
