@@ -87,6 +87,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 |  | Bon-Zeile zuordnen | ReceiptAssignDialog | ja | – (nur HTML) |
 |  | Laden ändern | ReceiptStoreAlert | ja | – (nur HTML) |
 |  | Kassenzettel prüfen – nicht gefunden | ReceiptReviewMissing | ja | – (nur HTML) |
+|  | Kassenzettel prüfen – Kaufdatum nicht erkannt | ReceiptReviewNoDate | ja | – (nur HTML) |
+|  | Kaufdatum ändern | ReceiptDateDialog | ja | – (nur HTML) |
 |  | Artikelpreise aktualisieren? | ReceiptPriceAlert | ja | – (nur HTML) |
 | 7 · Einstellungen & Konto | Einstellungen | Settings | ja | `SettingsScreen` |
 |  | Einstellungen – Artikel abhaken: nur Wischen | SettingsCheckMode | ja | – (nur HTML) |
@@ -225,6 +227,7 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
     - Sind alle Artikel abgehakt: Popup „Einkauf erledigt“ über „Zurücksetzen“ (ShoppingDonePopover: Kassenzettel scannen · Abgehakte löschen · Liste behalten); nach dem Kassenzettel ShoppingDonePopoverSaved (Abgehakte löschen & fertig · Liste behalten). Die Vollbilder ShoppingDone/ShoppingDoneScan sind archiviert (13.10.2026).
     - Kassenzettel fotografieren; lange Bons in mehreren Teilen, ein Zähler zeigt die Anzahl der Aufnahmen. Danach „Kassenzettel wird gelesen“ (ReceiptReading).
     - Kassenzettel prüfen: erkannte Positionen mit Preisen, automatische Zuordnung („Zugeordnet“, „Zuordnung prüfen“, „Neuer Artikel?“), Laden und Datum, Summe. Tippen auf eine Position → Zuordnen (ReceiptAssignDialog); Laden ändern (ReceiptStoreAlert); Artikel der Liste, die nicht auf dem Bon stehen (ReceiptReviewMissing).
+    - Kaufdatum nicht erkannt (ReceiptReviewNoDate, T-008): Die Kopfkarte zeigt „<Laden> · Datum fehlt“. Direkt darunter steht eine Hinweis-Karte mit Warn-Rand und Kalender-Symbol: „Kaufdatum nicht erkannt“, „Wir haben heute eingesetzt. Stimmt das nicht, ändere es vor dem Speichern.“ und die Pille „Datum ändern“. Die Pille öffnet die Aktionskarte „Kaufdatum ändern“ (ReceiptDateDialog): Pillen Heute · Gestern · Vorgestern, darunter ein Monatskalender mit Monatswechsel; Tage nach heute sind gesperrt, heute trägt einen Ring. „Übernehmen“ setzt das Datum, ✕ schließt ohne Änderung. Nach dem Übernehmen verschwindet die Hinweis-Karte, und die Kopfkarte zeigt das gewählte Datum. „Preise speichern“ geht ohne Rückfrage; ohne Änderung gilt das heutige Datum. Das Datum gilt für alle Preispunkte des Bons.
     - „Preise speichern“ legt Preispunkte an. Weicht ein Bon-Preis vom gespeicherten Artikelpreis ab, fragt die App nach (ReceiptPriceAlert).
     - Kassenzettel-Archiv (KASSENZETTEL_ARCHIV.md): Einstellungen → „Gespeicherte Kassenzettel“ (ReceiptArchive, leer: ReceiptArchiveEmpty); Detail mit Fotos, Summe, Teilen, Löschen mit Bestätigung (ReceiptDetail, ReceiptFullscreen, ReceiptDeleteDialog). Preise bleiben beim Löschen erhalten.
     - Einkaufsdaten & Auswertung (RECEIPT_INSIGHTS_PROMPT.md): Archiv oben Karte „Auswertung <Monat>“ → Sheet „Auswertung“ mit Reitern Ausgaben · Verbrauch und Monatswechsel (InsightSpend, InsightUsage). Detail zeigt Metadaten (Ort, Datum, Uhrzeit, Dauer, Artikel, Wert) und Reiter „Artikel“ · „Bon-Foto“ (ReceiptDetailMeta); Tipp auf einen Artikel → Preisverlauf.
@@ -271,6 +274,8 @@ Die Reihenfolge folgt der User Journey im Canvas (Seite „User Journey“, Absc
 - Nährwerte je Artikel (ReceiptItemNutrition) und Auswertung Ernährung (InsightNutrition) – Entwurf liegt im Canvas auf der Seite „Archiv“, noch nicht freigegeben. Quellen später: Open Food Facts (Barcode) + BLS 4.0 (allgemeine Lebensmittel).
 
 Diese Punkte kommen später mit eigenem Design. Bis dahin gilt: kein eigenes UI dafür erfinden.
+
+**T-008 entworfen (08.11.2026), Code folgt in einem eigenen Auftrag:** Hinweis „Kaufdatum nicht erkannt“ in der Prüfansicht und die Aktionskarte „Kaufdatum ändern“ (ReceiptReviewNoDate, ReceiptDateDialog, je mit Dark; Ablauf in §3 Punkt 13). Roberts Entscheide vom 08.11.2026: Hinweis als eigene Karte unter der Kopfkarte, Auswahl über Pillen und Monatskalender, Speichern ohne Rückfrage. Abweichung vom Glas-Muster: Der gewählte Tag und die gewählte Pille sind flach in `dc.info` mit `cta.text` gefüllt. Weiße Schrift auf dem Akzent-Glas `gp` erreicht in der Mitte nur 3,06:1 (Light) und 2,18:1 (Dark); die flache Fläche erreicht 7,10:1 und 9,29:1.
 
 **Von Robert freigegeben (28.09.2026) – Kassenzettel wie ein Dokumentenscanner:**
 Jede Aufnahme wird automatisch auf den Bon zugeschnitten (ohne neues UI). Dazu gestaltet und umgesetzt:
