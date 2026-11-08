@@ -12,6 +12,7 @@
    Werte 1:1 aus dem Design (1 CSS-px = 1 pt), nicht runden oder „verschönern“.
 
  📝 Last Change:
+ - 08.11.2026 (T-010): Aus-Spur aus ListAccountTokens.toggleOffColor(dark:) statt eigener Kopie.
  - Initial creation (Redesign „Hybrid“, Handoff 24.09.2026).
  ------------------------------------------------------------------------
  */
@@ -25,7 +26,7 @@ struct OverlaySwitch: View {
     /// Das Design zeigt nur „an“. „Aus“ nutzt `toggleOff` aus ListAccountTokens (Settings.dc.html).
     var isOn = true
 
-    private var offColor: Color { k.isDark ? .rgba(255, 255, 255, 0.14) : .hex("#DCE5E6") }
+    private var offColor: Color { ListAccountTokens.toggleOffColor(dark: k.isDark) }
 
     var body: some View {
         ZStack(alignment: isOn ? .topTrailing : .topLeading) {
