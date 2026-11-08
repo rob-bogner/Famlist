@@ -12,6 +12,7 @@
    Werte 1:1 aus dem Design (1 CSS-px = 1 pt), nicht runden oder „verschönern“.
 
  📝 Last Change:
+ - 08.11.2026 (T-010): Aus-Spur des Schalters aus ListAccountTokens.toggleOffColor(dark:) statt eigener Kopie.
  - Initial creation (Redesign „Hybrid“, Handoff 24.09.2026).
  ------------------------------------------------------------------------
  */
@@ -93,7 +94,8 @@ struct PopoverMenuRow: View {
                 Capsule().fill(isOn
                     ? LinearGradient(colors: k.isDark ? [k.a.light.color(), k.a.base.color()] : [k.a.base.color(), k.a.deep.color()],
                                      startPoint: .top, endPoint: .bottom)
-                    : LinearGradient(colors: [k.isDark ? .rgba(255, 255, 255, 0.14) : .hex("#DCE5E6")], startPoint: .top, endPoint: .bottom))
+                    : LinearGradient(colors: [ListAccountTokens.toggleOffColor(dark: k.isDark)],   // MenuOverlay.dc.html k.toggleOff
+                                     startPoint: .top, endPoint: .bottom))
                 Circle()
                     .fill(.white)
                     .shadow(color: .black.opacity(0.2), radius: 2, y: 2)

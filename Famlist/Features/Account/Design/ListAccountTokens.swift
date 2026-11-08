@@ -12,6 +12,7 @@
    Werte 1:1 aus dem Design (1 CSS-px = 1 pt), nicht runden oder „verschönern“.
 
  📝 Last Change:
+ - 08.11.2026 (T-010): toggleOff hell #7E8D8F, dunkel w(0.36) über toggleOffColor(dark:) – ≥ 3:1.
  - Initial creation (Redesign „Hybrid“, Handoff 24.09.2026).
  ------------------------------------------------------------------------
  */
@@ -66,7 +67,7 @@ struct ListAccountTokens {
             danger = .hex("#FF7A7E")
             dangerSoft = .rgba(255, 122, 126, 0.12)
             toggleOn = .linear(180, [stop(a.light.color(), 0), stop(a.base.color(), 1)])
-            toggleOff = w(0.14)
+            toggleOff = Self.toggleOffColor(dark: true)
             segBg = w(0.06)
             segOn = w(0.14)
             segOnText = .white
@@ -84,7 +85,7 @@ struct ListAccountTokens {
             danger = .hex("#C8363B")
             dangerSoft = .rgba(200, 54, 59, 0.08)
             toggleOn = .linear(180, [stop(a.base.color(), 0), stop(a.deep.color(), 1)])
-            toggleOff = .hex("#DCE5E6")
+            toggleOff = Self.toggleOffColor(dark: false)
             segBg = .hex("#F1F5F5")
             segOn = .white
             segOnText = .hex("#0F2528")
@@ -92,6 +93,13 @@ struct ListAccountTokens {
             menuBorder = .rgba(15, 37, 40, 0.08)
             menuShadow = [.drop(0, 24, 48, -16, .rgba(12, 40, 44, 0.35))]
         }
+    }
+
+    /// Spur eines ausgeschalteten Schalters (`k.toggleOff` in allen Boards). Einzige Quelle für ListAccountToggle,
+    /// OverlaySwitch und PopoverMenuRow. T-010: ≥ 3:1 gegen Karte, Feld und Menü (hell 3,09, dunkel 3,14 im
+    /// ungünstigsten Fall); geprüft in ToggleOffContrastTests.
+    static func toggleOffColor(dark: Bool) -> Color {
+        dark ? .rgba(255, 255, 255, 0.36) : .hex("#7E8D8F")
     }
 
     /// Platzhalterfarbe eines Eingabefelds mit Textfarbe `text` bzw. `sub`, α 0,75.

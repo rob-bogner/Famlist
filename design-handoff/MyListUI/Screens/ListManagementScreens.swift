@@ -55,7 +55,7 @@ struct ListAccountTokens {
             danger = .hex("#FF7A7E")
             dangerSoft = .rgba(255, 122, 126, 0.12)
             toggleOn = .linear(180, [stop(a.light.color(), 0), stop(a.base.color(), 1)])
-            toggleOff = w(0.14)
+            toggleOff = w(0.36)                     // T-010: ≥ 3:1 gegen Karte/Feld/Menü
             segBg = w(0.06)
             segOn = w(0.14)
             segOnText = .white
@@ -73,7 +73,7 @@ struct ListAccountTokens {
             danger = .hex("#C8363B")
             dangerSoft = .rgba(200, 54, 59, 0.08)
             toggleOn = .linear(180, [stop(a.base.color(), 0), stop(a.deep.color(), 1)])
-            toggleOff = .hex("#DCE5E6")
+            toggleOff = .hex("#7E8D8F")            // T-010: ≥ 3:1 gegen Karte/Feld/Menü
             segBg = .hex("#F1F5F5")
             segOn = .white
             segOnText = .hex("#0F2528")
