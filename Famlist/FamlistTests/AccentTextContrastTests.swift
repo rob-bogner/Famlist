@@ -6,7 +6,8 @@
  ------------------------------------------------------------------------
  📄 File Overview:
  - T-011: Schrift auf Akzentflächen hält mindestens 4,5:1 (WCAG 1.4.3), in hell und dunkel, an jedem Stopp
-   des Verlaufs: gewählte Pillen (GlassStyleTokens.selectedPillPaint / selectedPillText).
+   des Verlaufs: gewählte Pillen (GlassStyleTokens.selectedPillPaint / selectedPillText) und die Bon-Kopfkarte
+   (EKKTokens.receiptHeroBg / receiptHeroText / receiptHeroSub, Unterzeile als Mischfarbe mit 92 %).
 
  🔰 Notes for Beginners:
  - Verläufe sind `Paint` und nicht auslesbar; ihre Stopps kommen aus `AccentScale` (light, base), genau wie
@@ -45,6 +46,29 @@ final class AccentTextContrastTests: XCTestCase {
         for appearance in [Appearance.light, .dark] {
             let worst = pillStops(appearance).map { contrast(white, $0.1) }.min() ?? 99
             XCTAssertLessThan(worst, 4.5, "\(appearance): Weiß sollte auf der hellen Füllung unter 4,5 liegen")
+        }
+    }
+
+    // MARK: - Bon-Kopfkarte
+
+    func test_receiptHeroCard_textAndSubReachFourPointFiveOnEveryStop() {
+        let text = rgba(EKKTokens.receiptHeroText)
+        let sub = rgba(EKKTokens.receiptHeroSub)
+        for appearance in [Appearance.light, .dark] {
+            for (name, stop) in pillStops(appearance) {          // receiptHeroBg hat dieselben Stopps light → base
+                let rText = contrast(text, stop), rSub = contrast(sub, stop)
+                XCTAssertGreaterThanOrEqual(rText, 4.5, "\(appearance) – Kopfkarte Text \(name): \(fmt(rText)):1")
+                XCTAssertGreaterThanOrEqual(rSub, 4.5, "\(appearance) – Kopfkarte Unterzeile \(name): \(fmt(rSub)):1")
+            }
+        }
+    }
+
+    /// Gegenprobe: die alte Unterzeile (weiß 85 %) fällt auf denselben Stopps durch.
+    func test_receiptHeroCard_oldWhiteSubFailsOnSomeStop() {
+        let oldSub: RGBA = (255, 255, 255, 0.85)
+        for appearance in [Appearance.light, .dark] {
+            let worst = pillStops(appearance).map { contrast(oldSub, $0.1) }.min() ?? 99
+            XCTAssertLessThan(worst, 4.5, "\(appearance): alte Unterzeile sollte unter 4,5 liegen")
         }
     }
 

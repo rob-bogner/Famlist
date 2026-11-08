@@ -22,6 +22,7 @@
    Inhalt ReceiptDatePicker). Speichern geht ohne Rückfrage; ohne Wahl gilt heute.
 
  📝 Last Change:
+ - 08.11.2026 (T-011): Kopfkarte mit eigenem Verlauf receiptHeroBg und dunkler Schrift (≥ 4,5:1).
  - 08.11.2026: Hinweis und Datumswahl bei nicht erkanntem Kaufdatum (T-008).
  - Rückfrage „Artikelpreise aktualisieren?“ vor dem Speichern.
  ------------------------------------------------------------------------
@@ -214,27 +215,27 @@ struct ReceiptReviewSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(storeAndDate)
                         .font(AppFont.dm(13, 400))
-                        .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
+                        .foregroundStyle(EKKTokens.receiptHeroSub)
                     Text(flow.lines.count == 1 ? "1 Position erkannt" : "\(flow.lines.count) Positionen erkannt")
                         .font(AppFont.dm(15, 600))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(EKKTokens.receiptHeroText)
                     let missing = flow.missingItems.count
                     if missing > 0 {
                         Text(missing == 1 ? "1 Artikel nicht gefunden" : "\(missing) Artikel nicht gefunden")
                             .font(AppFont.dm(13, 400))
-                            .foregroundStyle(Color.rgba(255, 255, 255, 0.85))
+                            .foregroundStyle(EKKTokens.receiptHeroSub)
                             .contentTransition(.numericText())
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Text(flow.total.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE"))))
                     .font(AppFont.outfit(26, 600))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(EKKTokens.receiptHeroText)
                     .fixedSize()
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 16)
-            .background(CSSBox(shape: RR(20), paint: t.heroBg))
+            .background(CSSBox(shape: RR(20), paint: t.receiptHeroBg))
             .contentShape(RR(20))
         }
         .buttonStyle(.plain)
